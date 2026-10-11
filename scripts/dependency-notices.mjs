@@ -31,6 +31,7 @@ await writeFile(
   join(root, 'licenses/dependencies.txt'),
   notices
     .join('\n\n')
+    .replace(/\r\n?/g, '\n')
     .replace(/[ \t]+$/gm, '')
     .trimEnd() + '\n',
 );
