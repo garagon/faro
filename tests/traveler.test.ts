@@ -107,3 +107,110 @@ test('only a prepared, unchanged and recent message can be shared', async () => 
   assert.equal(canShareCheckIn(row, false, row.at + 15 * 60000), false);
   assert.equal(canShareCheckIn({ ...row, nextAt: row.at + 60000 }, false, row.at + 60000), false);
 });
+
+test('contextual updates explain location, reachability and the next check-in in both languages', () => {
+  const contextual: CheckIn = {
+    ...row,
+    context: 'earthquake',
+    companions: 'mi equipo',
+    destination: 'Punto de prueba',
+    connection: 'battery',
+  };
+  const es = checkInMessage(contextual, 'es', 'America/Panama');
+  const en = checkInMessage(contextual, 'en', 'America/Panama');
+  assert.match(es, /por el sismo/);
+  assert.match(es, /Me dirijo a Punto de prueba/);
+  assert.match(es, /poca batería/);
+  assert.match(es, /confirmen que recibieron/);
+  assert.match(en, /about the earthquake/);
+  assert.match(en, /heading to Punto de prueba/);
+  assert.match(en, /battery is low/);
+  assert.match(en, /Please let me know/);
+  assert.match(en, /GMT-5/);
+});
+
+test('changing status cannot leak an earlier destination or help request into the message', () => {
+  const contextual: CheckIn = {
+    ...row,
+    context: 'update',
+    status: 'ok',
+    destination: 'Private old destination',
+    needs: 'Private old help request',
+  };
+  for (const lang of ['es', 'en'] as const) {
+    const message = checkInMessage(contextual, lang);
+    assert.doesNotMatch(message, /Private old/);
+    assert.doesNotMatch(message, /sismo|earthquake|evacuation/);
+  }
+  assert.match(
+    checkInMessage({ ...contextual, status: 'help' }, 'es'),
+    /Necesito: Private old help request/,
+  );
+});
+
+test('only an explicitly attached event is included and its occurrence time is preserved', () => {
+  const event = {
+    source: 'IGC' as const,
+    place: 'Lugar de prueba',
+    mag: 4.2,
+    time: row.at - 3600000,
+  };
+  const attached: CheckIn = { ...row, context: 'earthquake', event };
+  const es = checkInMessage(attached, 'es', 'America/Panama');
+  assert.match(es, /Reporte de referencia: IGC · M 4.2 · Lugar de prueba/);
+  assert.match(es, /09:00/);
+  assert.match(es, /no una medida de cómo me afectó/);
+  assert.doesNotMatch(
+    checkInMessage({ ...attached, event: null }, 'es'),
+    /IGC|M 4.2|Lugar de prueba/,
+  );
+  assert.match(
+    checkInMessage({ ...attached, event: { ...event, mag: null } }, 'en'),
+    /magnitude not reported/,
+  );
+});
+
+test('new optional fields preserve old history while rejecting corrupt context and references', () => {
+  assert.ok(validCheckIn(row));
+  const contextual: CheckIn = {
+    ...row,
+    context: 'evacuation',
+    connection: 'limited',
+    needs: 'Contact insurance',
+    companions: 'a colleague',
+    destination: 'Meeting point',
+  };
+  assert.ok(validCheckIn(contextual));
+  const event = { source: 'USGS', place: 'Test location', mag: 4, time: row.at };
+  for (const invalid of [
+    { context: 'automatic-rescue' },
+    { connection: 'offline-tracking' },
+    { companions: 4 },
+    { needs: 'x'.repeat(1001) },
+    { destination: {} },
+    { event: 'unknown' },
+    { event: { ...event, source: 'unverified' } },
+    { event: { ...event, time: NaN } },
+    { event: { ...event, mag: '4' } },
+    { event: { ...event, place: 4 } },
+  ])
+    assert.equal(validCheckIn({ ...row, ...invalid }), false);
+});
+
+test('a promised check-in across midnight includes its date rather than an ambiguous time alone', () => {
+  const late = { ...row, at: Date.UTC(2026, 9, 12, 4, 50), nextAt: Date.UTC(2026, 9, 12, 5, 20) };
+  const es = checkInMessage(late, 'es', 'America/Panama');
+  assert.match(es, /a más tardar a las 00:20 GMT-5 \(12 oct 2026\)/);
+  const sameDay = checkInMessage(row, 'es', 'America/Panama');
+  assert.match(sameDay, /a más tardar a las 11:00 GMT-5\./);
+});
+
+test('a message contains contact channels only when explicitly included in its record', () => {
+  const message = checkInMessage(row, 'es');
+  assert.doesNotMatch(message, /Mi teléfono|Mi correo/);
+  const selected = { ...row, phone: '+1 202 555 0123', email: 'alex@example.com' };
+  assert.ok(validCheckIn(selected));
+  assert.match(checkInMessage(selected, 'es'), /Mi teléfono: \+1 202 555 0123/);
+  assert.match(checkInMessage(selected, 'en'), /My email: alex@example.com/);
+  assert.equal(validCheckIn({ ...selected, phone: {} }), false);
+});
