@@ -54,6 +54,7 @@ import './styles/travelSetup.css';
 import './styles/countrySearch.css';
 import './styles/dialogs.css';
 import './styles/urgentFlows.css';
+import './styles/checkIn.css';
 import { useIGC } from './hooks/useIGC.ts';
 import CoastalPanel from './components/CoastalPanel.tsx';
 import EmbassyPanel from './components/EmbassyPanel.tsx';
@@ -628,8 +629,8 @@ export default function App() {
                     )
                   : screen === 'status'
                     ? t(
-                        'Prepara un mensaje para tu familia, amigos o compañeros.',
-                        'Prepare a message for family, friends or colleagues.',
+                        'Diles dónde estás, qué necesitas y cuándo volverás a escribir.',
+                        'Tell them where you are, what you need and when you will check in again.',
                       )
                     : screen === 'hotel'
                       ? t(
@@ -1365,6 +1366,9 @@ export default function App() {
         )}
         <div hidden={screen !== 'status'}>
           <TravelerStatus
+            profile={profile}
+            plan={plan}
+            events={results.slice(0, 10)}
             country={country}
             lang={lang}
             history={checkIns}
