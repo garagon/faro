@@ -33,7 +33,7 @@ El servidor de desarrollo y el de vista previa incluyen los adaptadores `/api/ig
 - Mapa automático con OpenStreetMap, filtros, lista, magnitud, epicentro, hora del evento y hora de consulta.
 - Productos internacionales de tsunami de NOAA/PTWC, con fecha de emisión y límites de cobertura explícitos.
 - Onboarding con nombre, teléfono, correo, nacionalidad y destino guardados localmente; ayuda consular cuando hay una representación verificada en el directorio.
-- Plan del hotel y contactos personales guardados en el navegador.
+- Plan del hotel y contactos personales guardados en el navegador, con ficha visual descargable como imagen o texto para consultar sin conexión. [Apple Wallet: requisitos y límites](docs/apple-wallet.md).
 - Mensajes de estado con lugar, acompañantes, ayuda necesaria, disponibilidad y próxima hora de contacto; vista previa en español o inglés y envío manual. Puede adjuntarse un reporte sísmico seleccionado explícitamente.
 - Recomendaciones por situación en español e inglés, con enlaces a sus fuentes.
 

@@ -33,3 +33,7 @@ Do not commit browser storage dumps, actual traveler contacts, private locations
 ## Contact details in the trip profile
 
 Onboarding can save your name, phone and email alongside the destination and nationality in browser storage. These fields do not create an account and are not submitted to a server. The status composer uses the saved name; phone and email are excluded unless you select their inclusion in the message. Review the preview before manually sharing. Deleting the trip profile removes these profile fields; copies in previously prepared messages remain in the separate message history until that history is deleted.
+
+## Downloaded travel cards
+
+PNG and text travel cards are generated locally after an explicit download action. The complete contents can be previewed and include the saved profile and the selected destination’s contacts and hotel plan. GPS coordinates are excluded. A downloaded copy remains on the device outside browser storage; deleting data in Faro does not delete downloaded files. Apple Wallet is not yet enabled; see [integration requirements](docs/apple-wallet.md).

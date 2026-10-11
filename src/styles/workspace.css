@@ -1976,3 +1976,298 @@
 .fw-bulletin-current > h3 {
   font-size: 15px;
 }
+
+/* Personal travel card: a compact document beside an actionable contact directory. */
+.fw-trip-contacts .fw-trip-kit {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  gap: 32px;
+  margin-top: 26px;
+  align-items: start;
+}
+.fw-trip-contacts .fw-travel-card-area {
+  min-width: 0;
+}
+.fw-travel-pass {
+  background: #173e35;
+  color: #fff;
+  border-radius: 18px;
+  padding: 25px;
+  box-shadow: 0 6px 16px #173e3512;
+  overflow-wrap: anywhere;
+}
+.fw-pass-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+.fw-pass-brand strong {
+  font-size: 26px;
+  letter-spacing: -1px;
+}
+.fw-pass-brand svg {
+  color: #bfd8c8;
+}
+.fw-pass-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  color: #bfd8c8;
+  font-weight: 600;
+}
+.fw-travel-pass h3 {
+  font-size: 25px;
+  line-height: 1.2;
+  margin: 8px 0 10px;
+  color: white;
+  text-wrap: balance;
+}
+.fw-travel-pass .fw-pass-destination {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #e2ede6;
+  margin: 0 0 22px;
+  font-size: 14px;
+}
+.fw-travel-pass dl {
+  border-top: 1px solid #ffffff30;
+  margin: 0;
+  padding: 16px 0 4px;
+}
+.fw-travel-pass dl > div {
+  margin: 0 0 14px;
+}
+.fw-travel-pass dt {
+  font-size: 11px;
+  color: #bfd8c8;
+  margin-bottom: 4px;
+}
+.fw-travel-pass dd {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.fw-pass-emergency {
+  border-top: 1px solid #ffffff30;
+  padding-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 10px;
+  align-items: center;
+}
+.fw-pass-emergency > span {
+  font-size: 12px;
+  color: #e2ede6;
+}
+.fw-pass-emergency > strong {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.fw-pass-emergency > small {
+  grid-column: 1 / -1;
+  font-size: 10px;
+  color: #bfd8c8;
+}
+.fw-trip-contacts .fw-card-caption {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 17px 0 14px;
+  color: #52675f;
+}
+.fw-trip-contacts .fw-card-download {
+  width: 100%;
+  justify-content: center;
+  font-size: 13px;
+  min-height: 46px;
+}
+.fw-card-secondary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 9px 0;
+}
+.fw-card-secondary .fw-text {
+  font-size: 12px;
+  padding: 10px 0;
+  min-height: 44px;
+}
+.fw-card-secondary > span {
+  color: #67796f;
+  font-size: 11px;
+}
+.fw-card-contents {
+  border-top: 1px solid #d6e1da;
+  padding: 0;
+}
+.fw-card-contents summary {
+  cursor: pointer;
+  font-size: 12px;
+  padding: 14px 0;
+  min-height: 44px;
+}
+.fw-card-contents dl {
+  margin: 0;
+}
+.fw-card-contents dl > div {
+  padding: 10px 0;
+  border-top: 1px solid #e4ebe5;
+}
+.fw-card-contents dt {
+  font-size: 11px;
+  color: #65776e;
+}
+.fw-card-contents dd {
+  font-size: 13px;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.fw-trip-contacts .fw-card-privacy,
+.fw-trip-contacts .fw-card-notice {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #52675f;
+  margin: 10px 0 0;
+}
+.fw-card-notice:empty {
+  display: none;
+}
+.fw-trip-directory {
+  min-width: 0;
+}
+.fw-directory-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #d6e1da;
+}
+.fw-directory-heading h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.fw-directory-heading .fw-secondary {
+  font-size: 12px;
+  min-height: 44px;
+}
+.fw-trip-directory .fw-contacts-empty {
+  border: 0;
+  margin: 0;
+  padding: 26px 0;
+}
+.fw-trip-directory .fw-contacts-empty > p:first-child {
+  font-size: 17px;
+  line-height: 1.5;
+  color: #203d35;
+  font-weight: 600;
+  max-width: 300px;
+}
+.fw-trip-directory .fw-contact-empty-hint {
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 380px;
+  margin: 10px 0 22px;
+}
+.fw-contact-starters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.fw-contact-starters button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  background: #f7faf7;
+  border: 1px solid #d6e1da;
+  border-radius: 6px;
+  padding: 15px 12px;
+  color: #24483b;
+  font-size: 13px;
+  min-height: 48px;
+}
+.fw-contact-starters button:hover {
+  background: #e9f1e9;
+  border-color: #99b5a5;
+}
+.fw-trip-directory .fw-contact-grid {
+  grid-template-columns: 1fr 1fr;
+}
+.fw-trip-directory .fw-contact-list {
+  margin: 0;
+}
+.fw-trip-directory .fw-contact-list li {
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.fw-trip-directory .fw-contact-list li:first-child {
+  border-top: 0;
+}
+.fw-trip-directory .fw-contact-list li > div:first-child {
+  flex-basis: 100%;
+}
+.fw-trip-directory .fw-contact-list li > a {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.fw-trip-directory .fw-contact-tools {
+  margin-left: auto;
+}
+.fw-trip-directory .fw-contact-tools button {
+  min-height: 44px;
+}
+@media (max-width: 1050px) {
+  .fw-trip-contacts .fw-trip-kit {
+    grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+    gap: 24px;
+  }
+}
+@media (max-width: 760px) {
+  .fw-trip-contacts .fw-trip-kit {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    margin-top: 22px;
+  }
+  .fw-travel-pass {
+    padding: 22px;
+  }
+  .fw-trip-directory {
+    border-top: 1px solid #d6e1da;
+    padding-top: 22px;
+  }
+  .fw-trip-directory .fw-contact-grid {
+    grid-template-columns: 1fr;
+  }
+  .fw-directory-heading {
+    align-items: flex-start;
+  }
+  .fw-contact-starters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fw-contact-starters button {
+    font-size: 12px;
+    padding: 12px 8px;
+    gap: 6px;
+  }
+  .fw-trip-contacts .fw-card-download {
+    font-size: 12px;
+  }
+}
+
+.fw-contact-suggestions {
+  border-top: 1px solid #d6e1da;
+  margin-top: 20px;
+  padding-top: 20px;
+}
+.fw-contact-suggestions h4 {
+  font-size: 13px;
+  margin: 0 0 13px;
+  font-weight: 500;
+  color: #52675f;
+}

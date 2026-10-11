@@ -1161,7 +1161,13 @@ export default function App() {
               </button>
             </section>
             <LocalDataInfo lang={lang} />
-            <TravelContacts key={country} country={country} lang={lang} plan={plan} />
+            <TravelContacts
+              key={country}
+              country={country}
+              lang={lang}
+              plan={plan}
+              profile={profile}
+            />
             <div className="fw-hotel-layout">
               <form className="fw-form" onSubmit={savePlan}>
                 <span className="fw-eyebrow">
