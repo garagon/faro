@@ -50,6 +50,6 @@ Required change at deployment: bounded public request rates, sensible upstream-f
 
 ## Top 3 actions
 
-1. Complete hosted CI activation and required branch checks. The public repository and private vulnerability reporting are configured.
+1. Keep required CI checks, private vulnerability reporting and dependency monitoring active as the project evolves.
 2. Implement and validate production HTTP/abuse controls before public hosting.
 3. Validate emergency tasks, source freshness and resource coverage with local operators and real devices.

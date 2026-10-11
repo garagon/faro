@@ -30,7 +30,7 @@ function storage() {
 }
 test('profile restores known countries and language but strips unrelated data', () => {
   assert.deepEqual(
-    parsePreferences({ ...value, gps: [8, -80], name: 'unneeded' }, codes, now),
+    parsePreferences({ ...value, gps: [8, -80], unneeded: 'unneeded' }, codes, now),
     value,
   );
   assert.equal(parsePreferences({ ...value, destination: 'WORLD' }, codes, now), null);
@@ -89,4 +89,43 @@ test('all local records report failed writes/deletes without fallback', async ()
     removeLocal(key, s);
     assert.equal(s.getItem(key), null);
   }
+});
+
+test('contact profile is stored locally, normalized and restored without extra fields', () => {
+  const s = storage();
+  const details = {
+    ...value,
+    name: ' Alex Example ',
+    phone: '+1 (202) 555-0123',
+    email: ' alex@example.com ',
+  };
+  storePreferences(details, codes, s);
+  const restored = parsePreferences(JSON.parse(s.getItem(PREFERENCES_KEY)!), codes);
+  assert.deepEqual(restored, { ...details, name: 'Alex Example', email: 'alex@example.com' });
+  assert.deepEqual(
+    parsePreferences({ ...details, trackingId: 'omit', gps: [1, 2] }, codes),
+    restored,
+  );
+  forgetPreferences(s);
+  assert.equal(s.getItem(PREFERENCES_KEY), null);
+});
+
+test('contact fields reject invalid stored values while accepting legacy and optional fields', () => {
+  assert.ok(parsePreferences(value, codes));
+  assert.ok(parsePreferences({ ...value, name: '', phone: '', email: '' }, codes));
+  for (const extra of [
+    { name: 8 },
+    { name: 'x'.repeat(81) },
+    { name: 'Alex\nExample' },
+    { phone: 'https://example.com' },
+    { phone: '----' },
+    { phone: '+1 202\n555 0123' },
+    { phone: '123' },
+    { phone: '1'.repeat(16) },
+    { email: 'not-an-email' },
+    { email: 'a@b' },
+    { email: 'alex@example.com\nOther' },
+    { email: 5 },
+  ])
+    assert.equal(parsePreferences({ ...value, ...extra }, codes), null);
 });

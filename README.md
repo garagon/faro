@@ -32,8 +32,9 @@ El servidor de desarrollo y el de vista previa incluyen los adaptadores `/api/ig
 - IGC/Universidad de Panamá para Panamá y USGS para el catálogo global, consultados por separado cada 60 segundos mientras la pestaña está visible.
 - Mapa automático con OpenStreetMap, filtros, lista, magnitud, epicentro, hora del evento y hora de consulta.
 - Productos internacionales de tsunami de NOAA/PTWC, con fecha de emisión y límites de cobertura explícitos.
-- Nacionalidad y destino guardados localmente; ayuda consular cuando hay una representación verificada en el directorio.
-- Plan del hotel, contactos personales y mensajes de estado que la persona revisa y comparte manualmente.
+- Onboarding con nombre, teléfono, correo, nacionalidad y destino guardados localmente; ayuda consular cuando hay una representación verificada en el directorio.
+- Plan del hotel y contactos personales guardados en el navegador.
+- Mensajes de estado con lugar, acompañantes, ayuda necesaria, disponibilidad y próxima hora de contacto; vista previa en español o inglés y envío manual. Puede adjuntarse un reporte sísmico seleccionado explícitamente.
 - Recomendaciones por situación en español e inglés, con enlaces a sus fuentes.
 
 La relación de réplica no se deduce de cercanía entre sismos. Un punto personal no es un refugio certificado. La falta de datos no significa ausencia de peligro. Los teléfonos y las misiones diplomáticas tienen cobertura limitada: [fuentes y cobertura](docs/data-sources.md).

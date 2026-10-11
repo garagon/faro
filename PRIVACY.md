@@ -29,3 +29,7 @@ Los datos del viaje se guardan solo en el navegador de ese dispositivo. No se en
 ## Contributors
 
 Do not commit browser storage dumps, actual traveler contacts, private locations, personal message text, environment files, credentials, screenshots or network captures. Publication uses a file allowlist and a heuristic secret/path scan; manual review remains necessary.
+
+## Contact details in the trip profile
+
+Onboarding can save your name, phone and email alongside the destination and nationality in browser storage. These fields do not create an account and are not submitted to a server. The status composer uses the saved name; phone and email are excluded unless you select their inclusion in the message. Review the preview before manually sharing. Deleting the trip profile removes these profile fields; copies in previously prepared messages remain in the separate message history until that history is deleted.

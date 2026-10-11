@@ -63,3 +63,7 @@ The [extension guide](extending-faro.md) provides a reader example, integration 
 **Is it offline?** Downloaded text works offline; whole-app startup is not guaranteed offline.
 
 Initial maintainer: [@garagon](https://github.com/garagon). Use synthetic data in issues, follow the [code of conduct](../CODE_OF_CONDUCT.md), and report vulnerabilities through [private reporting](https://github.com/garagon/faro/security/advisories/new).
+
+## Contextual check-ins
+
+The status composer keeps location, reachability and the next check-in time visible. Moving and help statuses reveal destination or assistance fields. Optional details include companions, an alternative contact and an explicitly selected earthquake report. The message language can differ from the interface language; free text is preserved as entered. The preview updates locally, and sharing stays disabled until the person confirms the current message. Prior history is never treated as current status.
