@@ -79,13 +79,14 @@ export default function LiveActivity(p: Props) {
       {latest && (
         <div className="fw-latest-event">
           <div className="fw-latest-magnitude">
-            <span>{t('ÚLTIMO SISMO EN ESTA VISTA', 'LATEST EARTHQUAKE IN THIS VIEW')}</span>
-            <strong>
-              <small>M</small> {latest.mag?.toFixed(1) ?? '—'}
-            </strong>
+            <strong>{latest.mag?.toFixed(1) ?? '—'}</strong>
+            <span>{t('Magnitud', 'Magnitude')}</span>
           </div>
           <div className="fw-latest-place">
-            <h2>{latest.place}</h2>
+            <span className="fw-latest-kicker">
+              {t('Último sismo en esta vista', 'Latest earthquake in this view')}
+            </span>
+            <h2>{latest.place.replace(/^Localizado en\s+/i, '').replace(/(\d)km\b/g, '$1 km')}</h2>
             <p>
               <time
                 dateTime={new Date(latest.time).toISOString()}
@@ -119,7 +120,7 @@ export default function LiveActivity(p: Props) {
           <div className="fw-arrival-content">
             <p role="status">
               <strong>
-                {t('Recibido', 'Received')} {clock(fresh.receivedAt)} · M{' '}
+                {t('Recibido', 'Received')} {clock(fresh.receivedAt)} · {t('Magnitud', 'Magnitude')}{' '}
                 {fresh.event.mag?.toFixed(1) ?? '—'}
               </strong>{' '}
               — {fresh.event.place}
@@ -175,7 +176,10 @@ export default function LiveActivity(p: Props) {
           {updates.length ? (
             updates.map((u) => (
               <button key={key(u)} onClick={() => p.onDetails(u.event)}>
-                <strong>M {u.event.mag?.toFixed(1) ?? '—'}</strong>
+                <strong>
+                  {u.event.mag?.toFixed(1) ?? '—'}
+                  <small>{t('Magnitud', 'Magnitude')}</small>
+                </strong>
                 <span>
                   <b>{u.event.place}</b>
                   <small>

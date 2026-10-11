@@ -489,8 +489,9 @@
   background: #fbf3ed;
   color: #a65838;
   font-size: 23px;
-  min-width: 48px;
-  padding: 9px 5px 6px;
+  min-width: 67px;
+  flex-shrink: 0;
+  padding: 9px 7px 6px;
   text-align: center;
 }
 .fw-mag small {
@@ -1533,7 +1534,7 @@
   }
   .fw-mag {
     font-size: 23px;
-    min-width: 46px;
+    min-width: 63px;
   }
   .fw-event > span b {
     font-size: 12px;

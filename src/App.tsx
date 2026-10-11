@@ -705,7 +705,9 @@ export default function App() {
                   <strong>{t('Filtros', 'Filters')}</strong>
                   <span>
                     {catalog} · {hours === 168 ? t('7 días', '7 days') : `${hours} h`} ·{' '}
-                    {minMag ? `M ${minMag}+` : t('Todas las magnitudes', 'All magnitudes')}
+                    {minMag
+                      ? `${t('Magnitud', 'Magnitude')} ≥ ${minMag}`
+                      : t('Todas las magnitudes', 'All magnitudes')}
                     {maxDepth < 800 ? ` · ≤ ${maxDepth} km` : ''}
                     {scope === 'nearby' ? ` · ${radius} km` : ''}
                   </span>
@@ -744,7 +746,7 @@ export default function App() {
                       <option value={0}>{t('Todas', 'All')}</option>
                       {[2.5, 4, 5, 6].map((m) => (
                         <option key={m} value={m}>
-                          M {m}+
+                          ≥ {m}
                         </option>
                       ))}
                     </select>
@@ -873,8 +875,8 @@ export default function App() {
                   <div className="fw-map-foot">
                     <span>
                       <i />
-                      {t('Sismo · M', 'Earthquake · M')}{' '}
-                      <b>{t('Grupos · cantidad', 'Clusters · count')}</b>
+                      {t('Marcador: magnitud', 'Pin: magnitude')}{' '}
+                      <b>{t('Círculo: cantidad de sismos', 'Circle: earthquake count')}</b>
                       {visiblePoint && (
                         <b className="fw-personal-legend">
                           {t(
@@ -925,7 +927,7 @@ export default function App() {
                     >
                       <strong className="fw-mag">
                         {q.mag?.toFixed(1) ?? '—'}
-                        <small>{q.magType || 'M'}</small>
+                        <small>{t('Magnitud', 'Magnitude')}</small>
                       </strong>
                       <span>
                         <b>
