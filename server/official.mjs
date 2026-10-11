@@ -105,17 +105,25 @@ export function parseProduct(js, product) {
   };
 }
 export function summarizeBulletin(meta, text) {
-  const normalized = text.replace(/\s+/g, ' ');
-  const ended = /THREAT.*?(?:HAS NOW PASSED|HAS PASSED)|NO LONGER A TSUNAMI THREAT/.test(
-    normalized,
-  );
-  const info = meta.product.endsWith('42') || meta.product.endsWith('43');
   const section = text.match(/\nEVALUATION\s*\n-+\s*\n([\s\S]*?)(?=\n[A-Z][A-Z .-]{5,}\n|$)/);
+  const evaluation = (section?.[1] || '').trim().slice(0, 3000);
+  const normalized = evaluation.replace(/\s+/g, ' ').toUpperCase();
+  // Only an explicit, event-wide conclusion closes a threat. Regional or
+  // conditional cancellation language must not close a broader bulletin.
+  const ended =
+    /(?:^|\*|\.\.\.)\s*(?:THE TSUNAMI THREAT (?:FROM THIS EARTHQUAKE )?HAS (?:NOW )?PASSED(?: AND THERE IS NO FURTHER THREAT)?|THERE IS NO LONGER A TSUNAMI THREAT FROM THIS EARTHQUAKE)\s*(?:\.|$)/.test(
+      normalized,
+    );
+  const cancelled =
+    /(?:^|\*|\.\.\.)\s*(?:THE|ALL) TSUNAMI (?:WARNING|WARNINGS|ADVISORIES|WATCHES)(?:,? (?:ADVISORIES|AND WATCHES))* (?:IS|ARE|HAS BEEN|HAVE BEEN) CANCELLED\s*(?:\.|$)/.test(
+      normalized,
+    );
+  const info = meta.product.endsWith('42') || meta.product.endsWith('43');
   return {
     ...meta,
     basin: meta.product.startsWith('WEPA') ? 'Pacific' : 'Caribbean',
-    kind: ended ? 'ended' : info ? 'information' : 'threat',
-    evaluation: (section?.[1] || '').trim().slice(0, 3000),
+    kind: cancelled ? 'cancelled' : ended ? 'ended' : info ? 'information' : 'threat',
+    evaluation,
   };
 }
 export async function officialData(path) {

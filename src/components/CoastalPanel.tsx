@@ -2,17 +2,12 @@ import { useEffect, useState } from 'react';
 import { WavesIcon, ArrowUpRightIcon, ArrowClockwiseIcon } from '@phosphor-icons/react';
 import type { Geo } from './WebMap.tsx';
 import { coastDistanceKm, type CoastLine } from '../lib/coast.ts';
-type Bulletin = {
-  product: string;
-  issued: number;
-  eventId: string;
-  place: string;
-  url: string;
-  basin: string;
-  kind: string;
-  evaluation: string;
-};
-type Data = { bulletins: Bulletin[]; partial: boolean; fetched: number };
+import {
+  classifyBulletins,
+  parseTsunamiData,
+  type TsunamiData,
+  type BulletinState,
+} from '../lib/tsunami.ts';
 let coastCache: Promise<CoastLine[]> | null = null;
 export default function CoastalPanel({
   lang,
@@ -24,7 +19,7 @@ export default function CoastalPanel({
   country: string;
 }) {
   const t = (es: string, en: string) => (lang === 'es' ? es : en);
-  const [data, setData] = useState<Data | null>(null),
+  const [data, setData] = useState<TsunamiData | null>(null),
     [error, setError] = useState(false),
     [busy, setBusy] = useState(false),
     [refresh, setRefresh] = useState(0),
@@ -42,10 +37,10 @@ export default function CoastalPanel({
           signal: AbortSignal.any([ctrl.signal, AbortSignal.timeout(20000)]),
         });
         if (!r.ok) throw Error();
-        const d = await r.json();
-        if (!Array.isArray(d.bulletins) || !Number.isFinite(d.fetched)) throw Error();
+        const d = parseTsunamiData(await r.json());
         if (!stop) {
           setData(d);
+          setNow(Date.now());
           setError(false);
         }
       } catch {
@@ -112,10 +107,84 @@ export default function CoastalPanel({
       timeZone: 'America/Panama',
     }).format(n);
   const near = geo && distance !== null && distance <= 20 + geo.accuracy / 1000;
-  const recentThreats =
-    data?.bulletins.filter(
-      (b) => b.kind === 'threat' && now - b.issued < 6 * 3600000 && now >= b.issued,
-    ) || [];
+  const rows = data ? classifyBulletins(data, now, error) : [];
+  const current = rows.filter((r) => r.needsReview);
+  const archived = rows.filter((r) => !r.needsReview);
+  const labels: Record<BulletinState, string> = {
+    ended: t('Cierre de amenaza publicado', 'Threat ended in this bulletin'),
+    cancelled: t('Cancelación publicada', 'Cancellation published'),
+    information: t('Informativo · no es una alerta', 'Information · not an alert'),
+    superseded: t('Reemplazado por un boletín posterior', 'Superseded by a later bulletin'),
+    unconfirmed: t('Vigencia sin confirmar', 'Current status unconfirmed'),
+  };
+  const renderBulletin = (row: (typeof rows)[number]) => {
+    const { bulletin: b, state } = row;
+    return (
+      <article
+        className="fw-bulletin"
+        data-state={state}
+        key={`${b.product}:${b.eventId}:${b.issued}`}
+      >
+        <div className="fw-bulletin-state">{labels[state]}</div>
+        <h3>{b.place}</h3>
+        <p className="fw-bulletin-meta">
+          {t('Emitido', 'Issued')}:{' '}
+          <time dateTime={new Date(b.issued).toISOString()}>{date(b.issued)}</time> · America/Panama
+        </p>
+        <p>
+          {b.product} ·{' '}
+          {b.basin === 'Pacific' ? t('Pacífico', 'Pacific') : t('Caribe', 'Caribbean')} ·{' '}
+          {t('Evento', 'Event')} {b.eventId}
+        </p>
+        {row.replacedAt && (
+          <p>
+            {t('Actualización posterior', 'Later update')}: {date(row.replacedAt)}
+          </p>
+        )}
+        {state === 'ended' || state === 'cancelled' ? (
+          <p>
+            {t(
+              'Este estado corresponde al evento y al ámbito de ese boletín. No describe la situación actual de tu ubicación.',
+              'This status applies to the event and area in that bulletin. It does not describe the current situation at your location.',
+            )}
+          </p>
+        ) : state === 'unconfirmed' ? (
+          <p>
+            {t(
+              'Consulta la última actualización oficial y las costas afectadas. Faro no confirma que exista una alerta vigente para tu ubicación.',
+              'Check the latest official update and affected coasts. Faro does not confirm an active alert for your location.',
+            )}
+          </p>
+        ) : null}
+        {!row.recent && (
+          <small>
+            {t(
+              'Archivo: fuera de la ventana de 6 horas. La antigüedad no equivale a cancelación.',
+              'Archive: outside the 6-hour display window. Age does not mean cancellation.',
+            )}
+          </small>
+        )}
+        <div className="fw-bulletin-links">
+          <a href={b.url} target="_blank" rel="noreferrer">
+            {t('Leer comunicado', 'Read statement')} <ArrowUpRightIcon size={14} />
+          </a>
+          <a href="https://www.tsunami.gov/" target="_blank" rel="noreferrer">
+            {t('Consultar última actualización', 'Check latest update')} ↗
+          </a>
+        </div>
+        <details>
+          <summary>{t('Evaluación original (inglés)', 'Original evaluation (English)')}</summary>
+          <pre>
+            {b.evaluation ||
+              t(
+                'Sin evaluación legible. Abre el comunicado oficial.',
+                'No readable evaluation. Open the official statement.',
+              )}
+          </pre>
+        </details>
+      </article>
+    );
+  };
   return (
     <section
       className={`fw-coast ${near ? 'near-coast' : ''}`}
@@ -201,69 +270,56 @@ export default function CoastalPanel({
           )}
         </div>
       ) : null}
-      {recentThreats.length > 0 && (
-        <div className="fw-warning">
-          {t(
-            'Hay un mensaje reciente de amenaza en los productos consultados. Revisa las costas afectadas en el boletín; no se ha determinado si aplica a tu ubicación.',
-            'A recent threat message exists in the products checked. Review affected coasts in the bulletin; applicability to your location has not been determined.',
-          )}
-        </div>
-      )}
-      <details>
-        <summary>
-          {t('Boletines NOAA', 'NOAA bulletins')} {data ? `(${data.bulletins.length})` : ''}
-        </summary>
+      <div className="fw-tsunami-status" role="status">
+        <strong>
+          {t('Avisos locales: confirmar con la autoridad', 'Local alerts: check with authorities')}
+        </strong>
         <p>
           {t(
-            'Pacífico y Caribe internacionales. Un boletín antiguo no es una alerta vigente ni prueba que hoy no haya peligro. La autoridad nacional determina la alerta local.',
-            'International Pacific and Caribbean. An old bulletin is neither a current alert nor proof of no danger today. National authorities determine local alerts.',
+            'Estos productos internacionales no confirman el estado de una alerta en tu ubicación. Un comunicado informativo o un cierre anterior no es una alerta activa.',
+            'These international products do not confirm alert status at your location. An information statement or a previous closure is not an active alert.',
           )}
         </p>
-        {data?.bulletins.map((b) => (
-          <article className="fw-bulletin" key={b.product}>
-            <span className="fw-eyebrow">
-              {b.product} ·{' '}
-              {b.basin === 'Pacific' ? t('Pacífico', 'Pacific') : t('Caribe', 'Caribbean')}
-            </span>
-            <h3>{b.place}</h3>
-            <p>{date(b.issued)} · America/Panama</p>
-            <b>
-              {now - b.issued > 6 * 3600000
-                ? t('Boletín anterior', 'Past bulletin')
-                : t(
-                    'Mensaje reciente · verificar ámbito',
-                    'Recent message · check applicable area',
-                  )}
-            </b>
-            <p>
-              {b.kind === 'ended'
-                ? t(
-                    'El boletín da por terminada la amenaza para ese evento.',
-                    'The bulletin ends the threat for that specific event.',
-                  )
-                : b.kind === 'information'
-                  ? t(
-                      'Comunicado informativo para ese evento.',
-                      'Information statement for that specific event.',
-                    )
-                  : t(
-                      'Mensaje de amenaza: consultar texto oficial.',
-                      'Threat message: read the official text.',
-                    )}
-            </p>
-            <a href={b.url} target="_blank" rel="noreferrer">
-              {t('Leer boletín oficial', 'Read official bulletin')}
-              <ArrowUpRightIcon size={16} />
-            </a>
-            <details>
-              <summary>
-                {t('Evaluación original (inglés)', 'Original evaluation (English)')}
-              </summary>
-              <pre>{b.evaluation}</pre>
-            </details>
-          </article>
-        ))}
-      </details>
+        {data && rows.every((r) => r.reliable) && current.length === 0 && (
+          <p>
+            {t(
+              'No hay mensajes de amenaza de las últimas 6 horas entre los productos recibidos. Esto no confirma ausencia de peligro.',
+              'No threat messages from the last 6 hours appear in the products received. This does not confirm absence of danger.',
+            )}
+          </p>
+        )}
+        {data && rows.some((r) => !r.reliable) && !error && !data.partial && (
+          <p>
+            {t(
+              'La consulta está desactualizada. No se puede confirmar si hubo cambios.',
+              'This check is out of date. Changes cannot be confirmed.',
+            )}
+          </p>
+        )}
+      </div>
+      {current.length > 0 && (
+        <section className="fw-bulletin-current">
+          <h3>
+            {t('Mensajes recientes: verificar actualización', 'Recent messages: check for updates')}
+          </h3>
+          {current.map(renderBulletin)}
+        </section>
+      )}
+      {data && (
+        <details className="fw-bulletin-archive">
+          <summary>
+            {t('Archivo de comunicados NOAA', 'NOAA statement archive')}{' '}
+            <span>({archived.length})</span>
+          </summary>
+          <p>
+            {t(
+              'Último comunicado recibido de cada producto. Incluye información y cierres de eventos anteriores; no es una lista de alertas activas ni un historial completo.',
+              'Latest statement received for each product. Includes information and closures for past events; this is not a list of active alerts or a complete history.',
+            )}
+          </p>
+          {archived.map(renderBulletin)}
+        </details>
+      )}
       <div className="fw-coast-foot">
         <span>
           {data
