@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+artifacts/
+licenses/
+LICENSE
+package-lock.json
+public/data/coastline.json
+src/data/countries.json
+docs/dependencies.json

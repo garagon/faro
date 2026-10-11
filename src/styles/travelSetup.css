@@ -1,0 +1,458 @@
+.fw-setup {
+  position: fixed;
+  z-index: 3002;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #d3dfd7;
+  border-radius: 14px;
+  padding: 24px 28px;
+  color: #19332f;
+  box-shadow: 0 24px 100px #09271c33;
+  font:
+    14px/1.5 'DM Sans',
+    sans-serif;
+}
+.fw-setup * {
+  box-sizing: border-box;
+}
+.fw-setup button,
+.fw-setup select {
+  font: inherit;
+}
+.fw-setup button {
+  cursor: pointer;
+}
+.fw-setup :focus-visible {
+  outline: 3px solid #47869d;
+  outline-offset: 3px;
+}
+.fw-setup-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 13px;
+}
+.fw-setup-brand > span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 10px;
+  letter-spacing: 1.25px;
+  color: #527465;
+  font-weight: 700;
+}
+.fw-setup-close {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 6px;
+  color: #547265;
+  background: #f1f5f1;
+}
+.fw-setup h2 {
+  font-size: 27px;
+  letter-spacing: -0.6px;
+  line-height: 1.2;
+  margin: 0 0 10px;
+}
+.fw-setup > p {
+  font-size: 13px;
+  color: #60736a;
+  margin: 0 0 22px;
+}
+.fw-setup-language {
+  border: 0;
+  padding: 0;
+  margin: 0 0 17px;
+  display: flex;
+  gap: 9px;
+}
+.fw-setup-language legend {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.fw-setup-language label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid #cad8cf;
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.fw-setup-language label:has(input:checked) {
+  background: #eaf2eb;
+  border-color: #4d8166;
+}
+.fw-setup input[type='radio'] {
+  accent-color: #245f4e;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+}
+.fw-setup-field {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+.fw-setup-field > span {
+  font-weight: 400;
+  color: #6b7b71;
+  margin-left: 7px;
+}
+.fw-setup-field select {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 7px;
+  border: 1px solid #cad8cf;
+  background: #fff;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 16px;
+  color: #183c2e;
+}
+.fw-setup-hint {
+  font-size: 11px;
+  color: #60736a;
+  margin: 0 0 18px;
+}
+.fw-setup-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #f2f5f0;
+  border-radius: 7px;
+  padding: 12px;
+  margin-bottom: 18px;
+}
+.fw-setup-privacy svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #537661;
+}
+.fw-setup-privacy p {
+  margin: 0;
+  font-size: 11px;
+  color: #53685a;
+  line-height: 1.6;
+}
+.fw-setup-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 6px;
+  background: #215d4c;
+  color: #fff;
+  font-weight: 600 !important;
+}
+.fw-setup-skip {
+  display: block;
+  margin: 5px auto 0;
+  padding: 10px 16px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: #506c5e;
+  font-size: 12px !important;
+}
+.fw-setup-error {
+  color: #9b3f2e;
+  background: #fff1ed;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 12px;
+}
+.fw-setup-delete {
+  border-top: 1px solid #e0e6df;
+  margin-top: 10px;
+  padding-top: 12px;
+}
+.fw-setup-delete button {
+  border: 0;
+  background: none;
+  color: #8b493c;
+  font-size: 11px;
+  padding: 10px;
+  min-height: 44px;
+}
+.fw-setup-delete p {
+  font-size: 12px;
+  color: #6e5a50;
+}
+.fw-setup-delete > div {
+  display: flex;
+  gap: 14px;
+}
+.fw-profile-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: #d5e4dd !important;
+  padding: 0 0 17px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+}
+.fw-profile-button svg {
+  flex-shrink: 0;
+}
+.fw-profile-button small {
+  display: block;
+  font-size: 10px;
+  color: #a3c1b1;
+  margin-top: 3px;
+}
+.fw-trip-profile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 19px 22px;
+  border: 1px solid #d3dfd7;
+  border-radius: 8px;
+  background: #fff;
+  margin-bottom: 20px;
+}
+.fw-trip-profile h2 {
+  font-size: 17px;
+  margin: 0 0 7px;
+}
+.fw-trip-profile p {
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.7;
+}
+.fw-trip-profile button {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+.fw-save-feedback {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #eaf2e8;
+  padding: 12px 16px;
+  margin: 0 0 18px;
+  border: 1px solid #d0dfcf;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.fw-save-feedback > span {
+  flex: 1;
+}
+.fw-save-feedback button {
+  border: 0;
+  background: none;
+  color: #315d41;
+  min-height: 44px;
+  padding: 8px;
+}
+/* Practical touch sizes and stable icons on narrow screens. */
+.fw-app button > svg,
+.fw-app a > svg {
+  flex-shrink: 0;
+}
+.fw-app .fw-language button {
+  min-width: 44px;
+  min-height: 36px;
+}
+.fw-country .fw-icon {
+  width: 44px;
+  height: 44px;
+}
+.fw-feed-foot .fw-icon {
+  width: 44px;
+  height: 44px;
+}
+.fw-monitor-check button {
+  min-height: 44px;
+}
+.fw-monitor-foot button {
+  min-height: 44px;
+}
+.fw-arrival-actions button,
+.fw-arrival-dismiss {
+  min-height: 44px;
+  min-width: 44px;
+}
+.fw-latest-actions button {
+  min-height: 44px;
+}
+@media (max-width: 760px) {
+  .fw-sidebar-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .fw-profile-button {
+    width: 44px;
+    height: 44px;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0;
+    color: #ecf2e8 !important;
+    border: 1px solid #547161;
+    border-radius: 6px;
+  }
+  .fw-profile-button > span {
+    display: none;
+  }
+  .fw-header {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .fw-brand {
+    font-size: 25px !important;
+  }
+  .fw-trip-profile {
+    padding: 18px 16px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .fw-trip-profile button {
+    width: 100%;
+    justify-content: center;
+  }
+  .fw-main[data-screen='activity'] .fw-heading > .fw-primary {
+    font-size: 12px;
+    gap: 7px;
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+  .fw-main[data-screen='activity'] .fw-heading > .fw-primary svg {
+    width: 18px;
+    height: 18px;
+  }
+  .fw-main[data-screen='activity'] .fw-heading {
+    align-items: flex-start;
+  }
+  .fw-toolbar select,
+  .fw-toolbar .fw-view,
+  .fw-filter-extra > summary {
+    min-height: 44px;
+    height: auto;
+  }
+  .fw-main .fw-context .fw-live {
+    display: none;
+  }
+  .fw-country select {
+    max-width: 215px;
+    min-height: 44px;
+  }
+  .fw-save-feedback {
+    font-size: 12px;
+  }
+  .fw-app .fw-event > span small {
+    font-size: 11px;
+  }
+  .fw-map-head small {
+    font-size: 10px;
+  }
+}
+@media (max-width: 480px) {
+  .fw-setup {
+    padding: 16px 20px;
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 10px;
+  }
+  .fw-setup-brand {
+    margin-bottom: 9px;
+  }
+  .fw-setup h2 {
+    font-size: 24px;
+  }
+  .fw-setup > p {
+    margin-bottom: 17px;
+  }
+  .fw-setup-language {
+    margin-bottom: 14px;
+  }
+  .fw-setup-field {
+    margin-bottom: 14px;
+  }
+  .fw-setup-privacy {
+    margin-bottom: 13px;
+  }
+}
+.fw-main .fw-heading > .fw-primary svg {
+  display: block;
+}
+.fw-local-data {
+  margin: -8px 0 24px;
+  border-bottom: 1px solid #d5dfd9;
+  padding: 0 2px 14px;
+  color: #3e5c50;
+  font-size: 12px;
+}
+.fw-local-data summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  font-weight: 600;
+}
+.fw-local-data summary:after {
+  content: '+';
+  margin-left: auto;
+  font-size: 20px;
+  font-weight: 400;
+}
+.fw-local-data[open] summary:after {
+  content: '−';
+}
+.fw-local-data > div {
+  max-width: 780px;
+  padding: 0 0 4px 27px;
+  line-height: 1.7;
+}
+.fw-local-data p {
+  margin: 0 0 12px;
+}
+.fw-local-data dl {
+  margin: 16px 0 0;
+}
+.fw-local-data dl > div {
+  display: grid;
+  grid-template-columns: 155px 1fr;
+  gap: 18px;
+  padding: 10px 0;
+  border-top: 1px solid #e0e6e1;
+}
+.fw-local-data dt {
+  font-weight: 600;
+}
+.fw-local-data dd {
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .fw-local-data dl > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+  .fw-local-data > div {
+    padding-left: 0;
+  }
+}

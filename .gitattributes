@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.png binary
+*.woff binary
+*.woff2 binary
+public/data/coastline.json linguist-generated=true
+src/data/countries.json linguist-generated=true
