@@ -1,6 +1,6 @@
 # Source publication readiness
 
-Reviewed 2026-10-11. This assessment concerns publishing the source, not certifying an emergency service. No Git repository, remote, deployment or external account has been created.
+Reviewed 2026-10-11. This assessment concerns publishing the source, not certifying an emergency service. Source is published at [garagon/faro](https://github.com/garagon/faro), under Apache-2.0. No production deployment was created.
 
 ## Prepared
 
@@ -21,9 +21,9 @@ Reviewed 2026-10-11. This assessment concerns publishing the source, not certify
 - Browser checks of this separate copy: fresh onboarding, live catalogue rendering, automatic map imagery, language switching, current-message preparation and responsive layouts. Only synthetic personal state was used and no messages or emergency calls were sent.
 - Large-bundle warning remains. This is a maintenance/performance limitation, not a claim of production performance.
 
-## When the repository is created
+## Repository configuration
 
-Publish the clean source directory or the contents of its source archive, not a parent workspace. Configure the actual maintainer/security contact, private vulnerability reporting, branch protection and required CI checks. Verify the first hosted CI run. These settings require a repository and are intentionally not represented as already enabled.
+The public repository was created from the reviewed source tree without importing prototype history. Maintainer/security contact is configured, private vulnerability reporting and vulnerability alerts are enabled. The CI workflow is prepared locally; publishing it requires the GitHub session to have workflow permission. Hosted CI and required branch checks remain pending until that permission is available.
 
 ## Before production use
 

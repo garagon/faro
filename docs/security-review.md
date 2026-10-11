@@ -36,7 +36,7 @@ Required change at deployment: bounded public request rates, sensible upstream-f
 
 - Publication scanner reports paths/line numbers only; matching credential values are never echoed.
 - No matching credentials or private filesystem paths found in allowed files. Test fixtures are synthetic; institutional addresses/phone numbers are intentionally public and attributed.
-- No Git history exists in the prepared directory, so historical leak scanning is not applicable. Recheck if history is imported later.
+- The review began from a clean tree without inherited Git history. Only reviewed source files were included in the initial commit. Recheck if other history is imported later.
 - No cookie/session, SQL, auth, OAuth, payment, webhook, file-upload or AI/MCP surface exists in this application; those conditional checks are not applicable.
 - React escapes text; map popup text uses DOM text content. SVG marker HTML comes from static React icon rendering, not untrusted HTML. USGS links are restricted to its HTTPS host; NOAA product paths are validated without executing upstream JavaScript; server redirects are rejected.
 - Source errors return generic failure JSON rather than stack traces. Personal fields have no network fallback. Manual sharing and directions are explicit actions.
@@ -50,6 +50,6 @@ Required change at deployment: bounded public request rates, sensible upstream-f
 
 ## Top 3 actions
 
-1. Create the repository from the reviewed clean tree, then configure private reporting and required CI checks.
+1. Complete hosted CI activation and required branch checks. The public repository and private vulnerability reporting are configured.
 2. Implement and validate production HTTP/abuse controls before public hosting.
 3. Validate emergency tasks, source freshness and resource coverage with local operators and real devices.
