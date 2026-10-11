@@ -1909,3 +1909,70 @@
     transition: none;
   }
 }
+
+.fw-tsunami-status {
+  background: #fff;
+  border: 1px solid #d6dfdf;
+  border-radius: 7px;
+  padding: 16px;
+  margin: 18px 0;
+}
+.fw-tsunami-status strong {
+  font-size: 14px;
+  color: #354e54;
+}
+.fw-tsunami-status p {
+  font-size: 12px;
+  line-height: 1.65;
+  margin: 7px 0 0;
+}
+.fw-bulletin-archive {
+  border-top: 1px solid #d6dfdf;
+  padding-top: 14px;
+}
+.fw-bulletin-archive > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.fw-bulletin-archive > p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.fw-bulletin-archive .fw-bulletin {
+  border: 0;
+  border-top: 1px solid #d6dfdf;
+  border-radius: 0;
+  background: transparent;
+  padding: 16px 0;
+  margin: 0;
+}
+.fw-bulletin-state {
+  display: inline-block;
+  background: #edf0f2;
+  border: 1px solid #d8e0e3;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #40545f;
+  font-size: 12px;
+  font-weight: 600;
+}
+.fw-bulletin h3 {
+  font-size: 15px;
+  margin: 10px 0 6px;
+}
+.fw-bulletin p,
+.fw-bulletin small {
+  font-size: 12px;
+  line-height: 1.65;
+}
+.fw-bulletin-links {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+  font-size: 12px;
+}
+.fw-bulletin-current > h3 {
+  font-size: 15px;
+}

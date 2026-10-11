@@ -56,3 +56,37 @@ test('NOAA final bulletin ends only that event; issue time is preserved', () => 
   assert.equal(summarizeBulletin({ ...p, product: 'WEPA42' }, 'INFORMATION').kind, 'information');
   assert.equal(summarizeBulletin(p, 'THREAT EXISTS').kind, 'threat');
 });
+
+test('NOAA cancellation must be explicit and event-wide in the evaluation', () => {
+  const p = parseProduct(`var PHEBWEPA40 = ${JSON.stringify(meta)};`, 'WEPA40');
+  const body = (text) => `\nEVALUATION\n----------\n${text}\n`;
+  assert.equal(
+    summarizeBulletin(p, body('THE TSUNAMI WARNING HAS BEEN CANCELLED.')).kind,
+    'cancelled',
+  );
+  assert.equal(
+    summarizeBulletin(
+      p,
+      body('THE TSUNAMI THREAT HAS PASSED FOR COAST A. THREAT REMAINS FOR COAST B.'),
+    ).kind,
+    'threat',
+  );
+  assert.equal(
+    summarizeBulletin(p, body('THE TSUNAMI WARNING IS CANCELLED FOR COAST A.')).kind,
+    'threat',
+  );
+  assert.equal(summarizeBulletin(p, body('IF THE TSUNAMI THREAT HAS PASSED.')).kind, 'threat');
+  assert.equal(
+    summarizeBulletin(p, '\nNEXT UPDATE\n-----------\nTHE TSUNAMI THREAT HAS PASSED.').kind,
+    'threat',
+  );
+  assert.equal(
+    summarizeBulletin(
+      p,
+      body(
+        '* BASED ON ALL AVAILABLE DATA... THE TSUNAMI THREAT FROM THIS EARTHQUAKE HAS PASSED AND THERE IS NO FURTHER THREAT.',
+      ),
+    ).kind,
+    'ended',
+  );
+});

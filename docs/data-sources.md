@@ -19,3 +19,11 @@ Guidance links to SENAPRED, CDC, NOAA and national/local authorities. Chilean ev
 ## Updating records
 
 Record an official source, applicable country/jurisdiction, review date and uncertainty. Retain source-issued dates separately from fetch time. Use synthetic test fixtures; do not commit a live cache as application data. A missing/failed source must remain visibly missing/failed. Have relevant authorities or qualified local operators validate safety-critical wording before deployment.
+
+## Estado de los comunicados de tsunami
+
+Los productos internacionales NOAA/PTWC consultados no equivalen a alertas locales. Faro distingue comunicados informativos, cierres o cancelaciones explícitos y registros reemplazados por uno posterior del mismo evento y cuenca. No infiere un cierre a partir de texto condicional o de una cancelación limitada a otra costa.
+
+La ventana de seis horas organiza la presentación; no es un vencimiento oficial. Los mensajes anteriores se muestran en un archivo plegado, con emisión y estado del boletín. Los mensajes de amenaza recientes quedan como vigencia sin confirmar, enlazados a la actualización oficial. Una consulta fallida, parcial o con más de dos minutos no confirma vigencia. El archivo contiene los últimos productos recibidos, no toda la secuencia de cada evento.
+
+Fuentes: [productos NOAA](https://www.tsunami.gov/?page=product_list) y [actualización y cancelación de avisos](https://www.weather.gov/safety/tsunami-alerts).
