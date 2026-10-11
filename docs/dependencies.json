@@ -439,7 +439,7 @@
   },
   {
     "name": "@vitejs/plugin-react",
-    "version": "6.0.3",
+    "version": "6.1.2",
     "license": "MIT",
     "development": true
   },

@@ -3382,7 +3382,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-===== @vitejs/plugin-react@6.0.3 (LICENSE) =====
+===== @vitejs/plugin-react@6.1.2 (LICENSE) =====
 
 MIT License
 
