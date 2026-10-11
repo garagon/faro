@@ -93,15 +93,18 @@ export default function TravelSetup(p: Props) {
             </Dialog.Close>
           </div>
           <Dialog.Title>
-            {p.saved
-              ? t('Datos de tu viaje', 'Your trip preferences')
-              : t('Configura tu viaje', 'Set up your trip')}
+            {step === 0 ? t('Tus datos', 'Your details') : t('Tu viaje', 'Your trip')}
           </Dialog.Title>
           <Dialog.Description>
-            {t(
-              'Tu viaje y tus datos de contacto, guardados en este dispositivo.',
-              'Your trip and contact details, saved on this device.',
-            )}
+            {step === 0
+              ? t(
+                  'Cómo te llamas y cómo pueden contactarte.',
+                  'Your name and how people can reach you.',
+                )
+              : t(
+                  'Dónde estás y qué representación consular necesitas.',
+                  'Where you are and which consular representation you need.',
+                )}
           </Dialog.Description>
           {!p.saved && (
             <button className="fw-setup-emergency" onClick={() => p.onHelp(destination)}>
@@ -109,35 +112,14 @@ export default function TravelSetup(p: Props) {
             </button>
           )}
           <div className="fw-setup-progress" aria-label={t('Progreso', 'Progress')}>
-            <span className={step === 0 ? 'active' : ''}>{t('1 · Tu viaje', '1 · Your trip')}</span>
-            <span className={step === 1 ? 'active' : ''}>
-              {t('2 · Tus datos', '2 · Your details')}
+            <span className={step === 0 ? 'active' : ''}>
+              {t('1 · Tus datos', '1 · Your details')}
             </span>
+            <span className={step === 1 ? 'active' : ''}>{t('2 · Tu viaje', '2 · Your trip')}</span>
           </div>
           <form onSubmit={save}>
-            {step === 0 ? (
+            {step === 1 ? (
               <>
-                <fieldset className="fw-setup-language">
-                  <legend>{t('Idioma', 'Language')}</legend>
-                  <label>
-                    <input
-                      type="radio"
-                      name="setup-language"
-                      checked={language === 'es'}
-                      onChange={() => setLanguage('es')}
-                    />
-                    Español
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="setup-language"
-                      checked={language === 'en'}
-                      onChange={() => setLanguage('en')}
-                    />
-                    English
-                  </label>
-                </fieldset>
                 <CountrySearch
                   label={t('País donde estás', 'Country you are in')}
                   lang={language}
@@ -161,6 +143,28 @@ export default function TravelSetup(p: Props) {
               </>
             ) : (
               <div className="fw-setup-personal">
+                <fieldset className="fw-setup-language">
+                  <legend>{t('Idioma', 'Language')}</legend>
+                  <label>
+                    <input
+                      type="radio"
+                      name="setup-language"
+                      checked={language === 'es'}
+                      onChange={() => setLanguage('es')}
+                    />
+                    Español
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="setup-language"
+                      checked={language === 'en'}
+                      onChange={() => setLanguage('en')}
+                    />
+                    English
+                  </label>
+                </fieldset>
+
                 <label className="fw-setup-field">
                   {t('Tu nombre', 'Your name')} <span>{t('Obligatorio', 'Required')}</span>
                   <input
@@ -250,7 +254,7 @@ export default function TravelSetup(p: Props) {
             )}
             <button className="fw-setup-save" type="submit">
               {step === 0
-                ? t('Continuar', 'Continue')
+                ? t('Continuar con mi viaje', 'Continue to my trip')
                 : p.saved
                   ? t('Guardar cambios', 'Save changes')
                   : t('Guardar y continuar', 'Save and continue')}
@@ -265,7 +269,7 @@ export default function TravelSetup(p: Props) {
                   setError(false);
                 }}
               >
-                {t('Volver al viaje', 'Back to trip')}
+                {t('Volver a mis datos', 'Back to my details')}
               </button>
             )}
             <button className="fw-setup-skip" type="button" onClick={p.onClose}>
