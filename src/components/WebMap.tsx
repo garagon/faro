@@ -5,7 +5,7 @@ import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MapPinIcon, FlagIcon } from '@phosphor-icons/react';
+import { FlagIcon } from '@phosphor-icons/react';
 import { directionsUrl, type Embassy } from '../lib/embassies.ts';
 import type { Quake, Bounds } from '../lib/domain.ts';
 export type MapView = { lat: number; lng: number; zoom: number; key: number };
@@ -107,25 +107,20 @@ export default function WebMap({
       const size = q.id === selected ? 42 : 34;
       const icon = L.divIcon({
         className: q.id === selected ? 'fw-pin fw-pin-selected' : 'fw-pin',
-        html: renderToStaticMarkup(
-          <>
-            <MapPinIcon size={size} weight="fill" />
-            <b>{q.mag?.toFixed(1) ?? '—'}</b>
-          </>,
-        ),
+        html: renderToStaticMarkup(<b>{q.mag?.toFixed(1) ?? '—'}</b>),
         iconSize: [size, size],
         iconAnchor: [size / 2, size],
       });
       L.marker([q.lat, q.lng], {
         icon,
-        title: `M ${q.mag ?? '—'} · ${q.place}`,
-        alt: `M ${q.mag ?? '—'} · ${q.place}`,
+        title: `${lang === 'es' ? 'Magnitud' : 'Magnitude'} ${q.mag?.toFixed(1) ?? '—'} · ${q.place}`,
+        alt: `${lang === 'es' ? 'Magnitud' : 'Magnitude'} ${q.mag?.toFixed(1) ?? '—'} · ${q.place}`,
         zIndexOffset: q.id === selected ? 1000 : 0,
       })
         .on('click', () => callback.current.onSelect(q))
         .addTo(q.id === selected ? focus.current! : quakes.current!);
     });
-  }, [events, selected]);
+  }, [events, selected, lang]);
   useEffect(() => {
     const group = extras.current;
     if (!group) return;

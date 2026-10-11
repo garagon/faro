@@ -366,3 +366,19 @@
     flex-basis: 100%;
   }
 }
+
+.fw-magnitude-explainer {
+  margin: 0 0 20px;
+  border-block: 1px solid var(--line);
+  padding: 12px 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.fw-magnitude-explainer summary {
+  cursor: pointer;
+  color: var(--green);
+  font-weight: 600;
+}
+.fw-magnitude-explainer p {
+  margin: 10px 0;
+}

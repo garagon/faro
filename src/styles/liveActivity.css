@@ -57,15 +57,15 @@
 }
 .fw-latest-event {
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr) auto;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
   gap: 24px;
   align-items: center;
   padding: 23px 20px;
 }
 .fw-latest-magnitude > span {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
   color: #60756a;
   display: block;
   line-height: 1.6;
@@ -77,12 +77,26 @@
   line-height: 1.2;
   color: #b85840;
   display: block;
-  margin-top: 7px;
+  margin-top: 0;
   font-variant-numeric: tabular-nums;
 }
-.fw-latest-magnitude small {
-  font-size: 20px;
-  letter-spacing: 0;
+.fw-latest-magnitude {
+  text-align: center;
+  padding: 12px 8px;
+  background: #fbf3ed;
+  border: 1px solid #f0d9ce;
+  border-radius: 8px;
+}
+.fw-latest-place .fw-latest-kicker {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.fw-latest-magnitude > span {
+  margin-top: 4px;
 }
 .fw-latest-place h2 {
   font-size: 18px;
@@ -303,8 +317,8 @@
     gap: 12px;
   }
   .fw-latest-magnitude > span {
-    font-size: 8px;
-    letter-spacing: 0.5px;
+    font-size: 10px;
+    letter-spacing: 0;
   }
   .fw-latest-magnitude > strong {
     font-size: 34px;
