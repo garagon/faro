@@ -12,24 +12,6 @@
     "development": true
   },
   {
-    "name": "@emnapi/core",
-    "version": "1.11.1",
-    "license": "MIT",
-    "development": true
-  },
-  {
-    "name": "@emnapi/runtime",
-    "version": "1.11.1",
-    "license": "MIT",
-    "development": true
-  },
-  {
-    "name": "@emnapi/wasi-threads",
-    "version": "1.2.2",
-    "license": "MIT",
-    "development": true
-  },
-  {
     "name": "@eslint-community/eslint-utils",
     "version": "4.10.1",
     "license": "MIT",
@@ -138,14 +120,8 @@
     "development": true
   },
   {
-    "name": "@napi-rs/wasm-runtime",
-    "version": "1.2.5",
-    "license": "MIT",
-    "development": true
-  },
-  {
     "name": "@oxc-project/types",
-    "version": "0.139.0",
+    "version": "0.153.0",
     "license": "MIT",
     "development": true
   },
@@ -252,104 +228,98 @@
     "development": false
   },
   {
+    "name": "@rolldown/binding-android-arm-eabi",
+    "version": "1.2.13",
+    "license": "MIT",
+    "development": true
+  },
+  {
     "name": "@rolldown/binding-android-arm64",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-darwin-arm64",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-darwin-x64",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-freebsd-x64",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-linux-arm-gnueabihf",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-linux-arm64-gnu",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-linux-arm64-musl",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-linux-ppc64-gnu",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-linux-s390x-gnu",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-linux-x64-gnu",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-linux-x64-musl",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-openharmony-arm64",
-    "version": "1.1.5",
-    "license": "MIT",
-    "development": true
-  },
-  {
-    "name": "@rolldown/binding-wasm32-wasi",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-win32-arm64-msvc",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/binding-win32-x64-msvc",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
   {
     "name": "@rolldown/pluginutils",
     "version": "1.0.1",
-    "license": "MIT",
-    "development": true
-  },
-  {
-    "name": "@tybys/wasm-util",
-    "version": "0.10.4",
     "license": "MIT",
     "development": true
   },
@@ -1111,7 +1081,7 @@
   },
   {
     "name": "rolldown",
-    "version": "1.1.5",
+    "version": "1.2.13",
     "license": "MIT",
     "development": true
   },
@@ -1225,7 +1195,7 @@
   },
   {
     "name": "vite",
-    "version": "8.1.3",
+    "version": "8.3.4",
     "license": "MIT",
     "development": true
   },
