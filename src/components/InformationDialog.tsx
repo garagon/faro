@@ -186,6 +186,30 @@ export default function InformationDialog(p: Props) {
                     </div>
                   </div>
                 </section>
+                <details className="fw-magnitude-explainer">
+                  <summary>{t('Cómo leer la magnitud', 'Understanding magnitude')}</summary>
+                  <p>
+                    {t(
+                      'La magnitud expresa el tamaño del sismo. La intensidad describe cuánto se sintió en un lugar y puede variar entre localidades.',
+                      'Magnitude describes the size of an earthquake. Intensity describes shaking at a location and can vary from place to place.',
+                    )}
+                  </p>
+                  <p>
+                    {q.magType && q.magType.toUpperCase() !== 'M'
+                      ? `${t('Tipo publicado por la fuente', 'Type reported by the source')}: ${q.magType}.`
+                      : t(
+                          'La fuente no especifica el tipo de magnitud para este registro.',
+                          'The source does not specify a magnitude type for this record.',
+                        )}
+                  </p>
+                  <a
+                    href="https://www.usgs.gov/programs/earthquake-hazards/earthquake-magnitude-energy-release-and-shaking-intensity"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {t('Magnitud e intensidad · USGS', 'Magnitude and intensity · USGS')} ↗
+                  </a>
+                </details>
                 <dl className="fw-dialog-facts">
                   <div>
                     <dt>

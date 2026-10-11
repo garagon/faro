@@ -407,38 +407,50 @@
   font-weight: 600;
 }
 .fw-pin {
-  position: relative;
-  color: #ce745e;
+  color: #b96851;
   filter: drop-shadow(0 1px 2px #0003);
 }
-.fw-pin svg {
-  stroke: #fff;
-  stroke-width: 5px;
-  paint-order: stroke;
+.fw-pin::before {
+  content: '';
+  position: absolute;
+  inset: 1px 1px 7px;
+  background: currentColor;
+  border: 2px solid #fff;
+  border-radius: 7px;
+}
+.fw-pin::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  transform: rotate(45deg);
 }
 .fw-pin b {
   position: absolute;
-  top: 7px;
-  left: 0;
-  right: 0;
-  text-align: center;
+  inset: 0 0 6px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
-.fw-pin[style*='42px'] b {
-  top: 9px;
-  font-size: 12px;
+.fw-pin-selected b {
+  font-size: 13px;
 }
 .fw-hotel-pin {
   color: #6c568c;
   filter: drop-shadow(0 1px 2px #fff);
 }
 .fw-app .marker-cluster {
-  background: #eab2a1aa;
+  background: #c5d3d9b3;
 }
 .fw-app .marker-cluster div {
-  background: #bc6650;
+  background: #526c79;
   color: #fff;
   font-family: 'DM Sans', sans-serif;
 }
