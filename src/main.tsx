@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './styles/base.css';
 import App from './App.tsx';
 import './styles/emergencyFlow.css';
+import './styles/preparedness.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing application root');

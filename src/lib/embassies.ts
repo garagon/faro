@@ -12,6 +12,7 @@ export type Embassy = {
   phone?: string;
   emergency?: string;
   emergencySource?: string;
+  locationUnconfirmed?: boolean;
   hours?: [string, string];
   note?: [string, string];
 };
@@ -74,6 +75,9 @@ export const embassies: Embassy[] = [
   },
   {
     id: 'es-pa',
+    locationUnconfirmed: true,
+    phone: '+5072071500',
+    emergency: '+50764300642',
     nation: 'ES',
     country: 'PA',
     name: ['Embajada de España', 'Embassy of Spain'],

@@ -41,7 +41,7 @@ Country selection is global. Local help is intentionally partial. `src/data/dest
 7. Run `npm run check` and `npm run build`. `tests/destinations.test.ts` checks every registered record for codes, duplicates, phone shape, bilingual content, HTTPS attribution, dates and bounds. Add a regression for special territorial restrictions. Review the official content manually; schema tests cannot verify the truth of a phone number.
 8. Verify the country search, help page, emergency dialog, coast links, guide, image/text exports, unknown-country fallback and desktop/320px layouts. Update the coverage table in `docs/country-coverage.md`.
 
-**Consular assistance has two distinct datasets:** `src/lib/embassies.ts` stores a mission located in a host country, with coordinates, official contact and address uncertainty; `src/data/consularDirectories.ts` stores official outbound directories by the traveler's nationality, usable across destinations. A directory link does not establish that an embassy exists at a local address. Add verified mission records to enable map markers; do not fabricate coordinates for a directory-only result.
+**Consular assistance separates local offices and outbound directories:** `src/data/consularMissions.ts` is the extensible mission registry (including the original building records from `src/lib/embassies.ts`); `src/data/consularDirectories.ts` stores official outbound directories by the traveler's nationality, usable across destinations. A directory link does not establish that an embassy exists at a local address. Add verified mission records to enable map markers; do not fabricate coordinates for a directory-only result.
 
 The country-name/centre dataset remains `src/data/countries.json` under ODbL-1.0. Do not replace it with unlicensed scraped geography.
 
@@ -58,3 +58,10 @@ Map behavior is in `WebMap.tsx`. Keep user-selected epicenters independent of cl
 ## Verification checklist
 
 Run `npm run check` and `npm run build`. For new dependencies also run `npm run notices` and `npm audit`. Inspect desktop, 390 px and 320 px layouts, keyboard interactions, ES/EN, empty/error states and storage failures. No live emergency calls or messages are needed for tests. The CI job uses synthetic fixtures and does not depend on current earthquakes or upstream availability.
+
+## Consular assistance, healthcare and preparedness
+
+- Add missions to `src/data/consularMissions.ts`: destination, nationality, office type, source, check date, and source publication date where known. Several missions may serve one nationality. Only add phone numbers and addresses transcribed from the authority. An unknown coordinate remains absent. Historic references have no routing or phone action. A checked page is not a guarantee that a service operates.
+- Add full official host-country consular directories to `destinationConsularDirectories`, and health directories to `src/data/healthDirectories.ts`. State gaps explicitly. Nearby Google Maps searches are manual external searches, not a verified facility feed.
+- Add official evacuation-map links to a destination’s `evacuation` field. Never substitute a Google Maps route or university drill map for a public evacuation plan. Maps apply only to their jurisdiction.
+- The kit catalog is `src/data/emergencyKit.ts`; keep stable IDs for local checkmarks and ES/EN copy. Instructions and original vector illustrations live in `SafetyGuide.tsx` and `SafetyIllustration.tsx`. Review changes to illustrated body positions against the cited guidance.

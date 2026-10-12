@@ -1,3 +1,5 @@
+import NearbyCare from './components/NearbyCare.tsx';
+import EvacuationPlan from './components/EvacuationPlan.tsx';
 import MagnitudeLegend from './components/MagnitudeLegend.tsx';
 import { magnitudeBand } from './lib/magnitude.ts';
 import CountrySearch from './components/CountrySearch.tsx';
@@ -67,7 +69,8 @@ import TravelerStatus from './components/TravelerStatus.tsx';
 import TravelContacts from './components/TravelContacts.tsx';
 import EmergencyNumbers from './components/EmergencyNumbers.tsx';
 import { readCheckIns, checkInDue } from './lib/traveler.ts';
-import { embassies, embassyFor, type Embassy } from './lib/embassies.ts';
+import { type Embassy } from './lib/embassies.ts';
+import { mappedMissions } from './data/consularMissions.ts';
 function setupSkipped() {
   try {
     return sessionStorage.getItem('faro-setup-skipped') === 'yes';
@@ -329,12 +332,9 @@ export default function App() {
     );
   };
   const point = useMemo(() => planCoordinates(plan), [plan]);
-  const availableEmbassy = embassyFor(country, nationality);
+  const availableEmbassy = mappedMissions(country, nationality)[0];
   const mappedEmbassies = useMemo(
-    () =>
-      showEmbassies
-        ? embassies.filter((e) => e.country === country && e.nation === nationality)
-        : [],
+    () => (showEmbassies ? mappedMissions(country, nationality) : []),
     [showEmbassies, country, nationality],
   );
   const selected = live.events.find((q) => q.id === detail),
@@ -1018,6 +1018,12 @@ export default function App() {
         {screen === 'help' && (
           <>
             <EmergencyNumbers country={country} lang={lang} />
+            <NearbyCare
+              key={country}
+              country={country}
+              lang={lang}
+              onEmergency={() => setEmergencyOpen(true)}
+            />
             <DestinationInfo country={country} lang={lang} />
             <EmbassyPanel
               onProfile={() => setSetupOpen(true)}
@@ -1030,6 +1036,7 @@ export default function App() {
                 setShowEmbassies(!!value);
               }}
               onMap={(e: Embassy) => {
+                setNationality(e.nation);
                 setShowEmbassies(true);
                 center(e.lat, e.lng, 14);
                 setScreen('activity');
@@ -1235,18 +1242,7 @@ export default function App() {
                 )}
               </form>
               <aside className="fw-hotel-aside">
-                <div className="fw-note">
-                  <InfoIcon size={23} />
-                  <div>
-                    <h3>{t('Ruta de evacuación', 'Evacuation route')}</h3>
-                    <p>
-                      {t(
-                        'Un punto válido para sismos puede ser inadecuado ante tsunami. Confirma accesibilidad, amenazas y cambios con el hotel y las autoridades. Faro no calcula rutas seguras.',
-                        'An earthquake assembly point may be unsuitable for a tsunami. Confirm accessibility, hazards and changes with the hotel and authorities. Faro does not calculate safe routes.',
-                      )}
-                    </p>
-                  </div>
-                </div>
+                <EvacuationPlan country={country} lang={lang} />
                 {plan && (
                   <article className="fw-plan-card">
                     <FlagIcon size={29} />
