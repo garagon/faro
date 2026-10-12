@@ -1,16 +1,18 @@
 .fw-setup {
   position: fixed;
   z-index: 3002;
-  top: 50%;
+  top: calc(var(--setup-top, 0px) + var(--setup-height, 100dvh) / 2);
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(480px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
-  overflow: auto;
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(var(--setup-height, 100dvh) - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: #fff;
   border: 1px solid #d3dfd7;
   border-radius: 14px;
-  padding: 24px 28px;
+  padding: 0;
   color: #19332f;
   box-shadow: 0 24px 100px #09271c33;
   font:
@@ -35,14 +37,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 13px;
+  margin: 0 0 4px;
 }
 .fw-setup-brand > span {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 10px;
-  letter-spacing: 1.25px;
+  font-size: 12px;
   color: #527465;
   font-weight: 700;
 }
@@ -62,10 +63,10 @@
   line-height: 1.2;
   margin: 0 0 10px;
 }
-.fw-setup > p {
+.fw-setup-header > p {
   font-size: 13px;
   color: #60736a;
-  margin: 0 0 22px;
+  margin: 0 0 16px;
 }
 .fw-setup-language {
   border: 0;
@@ -136,7 +137,7 @@
   background: #f2f5f0;
   border-radius: 7px;
   padding: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 0;
 }
 .fw-setup-privacy svg {
   flex-shrink: 0;
@@ -372,9 +373,9 @@
 }
 @media (max-width: 480px) {
   .fw-setup {
-    padding: 16px 20px;
+    padding: 0;
     width: calc(100vw - 24px);
-    max-height: calc(100dvh - 24px);
+    max-height: calc(var(--setup-height, 100dvh) - 16px);
     border-radius: 10px;
   }
   .fw-setup-brand {
@@ -383,7 +384,7 @@
   .fw-setup h2 {
     font-size: 24px;
   }
-  .fw-setup > p {
+  .fw-setup-header > p {
     margin-bottom: 17px;
   }
   .fw-setup-language {
@@ -460,9 +461,11 @@
 .fw-setup-progress {
   display: flex;
   gap: 8px;
-  margin-bottom: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.fw-setup-progress span {
+.fw-setup-progress li {
   flex: 1;
   border-bottom: 2px solid #dde5de;
   padding: 0 0 8px;
@@ -496,4 +499,109 @@
   background: none;
   color: #215d4c;
   text-decoration: underline;
+}
+
+/* Keep navigation outside the scrolling fields, including above a mobile keyboard. */
+.fw-setup-overlay {
+  backdrop-filter: blur(2px);
+}
+.fw-setup-header {
+  flex: none;
+  padding: 16px 24px 0;
+}
+.fw-setup h2:focus {
+  outline: none;
+}
+.fw-setup-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.fw-setup-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 24px;
+  min-height: 0;
+  scroll-padding: 12px;
+}
+.fw-setup-actions {
+  flex: none;
+  padding: 12px 24px;
+  border-top: 1px solid #e0e6df;
+  background: #fff;
+}
+.fw-setup-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.fw-setup-secondary button {
+  margin: 0;
+  padding: 8px 0;
+}
+.fw-setup-secondary .fw-setup-skip {
+  margin-left: auto;
+}
+.fw-setup .fw-setup-emergency {
+  margin: 0;
+  min-height: 44px;
+}
+.fw-setup .fw-country-search-menu {
+  position: static;
+}
+.fw-setup .fw-country-search-list {
+  max-height: 160px;
+}
+.fw-setup-error {
+  margin: 0 0 8px;
+}
+@media (max-width: 480px) {
+  .fw-setup-header {
+    padding: 12px 16px 0;
+  }
+  .fw-setup-body {
+    padding: 16px;
+  }
+  .fw-setup-actions {
+    padding: 10px 16px;
+  }
+}
+/* visualViewport also shrinks for keyboards that leave layout media queries unchanged. */
+.fw-setup[data-compact='true'] .fw-setup-header {
+  padding-top: 6px;
+}
+.fw-setup[data-compact='true'] .fw-setup-brand {
+  margin: 0;
+}
+.fw-setup[data-compact='true'] .fw-setup-header > p {
+  display: none;
+}
+.fw-setup[data-compact='true'] h2 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+.fw-setup[data-compact='true'] .fw-setup-body {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.fw-setup[data-compact='true'] .fw-setup-actions {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.fw-setup-contacts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+.fw-setup-field input::placeholder {
+  font-size: 14px;
+  font-weight: 400;
+}
+@media (max-width: 480px) {
+  .fw-setup-contacts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
 }
