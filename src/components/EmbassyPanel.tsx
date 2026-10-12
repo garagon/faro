@@ -45,8 +45,8 @@ export default function EmbassyPanel({
       (kind === 'all' || m.kind === kind) &&
       normal(`${names.of(m.nation)} ${m.name[i]} ${m.city || ''}`).includes(normal(query)),
   );
-  const current = filtered.filter((m) => m.sourceDate !== '2024-10'),
-    archived = filtered.filter((m) => m.sourceDate === '2024-10');
+  const current = filtered.filter((m) => !m.historical),
+    archived = filtered.filter((m) => m.historical);
   const fallback = consularFallback(country, nationality);
   function card(m: Mission) {
     const route = missionDirections(m, mode);
@@ -56,16 +56,16 @@ export default function EmbassyPanel({
           <span>
             {names.of(m.nation)} · {missionKinds[m.kind][i]}
           </span>
-          <h3>{m.sourceDate === '2024-10' ? `${m.name[i]} · ${m.city}` : m.name[i]}</h3>
+          <h3>{m.historical ? `${m.name[i]} · ${m.city}` : m.name[i]}</h3>
         </div>
         {m.address && <address>{m.address}</address>}
-        {m.phone && (
+        {!m.historical && m.phone && (
           <a className="fw-consular-phone" href={`tel:${m.phone}`}>
             <PhoneIcon size={17} />
             {t('Llamar', 'Call')} {m.phone}
           </a>
         )}
-        {m.emergency && (
+        {!m.historical && m.emergency && (
           <div className="fw-consular-emergency">
             <strong>{t('Emergencia consular', 'Consular emergency')}</strong>
             <a href={`tel:${m.emergency}`}>{m.emergency}</a>
@@ -81,8 +81,8 @@ export default function EmbassyPanel({
         {m.note && <p>{m.note[i]}</p>}
         <div className="fw-consular-actions">
           <a href={m.source} target="_blank" rel="noreferrer">
-            {m.sourceDate === '2024-10'
-              ? t('Ver referencia oficial · PDF 2024', 'Official reference · 2024 PDF')
+            {m.historical
+              ? t('Ver referencia oficial', 'Official reference')
               : t('Contacto oficial', 'Official contact')}
             <ArrowUpRightIcon size={16} />
           </a>
@@ -91,7 +91,7 @@ export default function EmbassyPanel({
               {t('Cómo llegar · Google Maps', 'Directions · Google Maps')} ↗
             </a>
           )}
-          {m.map && (
+          {!m.historical && !m.locationUnconfirmed && m.map && (
             <button className="fw-text" onClick={() => onMap(m.map!)}>
               <MapPinIcon size={16} />
               {t('Ver en Faro', 'View in Faro')}
@@ -229,8 +229,8 @@ export default function EmbassyPanel({
         <details className="fw-consular-archive">
           <summary>
             {t(
-              'Referencias del directorio europeo de 2024',
-              'References from the 2024 EU directory',
+              'Referencias históricas · vigencia sin confirmar',
+              'Historical references · current status unconfirmed',
             )}{' '}
             ({archived.length})
           </summary>

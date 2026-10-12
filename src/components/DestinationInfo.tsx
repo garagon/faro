@@ -8,7 +8,7 @@ export default function DestinationInfo({ country, lang }: { country: string; la
   const data = destinationFor(country);
   const name =
     country === 'WORLD' ? '' : new Intl.DisplayNames([lang], { type: 'region' }).of(country);
-  const missions = missionsFor(country).filter((m) => m.sourceDate !== '2024-10').length;
+  const missions = missionsFor(country).filter((m) => !m.historical).length;
   if (!data)
     return (
       <section className="fw-destination-info fw-destination-missing">

@@ -9,6 +9,7 @@ export type Mission = {
   source: string;
   reviewedAt: string;
   sourceDate?: string;
+  historical?: boolean;
   address?: string;
   locationUnconfirmed?: boolean;
   city?: string;
@@ -338,6 +339,7 @@ export const consularMissions: Mission[] = [
     name: [missionKinds[r.kind][0], missionKinds[r.kind][1]],
     source: euDirectory,
     sourceDate: '2024-10',
+    historical: true,
     reviewedAt: '2026-10-12',
     note: [
       'Referencia del directorio europeo de octubre de 2024. Confirma vigencia, sede y servicios; un consulado honorario tiene funciones limitadas.',
@@ -349,8 +351,7 @@ export function missionsFor(country: string, nation?: string) {
   return consularMissions.filter((m) => m.country === country && (!nation || m.nation === nation));
 }
 export function missionDirections(mission: Mission, mode: 'walking' | 'driving') {
-  if (mission.locationUnconfirmed || !mission.address || mission.sourceDate === '2024-10')
-    return null;
+  if (mission.locationUnconfirmed || !mission.address || mission.historical) return null;
   return `https://www.google.com/maps/dir/?${new URLSearchParams({ api: '1', destination: `${mission.name[0]}, ${mission.address}`, travelmode: mode })}`;
 }
 // Complete official source directories complement the individually transcribed entries.
@@ -409,5 +410,7 @@ export const destinationConsularDirectories: Record<
 };
 
 export function mappedMissions(country: string, nation: string): Embassy[] {
-  return missionsFor(country, nation).flatMap((m) => (m.map ? [m.map] : []));
+  return missionsFor(country, nation).flatMap((m) =>
+    m.map && !m.historical && !m.locationUnconfirmed ? [m.map] : [],
+  );
 }

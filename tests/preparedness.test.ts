@@ -53,7 +53,7 @@ test('mission directory has unique records, dated official sources and separates
   }
 });
 test('historic honorary listings never produce phone links, directions or map pins', () => {
-  const archived = consularMissions.filter((m) => m.sourceDate === '2024-10');
+  const archived = consularMissions.filter((m) => m.historical);
   assert.ok(archived.length > 20);
   for (const m of archived) {
     assert.equal(m.phone, undefined);
@@ -83,4 +83,9 @@ test('uncertain office moves are not offered as directions or map pins', () => {
   const es = missionsFor('PA', 'ES').find((m) => m.kind === 'embassy')!;
   assert.equal(missionDirections(es, 'walking'), null);
   assert.deepEqual(mappedMissions('PA', 'ES'), []);
+});
+
+test('historic directions are blocked independently of the publication year', () => {
+  const record = { ...missionsFor('PA', 'CA')[0], historical: true, sourceDate: '2025-07' };
+  assert.equal(missionDirections(record, 'driving'), null);
 });
