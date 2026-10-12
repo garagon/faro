@@ -1,3 +1,4 @@
+import { downloadText } from '../lib/download.ts';
 import { useState } from 'react';
 import { DownloadSimpleIcon, IdentificationCardIcon, MapPinIcon } from '@phosphor-icons/react';
 import type { Preferences } from '../lib/preferences.ts';
@@ -59,12 +60,7 @@ export default function TravelCard({
       ),
       ...lines.map((row) => `${row.label}\n${row.value}`),
     ].join('\n\n');
-    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `faro-viaje-${country.toLowerCase()}-${lang}.txt`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    downloadText(text, `faro-viaje-${country.toLowerCase()}-${lang}.txt`);
     setNotice(t('Ficha completa guardada en Descargas.', 'Complete card saved to Downloads.'));
   };
   return (

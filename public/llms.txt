@@ -1,6 +1,6 @@
-# Faro by Oktsec
+# Faro
 
-> Faro is a free, open-source earthquake information and travel preparedness web application created by Oktsec. Available in Spanish and English.
+> Faro is a free, open-source earthquake information and travel preparedness web application created by Oktsec. Available in English and Spanish.
 
 ## Product and provenance
 - [About Faro, sources and limitations](/about.html): Crawlable bilingual product facts and frequently asked questions.

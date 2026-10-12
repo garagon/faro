@@ -316,7 +316,7 @@ export const consularMissions: Mission[] = [
   ...embassies.map((e): Mission => ({
     ...e,
     kind: 'embassy',
-    reviewedAt: e.nation === 'ES' ? '2026-10-12' : '2026-10-11',
+    reviewedAt: ['ES', 'US'].includes(e.nation) ? '2026-10-12' : '2026-10-11',
     map: e.locationUnconfirmed ? undefined : e,
     emergencyNote:
       e.nation === 'ES'
@@ -324,12 +324,17 @@ export const consularMissions: Mission[] = [
             'Urgencias de ciudadanos españoles fuera del horario de oficina.',
             'Spanish citizens’ emergencies outside office hours.',
           ]
-        : e.emergency
+        : e.nation === 'US'
           ? [
-              'Solo emergencias consulares de ciudadanos argentinos. Consulta horarios en la fuente.',
-              'Argentine citizens’ consular emergencies only. Check service hours at the source.',
+              'Urgencias consulares de ciudadanos estadounidenses; también fuera del horario de oficina.',
+              'U.S. citizens’ consular emergencies, including after hours.',
             ]
-          : undefined,
+          : e.emergency
+            ? [
+                'Solo emergencias consulares de ciudadanos argentinos. Consulta horarios en la fuente.',
+                'Argentine citizens’ consular emergencies only. Check service hours at the source.',
+              ]
+            : undefined,
   })),
   ...current,
   ...euReferences.map((r): Mission => ({

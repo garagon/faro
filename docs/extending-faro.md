@@ -65,3 +65,11 @@ Run `npm run check` and `npm run build`. For new dependencies also run `npm run 
 - Add full official host-country consular directories to `destinationConsularDirectories`, and health directories to `src/data/healthDirectories.ts`. State gaps explicitly. Nearby Google Maps searches are manual external searches, not a verified facility feed.
 - Add official evacuation-map links to a destination’s `evacuation` field. Never substitute a Google Maps route or university drill map for a public evacuation plan. Maps apply only to their jurisdiction.
 - The kit catalog is `src/data/emergencyKit.ts`; keep stable IDs for local checkmarks and ES/EN copy. Instructions live in `SafetyGuide.tsx`. Earthquake protection uses attributed ECA / ShakeOut graphics in `public/illustrations/`; supplementary Faro vectors remain in `SafetyIllustration.tsx`. Preserve the separate image usage terms in THIRD_PARTY_NOTICES.md.
+
+## Support for travelers by nationality
+
+`src/data/travelerSupport.ts` defines optional assistance packs by nationality, separate from the country being viewed. The initial U.S. pack provides State Department contacts, STEP, passport replacement, insurance, crisis departure, missing-person assistance and business-travel guidance. It appears in Local help when that nationality is selected and the destination differs from it. It is not inferred from language.
+
+To add a nationality, supply bilingual titles, descriptions and actions; verified telephone numbers with explicit caller-location scope; an official source and review date; and optionally verified destination-specific advisory links. Unknown destinations use the official advisory directory, never another country's page. Domestic travelers do not receive their own abroad-only pack. Do not hardcode current advisory levels or imply that linked notices are ingested live.
+
+These are ordinary external links opened by the traveler. No registration, auto-enrollment or profile transmission is performed. STEP registration happens on the government's site under its own privacy policy. Local emergency services remain the first contact for immediate physical assistance.

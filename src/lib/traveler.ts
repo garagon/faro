@@ -1,3 +1,4 @@
+import { displayPlace } from './domain.ts';
 export const contextLabels = {
   earthquake: ['Por el sismo', 'About the earthquake'],
   evacuation: ['Por una evacuación', 'About an evacuation'],
@@ -161,7 +162,7 @@ export function checkInMessage(record: CheckIn, lang: 'es' | 'en', zone?: string
           )
         : '',
     record.context === 'earthquake' && record.event
-      ? `${t('Reporte de referencia', 'Reference report')}: ${record.event.source} · ${record.event.mag === null ? t('magnitud no informada', 'magnitude not reported') : `M ${record.event.mag.toFixed(1)}`} · ${record.event.place} · ${checkInTime(record.event.time, lang, zone)}. ${t('Es un dato del catálogo, no una medida de cómo me afectó.', 'This is a catalogue record, not a measure of how I was affected.')}`
+      ? `${t('Reporte de referencia', 'Reference report')}: ${record.event.source} · ${record.event.mag === null ? t('magnitud no informada', 'magnitude not reported') : `M ${record.event.mag.toFixed(1)}`} · ${displayPlace(record.event.place)} · ${checkInTime(record.event.time, lang, zone)}. ${t('Es un dato del catálogo, no una medida de cómo me afectó.', 'This is a catalogue record, not a measure of how I was affected.')}`
       : '',
     `${t('Actualizado', 'Updated')}: ${checkInTime(record.at, lang, zone)}`,
   ]

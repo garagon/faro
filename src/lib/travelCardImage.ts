@@ -1,3 +1,4 @@
+import { downloadBlob } from './download.ts';
 import { emergencyFor } from './emergency.ts';
 import type { Preferences } from './preferences.ts';
 import type { HotelPlan, Lang } from './resources.ts';
@@ -157,10 +158,5 @@ export async function downloadCardImage(country: string, lang: Lang, lines: Card
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Export failed'))), 'image/png'),
   );
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `faro-${country.toLowerCase()}-${lang}.png`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  downloadBlob(blob, `faro-${country.toLowerCase()}-${lang}.png`);
 }

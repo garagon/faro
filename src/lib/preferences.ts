@@ -84,9 +84,15 @@ export function forgetPreferences(storage: Pick<Storage, 'removeItem' | 'getItem
 }
 
 /** Site language takes precedence over the copy retained in older trip profiles. */
+/** Saved choice first, then the profile, then the browser language. Non-Spanish browsers get English. */
 export function readSiteLanguage(
   profileLanguage?: 'es' | 'en',
   storage?: Pick<Storage, 'getItem'>,
+  browserLanguages: readonly string[] = typeof navigator === 'undefined'
+    ? []
+    : navigator.languages?.length
+      ? navigator.languages
+      : [navigator.language],
 ): 'es' | 'en' {
   try {
     const saved = (storage ?? localStorage).getItem('faro-lang');
@@ -94,5 +100,7 @@ export function readSiteLanguage(
   } catch {
     /* The site still works when browser storage is unavailable. */
   }
-  return profileLanguage ?? 'es';
+  if (profileLanguage) return profileLanguage;
+  const first = browserLanguages.find(Boolean)?.toLowerCase() ?? '';
+  return first.startsWith('es') ? 'es' : 'en';
 }

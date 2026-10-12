@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { PhoneIcon, PlusIcon } from '@phosphor-icons/react';
 import {
   contactKinds,
+  contactGroups,
   phoneHref,
   readContacts,
   type TravelContact,
@@ -93,6 +94,45 @@ export default function TravelContacts({
     setNotice('');
     requestAnimationFrame(() => title.current?.focus());
   };
+  const missing = (Object.keys(contactKinds) as ContactKind[]).filter(
+    (kind) => kind !== 'other' && !local.some((row) => row.kind === kind),
+  );
+  const startContact = (kind: ContactKind) => {
+    setDraft({ ...blank, kind });
+    setEditing(null);
+    setOpen(true);
+    setNotice('');
+    requestAnimationFrame(() => title.current?.focus());
+  };
+  const starterGroups = (personal: readonly ContactKind[], work: readonly ContactKind[]) => (
+    <div className="fw-contact-groups">
+      {[
+        { id: 'personal', label: t('Personales', 'Personal'), kinds: personal },
+        { id: 'work', label: t('Trabajo y misión', 'Work and assignment'), kinds: work },
+      ]
+        .filter((group) => group.kinds.length > 0)
+        .map((group) => (
+          <div
+            key={group.id}
+            className="fw-contact-group"
+            role="group"
+            aria-labelledby={`contact-group-${group.id}`}
+          >
+            <p id={`contact-group-${group.id}`} className="fw-contact-group-title">
+              {group.label}
+            </p>
+            <div className="fw-contact-starters">
+              {group.kinds.map((kind) => (
+                <button key={kind} type="button" onClick={() => startContact(kind)}>
+                  <PlusIcon size={16} aria-hidden="true" />
+                  {contactKinds[kind][lang === 'es' ? 0 : 1]}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+    </div>
+  );
   return (
     <section className="fw-trip-contacts" aria-label={t('Contactos del viaje', 'Travel contacts')}>
       <header>
@@ -116,16 +156,7 @@ export default function TravelContacts({
           <div className="fw-trip-directory">
             <div className="fw-directory-heading">
               <h3>{t('Contactos importantes', 'Important contacts')}</h3>
-              <button
-                className="fw-secondary"
-                onClick={() => {
-                  setDraft(blank);
-                  setEditing(null);
-                  setOpen(true);
-                  setNotice('');
-                  requestAnimationFrame(() => title.current?.focus());
-                }}
-              >
+              <button className="fw-secondary" onClick={() => startContact(blank.kind)}>
                 <PlusIcon size={18} aria-hidden="true" />
                 {t('Añadir contacto', 'Add contact')}
               </button>
@@ -179,56 +210,23 @@ export default function TravelContacts({
                   </p>
                   <p className="fw-contact-empty-hint">
                     {t(
-                      'Elige un contacto para empezar. El teléfono quedará a mano durante el viaje.',
-                      'Choose a contact to start. Keep their phone number close at hand during your trip.',
+                      'Ten a mano a tu familia, tu alojamiento, tu seguro y, si viajas por trabajo, a tu equipo.',
+                      'Keep your family, accommodation, insurer and, if you travel for work, your team close at hand.',
                     )}
                   </p>
-                  <div className="fw-contact-starters">
-                    {(['hotel', 'insurance', 'family', 'work'] as ContactKind[]).map((kind) => (
-                      <button
-                        key={kind}
-                        onClick={() => {
-                          setDraft({ ...blank, kind });
-                          setEditing(null);
-                          setOpen(true);
-                          requestAnimationFrame(() => title.current?.focus());
-                        }}
-                      >
-                        <PlusIcon size={16} aria-hidden="true" />
-                        {contactKinds[kind][lang === 'es' ? 0 : 1]}
-                      </button>
-                    ))}
-                  </div>
+                  {starterGroups(contactGroups.personal, contactGroups.work)}
                 </div>
               )
             )}
-            {local.length > 0 &&
-              !open &&
-              (['hotel', 'insurance', 'family', 'work'] as ContactKind[]).some(
-                (kind) => !local.some((row) => row.kind === kind),
-              ) && (
-                <div className="fw-contact-suggestions">
-                  <h4>{t('Añade para este viaje', 'Add for this trip')}</h4>
-                  <div className="fw-contact-starters">
-                    {(['hotel', 'insurance', 'family', 'work'] as ContactKind[])
-                      .filter((kind) => !local.some((row) => row.kind === kind))
-                      .map((kind) => (
-                        <button
-                          key={kind}
-                          onClick={() => {
-                            setDraft({ ...blank, kind });
-                            setEditing(null);
-                            setOpen(true);
-                            requestAnimationFrame(() => title.current?.focus());
-                          }}
-                        >
-                          <PlusIcon size={16} aria-hidden="true" />
-                          {contactKinds[kind][lang === 'es' ? 0 : 1]}
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              )}
+            {local.length > 0 && !open && missing.length > 0 && (
+              <div className="fw-contact-suggestions">
+                <h4>{t('Añade para este viaje', 'Add for this trip')}</h4>
+                {starterGroups(
+                  contactGroups.personal.filter((k) => missing.includes(k)),
+                  contactGroups.work.filter((k) => missing.includes(k)),
+                )}
+              </div>
+            )}
             {open && (
               <form className="fw-contact-editor" onSubmit={save}>
                 <h3>

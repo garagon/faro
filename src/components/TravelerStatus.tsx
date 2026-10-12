@@ -1,6 +1,12 @@
-import { helpTemplates } from '../lib/messageTemplates.ts';
+import {
+  helpTemplates,
+  quickMessages,
+  applyQuickMessage,
+  translateQuickMessage,
+  type QuickFields,
+} from '../lib/messageTemplates.ts';
 import { removeLocal } from '../lib/browserStorage.ts';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { recentLocation, statusLocation, type LocationFix } from '../lib/statusLocation.ts';
 import {
   CheckCircleIcon,
@@ -23,7 +29,7 @@ import {
   type TravelerStatus as Status,
 } from '../lib/traveler.ts';
 import type { Preferences } from '../lib/preferences.ts';
-import type { Quake } from '../lib/domain.ts';
+import { displayPlace, type Quake } from '../lib/domain.ts';
 import type { HotelPlan, Lang } from '../lib/resources.ts';
 import { prepareCheckIn } from '../lib/prepareCheckIn.ts';
 type Props = {
@@ -67,7 +73,8 @@ export default function TravelerStatus({
     [needs, setNeeds] = useState(''),
     [connection, setConnection] = useState<Connection | ''>(''),
     [event, setEvent] = useState<(EventReference & { id: string }) | null>(null),
-    [messageLanguage, setMessageLanguage] = useState<Lang | null>(null);
+    [messageLanguage, setMessageLanguage] = useState<Lang | null>(null),
+    [quick, setQuick] = useState('');
   const [includePhone, setIncludePhone] = useState(false),
     [includeEmail, setIncludeEmail] = useState(false);
   const name = nameOverride ?? profile?.name ?? history[0]?.name ?? '';
@@ -110,6 +117,36 @@ export default function TravelerStatus({
     setDirty(true);
     setFeedback('');
   };
+  const quickFields = (): QuickFields => ({ status, context, connection, note, needs, companions });
+  const setQuickFields = (fields: QuickFields) => {
+    setStatus(fields.status);
+    setContext(fields.context);
+    setConnection(fields.connection);
+    setNote(fields.note);
+    setNeeds(fields.needs);
+    setCompanions(fields.companions);
+  };
+  // The last ready message applied. Unlike the highlight, it survives manual edits so its
+  // untouched text can still be replaced or translated.
+  const applied = useRef<(typeof quickMessages)[number] | null>(null);
+  const applyQuick = (id: string) => {
+    const preset = quickMessages.find((m) => m.id === id);
+    if (!preset) return;
+    setQuickFields(applyQuickMessage(quickFields(), preset, applied.current, outputLang));
+    applied.current = preset;
+    change();
+    setQuick(id);
+  };
+  // Keep ready-message text in the language chosen for the message.
+  const lastLanguage = useRef(outputLang);
+  useEffect(() => {
+    const from = lastLanguage.current;
+    lastLanguage.current = outputLang;
+    const preset = applied.current;
+    if (preset && from !== outputLang)
+      setQuickFields(translateQuickMessage(quickFields(), preset, from, outputLang));
+    // Only language changes trigger this; the form values are read at that moment.
+  }, [outputLang]);
   const review = () => {
     form.current
       ?.querySelector<HTMLInputElement>('input[type=radio]:checked, input[type=radio]')
@@ -210,11 +247,31 @@ export default function TravelerStatus({
           <h2>{t('¿Cómo estás ahora?', 'How are you now?')}</h2>
           <p>
             {t(
-              'Elige tu estado y añade el lugar si puedes.',
-              'Choose your status and add your location if you can.',
+              'Empieza con un mensaje listo o elige tu estado. Todo se puede editar.',
+              'Start with a ready message or choose your status. Everything stays editable.',
             )}
           </p>
         </header>
+        <div
+          className="fw-quick-messages"
+          role="group"
+          aria-label={t('Mensajes listos', 'Ready messages')}
+        >
+          <span className="fw-quick-title">{t('Mensajes listos', 'Ready messages')}</span>
+          <div>
+            {quickMessages.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                data-status={m.status}
+                aria-pressed={quick === m.id}
+                onClick={() => applyQuick(m.id)}
+              >
+                {m.label[lang === 'es' ? 0 : 1]}
+              </button>
+            ))}
+          </div>
+        </div>
         <fieldset>
           <legend className="fw-sr">{t('Tu estado ahora', 'Your status now')}</legend>
           <div className="fw-status-options">
@@ -228,7 +285,10 @@ export default function TravelerStatus({
                     name="personal-status"
                     value={s}
                     checked={status === s}
-                    onChange={() => setStatus(s)}
+                    onChange={() => {
+                      setStatus(s);
+                      setQuick('');
+                    }}
                   />
                   <Icon size={20} />
                   <span>{statusLabels[s][lang === 'es' ? 0 : 1]}</span>
@@ -267,6 +327,7 @@ export default function TravelerStatus({
           {(countryName || hotel?.name) && (
             <div
               className="fw-place-suggestions"
+              role="group"
               aria-label={t('Añadir un lugar al mensaje', 'Add a place to the message')}
             >
               {countryName && (
@@ -332,6 +393,7 @@ export default function TravelerStatus({
                     aria-pressed={needs === template.text[lang === 'es' ? 0 : 1]}
                     onClick={() => {
                       setNeeds(template.text[lang === 'es' ? 0 : 1]);
+                      setQuick('');
                       change();
                     }}
                   >
@@ -345,7 +407,10 @@ export default function TravelerStatus({
                   maxLength={300}
                   rows={2}
                   value={needs}
-                  onChange={(e) => setNeeds(e.target.value)}
+                  onChange={(e) => {
+                    setNeeds(e.target.value);
+                    setQuick('');
+                  }}
                   placeholder={t(
                     'Por ejemplo: necesito que contacten a mi seguro de viaje',
                     'For example: please contact my travel insurer',
@@ -447,7 +512,10 @@ export default function TravelerStatus({
               <input
                 maxLength={160}
                 value={companions}
-                onChange={(e) => setCompanions(e.target.value)}
+                onChange={(e) => {
+                  setCompanions(e.target.value);
+                  setQuick('');
+                }}
                 placeholder={t('Mis compañeros de trabajo', 'My colleagues')}
               />
             </label>
@@ -458,7 +526,10 @@ export default function TravelerStatus({
               maxLength={600}
               rows={2}
               value={note}
-              onChange={(e) => setNote(e.target.value)}
+              onChange={(e) => {
+                setNote(e.target.value);
+                setQuick('');
+              }}
             />
           </label>
           <label>
@@ -496,12 +567,13 @@ export default function TravelerStatus({
                 <option value="">{t('Sin adjuntar un reporte', 'No report attached')}</option>
                 {event && !events.some((item) => item.id === event.id) && (
                   <option value={event.id}>
-                    M {event.mag ?? '—'} · {event.place}
+                    M {event.mag ?? '—'} · {displayPlace(event.place)}
                   </option>
                 )}
                 {events.map((item) => (
                   <option key={item.id} value={item.id}>
-                    M {item.mag ?? '—'} · {item.place} · {checkInTime(item.time, lang)}
+                    M {item.mag ?? '—'} · {displayPlace(item.place)} ·{' '}
+                    {checkInTime(item.time, lang)}
                   </option>
                 ))}
               </select>
@@ -595,6 +667,7 @@ export default function TravelerStatus({
               )}
               <div
                 className="fw-message-body"
+                role="region"
                 aria-label={t('Mensaje para compartir', 'Message to share')}
               >
                 {message.split('\n\n').map((paragraph, index) => (
@@ -611,6 +684,7 @@ export default function TravelerStatus({
               )}
               <div
                 className="fw-share-actions"
+                role="group"
                 aria-label={t('Compartir mensaje preparado', 'Share prepared message')}
               >
                 <button className="fw-primary" disabled={!shareAllowed} onClick={() => void copy()}>

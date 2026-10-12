@@ -143,3 +143,15 @@ test('relative event ages remain explicit in both languages', () => {
   assert.equal(ageLabel(now - 120000, now, 'es'), 'hace 2 min');
   assert.equal(ageLabel(now - 7200000, now, 'en'), '2h ago');
 });
+test('displayPlace removes the IGC prefix and spaces distances', async () => {
+  const { displayPlace } = await import('../src/lib/domain.ts');
+  assert.equal(
+    displayPlace('Localizado en Panamá a 31km al noroeste de Tonosí'),
+    'Panamá a 31 km al noroeste de Tonosí',
+  );
+  assert.equal(displayPlace('  12 km SW of Tonosí, Panama '), '12 km SW of Tonosí, Panama');
+  assert.equal(
+    displayPlace('Sur de Panamá a 56km al oeste de Coiba'),
+    'Sur de Panamá a 56 km al oeste de Coiba',
+  );
+});

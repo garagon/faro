@@ -9,6 +9,7 @@ import {
   type Mission,
 } from '../data/consularMissions.ts';
 import CountrySearch from './CountrySearch.tsx';
+import TravelerSupport from './TravelerSupport.tsx';
 type Props = {
   savedNationality: string | null;
   onProfile: () => void;
@@ -228,6 +229,7 @@ export default function EmbassyPanel({
                 )}
         </p>
       )}
+      <TravelerSupport nationality={nationality} country={country} lang={lang} />
       {!!archived.length && (
         <details className="fw-consular-archive">
           <summary>

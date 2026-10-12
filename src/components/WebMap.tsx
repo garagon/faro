@@ -8,7 +8,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { FlagIcon } from '@phosphor-icons/react';
 import { directionsUrl, type Embassy } from '../lib/embassies.ts';
-import type { Quake, Bounds } from '../lib/domain.ts';
+import { displayPlace, type Quake, type Bounds } from '../lib/domain.ts';
 export type MapView = { lat: number; lng: number; zoom: number; key: number };
 export type Geo = { lat: number; lng: number; accuracy: number; at: number };
 export default function WebMap({
@@ -101,10 +101,15 @@ export default function WebMap({
   useEffect(() => {
     map.current?.setView([view.lat, view.lng], view.zoom, { animate: false });
   }, [view]);
+  // Rebuild markers only when the visible events actually change, not on every new array.
+  // Rebuilding resets keyboard focus and expanded clusters.
+  const eventKey = events.map((q) => `${q.id}:${q.mag}:${q.lat}:${q.lng}`).join('|');
+  const latestEvents = useRef(events);
+  latestEvents.current = events;
   useEffect(() => {
     quakes.current?.clearLayers();
     focus.current?.clearLayers();
-    events.forEach((q) => {
+    latestEvents.current.forEach((q) => {
       const size = q.id === selected ? 42 : 34;
       const icon = L.divIcon({
         className: `fw-pin fw-mag-band-${magnitudeBand(q.mag)}${q.id === selected ? ' fw-pin-selected' : ''}`,
@@ -114,14 +119,14 @@ export default function WebMap({
       });
       L.marker([q.lat, q.lng], {
         icon,
-        title: `${lang === 'es' ? 'Magnitud' : 'Magnitude'} ${q.mag?.toFixed(1) ?? '—'} · ${q.place}`,
-        alt: `${lang === 'es' ? 'Magnitud' : 'Magnitude'} ${q.mag?.toFixed(1) ?? '—'} · ${q.place}`,
+        title: `${lang === 'es' ? 'Magnitud' : 'Magnitude'} ${q.mag?.toFixed(1) ?? '—'} · ${displayPlace(q.place)}`,
+        alt: `${lang === 'es' ? 'Magnitud' : 'Magnitude'} ${q.mag?.toFixed(1) ?? '—'} · ${displayPlace(q.place)}`,
         zIndexOffset: q.id === selected ? 1000 : 0,
       })
         .on('click', () => callback.current.onSelect(q))
         .addTo(q.id === selected ? focus.current! : quakes.current!);
     });
-  }, [events, selected, lang]);
+  }, [eventKey, selected, lang]);
   useEffect(() => {
     const group = extras.current;
     if (!group) return;

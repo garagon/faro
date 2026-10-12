@@ -983,24 +983,7 @@
   line-height: 1.8;
   color: #64725b;
 }
-.fw-checklist {
-  padding: 7px 4px 15px;
-  border: 0;
-  border-radius: 0;
-}
-.fw-checklist h3 {
-  font-size: 14px;
-  line-height: 1.5;
-}
-.fw-checklist ol {
-  padding-left: 20px;
-}
-.fw-checklist li {
-  font-size: 12px;
-  line-height: 1.7;
-  margin: 14px 0;
-  padding-left: 5px;
-}
+
 .fw-plan-card {
   background: white;
   border-color: #d4dfd4;
@@ -1766,9 +1749,7 @@
   .fw-hotel-aside .fw-note {
     padding: 22px 20px;
   }
-  .fw-checklist {
-    padding: 2px 5px 10px;
-  }
+
   .fw-safety-layout {
     display: flex;
     gap: 20px;
@@ -1851,9 +1832,7 @@
 .fw-status-options label {
   font-size: 14px !important;
 }
-.fw-checklist {
-  background: transparent;
-}
+
 .fw-form p,
 .fw-hotel-aside .fw-note p {
   font-size: 13px;
@@ -1862,7 +1841,7 @@
   .fw-context {
     min-height: 66px;
     margin: 0 -32px 18px;
-    padding: 0 32px;
+    padding: 12px 32px;
     background: white;
     border-bottom: 1px solid var(--line);
   }
@@ -1877,7 +1856,7 @@
   .fw-context {
     margin-left: -24px;
     margin-right: -24px;
-    padding: 0 24px;
+    padding: 12px 24px;
   }
 }
 @media (max-width: 760px) {
@@ -2275,19 +2254,22 @@
 .fw-context .fw-country {
   min-width: 0;
   flex: 1;
-  max-width: 430px;
-}
-.fw-context .fw-country > svg {
-  flex: none;
+  max-width: 360px;
+  align-items: center;
 }
 .fw-context .fw-country-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
   min-width: 0;
   width: 100%;
+  margin: 0;
 }
 .fw-context .fw-country-search > label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
-  margin-bottom: 5px;
+  margin: 0;
   color: var(--muted);
 }
 .fw-context .fw-country-search input {
@@ -2416,4 +2398,36 @@
     min-height: 44px;
     flex-shrink: 0;
   }
+}
+.fw-contact-groups {
+  display: grid;
+  gap: 16px;
+}
+.fw-contact-group-title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted, #5a6e66);
+}
+.fw-plan-country {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #24483b;
+}
+.fw-plan-move {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+}
+.fw-plan-move input {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  accent-color: #205f50;
 }

@@ -1,12 +1,20 @@
 import { emergencyFor } from './emergency.ts';
 import type { HotelPlan, Lang } from './resources.ts';
+// Who a traveler or a professional on assignment may need to reach. Stored keys stay stable.
 export const contactKinds = {
-  hotel: ['Recepción', 'Hotel reception'],
   family: ['Familia o amistad', 'Family or friend'],
-  work: ['Empresa', 'Employer'],
-  insurance: ['Seguro de viaje', 'Travel insurance'],
+  hotel: ['Recepción del alojamiento', 'Accommodation reception'],
+  insurance: ['Seguro o asistencia al viajero', 'Insurance or travel assistance'],
+  consulate: ['Consulado o embajada', 'Consulate or embassy'],
+  work: ['Empresa o empleador', 'Employer'],
+  team: ['Coordinación del equipo', 'Team coordinator'],
+  transport: ['Transporte o conductor', 'Driver or transport'],
   other: ['Otro contacto', 'Other contact'],
 } as const;
+export const contactGroups = {
+  personal: ['family', 'hotel', 'insurance', 'consulate'],
+  work: ['work', 'team', 'transport'],
+} as const satisfies Record<string, readonly ContactKind[]>;
 export type ContactKind = keyof typeof contactKinds;
 export type TravelContact = {
   id: string;

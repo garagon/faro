@@ -769,8 +769,7 @@
 .fw-hotel-aside .fw-note {
   margin-top: 0;
 }
-.fw-plan-card,
-.fw-checklist {
+.fw-plan-card {
   padding: 24px;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -793,11 +792,7 @@
 .fw-plan-card button {
   margin: 16px 10px 0 0;
 }
-.fw-checklist li {
-  margin: 10px 0;
-  color: var(--muted);
-  font-size: 14px;
-}
+
 .fw-guide-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

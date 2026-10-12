@@ -12,7 +12,8 @@ test('public metadata and static facts identify the creator without claiming ear
   assert($('meta[property="og:title"]').attr('content'));
   const about = load(await readFile('public/about.html', 'utf8'));
   assert(about('a[href="https://oktsec.com"]').length);
-  assert(about('section[lang="en"]').length);
+  assert(about('section[lang="es"]').length);
+  assert.match(about('main').text(), /does not predict earthquakes/);
   assert.match(about('main').text(), /No predice terremotos/);
 });
 test('only original, valid PNG instruction assets are published', async () => {

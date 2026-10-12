@@ -1,41 +1,46 @@
-# Cobertura por país / Country coverage
+# Country coverage
 
-Revisión de esta ampliación: 12 de octubre de 2026. Los campos `reviewedAt` conservan la fecha de revisión de cada fuente. Una revisión editorial no garantiza disponibilidad del sitio ni vigencia operativa de un servicio. Algunas fuentes oficiales bloquearon la lectura automatizada; su contenido se contrastó mediante el índice de búsqueda oficial. No se hicieron llamadas de prueba.
+Last review of this coverage: October 12, 2026. The `reviewedAt` fields keep the review date of each source. An editorial review does not guarantee that a site is available or that a service is operating. Some official sources blocked automated reading; their content was checked against the official search index. No test calls were made.
 
-| Destino        | Teléfonos incluidos | Autoridad / preparación                   | Red sísmica enlazada            | Sismos dentro de Faro |
-| -------------- | ------------------- | ----------------------------------------- | ------------------------------- | --------------------- |
-| Panamá         | 911                 | SINAPROC                                  | IGC · Universidad de Panamá     | IGC o USGS            |
-| Chile          | 131, 132, 133       | SENAPRED; planos de evacuación            | CSN · Universidad de Chile      | USGS                  |
-| Colombia       | 123                 | UNGRD                                     | Servicio Geológico Colombiano   | USGS                  |
-| Argentina      | 911, 100, 103       | SINAGIR                                   | INPRES                          | USGS                  |
-| Estados Unidos | 911                 | Ready.gov · FEMA                          | USGS                            | USGS                  |
-| México         | 911                 | Coordinación Nacional de Protección Civil | SSN · UNAM                      | USGS                  |
-| Perú           | 105, 116, 106       | INDECI                                    | IGP · CENSIS                    | USGS                  |
-| Ecuador        | 911                 | Secretaría Nacional de Gestión de Riesgos | IG · EPN                        | USGS                  |
-| Costa Rica     | 911                 | Comisión Nacional de Emergencias          | RSN · Universidad de Costa Rica | USGS                  |
+| Destination   | Numbers included | Authority / preparedness                  | Linked seismic network         | Earthquakes in Faro |
+| ------------- | ---------------- | ----------------------------------------- | ------------------------------ | ------------------- |
+| Panama        | 911              | SINAPROC                                  | IGC · University of Panama     | IGC or USGS         |
+| Chile         | 131, 132, 133    | SENAPRED; evacuation maps                 | CSN · University of Chile      | USGS                |
+| Colombia      | 123              | UNGRD                                     | Colombian Geological Survey    | USGS                |
+| Argentina     | 911, 100, 103    | SINAGIR                                   | INPRES                         | USGS                |
+| United States | 911              | Ready.gov · FEMA                          | USGS                           | USGS                |
+| Mexico        | 911              | Coordinación Nacional de Protección Civil | SSN · UNAM                     | USGS                |
+| Peru          | 105, 116, 106    | INDECI                                    | IGP · CENSIS                   | USGS                |
+| Ecuador       | 911              | Secretaría Nacional de Gestión de Riesgos | IG · EPN                       | USGS                |
+| Costa Rica    | 911              | Comisión Nacional de Emergencias          | RSN · University of Costa Rica | USGS                |
 
-- Los teléfonos cortos se usan dentro del país. Perú: SAMU 106 tiene cobertura regional; el dato y la interfaz remiten a la lista de regiones de la fuente oficial. Argentina: no se presenta el SAME 107 como servicio nacional.
-- Los enlaces a las redes nacionales abren sus sitios. Sus datos no se agregan al mapa de USGS. IGC y USGS mantienen sus catálogos separados; la red nacional puede publicar más sismos pequeños.
-- Los rectángulos del mapa son áreas aproximadas. Chile y Argentina usan vistas continentales más extensas; EE. UU. inicia en los estados contiguos y lo indica explícitamente. Para Alaska, Hawái, islas u otros territorios, desplaza el mapa y usa «Buscar en esta área». Ecuador incluye Galápagos en su área inicial. Ninguno de estos rectángulos acredita jurisdicción, fronteras ni riesgo.
-- Asistencia consular en Panamá: 24 fichas con fuentes oficiales actuales (algunas solo enlazan al organismo) y 26 referencias históricas del directorio europeo de octubre de 2024, separadas y sin rutas ni teléfonos. La cobertura no es exhaustiva. Hay seis marcadores de edificios documentados; España queda sin ruta ni marcador por el traslado provisional pendiente de confirmar. Para otras combinaciones de destino/nacionalidad se muestran directorios oficiales cuando hay uno documentado. Sin una dirección verificada no se añade un marcador.
-- Refugios y voluntariado: no hay disponibilidad operativa confirmada en Faro. Los enlaces institucionales no son una lista de centros abiertos.
-- Otros países: selector y catálogo USGS disponibles; teléfonos y directorio local pueden faltar. La interfaz lo dice expresamente. No se inventa un número de emergencia por defecto.
-- NOAA/PTWC: se mantienen los productos internacionales configurados y sus límites de cobertura. Cambiar de país no los convierte en un sistema local de alertas. Se enlaza la autoridad del destino y las fechas se muestran en la zona horaria del dispositivo.
+- Short numbers are for calls within the country. Peru: SAMU 106 has regional coverage; the data and the interface point to the regional list on the official source. Argentina: SAME 107 is not presented as a national service.
+- Panama: the official SUME page states that 911 transfers calls to police, fire and civil protection, so 911 is the only number listed.
+- Links to national networks open their sites. Their data is not added to the USGS map. IGC and USGS keep separate catalogs; a national network may publish more small earthquakes.
+- Map rectangles are approximate areas. Chile and Argentina use wider continental views; the United States starts on the contiguous states and says so explicitly. For Alaska, Hawaii, islands or other territories, pan the map and use "Search this area". Ecuador includes the Galápagos in its initial area. None of these rectangles represents jurisdiction, borders or risk.
+- Consular assistance in Panama: 24 listings with current official sources (some only link to the agency) and 26 historical references from the October 2024 European directory, kept separate and without directions or phone numbers. Coverage is not exhaustive. There are six documented building markers; Spain has no directions or marker because its temporary relocation is unconfirmed. For other destination and nationality combinations, official directories are shown when one is documented. No marker is added without a verified address.
+- Shelters and volunteering: Faro has no confirmed operational availability. Institutional links are not a list of open centers.
+- Other countries: the country selector and the USGS catalog are available; numbers and a local directory may be missing. The interface says so explicitly. Faro never invents a default emergency number.
+- NOAA/PTWC: the configured international products and their coverage limits are kept. Changing country does not turn them into a local alert system. The destination's authority is linked and dates are shown in the device time zone.
 
-## Fuentes de los cuatro destinos añadidos
+## Sources for the four added destinations
 
-- México: [911](https://www.gob.mx/911/articulos/servicio-de-atencion-de-llamadas-de-emergencias-9-1-1?idiom=es), [Protección Civil](https://www.gob.mx/sspc/acciones-y-programas/coordinacion-nacional-de-proteccion-civil-357857), [SSN](https://www.ssn.unam.mx/sismicidad/ultimos/).
-- Perú: [teléfonos y alcance regional](https://www.gob.pe/547-telefonos-de-emergencia), [INDECI](https://www.gob.pe/indeci), [CENSIS](https://censis.igp.gob.pe/).
-- Ecuador: [ECU 911](https://www.ecu911.gob.ec/gestion-de-la-atencion-de-emergencias/), [Gestión de Riesgos](https://www.gestionderiesgos.gob.ec/), [IG · EPN](https://www2.igepn.edu.ec/mapa-ultimos-sismos).
-- Costa Rica: [sistema 911, Poder Judicial](https://diccionariousual.poder-judicial.go.cr/index.php/diccionario/sistema-de-emergencias-9-1-1), [CNE](https://www.cne.go.cr/), [RSN](https://rsn.ucr.ac.cr/).
+- Mexico: [911](https://www.gob.mx/911/articulos/servicio-de-atencion-de-llamadas-de-emergencias-9-1-1?idiom=es), [Civil Protection](https://www.gob.mx/sspc/acciones-y-programas/coordinacion-nacional-de-proteccion-civil-357857), [SSN](https://www.ssn.unam.mx/sismicidad/ultimos/).
+- Peru: [numbers and regional scope](https://www.gob.pe/547-telefonos-de-emergencia), [INDECI](https://www.gob.pe/indeci), [CENSIS](https://censis.igp.gob.pe/).
+- Ecuador: [ECU 911](https://www.ecu911.gob.ec/gestion-de-la-atencion-de-emergencias/), [Risk Management](https://www.gestionderiesgos.gob.ec/), [IG · EPN](https://www2.igepn.edu.ec/mapa-ultimos-sismos).
+- Costa Rica: [911 system, Judicial Branch](https://diccionariousual.poder-judicial.go.cr/index.php/diccionario/sistema-de-emergencias-9-1-1), [CNE](https://www.cne.go.cr/), [RSN](https://rsn.ucr.ac.cr/).
 
-## Extensión
+## Extending
 
-Un archivo tipado por destino y una entrada en el registro. Ver [pasos y pruebas](extending-faro.md#add-or-improve-country-coverage). Las fuentes, fechas y restricciones forman parte de los datos; no deben quedar ocultas en componentes o textos fijos.
+One typed file per destination plus one entry in the registry. See the [steps and tests](extending-faro.md#add-or-improve-country-coverage). Sources, dates and restrictions are part of the data; they must not be hidden in components or hard-coded text.
 
-## Preparación y atención de salud
+## Preparedness and healthcare
 
-- Mochila: 14 elementos con lista local descargable en ES/EN, basada en SENAPRED; la batería externa se identifica como complemento de Faro. Las instrucciones durante el sismo usan material de ECA / ShakeOut con atribución y condiciones de uso propias; las ilustraciones complementarias de Faro son originales.
-- Farmacias y hospitales: búsquedas explícitas en Google Maps por dirección o ubicación aproximada. No son una integración de disponibilidad, horarios de guardia ni triaje. Enlaces oficiales: MINSA en Panamá y Visor Preparado de SENAPRED en Chile.
-- Evacuación: se corrigieron los enlaces de SENAPRED. No se verificó físicamente ninguna ruta, calle, salida de hotel ni punto seguro. Los planos chilenos solo se muestran para Chile.
-- El PDF de cuerpo diplomático enlazado por la Cancillería de Panamá devolvió 404 durante esta revisión. No se transcribió como una lista completa vigente.
+- Emergency kit: 14 items with a local checklist downloadable in English and Spanish, based on SENAPRED; the power bank is marked as a Faro addition. The during-the-earthquake instructions use ECA / ShakeOut material with attribution and its own terms of use; Faro's supplementary illustrations are original.
+- Pharmacies and hospitals: explicit Google Maps searches by area or approximate location, with city shortcuts per country in `src/data/careAreas.ts`. They are not an integration of availability, on-call hours or triage. Official links: MINSA in Panama and SENAPRED's Visor Preparado in Chile.
+- Evacuation: SENAPRED links were corrected. No route, street, hotel exit or safe point was physically verified. Chilean evacuation maps are shown only for Chile.
+- The diplomatic corps PDF linked by Panama's Foreign Ministry returned 404 during this review. It was not transcribed as a complete current list.
+
+## U.S. citizens traveling abroad
+
+Local help includes a nationality-specific State Department resource pack (sources checked October 12, 2026). Destination advisory links are verified for Panama, Colombia, Chile, Mexico, Costa Rica, Peru, Ecuador and Canada; other destinations lead to the official advisory directory. These links do not add a live alert feed or new embassy map markers. The Panama U.S. embassy card includes its officially listed main and after-hours consular telephone. General State Department fallback numbers distinguish callers outside the U.S./Canada from callers within those countries.
