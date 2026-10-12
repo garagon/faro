@@ -76,4 +76,4 @@ See [emergency interactions and magnitude colors](emergency-ux.md) for message r
 
 ## Preparedness and local assistance
 
-Faro includes a 14-item emergency-kit checklist saved in this browser, text export, and original vector instructions for earthquake protection and evacuation preparation. Nearby pharmacy and hospital searches open Google Maps only on request; facility availability and road access are not verified. Consular cards support multiple offices per nationality, official directories, and separately labelled historical references. See [extension points](extending-faro.md#consular-assistance-healthcare-and-preparedness).
+Faro includes a 14-item emergency-kit checklist saved in this browser, text export, and attributed ECA / ShakeOut earthquake instructions and supplementary Faro preparation graphics. Nearby pharmacy and hospital searches open Google Maps only on request; facility availability and road access are not verified. Consular cards support multiple offices per nationality, official directories, and separately labelled historical references. See [extension points](extending-faro.md#consular-assistance-healthcare-and-preparedness).

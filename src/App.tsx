@@ -4,6 +4,7 @@ import MagnitudeLegend from './components/MagnitudeLegend.tsx';
 import { magnitudeBand } from './lib/magnitude.ts';
 import CountrySearch from './components/CountrySearch.tsx';
 import DestinationInfo from './components/DestinationInfo.tsx';
+import { hasCountryBoundary, inCountryScope } from './lib/countryScope.ts';
 import { WORLD, countryCodes, regionFor, regionScope } from './lib/regions.ts';
 import EmergencyDialog from './components/EmergencyDialog.tsx';
 import LocalDataInfo from './components/LocalDataInfo.tsx';
@@ -147,7 +148,7 @@ export default function App() {
     [maxDepth, setMaxDepth] = useState(800),
     [order, setOrder] = useState('time'),
     [radius, setRadius] = useState(300),
-    [scope, setScope] = useState<'area' | 'nearby'>('area'),
+    [scope, setScope] = useState<'country' | 'area' | 'nearby'>('country'),
     [limit, setLimit] = useState(20),
     [listOnly, setListOnly] = useState(() => window.matchMedia('(max-width:760px)').matches);
   const [bounds, setBounds] = useState<Bounds>(initialRegion.bounds),
@@ -190,7 +191,10 @@ export default function App() {
     }).format(n);
   useEffect(() => {
     document.documentElement.lang = lang;
-    document.title = t('Faro · Sismos y ayuda local', 'Faro · Earthquakes & local help');
+    document.title = t(
+      'Faro by Oktsec · Sismos y ayuda para viajeros',
+      'Faro by Oktsec · Earthquakes and travel preparedness',
+    );
     try {
       writeLocal('faro-lang', lang);
     } catch {
@@ -211,7 +215,7 @@ export default function App() {
     setTracking(false);
     setGeo(null);
     setGeoState('idle');
-    setScope('area');
+    setScope('country');
   };
   const locate = () => {
     if (!navigator.geolocation) {
@@ -242,7 +246,7 @@ export default function App() {
         setGeoState(e.code === 1 ? 'denied' : 'failed');
         setTracking(false);
         setGeo(null);
-        setScope('area');
+        setScope('country');
         if (watch.current !== null) navigator.geolocation.clearWatch(watch.current);
         watch.current = null;
       },
@@ -253,7 +257,13 @@ export default function App() {
     const region = regionFor(code);
     setCountry(code);
     setCatalog(code === 'PA' ? 'IGC' : 'USGS');
-    setScope('area');
+    if (watch.current !== null) navigator.geolocation.clearWatch(watch.current);
+    watch.current = null;
+    firstFix.current = false;
+    setTracking(false);
+    setGeo(null);
+    setGeoState('idle');
+    setScope('country');
     setLimit(20);
     setFocused(null);
     setDetail(null);
@@ -307,7 +317,9 @@ export default function App() {
     const arr =
       scope === 'nearby' && geo
         ? temporal.filter((e) => distanceKm([geo.lat, geo.lng], [e.lat, e.lng]) <= radius)
-        : filterEvents(temporal, bounds, hours, minMag, maxDepth, live.now);
+        : scope === 'country' && (country === 'WORLD' || hasCountryBoundary(country))
+          ? temporal.filter((e) => inCountryScope(e, country))
+          : filterEvents(temporal, bounds, hours, minMag, maxDepth, live.now);
     if (order === 'magnitude') arr.sort((a, b) => (b.mag ?? -Infinity) - (a.mag ?? -Infinity));
     if (order === 'distance' && geo)
       arr.sort(
@@ -316,7 +328,7 @@ export default function App() {
           distanceKm([geo.lat, geo.lng], [b.lat, b.lng]),
       );
     return arr;
-  }, [temporal, bounds, scope, geo, radius, order]);
+  }, [temporal, bounds, scope, country, geo, radius, order]);
   const newIds = new Set(
     live.updates.filter((u) => live.now - u.receivedAt < 600000).map((u) => u.event.id),
   );
@@ -665,7 +677,7 @@ export default function App() {
                         setDetail(null);
                       }}
                     >
-                      <option value="IGC">IGC · UP · Panamá</option>
+                      {country === 'PA' && <option value="IGC">IGC · UP · Panamá</option>}
                       <option value="USGS">USGS · {t('Mundo', 'Worldwide')}</option>
                     </select>
                   </label>
@@ -770,23 +782,28 @@ export default function App() {
                 {listOnly ? t('Mostrar mapa', 'Show map') : t('Solo lista', 'List only')}
               </button>
             </div>
-            <p className="fw-area-scope">
-              {t('Área inicial', 'Initial area')}: {regionScope(country, lang)}
-              {country !== 'WORLD' && (
-                <>
-                  {' '}
-                  ·{' '}
-                  {t(
-                    'El área puede incluir países vecinos.',
-                    'The area may include neighboring countries.',
-                  )}
-                </>
-              )}
+            <p className="fw-area-scope" role="status">
+              {scope === 'country' && hasCountryBoundary(country)
+                ? t(
+                    `${countryName}: territorio y hasta 100 km mar adentro. Límites aproximados; no indican riesgo.`,
+                    `${countryName}: land and up to 100 km offshore. Approximate boundaries; not a risk zone.`,
+                  )
+                : scope === 'nearby'
+                  ? t(
+                      `Sismos a menos de ${radius} km de tu ubicación.`,
+                      `Earthquakes within ${radius} km of your location.`,
+                    )
+                  : scope === 'area'
+                    ? t(
+                        'Área del mapa: incluye todos los países visibles.',
+                        'Map area: includes all visible countries.',
+                      )
+                    : regionScope(country, lang)}
             </p>
             <MagnitudeLegend lang={lang} />
             <LiveActivity
               events={results}
-              updates={live.updates}
+              updates={live.updates.filter((u) => results.some((e) => e.id === u.event.id))}
               provider={provider}
               catalog={catalog}
               lang={lang}
@@ -812,7 +829,9 @@ export default function App() {
                       <MapPinIcon size={17} />
                       {scope === 'nearby'
                         ? `${radius} km · ${t('cerca de ti', 'near you')}`
-                        : countryName}
+                        : scope === 'area'
+                          ? t('Área del mapa', 'Map area')
+                          : countryName}
                     </span>
                     <small>
                       {t('Epicentros, no zonas de riesgo', 'Epicentres, not hazard zones')}
@@ -940,7 +959,7 @@ export default function App() {
                           setHours(24);
                           setMinMag(0);
                           setMaxDepth(800);
-                          setScope('area');
+                          setScope('country');
                           setBounds(regionFor(country).bounds);
                           setLimit(20);
                         }}
@@ -1337,7 +1356,13 @@ export default function App() {
           />
         </div>
         <footer className="fw-footer">
-          <span>Faro</span>
+          <span>
+            Faro · {t('Creado por', 'Created by')}{' '}
+            <a href="https://oktsec.com" target="_blank" rel="noopener">
+              Oktsec
+            </a>{' '}
+            · <a href="/about.html">{t('Acerca de Faro', 'About Faro')}</a>
+          </span>
           <span>
             {screen === 'status'
               ? t('Mensajes personales · Envío manual', 'Personal messages · Sent manually')

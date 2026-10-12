@@ -1,0 +1,20 @@
+# Faro by Oktsec
+
+> Faro is a free, open-source earthquake information and travel preparedness web application created by Oktsec. Available in Spanish and English.
+
+## Product and provenance
+- [About Faro, sources and limitations](/about.html): Crawlable bilingual product facts and frequently asked questions.
+- [Oktsec](https://oktsec.com): Creator.
+- [Source code](https://github.com/garagon/faro): Apache-2.0 application code; third-party materials retain their terms.
+
+## What Faro does
+Displays earthquake catalogues from USGS and IGC (Panama), with automatic checks every 60 seconds while the app is active. Includes country-specific emergency and consular resources where coverage is available, nearby healthcare searches, travel contacts, an emergency kit checklist and manually shared status messages.
+
+## Important distinctions
+- Catalogue events have already occurred; publication may be delayed. Faro is not an early-warning system.
+- Magnitude colors do not represent local risk or shaking intensity.
+- NOAA bulletins do not by themselves establish an active local tsunami alert. Local authorities decide local alerts and evacuation instructions.
+- Missing earthquake records do not establish safety.
+- Saved contacts and profile information stay in browser storage. Map providers receive ordinary map requests. Sharing and external searches are user-initiated.
+- Faro does not dispatch responders, track recipients, verify route safety or certify shelters and healthcare availability.
+- Coverage varies by country; USGS is not a complete substitute for national networks.

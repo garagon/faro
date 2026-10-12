@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 const excludedDirectories = new Set([
   'node_modules',
+  '.vercel',
   '.git',
   'dist',
   'coverage',
@@ -40,7 +41,15 @@ export function isPublicFile(path) {
     /^docs\/[\w./-]+\.(md|json)$/.test(path) ||
     /^licenses\/[\w.-]+\.txt$/.test(path) ||
     /^\.github\/[\w./-]+\.(yml|yaml|md)$/.test(path) ||
-    ['public/faro-mark.svg', 'public/data/coastline.json'].includes(path)
+    [
+      'public/faro-mark.svg',
+      'public/data/coastline.json',
+      'public/about.html',
+      'public/robots.txt',
+      'public/llms.txt',
+      'public/illustrations/drop-cover-hold-es.png',
+      'public/illustrations/drop-cover-hold-en.png',
+    ].includes(path)
   );
 }
 const privatePath =
@@ -80,6 +89,7 @@ export async function collectPublicFiles(root) {
         await visit(path);
         continue;
       }
+      if (['vercel.json', '.vercelignore'].includes(entry.name)) continue;
       if (/^\.env(?:\.|$)/.test(entry.name) && entry.name !== '.env.example') continue;
       if (!isPublicFile(path)) throw new Error(`File outside publication allowlist: ${path}`);
       const findings = sensitiveFindings(await readFile(join(root, path), 'utf8'));

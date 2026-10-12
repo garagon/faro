@@ -131,20 +131,29 @@
   font-size: 14px;
   line-height: 1.6;
 }
-.fw-instruction-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin: 26px 0;
+.fw-official-instructions {
+  margin: 24px 0;
 }
-.fw-instruction-strip figure {
-  margin: 0;
-  min-width: 0;
+.fw-official-instructions img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
 }
-.fw-instruction-strip figcaption {
-  margin-top: 8px;
-  font-size: 15px;
-  font-weight: 700;
+.fw-official-instructions figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 0;
+  font-size: 12px;
+  color: #526b64;
+}
+.fw-accessible-guide {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
 }
 .fw-safety-illustration {
   width: 100%;
@@ -460,12 +469,6 @@
   .fw-kit-intro > svg {
     width: 180px;
     justify-self: center;
-  }
-  .fw-instruction-strip {
-    gap: 8px;
-  }
-  .fw-instruction-strip figcaption {
-    font-size: 12px;
   }
   .fw-evacuation-steps {
     grid-template-columns: 1fr;

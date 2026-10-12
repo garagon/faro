@@ -4,6 +4,9 @@ import { isPublicFile, sensitiveFindings } from '../scripts/public-files.mjs';
 
 test('publication allowlist excludes credentials, captures and local artifacts', () => {
   for (const path of [
+    '.vercel/project.json',
+    'vercel.json',
+    '.vercelignore',
     '.env',
     '.env.local',
     'capture.png',

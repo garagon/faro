@@ -35,7 +35,7 @@ Un archivo tipado por destino y una entrada en el registro. Ver [pasos y pruebas
 
 ## Preparación y atención de salud
 
-- Mochila: 14 elementos con lista local descargable en ES/EN, basada en SENAPRED; la batería externa se identifica como complemento de Faro. Las ilustraciones vectoriales son originales, no material oficial.
+- Mochila: 14 elementos con lista local descargable en ES/EN, basada en SENAPRED; la batería externa se identifica como complemento de Faro. Las instrucciones durante el sismo usan material de ECA / ShakeOut con atribución y condiciones de uso propias; las ilustraciones complementarias de Faro son originales.
 - Farmacias y hospitales: búsquedas explícitas en Google Maps por dirección o ubicación aproximada. No son una integración de disponibilidad, horarios de guardia ni triaje. Enlaces oficiales: MINSA en Panamá y Visor Preparado de SENAPRED en Chile.
 - Evacuación: se corrigieron los enlaces de SENAPRED. No se verificó físicamente ninguna ruta, calle, salida de hotel ni punto seguro. Los planos chilenos solo se muestran para Chile.
 - El PDF de cuerpo diplomático enlazado por la Cancillería de Panamá devolvió 404 durante esta revisión. No se transcribió como una lista completa vigente.

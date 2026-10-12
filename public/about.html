@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Faro by Oktsec · Fuentes, cobertura y preguntas frecuentes</title>
+    <meta
+      name="description"
+      content="Qué es Faro, quién lo creó, qué fuentes usa y cuáles son sus límites. Información en español e inglés sobre sismos, privacidad y preparación para viajeros."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="icon" href="/faro-mark.svg" />
+    <style>
+      body {
+        margin: 0;
+        background: #f5f7f4;
+        color: #183d38;
+        font:
+          17px/1.65 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 780px;
+        margin: auto;
+        padding: 40px 24px;
+      }
+      a {
+        color: #205f50;
+        text-underline-offset: 3px;
+      }
+      nav {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      h1 {
+        font-size: clamp(30px, 5vw, 44px);
+        line-height: 1.15;
+        letter-spacing: -1px;
+      }
+      h2 {
+        margin-top: 40px;
+        line-height: 1.25;
+      }
+      h3 {
+        font-size: 19px;
+        margin-bottom: 4px;
+      }
+      p {
+        margin-top: 8px;
+      }
+      section {
+        border-top: 1px solid #ccd8d2;
+        margin-top: 32px;
+      }
+      footer {
+        border-top: 1px solid #ccd8d2;
+        padding-top: 24px;
+        margin-top: 40px;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <nav aria-label="Navegación">
+        <a href="/">Abrir Faro</a><a href="#english" lang="en">Read in English</a
+        ><a href="https://github.com/garagon/faro">Código abierto</a>
+      </nav>
+      <h1>Faro: información sísmica y ayuda para viajeros</h1>
+      <p>
+        Una herramienta gratuita creada por <a href="https://oktsec.com">Oktsec</a>, disponible en
+        español e inglés, para consultar sismos, encontrar contactos de ayuda y preparar un viaje.
+        Funciona en navegadores de computadoras y teléfonos.
+      </p>
+      <section>
+        <h2>Fuentes y cobertura</h2>
+        <ul>
+          <li>
+            <a href="https://earthquake.usgs.gov/earthquakes/">USGS</a>: catálogo de sismos con
+            cobertura mundial. Su cobertura no sustituye todos los registros de las redes
+            nacionales.
+          </li>
+          <li>
+            <a href="https://sismosgeociencias.up.ac.pa/">IGC · Universidad de Panamá</a>: catálogo
+            utilizado por defecto para Panamá.
+          </li>
+          <li>
+            <a href="https://www.tsunami.gov/">NOAA / PTWC</a>: boletines internacionales del
+            Pacífico y el Caribe. Un boletín histórico, informativo o cancelado no es una alerta
+            activa.
+          </li>
+          <li>
+            <a href="https://www.senapred.gov.cl/sismos/">SENAPRED</a>,
+            <a href="https://www.cdc.gov/earthquakes/safety/index.html">CDC</a> y
+            <a href="https://www.earthquakecountry.org/graphics/"
+              >Earthquake Country Alliance / ShakeOut</a
+            >: recomendaciones y materiales de preparación. Sigue las instrucciones de las
+            autoridades de tu ubicación.
+          </li>
+        </ul>
+        <p>
+          Los catálogos se consultan cada 60 segundos mientras la aplicación está activa. Faro
+          muestra la fecha del evento y el estado de la consulta. La publicación en la fuente puede
+          demorarse.
+        </p>
+        <p>
+          Los teléfonos, consulados y recursos varían por país. Las fichas indican sus fuentes y
+          fechas de revisión. La cobertura es parcial: no se afirma que una oficina, hospital o ruta
+          esté disponible después de un desastre.
+        </p>
+      </section>
+      <section>
+        <h2>Preguntas frecuentes</h2>
+        <h3>¿Faro me avisa antes de un terremoto?</h3>
+        <p>
+          No. Muestra registros de sismos que ya ocurrieron. No predice terremotos ni sustituye
+          sistemas oficiales de alerta temprana.
+        </p>
+        <h3>¿Los colores indican peligro en mi ubicación?</h3>
+        <p>
+          No. Agrupan magnitudes para facilitar la lectura. El riesgo local depende de más factores.
+          Faro no calcula una zona segura a partir de la magnitud o la distancia.
+        </p>
+        <h3>¿Puedo avisar a mi familia?</h3>
+        <p>
+          Puedes preparar y revisar un mensaje con tu estado, lugar y necesidades; después eliges
+          dónde compartirlo. El envío es manual. Faro no realiza seguimiento automático ni confirma
+          la recepción.
+        </p>
+        <h3>¿Dónde se guardan mis datos?</h3>
+        <p>
+          El perfil, los contactos y las notas se guardan en el navegador del dispositivo. No se
+          sincronizan con una cuenta. Las consultas de mapas y los enlaces externos usan los
+          servicios indicados; compartir información requiere una acción tuya.
+        </p>
+        <h3>¿Qué incluye la preparación?</h3>
+        <p>
+          Guías para actuar durante y después de un sismo, información costera, un plan personal de
+          alojamiento y una lista de mochila de emergencia. Las rutas enlazadas no certifican
+          transitabilidad ni seguridad.
+        </p>
+        <h3>¿Quién mantiene Faro?</h3>
+        <p>
+          Faro fue creado por Oktsec. El
+          <a href="https://github.com/garagon/faro">código está publicado</a> bajo Apache 2.0, con
+          condiciones propias para materiales de terceros. Es independiente de los organismos
+          citados y no representa un servicio oficial de emergencias.
+        </p>
+      </section>
+      <section id="english" lang="en">
+        <h2>Faro by Oktsec</h2>
+        <p>
+          Faro is a free, open-source earthquake information and travel preparedness web app created
+          by <a href="https://oktsec.com">Oktsec</a>. It works on desktop and mobile browsers, in
+          Spanish and English.
+        </p>
+        <h3>Sources and updates</h3>
+        <p>
+          Faro checks USGS and Panama's IGC earthquake catalogues every 60 seconds while active.
+          Events have already occurred and publication can be delayed. NOAA/PTWC bulletins cover
+          international Pacific and Caribbean products; national authorities determine local tsunami
+          alerts. Coverage varies by country and is not comprehensive.
+        </p>
+        <h3>Travel preparation and privacy</h3>
+        <p>
+          Find emergency and consular resources, search for nearby healthcare, prepare an emergency
+          kit and manually share a status message. Profile, contacts and notes stay in browser
+          storage. Map services receive normal map requests; external searches and sharing are
+          initiated by you.
+        </p>
+        <h3>Limits</h3>
+        <p>
+          Faro does not predict earthquakes, issue early warnings, dispatch responders or provide
+          live tracking. Magnitude colors are not local risk levels. Missing records do not
+          establish safety. Directions, shelters and healthcare availability are not certified.
+          Follow local authorities' instructions.
+        </p>
+      </section>
+      <footer>
+        Creado por / Created by <a href="https://oktsec.com">Oktsec</a> · <a href="/">Faro</a> ·
+        <a href="https://github.com/garagon/faro/blob/main/PRIVACY.md">Privacidad / Privacy</a>
+      </footer>
+    </main>
+  </body>
+</html>
