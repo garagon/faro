@@ -260,3 +260,10 @@
   flex-shrink: 0;
   accent-color: #215d4c;
 }
+
+.fw-location-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #60736a;
+}
