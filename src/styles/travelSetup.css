@@ -68,40 +68,6 @@
   color: #60736a;
   margin: 0 0 16px;
 }
-.fw-setup-language {
-  border: 0;
-  padding: 0;
-  margin: 0 0 17px;
-  display: flex;
-  gap: 9px;
-}
-.fw-setup-language legend {
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-.fw-setup-language label {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  flex: 1;
-  min-height: 44px;
-  border: 1px solid #cad8cf;
-  border-radius: 6px;
-  padding: 9px 12px;
-  font-size: 13px;
-  cursor: pointer;
-}
-.fw-setup-language label:has(input:checked) {
-  background: #eaf2eb;
-  border-color: #4d8166;
-}
-.fw-setup input[type='radio'] {
-  accent-color: #245f4e;
-  width: 17px;
-  height: 17px;
-  margin: 0;
-}
 .fw-setup-field {
   display: block;
   font-size: 12px;
@@ -386,9 +352,6 @@
   }
   .fw-setup-header > p {
     margin-bottom: 17px;
-  }
-  .fw-setup-language {
-    margin-bottom: 14px;
   }
   .fw-setup-field {
     margin-bottom: 14px;

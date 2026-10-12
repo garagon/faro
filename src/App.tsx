@@ -41,6 +41,7 @@ import LiveActivity from './components/LiveActivity.tsx';
 import TravelSetup from './components/TravelSetup.tsx';
 import {
   readPreferences,
+  readSiteLanguage,
   storePreferences,
   forgetPreferences,
   type Preferences,
@@ -119,14 +120,7 @@ export default function App() {
   }, [profileFeedback]);
   const initialRegion = useMemo(() => regionFor(profile?.destination ?? 'PA'), []);
   const [checkIns, setCheckIns] = useState(readCheckIns);
-  const [lang, setLang] = useState<Lang>(() => {
-    if (profile) return profile.language;
-    try {
-      return localStorage.getItem('faro-lang') === 'en' ? 'en' : 'es';
-    } catch {
-      return 'es';
-    }
-  });
+  const [lang, setLang] = useState<Lang>(() => readSiteLanguage(profile?.language));
   const t = (es: string, en: string) => (lang === 'es' ? es : en),
     idx = lang === 'es' ? 0 : 1;
   const [catalog, setCatalog] = useState<'USGS' | 'IGC'>(
@@ -283,19 +277,7 @@ export default function App() {
     setSetupOpen(false);
     setProfileFeedback('saved');
   };
-  const changeLanguage = (value: Lang) => {
-    if (profile) {
-      try {
-        setProfile(
-          storePreferences({ ...profile, language: value, savedAt: Date.now() }, countryCodes),
-        );
-      } catch {
-        setProfileFeedback('storage');
-        return;
-      }
-    }
-    setLang(value);
-  };
+  const changeLanguage = (value: Lang) => setLang(value);
   const deleteProfile = () => {
     forgetPreferences();
     setProfile(null);
@@ -1126,8 +1108,8 @@ export default function App() {
                   {profile
                     ? `${t('Destino guardado', 'Saved destination')}: ${names.of(profile.destination)} · ${t('Nacionalidad', 'Nationality')}: ${profile.nationality ? names.of(profile.nationality) : t('Sin indicar', 'Not specified')}`
                     : t(
-                        'Guarda tu destino, idioma y nacionalidad para la próxima visita.',
-                        'Save your destination, language and nationality for your next visit.',
+                        'Guarda tus datos y el destino para la próxima visita.',
+                        'Save your details and destination for your next visit.',
                       )}
                 </p>
               </div>

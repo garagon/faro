@@ -51,20 +51,26 @@ export default function EmbassyPanel({
   function card(m: Mission) {
     const route = missionDirections(m, mode);
     return (
-      <article className="fw-consular-card" key={m.id}>
-        <div>
-          <span>
-            {names.of(m.nation)} · {missionKinds[m.kind][i]}
-          </span>
-          <h3>{m.historical ? `${m.name[i]} · ${m.city}` : m.name[i]}</h3>
+      <article
+        className={`fw-consular-card${!m.historical && m.emergency ? ' has-emergency' : ''}`}
+        key={m.id}
+      >
+        <div className="fw-consular-card-main">
+          <div>
+            <span>
+              {names.of(m.nation)} · {missionKinds[m.kind][i]}
+            </span>
+            <h3>{m.historical ? `${m.name[i]} · ${m.city}` : m.name[i]}</h3>
+          </div>
+          {m.address && <address>{m.address}</address>}
+          {!m.historical && m.phone && (
+            <a className="fw-consular-phone" href={`tel:${m.phone}`}>
+              <PhoneIcon size={17} />
+              {t('Llamar', 'Call')} {m.phone}
+            </a>
+          )}
+          {m.note && <p>{m.note[i]}</p>}
         </div>
-        {m.address && <address>{m.address}</address>}
-        {!m.historical && m.phone && (
-          <a className="fw-consular-phone" href={`tel:${m.phone}`}>
-            <PhoneIcon size={17} />
-            {t('Llamar', 'Call')} {m.phone}
-          </a>
-        )}
         {!m.historical && m.emergency && (
           <div className="fw-consular-emergency">
             <strong>{t('Emergencia consular', 'Consular emergency')}</strong>
@@ -78,7 +84,7 @@ export default function EmbassyPanel({
             </p>
           </div>
         )}
-        {m.note && <p>{m.note[i]}</p>}
+
         <div className="fw-consular-actions">
           <a href={m.source} target="_blank" rel="noreferrer">
             {m.historical
@@ -109,14 +115,11 @@ export default function EmbassyPanel({
     <section className="fw-consular-directory" aria-labelledby="consular-title">
       <header>
         <div>
-          <span>
-            {t('DOCUMENTOS Y ASISTENCIA EN EL EXTERIOR', 'DOCUMENTS AND ASSISTANCE ABROAD')}
-          </span>
           <h2 id="consular-title">{t('Embajadas y consulados', 'Embassies and consulates')}</h2>
           <p>
             {t(
-              'Busca por nacionalidad. Una misma nacionalidad puede tener varias oficinas con servicios diferentes.',
-              'Search by nationality. A country may have several offices providing different services.',
+              'Encuentra tu representación y consulta cómo contactar o llegar.',
+              'Find your representation, contact details and directions.',
             )}
           </p>
         </div>
@@ -146,11 +149,11 @@ export default function EmbassyPanel({
           }}
         >
           {all
-            ? t('Ver mi nacionalidad', 'My nationality')
+            ? t('Filtrar por nacionalidad', 'Filter by nationality')
             : t('Explorar el directorio', 'Browse directory')}
         </button>
       </div>
-      {savedNationality === nationality && nationality && (
+      {!all && savedNationality === nationality && nationality && (
         <small>
           {t('Nacionalidad guardada en tu perfil.', 'Nationality saved in your profile.')}
         </small>

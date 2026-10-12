@@ -82,3 +82,17 @@ export function storePreferences(
 export function forgetPreferences(storage: Pick<Storage, 'removeItem' | 'getItem'> = localStorage) {
   removeLocal(PREFERENCES_KEY, storage);
 }
+
+/** Site language takes precedence over the copy retained in older trip profiles. */
+export function readSiteLanguage(
+  profileLanguage?: 'es' | 'en',
+  storage?: Pick<Storage, 'getItem'>,
+): 'es' | 'en' {
+  try {
+    const saved = (storage ?? localStorage).getItem('faro-lang');
+    if (saved === 'es' || saved === 'en') return saved;
+  } catch {
+    /* The site still works when browser storage is unavailable. */
+  }
+  return profileLanguage ?? 'es';
+}
