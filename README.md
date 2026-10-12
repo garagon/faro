@@ -111,3 +111,9 @@ La publicación del código no equivale a aprobar el uso en emergencias. [Revisi
 Para cambios de código, empieza por [CONTRIBUTING.md](CONTRIBUTING.md). Para ampliar cobertura, aporta la fuente oficial, jurisdicción, fecha y limitaciones. Para fallas ordinarias, abre un issue con un ejemplo sintético; para vulnerabilidades usa [el canal privado](https://github.com/garagon/faro/security/advisories/new).
 
 Mantenedor inicial: [@garagon](https://github.com/garagon). La comunidad se rige por el [código de conducta](CODE_OF_CONDUCT.md).
+
+## Creado por Oktsec
+
+Faro es una herramienta creada por [Oktsec](https://oktsec.com). La página pública `/about.html` documenta fuentes, cobertura y límites en español e inglés, sin requerir JavaScript. Los metadatos y datos estructurados describen el producto sin prometer alertas tempranas ni cobertura completa. `llms.txt` facilita la consulta de esta información; no garantiza inclusión en buscadores o respuestas de IA.
+
+Las configuraciones e identificadores de despliegue se mantienen fuera del repositorio y del archivo exportado.

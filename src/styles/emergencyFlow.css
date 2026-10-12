@@ -23,15 +23,16 @@
   --mag-ink: #58616b;
   --mag-bg: #f0f2f4;
 }
+.fw-app .fw-latest-magnitude,
 .fw-app .fw-mag,
-.fw-app .fw-quake-magnitude,
+.fw-quake-magnitude,
 .fw-app .fw-update-mag {
   background: var(--mag-bg);
   color: var(--mag-ink);
   border-color: var(--mag-ink);
 }
 .fw-app .fw-latest-magnitude > strong,
-.fw-app .fw-quake-magnitude > strong {
+.fw-quake-magnitude > strong {
   color: var(--mag-ink);
 }
 .fw-app .fw-pin {
@@ -48,7 +49,11 @@
   color: white;
 }
 .fw-magnitude-legend {
-  padding: 12px 0 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 8px 0 14px;
   font-size: 12px;
 }
 .fw-magnitude-legend > strong {
@@ -60,7 +65,7 @@
   gap: 10px 18px;
   list-style: none;
   padding: 0;
-  margin: 10px 0;
+  margin: 0;
 }
 .fw-magnitude-legend li {
   display: flex;

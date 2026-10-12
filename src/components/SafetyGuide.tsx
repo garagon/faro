@@ -1,5 +1,4 @@
 import EmergencyKit from './EmergencyKit.tsx';
-import SafetyIllustration from './SafetyIllustration.tsx';
 import EvacuationPlan from './EvacuationPlan.tsx';
 import { kitText } from '../data/emergencyKit.ts';
 import { destinationFor } from '../data/destinations/index.ts';
@@ -399,17 +398,48 @@ export default function SafetyGuide({
             <p>{current.intro[i]}</p>
           </header>
           {active === 'during' && (
-            <div className="fw-instruction-strip">
-              {(['drop', 'cover', 'hold'] as const).map((scene, n) => (
-                <figure key={scene}>
-                  <SafetyIllustration scene={scene} />
-                  <figcaption>
-                    {n + 1}.{' '}
-                    {t(['Agáchate', 'Cúbrete', 'Sujétate'][n], ['Drop', 'Cover', 'Hold on'][n])}
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
+            <figure className="fw-official-instructions">
+              <a
+                href={`/illustrations/drop-cover-hold-${lang}.png`}
+                target="_blank"
+                rel="noopener"
+                aria-label={t(
+                  'Ampliar las instrucciones ilustradas',
+                  'Enlarge illustrated instructions',
+                )}
+              >
+                <img
+                  src={`/illustrations/drop-cover-hold-${lang}.png`}
+                  width="1920"
+                  height="631"
+                  alt={t(
+                    'Agáchate sobre manos y rodillas. Cubre cabeza y cuello bajo una mesa resistente. Sujeta la mesa con una mano y sigue protegiéndote con la otra.',
+                    'Drop onto your hands and knees. Cover your head and neck under a sturdy table. Hold the table with one hand and keep protecting yourself with the other.',
+                  )}
+                />
+              </a>
+              <figcaption>
+                <a
+                  href="https://www.earthquakecountry.org/graphics/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Earthquake Country Alliance · ShakeOut ↗
+                </a>
+                <span>{t('Toca la imagen para ampliarla.', 'Tap the image to enlarge.')}</span>
+              </figcaption>
+              <a
+                className="fw-accessible-guide"
+                href={`https://www.earthquakecountry.org/library/Accessible_Earthquake_Protective_Actions_Image-${lang === 'es' ? 'SP' : 'EN'}.pdf`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t(
+                  'Guía ilustrada: bastón, andador y silla de ruedas (PDF) ↗',
+                  'Illustrated guide: cane, walker and wheelchair (PDF) ↗',
+                )}
+              </a>
+            </figure>
           )}
           <ol className="fw-safety-steps" role="list">
             {current.steps.map((step, n) => (

@@ -22,3 +22,5 @@ audit-launch/
 .openai/
 .vercel/
 .wrangler/
+vercel.json
+.vercelignore

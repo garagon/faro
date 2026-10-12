@@ -24,3 +24,13 @@ The included database retains ISO country codes, Spanish names, approximate cent
 ## Official sources
 
 Source links identify USGS, NOAA, IGC/Universidad de Panamá, SENAPRED and other public agencies. Faro does not claim their names, logos, data or materials as its own. Guidance is summarized and linked; full agency publications and scraped catalogue snapshots are not bundled. Runtime access to each service remains subject to that provider's policies. See [data sources](docs/data-sources.md).
+
+## Country boundaries
+
+`src/data/countryBoundaries.json` is derived from Natural Earth 1:50m countries v5.1.2, public domain. Processing and geographic limitations are documented in `docs/country-geography.md`.
+
+## Earthquake protective action illustrations
+
+`public/illustrations/drop-cover-hold-es.png` and `drop-cover-hold-en.png` are unmodified Earthquake Country Alliance / ShakeOut graphics. ECA makes these available for campaigns and outreach: https://www.earthquakecountry.org/graphics/ . Original downloads are listed at https://www.earthquakecountry.org/languages/ . Retrieved 2026-10-12.
+
+These graphics retain the provider's usage terms and are **not relicensed under Apache-2.0**. Faro includes them for public earthquake-preparedness education, with visible attribution and a link to the original resource. Their presence does not imply endorsement of Faro or Oktsec.

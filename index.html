@@ -6,12 +6,78 @@
     <meta name="theme-color" content="#20584f" />
     <meta
       name="description"
-      content="Explora sismos, consulta sus fuentes oficiales y prepara tu plan con Faro."
+      content="Faro, creado por Oktsec: sismos de USGS e IGC, ayuda local, contactos de viaje y preparación ante terremotos. Gratis, en español e inglés."
     />
-    <title>Faro · Sismos y ayuda local</title>
+    <title>Faro by Oktsec · Sismos y ayuda para viajeros</title>
+    <link rel="icon" type="image/svg+xml" href="/faro-mark.svg" />
+    <meta name="author" content="Oktsec" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Faro by Oktsec" />
+    <meta property="og:title" content="Faro · Sismos y ayuda para viajeros" />
+    <meta
+      property="og:description"
+      content="Consulta fuentes sísmicas oficiales, encuentra ayuda local y prepara un mensaje para tus contactos. Español e inglés. Datos personales guardados en tu navegador."
+    />
+    <meta property="og:locale" content="es_PA" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Faro by Oktsec" />
+    <meta
+      name="twitter:description"
+      content="Sismos, ayuda local y preparación para viajeros. Gratis y de código abierto."
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Faro",
+        "alternateName": "Faro by Oktsec",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web",
+        "inLanguage": ["es", "en"],
+        "isAccessibleForFree": true,
+        "description": "Earthquake information from USGS and IGC, local help, travel contacts and preparedness. Not an early-warning or emergency dispatch service.",
+        "creator": { "@type": "Organization", "name": "Oktsec", "url": "https://oktsec.com" },
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": [
+          "Official earthquake catalogues",
+          "Local emergency and consular resources",
+          "Locally saved travel information",
+          "Manual status sharing",
+          "Emergency kit checklist"
+        ]
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main>
+        <h1>Faro · Sismos y ayuda para viajeros</h1>
+        <p>
+          Creado por <a href="https://oktsec.com">Oktsec</a>. Consulta sismos de USGS e IGC, ayuda
+          local y recomendaciones para preparar tu viaje.
+        </p>
+        <p>
+          La aplicación consulta los catálogos cada 60 segundos mientras está activa. Los registros
+          pueden publicarse con demora; no es un sistema de alerta temprana.
+        </p>
+        <p>
+          Disponible en español e inglés. Tus datos personales se guardan en este navegador;
+          compartir un mensaje requiere tu acción.
+        </p>
+        <a href="/about.html">Fuentes, cobertura y preguntas frecuentes / Sources and coverage</a>
+      </main>
+    </div>
+    <noscript
+      ><p>
+        Activa JavaScript para usar el mapa y consultar los catálogos.
+        <a href="/about.html"
+          >La información y los enlaces oficiales están disponibles sin JavaScript.</a
+        >
+      </p></noscript
+    >
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -14,7 +14,7 @@ The Panama mission directory in `src/data/consularMissions.ts` contains 24 recor
 
 Nearby pharmacies and hospitals are explicit Google Maps searches, not live availability data. The user enters a place or requests approximate GPS coordinates; the query is sent only when they open a search. Official complementary sources are [MINSA's facilities directory](https://instalaciones.minsa.gob.pa/) and [SENAPRED's Visor Preparado](https://www.senapred.gov.cl/visor-preparado/).
 
-The 14-item emergency checklist is based on [SENAPRED's emergency kit](https://www.senapred.gov.cl/kit-de-emergencia/) and [family preparation](https://senapred.cl/familia-preparada/). A power bank is an explicit Faro addition. Checklist marks stay in the browser. The original vector illustrations supplement written instructions; they are not official SENAPRED illustrations.
+The 14-item emergency checklist is based on [SENAPRED's emergency kit](https://www.senapred.gov.cl/kit-de-emergencia/) and [family preparation](https://senapred.cl/familia-preparada/). A power bank is an explicit Faro addition. Checklist marks stay in the browser. Earthquake protection uses unmodified ECA / ShakeOut illustrations with attribution; other Faro illustrations supplement written instructions. They are not SENAPRED illustrations. See THIRD_PARTY_NOTICES.md for usage terms.
 
 The emergency-number directory covers Panama, Chile, Colombia, Argentina, the United States, Mexico, Peru, Ecuador and Costa Rica with explicit source and geographic caveats. No global default number is invented. Some numbers apply only to a specific domestic jurisdiction, including SAMU coverage in Peru. See [country coverage](country-coverage.md) and the country modules in `src/data/destinations/`.
 
