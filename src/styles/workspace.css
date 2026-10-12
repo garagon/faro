@@ -983,24 +983,7 @@
   line-height: 1.8;
   color: #64725b;
 }
-.fw-checklist {
-  padding: 7px 4px 15px;
-  border: 0;
-  border-radius: 0;
-}
-.fw-checklist h3 {
-  font-size: 14px;
-  line-height: 1.5;
-}
-.fw-checklist ol {
-  padding-left: 20px;
-}
-.fw-checklist li {
-  font-size: 12px;
-  line-height: 1.7;
-  margin: 14px 0;
-  padding-left: 5px;
-}
+
 .fw-plan-card {
   background: white;
   border-color: #d4dfd4;
@@ -1766,9 +1749,7 @@
   .fw-hotel-aside .fw-note {
     padding: 22px 20px;
   }
-  .fw-checklist {
-    padding: 2px 5px 10px;
-  }
+
   .fw-safety-layout {
     display: flex;
     gap: 20px;
@@ -1851,9 +1832,7 @@
 .fw-status-options label {
   font-size: 14px !important;
 }
-.fw-checklist {
-  background: transparent;
-}
+
 .fw-form p,
 .fw-hotel-aside .fw-note p {
   font-size: 13px;

@@ -1,5 +1,4 @@
 import { destinationFor } from '../data/destinations/index.ts';
-import SafetyIllustration from './SafetyIllustration.tsx';
 export default function EvacuationPlan({ country, lang }: { country: string; lang: 'es' | 'en' }) {
   const t = (es: string, en: string) => (lang === 'es' ? es : en),
     destination = destinationFor(country);
@@ -10,38 +9,39 @@ export default function EvacuationPlan({ country, lang }: { country: string; lan
         <p>
           {t(
             'Faro no verifica el estado de calles, salidas ni puntos de encuentro. Una ruta de Google Maps no es una ruta de evacuación.',
-            'Faro does not verify roads, exits or assembly points. Google Maps directions are not an evacuation route.',
+            'Faro does not verify roads, exits or meeting points. Google Maps directions are not an evacuation route.',
           )}
         </p>
       </header>
-      <div className="fw-evacuation-steps">
-        <article>
-          <SafetyIllustration scene="stairs" />
-          <h4>{t('1. Confirma la salida', '1. Confirm the exit')}</h4>
+      <ol className="fw-evacuation-steps">
+        <li>
+          <h4>{t('Confirma la salida', 'Confirm the exit')}</h4>
           <p>
             {t(
-              'Pide a recepción el plano desde tu habitación, una alternativa y apoyo si tienes movilidad reducida. No uses ascensores durante el sismo.',
-              'Ask reception for the route from your room, an alternative and assistance if you have limited mobility. Do not use elevators during shaking.',
+              'Pide en recepción la ruta desde tu habitación, una alternativa y apoyo si tienes movilidad reducida. No uses ascensores durante el sismo.',
+              'Ask reception for the route from your room, an alternative and support if you have limited mobility. Do not use elevators during shaking.',
             )}
           </p>
-        </article>
-        <article>
-          <SafetyIllustration scene="coast" />
-          <h4>{t('2. Distingue sismo de tsunami', '2. Distinguish earthquake from tsunami')}</h4>
+        </li>
+        <li>
+          <h4>{t('Ten en cuenta el tsunami', 'Consider tsunami risk')}</h4>
           <p>
             {t(
-              'El punto del hotel puede estar en zona inundable. En la costa, confirma la ruta a terreno alto o tierra adentro con la autoridad local.',
-              'The hotel meeting point may be in an inundation zone. On the coast, confirm the route to higher ground or inland with local authorities.',
+              'El punto del hotel puede estar en zona inundable. En la costa, confirma con la autoridad local la ruta a terreno alto o tierra adentro.',
+              'The hotel meeting point may be in a flood zone. On the coast, confirm the route to higher ground or inland with local authorities.',
             )}
           </p>
-        </article>
-      </div>
-      <p>
-        {t(
-          '3. Sigue las indicaciones actuales. Los daños pueden bloquear una ruta prevista. No regreses a una zona evacuada hasta que la autoridad lo permita.',
-          '3. Follow current instructions. Damage can block a planned route. Do not return to an evacuated area until authorities allow it.',
-        )}
-      </p>
+        </li>
+        <li>
+          <h4>{t('Sigue las indicaciones actuales', 'Follow current instructions')}</h4>
+          <p>
+            {t(
+              'Los daños pueden bloquear una ruta prevista. No regreses a una zona evacuada hasta que la autoridad lo permita.',
+              'Damage can block a planned route. Do not return to an evacuated area until authorities allow it.',
+            )}
+          </p>
+        </li>
+      </ol>
       {destination?.evacuation ? (
         <a
           className="fw-secondary"

@@ -439,15 +439,13 @@
   width: 20px;
 }
 .fw-form,
-.fw-plan-card,
-.fw-checklist {
+.fw-plan-card {
   border-radius: 5px;
   background: #fff;
   padding: 24px;
 }
 .fw-form h2,
-.fw-plan-card h2,
-.fw-checklist h3 {
+.fw-plan-card h2 {
   font-size: 19px;
   font-weight: 600;
 }

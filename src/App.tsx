@@ -1122,13 +1122,36 @@ export default function App() {
                 <span className="fw-eyebrow">
                   {t('GUARDADO SOLO EN ESTE DISPOSITIVO', 'SAVED ONLY ON THIS DEVICE')}
                 </span>
-                <h2>{t('Punto de encuentro', 'Assembly point')}</h2>
+                <h2>{t('Punto de encuentro', 'Meeting point')}</h2>
                 <p>
                   {t(
-                    'Completa los datos con recepción. El punto guardado es personal y no está verificado.',
-                    'Confirm these details with reception. The saved point is personal and unverified.',
+                    'Pregunta en recepción y guárdalo aquí. Es una nota personal, no un punto seguro verificado.',
+                    'Ask reception and save it here. It is a personal note, not a verified safe point.',
                   )}
                 </p>
+                <div className="fw-ask-reception">
+                  <h3>{t('Qué preguntar en recepción', 'What to ask reception')}</h3>
+                  <ol>
+                    <li>
+                      {t(
+                        '¿Dónde están las salidas y el punto de encuentro?',
+                        'Where are the exits and the meeting point?',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        '¿Cuál es el plan si hay un aviso de tsunami?',
+                        'What is the plan if there is a tsunami warning?',
+                      )}
+                    </li>
+                    <li>
+                      {t(
+                        '¿Cómo darán instrucciones si no hay internet?',
+                        'How will you share instructions without internet?',
+                      )}
+                    </li>
+                  </ol>
+                </div>
                 {plan && (
                   <p className="fw-plan-country">
                     {t('Plan guardado para', 'Plan saved for')} {names.of(plan.country)}
@@ -1145,7 +1168,7 @@ export default function App() {
                   </label>
                 )}
                 <label>
-                  {t('Nombre del hotel', 'Hotel name')}
+                  {t('Alojamiento', 'Accommodation')}
                   <input
                     required
                     maxLength={120}
@@ -1154,10 +1177,7 @@ export default function App() {
                   />
                 </label>
                 <label>
-                  {t(
-                    'Punto de encuentro indicado por recepción',
-                    'Assembly point provided by reception',
-                  )}
+                  {t('Punto de encuentro', 'Meeting point')}
                   <input
                     required
                     maxLength={300}
@@ -1215,7 +1235,7 @@ export default function App() {
                   )}
                 </details>
                 <label>
-                  {t('Ruta e instrucciones del hotel', 'Hotel route and instructions')}
+                  {t('Ruta e indicaciones', 'Route and instructions')}
                   <textarea
                     maxLength={1500}
                     rows={3}
@@ -1290,29 +1310,6 @@ export default function App() {
                     </button>
                   </article>
                 )}
-                <div className="fw-checklist">
-                  <h3>{t('Confirmar con recepción', 'Confirm with reception')}</h3>
-                  <ol>
-                    <li>
-                      {t(
-                        '¿Dónde está la salida y el punto de encuentro?',
-                        'Where are the exit and assembly point?',
-                      )}
-                    </li>
-                    <li>
-                      {t(
-                        '¿Cuál es el plan si hay un aviso de tsunami?',
-                        'What is the plan for a tsunami warning?',
-                      )}
-                    </li>
-                    <li>
-                      {t(
-                        '¿Cómo recibiremos instrucciones si no hay internet?',
-                        'How will we receive instructions without internet?',
-                      )}
-                    </li>
-                  </ol>
-                </div>
               </aside>
             </div>
           </>
