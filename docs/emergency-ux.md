@@ -2,7 +2,7 @@
 
 ## Emergency flows
 
-The emergency button stays in the fixed desktop sidebar and mobile header. Onboarding also offers direct access without saving a profile. The dialog asks the person to check the country before opening a telephone link; no call is placed by Faro. Guidance and personal messages are separate actions available from the dialog.
+The emergency button stays in the fixed desktop sidebar and mobile header. Onboarding is a single step (name, country you are in and nationality, with phone and email optional) and offers emergency numbers first, without saving a profile. The dialog asks the person to check the country before opening a telephone link; no call is placed by Faro. Guidance and personal messages are separate actions available from the dialog.
 
 A status update has three steps: select the current state and optional location, review the generated message, then choose a sharing method. Other fields are under an optional disclosure. Help suggestions insert editable text only after selection. Nothing infers the person's status from an earthquake, map position or saved message. Phone/email remain opt-in. Changing the text or output language requires another review; elapsed time still invalidates sharing. Browser persistence can fail without preventing preparation of a message.
 

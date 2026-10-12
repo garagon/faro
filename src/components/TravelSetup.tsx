@@ -25,7 +25,6 @@ export default function TravelSetup(p: Props) {
       p.saved?.destination ?? (p.destination === 'WORLD' ? 'PA' : p.destination),
     ),
     [nationality, setNationality] = useState(p.nationality),
-    [step, setStep] = useState(0),
     [name, setName] = useState(p.saved?.name || ''),
     [phone, setPhone] = useState(p.saved?.phone || ''),
     [email, setEmail] = useState(p.saved?.email || ''),
@@ -51,17 +50,9 @@ export default function TravelSetup(p: Props) {
       viewport.removeEventListener('scroll', fitViewport);
     };
   }, []);
-  useEffect(() => {
-    bodyRef.current?.scrollTo(0, 0);
-    titleRef.current?.focus({ preventScroll: true });
-  }, [step]);
   const t = (es: string, en: string) => (language === 'es' ? es : en);
   function save(e: React.FormEvent) {
     e.preventDefault();
-    if (step === 0) {
-      setStep(1);
-      return;
-    }
     try {
       p.onSave({
         version: 1,
@@ -130,137 +121,107 @@ export default function TravelSetup(p: Props) {
                 onClick={() => p.onHelp(destination || p.destination)}
               >
                 <PhoneIcon size={18} aria-hidden="true" />
-                {t(
-                  '¿Necesitas ayuda ahora? Ver teléfonos de emergencia',
-                  'Need help now? See emergency numbers',
-                )}
+                {t('Necesito ayuda ahora', 'I need help now')}
               </button>
             )}
             <Dialog.Title ref={titleRef} tabIndex={-1}>
-              {step === 0 ? t('Tus datos', 'Your details') : t('Tu viaje', 'Your trip')}
+              {p.saved
+                ? t('Mi perfil', 'My profile')
+                : t('Tus datos para este viaje', 'Your details for this trip')}
             </Dialog.Title>
             <Dialog.Description>
-              {step === 0
-                ? t(
-                    'Para identificarte cuando avises cómo estás.',
-                    'So people know who your update is from.',
-                  )
-                : t(
-                    'Encuentra información local y asistencia consular.',
-                    'Find local information and consular assistance.',
-                  )}
+              {t(
+                'Para avisar cómo estás y encontrar ayuda consular. Menos de un minuto.',
+                'To tell people how you are and find consular help. Under a minute.',
+              )}
             </Dialog.Description>
-            <ol className="fw-setup-progress" aria-label={t('Progreso', 'Progress')}>
-              <li
-                className={step === 0 ? 'active' : ''}
-                aria-current={step === 0 ? 'step' : undefined}
-              >
-                {t('1 · Tus datos', '1 · Your details')}
-              </li>
-              <li
-                className={step === 1 ? 'active' : ''}
-                aria-current={step === 1 ? 'step' : undefined}
-              >
-                {t('2 · Tu viaje', '2 · Your trip')}
-              </li>
-            </ol>
           </header>
           <form onSubmit={save} className="fw-setup-form">
             <div className="fw-setup-body" ref={bodyRef}>
-              {step === 1 ? (
-                <>
-                  <CountrySearch
-                    label={t('País donde estás', 'Country you are in')}
-                    lang={language}
-                    value={destination}
-                    onChange={setDestination}
-                    required
-                  />
-                  <CountrySearch
-                    label={t('Nacionalidad', 'Nationality')}
-                    lang={language}
-                    value={nationality}
-                    onChange={setNationality}
-                    required
-                  />
-                  <p className="fw-setup-hint">
-                    {t(
-                      'La cobertura consular varía según el país. Puedes consultar otras regiones sin cambiar el destino guardado.',
-                      'Consular coverage varies by country. You can browse other regions without changing your saved destination.',
-                    )}
-                  </p>
-                </>
-              ) : (
-                <div className="fw-setup-personal">
+              <label className="fw-setup-field">
+                {t('Tu nombre', 'Your name')} <span>{t('Obligatorio', 'Required')}</span>
+                <input
+                  name="traveler-name"
+                  autoComplete="name"
+                  maxLength={80}
+                  required
+                  value={name}
+                  onChange={(e) => {
+                    e.target.setCustomValidity(
+                      e.target.value.trim() ? '' : t('Escribe tu nombre.', 'Enter your name.'),
+                    );
+                    setName(e.target.value);
+                  }}
+                />
+              </label>
+              <CountrySearch
+                label={t('País donde estás', 'Country you are in')}
+                lang={language}
+                value={destination}
+                onChange={setDestination}
+                required
+              />
+              <CountrySearch
+                label={t('Nacionalidad', 'Nationality')}
+                lang={language}
+                value={nationality}
+                onChange={setNationality}
+                required
+              />
+              <details className="fw-setup-more" open={!!(phone || email)}>
+                <summary>{t('Teléfono y correo · opcional', 'Phone and email · optional')}</summary>
+                <div className="fw-setup-contacts">
                   <label className="fw-setup-field">
-                    {t('Tu nombre', 'Your name')} <span>{t('Obligatorio', 'Required')}</span>
+                    {t('Teléfono', 'Phone')}
                     <input
-                      name="traveler-name"
-                      autoComplete="name"
-                      maxLength={80}
-                      required
-                      value={name}
+                      name="traveler-phone"
+                      type="tel"
+                      autoComplete="tel"
+                      inputMode="tel"
+                      maxLength={40}
+                      value={phone}
                       onChange={(e) => {
                         e.target.setCustomValidity(
-                          e.target.value.trim() ? '' : t('Escribe tu nombre.', 'Enter your name.'),
+                          validProfilePhone(e.target.value)
+                            ? ''
+                            : t(
+                                'Revisa el teléfono e incluye el código de país.',
+                                'Check the number and include the country code.',
+                              ),
                         );
-                        setName(e.target.value);
+                        setPhone(e.target.value);
                       }}
+                      placeholder={t('Incluye el código de país', 'Include country code')}
                     />
                   </label>
-                  <div className="fw-setup-contacts">
-                    <label className="fw-setup-field">
-                      {t('Teléfono', 'Phone')} <span>{t('Opcional', 'Optional')}</span>
-                      <input
-                        name="traveler-phone"
-                        type="tel"
-                        autoComplete="tel"
-                        inputMode="tel"
-                        maxLength={40}
-                        value={phone}
-                        onChange={(e) => {
-                          e.target.setCustomValidity(
-                            validProfilePhone(e.target.value)
-                              ? ''
-                              : t(
-                                  'Revisa el teléfono e incluye el código de país.',
-                                  'Check the number and include the country code.',
-                                ),
-                          );
-                          setPhone(e.target.value);
-                        }}
-                        placeholder={t('Incluye el código de país', 'Include country code')}
-                      />
-                    </label>
-                    <label className="fw-setup-field">
-                      {t('Correo electrónico', 'Email')} <span>{t('Opcional', 'Optional')}</span>
-                      <input
-                        name="traveler-email"
-                        type="email"
-                        autoComplete="email"
-                        inputMode="email"
-                        maxLength={254}
-                        value={email}
-                        onChange={(e) => {
-                          e.target.setCustomValidity(
-                            validProfileEmail(e.target.value)
-                              ? ''
-                              : t('Revisa el correo de contacto.', 'Check the contact email.'),
-                          );
-                          setEmail(e.target.value);
-                        }}
-                        placeholder="nombre@ejemplo.com"
-                      />
-                    </label>
-                  </div>
-                  <p className="fw-setup-hint">
-                    {t(
-                      'Tú decides si incluyes tu teléfono o correo al compartir un aviso.',
-                      'You choose whether to include your phone or email when sharing an update.',
-                    )}
-                  </p>
+                  <label className="fw-setup-field">
+                    {t('Correo electrónico', 'Email')}
+                    <input
+                      name="traveler-email"
+                      type="email"
+                      autoComplete="email"
+                      inputMode="email"
+                      maxLength={254}
+                      value={email}
+                      onChange={(e) => {
+                        e.target.setCustomValidity(
+                          validProfileEmail(e.target.value)
+                            ? ''
+                            : t('Revisa el correo de contacto.', 'Check the contact email.'),
+                        );
+                        setEmail(e.target.value);
+                      }}
+                      placeholder={t('nombre@ejemplo.com', 'name@example.com')}
+                    />
+                  </label>
                 </div>
-              )}
+                <p className="fw-setup-hint">
+                  {t(
+                    'Tú decides si incluyes tu teléfono o correo al compartir un aviso.',
+                    'You choose whether to include your phone or email when sharing an update.',
+                  )}
+                </p>
+              </details>
               <div className="fw-setup-privacy">
                 <LockSimpleIcon size={18} />
                 <p>
@@ -321,26 +282,12 @@ export default function TravelSetup(p: Props) {
                 </p>
               )}
               <button className="fw-setup-save" type="submit">
-                {step === 0
-                  ? t('Continuar', 'Continue')
-                  : p.saved
-                    ? t('Guardar cambios', 'Save changes')
-                    : t('Guardar y continuar', 'Save and continue')}
+                {p.saved
+                  ? t('Guardar cambios', 'Save changes')
+                  : t('Guardar y empezar', 'Save and start')}
                 <ArrowRightIcon size={18} />
               </button>
               <div className="fw-setup-secondary">
-                {step === 1 && (
-                  <button
-                    className="fw-setup-back"
-                    type="button"
-                    onClick={() => {
-                      setStep(0);
-                      setError(false);
-                    }}
-                  >
-                    {t('Volver a mis datos', 'Back to my details')}
-                  </button>
-                )}
                 <button className="fw-setup-skip" type="button" onClick={p.onClose}>
                   {p.saved ? t('Cancelar', 'Cancel') : t('Omitir por ahora', 'Skip for now')}
                 </button>
