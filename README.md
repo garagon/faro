@@ -1,14 +1,14 @@
 # Faro
 
-[English](docs/README.en.md) · [Guía de extensión](docs/extending-faro.md) · [Privacidad](PRIVACY.md) · [Contribuir](CONTRIBUTING.md)
+[Extension guide](docs/extending-faro.md) · [Privacy](PRIVACY.md) · [Contributing](CONTRIBUTING.md) · [Country coverage](docs/country-coverage.md)
 
-Faro permite consultar actividad sísmica de fuentes oficiales y preparar información personal para un viaje. La web funciona en español e inglés y se adapta a teléfonos y computadoras. Panamá es el punto de partida; USGS permite consultar otras regiones.
+Faro is an open source web app for people away from home during an earthquake: travelers, work teams and anyone passing through an affected area. It shows earthquakes from official sources, helps people tell family or colleagues how they are, and keeps local emergency information at hand. The interface is available in English and Spanish and works on phones and computers.
 
-**Estado: versión inicial, previa a producción.** Los sismos se muestran después de su publicación. Faro no predice terremotos, no es un sistema de alerta temprana y no reemplaza las instrucciones de las autoridades locales.
+**Status: early, pre-production release.** Earthquakes appear after the source publishes them. Faro does not predict earthquakes, is not an early warning system and does not replace instructions from local authorities.
 
-## Empezar
+## Run locally
 
-Requisitos: Node.js 24 LTS y npm 11 o posterior. No necesitas cuentas, claves API ni un archivo `.env`.
+Requirements: Node.js 24 LTS and npm 11 or later. No account, API key or `.env` file is needed.
 
 ```sh
 git clone https://github.com/garagon/faro.git
@@ -17,7 +17,7 @@ npm ci
 npm run dev
 ```
 
-Abre la dirección local que muestra Vite. El servidor se limita a `127.0.0.1` por defecto. Para comprobar la compilación:
+Open the local URL printed by Vite. The dev server binds to `127.0.0.1` by default. To verify a build:
 
 ```sh
 npm run check
@@ -25,96 +25,92 @@ npm run build
 npm run preview
 ```
 
-El servidor de desarrollo y el de vista previa incluyen los adaptadores `/api/igc` y `/api/tsunami`. **Copiar `dist/client` a un alojamiento estático no basta:** esas rutas necesitan un servidor compatible. `vite preview` es una herramienta de comprobación, no un servidor de producción. Consulta [arquitectura y despliegue](docs/architecture.md).
+The dev and preview servers include the `/api/igc` and `/api/tsunami` adapters. **Copying `dist/client` to static hosting is not enough:** those routes need a compatible server. `vite preview` is a verification tool, not a production server. See [architecture and deployment](docs/architecture.md).
 
-## Qué incluye
+## What it includes
 
-- IGC/Universidad de Panamá para Panamá y USGS para el catálogo global, consultados por separado cada 60 segundos mientras la pestaña está visible.
-- Mapa automático con OpenStreetMap, filtros, lista, magnitud, epicentro, hora del evento y hora de consulta.
-- Productos internacionales de tsunami de NOAA/PTWC, con fecha de emisión y límites de cobertura explícitos.
-- Onboarding con nombre, teléfono, correo, nacionalidad y destino guardados localmente; ayuda consular cuando hay una representación verificada en el directorio.
-- Búsqueda de farmacias y hospitales por lugar o ubicación aproximada, con apertura manual de Google Maps y enlaces sanitarios oficiales.
-- Mochila de emergencia: lista de 14 elementos, guardada localmente y descargable, e instrucciones ilustradas.
-- Ayuda local con teléfonos y fuentes oficiales para nueve destinos de América; [cobertura y límites por país](docs/country-coverage.md).
-- Plan del hotel y contactos personales guardados en el navegador, con ficha visual descargable como imagen o texto para consultar sin conexión. [Apple Wallet: requisitos y límites](docs/apple-wallet.md).
-- Mensajes de estado con lugar, acompañantes, ayuda necesaria, disponibilidad y próxima hora de contacto; mensajes listos para empezar más rápido, vista previa en español o inglés y envío manual. Puede adjuntarse un reporte sísmico seleccionado explícitamente.
-- Contactos personales y de trabajo (familia, alojamiento, seguro, consulado, empresa, coordinación del equipo y transporte) para viajeros y profesionales de paso.
-- Recomendaciones por situación en español e inglés, con enlaces a sus fuentes. [Flujos de emergencia y criterio de colores](docs/emergency-ux.md).
+- **Earthquake activity.** USGS for the whole world and IGC (University of Panama) for Panama, each checked every 60 seconds while the tab is visible. Map, filters, list, magnitude, epicentre, event time and check time.
+- **Tsunami information.** International NOAA/PTWC products with issue dates and explicit coverage limits.
+- **Status messages.** Ready messages (for example "I'm OK, poor signal" or "I need medical care") as editable shortcuts. Location, companions, help needed, reachability and next check-in time. Preview in English or Spanish and manual sharing from any app. An earthquake report can be attached only when explicitly selected.
+- **Local help.** Official emergency numbers and sources for nine destinations in the Americas, consular assistance where a verified listing exists, and pharmacy and hospital searches by area or approximate location. See [coverage and limits by country](docs/country-coverage.md).
+- **Contacts.** Personal and work contacts (family, accommodation, insurer, consulate, employer, team coordinator and transport) for travelers and professionals on assignment.
+- **Trip card.** Hotel plan and contacts saved in the browser, downloadable as an image or text for offline use. [Apple Wallet: requirements and limits](docs/apple-wallet.md).
+- **Preparedness.** Situation guides with linked sources and a 14-item emergency kit checklist, saved locally and downloadable. [Emergency flows and magnitude colors](docs/emergency-ux.md).
 
-La relación de réplica no se deduce de cercanía entre sismos. Un punto personal no es un refugio certificado. La falta de datos no significa ausencia de peligro. Los teléfonos y las misiones diplomáticas tienen cobertura limitada: [fuentes y cobertura](docs/data-sources.md).
+Aftershocks are not inferred from proximity between events. A personal meeting point is not a certified shelter. Missing data does not mean there is no danger. Emergency numbers and diplomatic missions have limited coverage: see [sources and coverage](docs/data-sources.md).
 
-## Arquitectura y extensiones
+## Architecture and extension points
 
 ```mermaid
 flowchart LR
-  USGS[USGS GeoJSON] --> Reader[Lectores tipados]
-  IGC[IGC / NOAA] --> API[Adaptadores Node]
+  USGS[USGS GeoJSON] --> Reader[Typed readers]
+  IGC[IGC / NOAA] --> API[Node adapters]
   API --> Reader
-  Reader --> UI[React · mapa y lista]
-  UI --> Local[(Almacenamiento del navegador)]
+  Reader --> UI[React · map and list]
+  UI --> Local[(Browser storage)]
   OSM[OpenStreetMap] --> UI
-  UI --> Manual[Compartir manualmente]
+  UI --> Manual[Manual sharing]
 ```
 
-Los adaptadores no reciben el perfil del viajero. El mapa consulta solo las teselas de la vista actual. La geolocalización y la preparación del viaje se mantienen del lado del navegador.
+The adapters never receive the traveler's profile. The map requests only the tiles in the current view. Geolocation and trip preparation stay in the browser.
 
-| Quieres extender…         | Punto de entrada                                               |
-| ------------------------- | -------------------------------------------------------------- |
-| Una fuente sísmica        | [`src/catalogs/`](src/catalogs/) y el contrato `CatalogReader` |
-| La consulta y sus estados | [`useCatalogFeed`](src/hooks/useCatalogFeed.ts)                |
-| Países y vista inicial    | [`regions.ts`](src/lib/regions.ts)                             |
-| Teléfonos de emergencia   | [`emergency.ts`](src/lib/emergency.ts)                         |
-| Misiones diplomáticas     | [`consularMissions.ts`](src/data/consularMissions.ts)          |
-| Instituciones y recursos  | [`resources.ts`](src/lib/resources.ts)                         |
-| Recomendaciones           | [`SafetyGuide.tsx`](src/components/SafetyGuide.tsx)            |
-| Datos personales locales  | [`browserStorage.ts`](src/lib/browserStorage.ts)               |
+| To extend…               | Start here                                                         |
+| ------------------------ | ------------------------------------------------------------------ |
+| An earthquake source     | [`src/catalogs/`](src/catalogs/) and the `CatalogReader` contract  |
+| Polling and its states   | [`useCatalogFeed`](src/hooks/useCatalogFeed.ts)                    |
+| A country or destination | [`src/data/destinations/`](src/data/destinations/) (one file each) |
+| Diplomatic missions      | [`consularMissions.ts`](src/data/consularMissions.ts)              |
+| Care search area presets | [`careAreas.ts`](src/data/careAreas.ts)                            |
+| Ready status messages    | [`messageTemplates.ts`](src/lib/messageTemplates.ts)               |
+| Safety guidance          | [`SafetyGuide.tsx`](src/components/SafetyGuide.tsx)                |
+| Personal data storage    | [`browserStorage.ts`](src/lib/browserStorage.ts)                   |
 
-La [guía de extensión](docs/extending-faro.md) incluye un lector de ejemplo, pasos de integración y pruebas necesarias. Cada nueva fuente mantiene sus fechas, identidad y cobertura; no se mezclan catálogos automáticamente.
+The [extension guide](docs/extending-faro.md) includes a reader example, integration steps and the tests each change needs. Every source keeps its own timestamps, identity and coverage; catalogs are never merged automatically.
 
-## Datos personales
+## Personal data
 
-El perfil, los contactos, los planes y el historial se guardan en el navegador de ese dispositivo. No hay cuentas, servidor de perfiles, analítica ni sincronización entre dispositivos. GPS requiere permiso y permanece en memoria salvo que la persona copie coordenadas a su plan.
+Profile, contacts, plans and history are stored in the browser on that device. There are no accounts, no profile server, no analytics and no sync between devices. Location requires permission and stays in memory unless the person copies coordinates into their plan.
 
-Las fuentes externas reciben las solicitudes de red necesarias; el proveedor del mapa recibe la IP, el origen de la web y el área consultada. Compartir texto o abrir una ruta es una acción explícita. [Política de privacidad](PRIVACY.md).
+External sources receive the network requests they need; the map provider receives the IP address, the site origin and the area being viewed. Sharing text or opening directions is always an explicit action. See the [privacy policy](PRIVACY.md).
 
-## Desarrollo
+## Development
 
-| Comando                   | Uso                                                                      |
-| ------------------------- | ------------------------------------------------------------------------ |
-| `npm run check`           | Formato, lint, tipos, pruebas y control de archivos publicables          |
-| `npm run format`          | Aplicar formato uniforme                                                 |
-| `npm test`                | Pruebas locales con datos sintéticos, sin depender de servicios externos |
-| `npm audit`               | Consultar vulnerabilidades conocidas de dependencias                     |
-| `npm run prepare:release` | Validar, compilar y generar un archivo de fuentes con manifiesto SHA-256 |
+| Command                   | Purpose                                                            |
+| ------------------------- | ------------------------------------------------------------------ |
+| `npm run check`           | Formatting, lint, types, tests and the publishable-files check     |
+| `npm run format`          | Apply consistent formatting                                        |
+| `npm test`                | Local tests with synthetic data, no external services              |
+| `npm audit`               | Check dependencies for known vulnerabilities                       |
+| `npm run prepare:release` | Validate, build and produce a source archive with SHA-256 manifest |
 
-El archivo `artifacts/faro-source.tar.gz` excluye dependencias instaladas, compilaciones, secretos locales y evidencia de pruebas. El escáner es una ayuda; revisa los archivos antes de publicarlos.
+`artifacts/faro-source.tar.gz` excludes installed dependencies, builds, local secrets and test evidence. The scanner is an aid; review files before publishing them.
 
-## Licencia
+## License
 
-Código de Faro: **Apache-2.0**, ver [LICENSE](LICENSE) y [NOTICE](NOTICE). Los países derivados de `world-countries` mantienen ODbL-1.0; Natural Earth es de dominio público. Las fuentes, iconos y bibliotecas conservan sus licencias. Ver [atribuciones](THIRD_PARTY_NOTICES.md).
+Faro code is **Apache-2.0**: see [LICENSE](LICENSE) and [NOTICE](NOTICE). Country data derived from `world-countries` keeps ODbL-1.0; Natural Earth is public domain. Fonts, icons and libraries keep their own licenses. See [third-party notices](THIRD_PARTY_NOTICES.md).
 
-La publicación del código no equivale a aprobar el uso en emergencias. [Revisión de publicación y pendientes operativos](docs/release-readiness.md).
+Publishing the code does not mean it is approved for emergency use. See [release readiness and open operational items](docs/release-readiness.md).
 
-## Preguntas frecuentes
+## FAQ
 
-**¿Es realtime?** Consulta cada 60 segundos con la página visible. El organismo puede publicar un evento con demora; no es una alerta temprana ni streaming.
+**Is it realtime?** It checks every 60 seconds while the page is visible. Agencies can publish an event with a delay. It is not an early warning or a stream.
 
-**¿Funciona fuera de Panamá?** USGS permite explorar otras regiones. La cobertura de ayuda local y teléfonos depende de los registros verificados; no se inventan alternativas cuando falta información.
+**Does it work outside Panama?** Yes. USGS covers the whole world. Local help and emergency numbers depend on verified records, and Faro never invents alternatives when information is missing.
 
-**¿Mi familia puede seguirme?** Puedes preparar y compartir un mensaje. No hay seguimiento remoto, entrega garantizada ni aviso automático si dejas de responder.
+**Can my family track me?** You can prepare and share a message. There is no remote tracking, guaranteed delivery or automatic alert if you stop replying.
 
-**¿Funciona sin internet?** Los textos descargados sí. La web completa no garantiza arranque offline. El navegador puede conservar datos previos, que se muestran con sus límites de actualización.
+**Does it work offline?** Downloaded text files do. The full app is not guaranteed to start offline. The browser may keep earlier data, shown with its update limits.
 
-**¿Es un servicio oficial?** No. Faro es un proyecto independiente y cita las fuentes utilizadas. No está afiliado a los organismos mencionados.
+**Is it an official service?** No. Faro is an independent project that cites its sources. It is not affiliated with the agencies it mentions.
 
-## Participar
+## Get involved
 
-Para cambios de código, empieza por [CONTRIBUTING.md](CONTRIBUTING.md). Para ampliar cobertura, aporta la fuente oficial, jurisdicción, fecha y limitaciones. Para fallas ordinarias, abre un issue con un ejemplo sintético; para vulnerabilidades usa [el canal privado](https://github.com/garagon/faro/security/advisories/new).
+For code changes, start with [CONTRIBUTING.md](CONTRIBUTING.md). To add coverage, provide the official source, jurisdiction, review date and limitations. For ordinary bugs, open an issue with a synthetic example; report vulnerabilities through [private reporting](https://github.com/garagon/faro/security/advisories/new).
 
-Mantenedor inicial: [@garagon](https://github.com/garagon). La comunidad se rige por el [código de conducta](CODE_OF_CONDUCT.md).
+Initial maintainer: [@garagon](https://github.com/garagon). The community follows the [code of conduct](CODE_OF_CONDUCT.md).
 
-## Creado por Oktsec
+## About
 
-Faro es una herramienta creada por [Oktsec](https://oktsec.com). La página pública `/about.html` documenta fuentes, cobertura y límites en español e inglés, sin requerir JavaScript. Los metadatos y datos estructurados describen el producto sin prometer alertas tempranas ni cobertura completa. `llms.txt` facilita la consulta de esta información; no garantiza inclusión en buscadores o respuestas de IA.
+Faro was created by [Oktsec](https://oktsec.com). The public `/about.html` page documents sources, coverage and limits in English and Spanish without requiring JavaScript. Metadata and structured data describe the product without promising early warnings or full coverage. `llms.txt` makes this information easy to consult; it does not guarantee inclusion in search engines or AI answers.
 
-Las configuraciones e identificadores de despliegue se mantienen fuera del repositorio y del archivo exportado.
+Deployment settings and identifiers are kept out of the repository and the exported archive.

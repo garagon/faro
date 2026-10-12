@@ -133,7 +133,10 @@ test('contact fields reject invalid stored values while accepting legacy and opt
 test('site language persists independently of the trip profile', async () => {
   const { readSiteLanguage } = await import('../src/lib/preferences.ts');
   const s = storage();
-  assert.equal(readSiteLanguage(undefined, s), 'es');
+  assert.equal(readSiteLanguage(undefined, s, ['es-PA', 'en']), 'es');
+  assert.equal(readSiteLanguage(undefined, s, ['en-US', 'es']), 'en');
+  assert.equal(readSiteLanguage(undefined, s, ['pt-BR']), 'en');
+  assert.equal(readSiteLanguage(undefined, s, []), 'en');
   assert.equal(readSiteLanguage('en'), 'en');
   assert.equal(readSiteLanguage('en', s), 'en');
   s.setItem('faro-lang', 'es');

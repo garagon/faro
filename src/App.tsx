@@ -181,8 +181,8 @@ export default function App() {
   useEffect(() => {
     document.documentElement.lang = lang;
     document.title = t(
-      'Faro by Oktsec · Sismos y ayuda para viajeros',
-      'Faro by Oktsec · Earthquakes and travel preparedness',
+      'Faro · Sismos y ayuda local',
+      'Faro · Earthquake information and local help',
     );
     try {
       writeLocal('faro-lang', lang);
