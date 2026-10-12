@@ -24,10 +24,10 @@ Guidance links to SENAPRED, CDC, NOAA and national/local authorities. Chilean ev
 
 Record an official source, applicable country/jurisdiction, review date and uncertainty. Retain source-issued dates separately from fetch time. Use synthetic test fixtures; do not commit a live cache as application data. A missing/failed source must remain visibly missing/failed. Have relevant authorities or qualified local operators validate safety-critical wording before deployment.
 
-## Estado de los comunicados de tsunami
+## Tsunami bulletin status
 
-Los productos internacionales NOAA/PTWC consultados no equivalen a alertas locales. Faro distingue comunicados informativos, cierres o cancelaciones explícitos y registros reemplazados por uno posterior del mismo evento y cuenca. No infiere un cierre a partir de texto condicional o de una cancelación limitada a otra costa.
+The international NOAA/PTWC products Faro checks are not local alerts. Faro distinguishes informational statements, explicit ends of threat or cancellations, and records superseded by a later bulletin for the same event and basin. It never infers an end of threat from conditional text or from a cancellation limited to another coast.
 
-La ventana de seis horas organiza la presentación; no es un vencimiento oficial. Los mensajes anteriores se muestran en un archivo plegado, con emisión y estado del boletín. Los mensajes de amenaza recientes quedan como vigencia sin confirmar, enlazados a la actualización oficial. Una consulta fallida, parcial o con más de dos minutos no confirma vigencia. El archivo contiene los últimos productos recibidos, no toda la secuencia de cada evento.
+The six-hour window only organizes the display; it is not an official expiry. Earlier messages appear in a collapsed archive with their issue time and bulletin status. Recent threat messages are shown as unconfirmed and link to the official update. A failed or partial check, or one older than two minutes, does not confirm whether a message is still in effect. The archive holds the latest products received, not the full sequence of each event.
 
-Fuentes: [productos NOAA](https://www.tsunami.gov/?page=product_list) y [actualización y cancelación de avisos](https://www.weather.gov/safety/tsunami-alerts).
+Sources: [NOAA products](https://www.tsunami.gov/?page=product_list) and [how alerts are updated and cancelled](https://www.weather.gov/safety/tsunami-alerts).
