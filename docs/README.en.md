@@ -71,3 +71,5 @@ The status composer keeps location, reachability and the next check-in time visi
 ## Country coverage
 
 Local emergency numbers and national source links are configured for Panama, Chile, Colombia, Argentina, the United States, Mexico, Peru, Ecuador and Costa Rica. The global country selector does not imply a complete local directory. See [coverage and limitations](country-coverage.md) and [how to add a destination](extending-faro.md#add-or-improve-country-coverage).
+
+See [emergency interactions and magnitude colors](emergency-ux.md) for message review, sharing safeguards and the distinction between magnitude, intensity and impact.

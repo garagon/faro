@@ -1,0 +1,183 @@
+/* Magnitude is not a hazard assessment. Number labels carry the same information. */
+.fw-mag-band-under4 {
+  --mag-ink: #28658a;
+  --mag-bg: #edf5fa;
+}
+.fw-mag-band-4 {
+  --mag-ink: #806000;
+  --mag-bg: #fff8df;
+}
+.fw-mag-band-5 {
+  --mag-ink: #a45218;
+  --mag-bg: #fff1e6;
+}
+.fw-mag-band-6 {
+  --mag-ink: #ab343b;
+  --mag-bg: #fff0f1;
+}
+.fw-mag-band-7plus {
+  --mag-ink: #713874;
+  --mag-bg: #f8edf9;
+}
+.fw-mag-band-unknown {
+  --mag-ink: #58616b;
+  --mag-bg: #f0f2f4;
+}
+.fw-app .fw-mag,
+.fw-app .fw-quake-magnitude,
+.fw-app .fw-update-mag {
+  background: var(--mag-bg);
+  color: var(--mag-ink);
+  border-color: var(--mag-ink);
+}
+.fw-app .fw-latest-magnitude > strong,
+.fw-app .fw-quake-magnitude > strong {
+  color: var(--mag-ink);
+}
+.fw-app .fw-pin {
+  color: var(--mag-ink);
+}
+.fw-app .fw-pin-selected {
+  filter: drop-shadow(0 0 2px #172d39) drop-shadow(0 0 5px #fff);
+}
+.fw-app .marker-cluster {
+  background: #dce1e7cc;
+}
+.fw-app .marker-cluster div {
+  background: #52616e;
+  color: white;
+}
+.fw-magnitude-legend {
+  padding: 12px 0 16px;
+  font-size: 12px;
+}
+.fw-magnitude-legend > strong {
+  font-weight: 600;
+}
+.fw-magnitude-legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+.fw-magnitude-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.fw-magnitude-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--mag-ink);
+}
+.fw-magnitude-legend summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.fw-magnitude-legend p {
+  max-width: 760px;
+  line-height: 1.6;
+}
+.fw-header .fw-emergency-persistent {
+  background: #fff1e7;
+  color: #853d24;
+  border: 1px solid #e5bbaa;
+  min-height: 44px;
+  justify-content: center;
+  width: 100%;
+  margin: 0 0 14px;
+}
+.fw-message-steps {
+  margin: 0 0 12px;
+  color: #52675f;
+  font-size: 12px;
+}
+.fw-needs-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fw-needs-presets button {
+  padding: 8px 12px;
+  min-height: 44px;
+  border: 1px solid #d4dfd9;
+  border-radius: 6px;
+  text-align: left;
+}
+.fw-needs-presets button[aria-pressed='true'] {
+  border-color: #9a5128;
+  background: #fff1e6;
+  color: #854321;
+}
+.fw-checkin-optional > .fw-message-fields {
+  margin: 12px 0;
+}
+.fw-traveler .fw-checkin-form > .fw-primary {
+  margin-top: 16px;
+}
+@media (max-width: 760px) {
+  .fw-header {
+    padding-inline: 12px;
+    gap: 8px;
+  }
+  .fw-header .fw-sidebar-foot {
+    gap: 6px;
+  }
+  .fw-header .fw-emergency-persistent {
+    width: auto;
+    margin: 0;
+    padding: 8px;
+    font-size: 12px;
+    gap: 5px;
+  }
+  .fw-header .fw-emergency-persistent svg {
+    width: 16px;
+  }
+  .fw-header .fw-brand {
+    font-size: 23px !important;
+    gap: 5px;
+  }
+  .fw-help-request label {
+    margin-top: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .fw-header .fw-brand {
+    font-size: 0 !important;
+    gap: 0;
+  }
+}
+
+.fw-app .fw-map-foot > span > i {
+  background: #52616e;
+}
+.fw-edit-message {
+  min-height: 44px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  border: 1px solid #cedcd4;
+  border-radius: 6px;
+}
+@media (max-width: 760px) {
+  .fw-header .fw-language button {
+    min-height: 40px;
+  }
+}
+/* Keep the emergency action usable when a narrow phone is zoomed in. */
+body {
+  min-width: 0;
+}
+@media (max-width: 340px) {
+  .fw-header .fw-brand {
+    display: none;
+  }
+  .fw-header .fw-sidebar-foot {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

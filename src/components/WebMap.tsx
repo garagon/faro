@@ -1,3 +1,4 @@
+import { magnitudeBand } from '../lib/magnitude.ts';
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -106,7 +107,7 @@ export default function WebMap({
     events.forEach((q) => {
       const size = q.id === selected ? 42 : 34;
       const icon = L.divIcon({
-        className: q.id === selected ? 'fw-pin fw-pin-selected' : 'fw-pin',
+        className: `fw-pin fw-mag-band-${magnitudeBand(q.mag)}${q.id === selected ? ' fw-pin-selected' : ''}`,
         html: renderToStaticMarkup(<b>{q.mag?.toFixed(1) ?? '—'}</b>),
         iconSize: [size, size],
         iconAnchor: [size / 2, size],

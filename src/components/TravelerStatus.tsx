@@ -1,3 +1,4 @@
+import { helpTemplates } from '../lib/messageTemplates.ts';
 import { removeLocal } from '../lib/browserStorage.ts';
 import { useRef, useState } from 'react';
 import {
@@ -50,6 +51,7 @@ export default function TravelerStatus({
     form = useRef<HTMLFormElement>(null);
   const t = (es: string, en: string) => (lang === 'es' ? es : en);
   const [prepared, setPrepared] = useState<CheckIn | null>(null),
+    [preparedLanguage, setPreparedLanguage] = useState<Lang | null>(null),
     [notSaved, setNotSaved] = useState(false);
   const [status, setStatus] = useState<Status | ''>(''),
     [nameOverride, setName] = useState<string | null>(null),
@@ -114,6 +116,7 @@ export default function TravelerStatus({
     const row = { ...makeRecord(at), id: crypto.randomUUID() };
     const result = prepareCheckIn(row, history);
     setPrepared(row);
+    setPreparedLanguage(outputLang);
     setNotSaved(!result.persisted);
     if (result.persisted) onHistory(result.rows);
     setDirty(false);
@@ -126,6 +129,7 @@ export default function TravelerStatus({
   };
   const changed =
     dirty ||
+    (!!prepared && preparedLanguage !== outputLang) ||
     (!!prepared &&
       (prepared.name !== name.trim() ||
         (prepared.phone || '') !== (includePhone ? profile?.phone || '' : '') ||
@@ -193,11 +197,14 @@ export default function TravelerStatus({
     <div className="fw-traveler">
       <form ref={form} className="fw-checkin-form" onSubmit={save} onChange={change}>
         <header>
+          <p className="fw-message-steps">
+            {t('1. Completar · 2. Revisar · 3. Compartir', '1. Fill in · 2. Review · 3. Share')}
+          </p>
           <h2>{t('¿Cómo estás ahora?', 'How are you now?')}</h2>
           <p>
             {t(
-              'Un mensaje claro ayuda a quienes te están esperando.',
-              'Give the people waiting to hear from you a clear update.',
+              'Elige tu estado y añade el lugar si puedes.',
+              'Choose your status and add your location if you can.',
             )}
           </p>
         </header>
@@ -238,16 +245,6 @@ export default function TravelerStatus({
           </div>
         )}
         <div className="fw-message-fields">
-          <label>
-            {t('Motivo del mensaje', 'Reason for your message')}
-            <select value={context} onChange={(e) => setContext(e.target.value as MessageContext)}>
-              {Object.entries(contextLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label[lang === 'es' ? 0 : 1]}
-                </option>
-              ))}
-            </select>
-          </label>
           <label>
             {t('Dónde estás ahora', 'Where you are now')}
             <input
@@ -301,85 +298,119 @@ export default function TravelerStatus({
             </label>
           )}
           {status === 'help' && (
-            <label>
-              {t('Qué ayuda necesitas', 'What help you need')}
-              <textarea
-                maxLength={300}
-                rows={2}
-                value={needs}
-                onChange={(e) => setNeeds(e.target.value)}
-                placeholder={t(
-                  'Por ejemplo: necesito que contacten a mi seguro de viaje',
-                  'For example: please contact my travel insurer',
-                )}
-              />
-            </label>
-          )}
-          <div className="fw-context-pair">
-            <label>
-              {t('Puedes contactarme', 'Reaching me')}
-              <select
-                value={connection}
-                onChange={(e) => setConnection(e.target.value as Connection | '')}
+            <div className="fw-help-request">
+              <div
+                className="fw-needs-presets"
+                role="group"
+                aria-label={t('Opciones de ayuda', 'Help suggestions')}
               >
-                <option value="">{t('Sin indicar', 'Not specified')}</option>
-                {Object.entries(connectionLabels).map(([value, label]) => (
+                {helpTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    aria-pressed={needs === template.text[lang === 'es' ? 0 : 1]}
+                    onClick={() => {
+                      setNeeds(template.text[lang === 'es' ? 0 : 1]);
+                      change();
+                    }}
+                  >
+                    {template.label[lang === 'es' ? 0 : 1]}
+                  </button>
+                ))}
+              </div>
+              <label>
+                {t('Qué ayuda necesitas', 'What help you need')}
+                <textarea
+                  maxLength={300}
+                  rows={2}
+                  value={needs}
+                  onChange={(e) => setNeeds(e.target.value)}
+                  placeholder={t(
+                    'Por ejemplo: necesito que contacten a mi seguro de viaje',
+                    'For example: please contact my travel insurer',
+                  )}
+                />
+              </label>
+            </div>
+          )}
+        </div>
+        <details className="fw-checkin-optional">
+          <summary>{t('Más detalles · opcional', 'More details · optional')}</summary>
+          <div className="fw-message-fields">
+            <label>
+              {t('Motivo del mensaje', 'Reason for your message')}
+              <select
+                value={context}
+                onChange={(e) => setContext(e.target.value as MessageContext)}
+              >
+                {Object.entries(contextLabels).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label[lang === 'es' ? 0 : 1]}
                   </option>
                 ))}
               </select>
             </label>
-            <label>
-              {t('Volveré a avisar', "I'll check in again")}
-              <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
-                <option value={0}>{t('Sin acordar una hora', 'No time agreed')}</option>
-                {[15, 30, 60, 120].map((v) => (
-                  <option key={v} value={v}>
-                    {t('En', 'In')} {v} min
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="fw-context-pair">
+              <label>
+                {t('Puedes contactarme', 'Reaching me')}
+                <select
+                  value={connection}
+                  onChange={(e) => setConnection(e.target.value as Connection | '')}
+                >
+                  <option value="">{t('Sin indicar', 'Not specified')}</option>
+                  {Object.entries(connectionLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label[lang === 'es' ? 0 : 1]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {t('Volveré a avisar', "I'll check in again")}
+                <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
+                  <option value={0}>{t('Sin acordar una hora', 'No time agreed')}</option>
+                  {[15, 30, 60, 120].map((v) => (
+                    <option key={v} value={v}>
+                      {t('En', 'In')} {v} min
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {minutes > 0 && (
+              <small>
+                {t(
+                  'Es un compromiso en tu mensaje. El recordatorio aparece con Faro abierto.',
+                  'This is a commitment in your message. The reminder appears while Faro is open.',
+                )}
+              </small>
+            )}
           </div>
-          {minutes > 0 && (
-            <small>
-              {t(
-                'Es un compromiso en tu mensaje. El recordatorio aparece con Faro abierto.',
-                'This is a commitment in your message. The reminder appears while Faro is open.',
+          {(profile?.phone || profile?.email) && (
+            <fieldset className="fw-contact-inclusion">
+              <legend>{t('Incluir cómo contactarme', 'Include how to reach me')}</legend>
+              {profile.phone && (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={includePhone}
+                    onChange={(e) => setIncludePhone(e.target.checked)}
+                  />
+                  {t('Mi teléfono', 'My phone')} · {profile.phone}
+                </label>
               )}
-            </small>
+              {profile.email && (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={includeEmail}
+                    onChange={(e) => setIncludeEmail(e.target.checked)}
+                  />
+                  {t('Mi correo', 'My email')} · {profile.email}
+                </label>
+              )}
+            </fieldset>
           )}
-        </div>
-        {(profile?.phone || profile?.email) && (
-          <fieldset className="fw-contact-inclusion">
-            <legend>{t('Incluir cómo contactarme', 'Include how to reach me')}</legend>
-            {profile.phone && (
-              <label>
-                <input
-                  type="checkbox"
-                  checked={includePhone}
-                  onChange={(e) => setIncludePhone(e.target.checked)}
-                />
-                {t('Mi teléfono', 'My phone')} · {profile.phone}
-              </label>
-            )}
-            {profile.email && (
-              <label>
-                <input
-                  type="checkbox"
-                  checked={includeEmail}
-                  onChange={(e) => setIncludeEmail(e.target.checked)}
-                />
-                {t('Mi correo', 'My email')} · {profile.email}
-              </label>
-            )}
-          </fieldset>
-        )}
-        <details className="fw-checkin-optional">
-          <summary>
-            {t('Nombre, acompañantes y más detalles', 'Name, companions and more details')}
-          </summary>
           <div className="fw-checkin-fields">
             <label>
               {t('Tu nombre', 'Your name')}
@@ -463,13 +494,13 @@ export default function TravelerStatus({
           )}
         </details>
         <button type="submit" className="fw-primary" disabled={!status}>
-          {t('Confirmar y preparar mensaje', 'Confirm and prepare message')}
+          {t('Revisar mensaje', 'Review message')}
           <ArrowRightIcon size={17} />
         </button>
         <small className="fw-checkin-privacy">
           {t(
-            'Nada se envía al pulsar este botón. Primero verás el texto.',
-            'This button does not send anything. You will see the text first.',
+            'Revisa el texto y después elige cómo compartirlo.',
+            'Review the text, then choose how to share it.',
           )}
         </small>
       </form>
@@ -482,7 +513,7 @@ export default function TravelerStatus({
         >
           <header>
             <div className="fw-preview-title">
-              <h2>{t('Lo que van a recibir', "What they'll receive")}</h2>
+              <h2>{t('Tu mensaje', 'Your message')}</h2>
               <span className={`fw-draft-badge ${shareAllowed ? 'ready' : ''}`}>
                 {shareAllowed
                   ? t('Listo para compartir', 'Ready to share')
@@ -536,6 +567,11 @@ export default function TravelerStatus({
                   )}
                 </div>
               )}
+              {prepared && !changed && (
+                <button className="fw-edit-message" onClick={review}>
+                  {t('Editar datos', 'Edit details')}
+                </button>
+              )}
               <div
                 className="fw-message-body"
                 aria-label={t('Mensaje para compartir', 'Message to share')}
@@ -547,8 +583,8 @@ export default function TravelerStatus({
               {!prepared && (
                 <p className="fw-draft-hint">
                   {t(
-                    'La vista previa cambia mientras completas los datos. Confírmala para habilitar el envío.',
-                    'The preview updates as you add details. Confirm it to enable sharing.',
+                    'Pulsa «Revisar mensaje» antes de compartir.',
+                    'Select “Review message” before sharing.',
                   )}
                 </p>
               )}
