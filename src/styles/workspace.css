@@ -2254,19 +2254,22 @@
 .fw-context .fw-country {
   min-width: 0;
   flex: 1;
-  max-width: 430px;
-}
-.fw-context .fw-country > svg {
-  flex: none;
+  max-width: 360px;
+  align-items: center;
 }
 .fw-context .fw-country-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
   min-width: 0;
   width: 100%;
+  margin: 0;
 }
 .fw-context .fw-country-search > label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
-  margin-bottom: 5px;
+  margin: 0;
   color: var(--muted);
 }
 .fw-context .fw-country-search input {

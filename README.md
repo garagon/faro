@@ -27,12 +27,19 @@ npm run preview
 
 The dev and preview servers include the `/api/igc` and `/api/tsunami` adapters. **Copying `dist/client` to static hosting is not enough:** those routes need a compatible server. `vite preview` is a verification tool, not a production server. See [architecture and deployment](docs/architecture.md).
 
+## Install on your phone
+
+Use **Install Faro** in the country toolbar. Android browsers that support installation can show a native install prompt; otherwise follow the browser-menu instructions. On iPhone or iPad, open Faro in Safari, choose **Share → Add to Home Screen**, keep **Open as Web App** enabled if offered, and tap **Add**. Desktop Chrome and Edge also support installation.
+
+Installation adds a home-screen icon and standalone window. It does not enable background earthquake alerts or guarantee offline startup. No service worker caches official reports or map tiles. Data remains local to the browser/app and site origin; verify your profile after installation or a domain change. No automatic data migration is performed.
+
 ## What it includes
 
 - **Earthquake activity.** USGS for the whole world and IGC (University of Panama) for Panama, each checked every 60 seconds while the tab is visible. Map, filters, list, magnitude, epicentre, event time and check time.
 - **Tsunami information.** International NOAA/PTWC products with issue dates and explicit coverage limits.
 - **Status messages.** Ready messages (for example "I'm OK, poor signal" or "I need medical care") as editable shortcuts. Location, companions, help needed, reachability and next check-in time. Preview in English or Spanish and manual sharing from any app. An earthquake report can be attached only when explicitly selected.
 - **Local help.** Official emergency numbers and sources for nine destinations in the Americas, consular assistance where a verified listing exists, and pharmacy and hospital searches by area or approximate location. See [coverage and limits by country](docs/country-coverage.md).
+- **U.S. travelers abroad.** Nationality-specific consular contacts, STEP enrollment information, destination advisories, passport replacement, insurance and crisis guidance. Official links open on request; no automatic enrollment or live advisory claims. The data registry supports adding other nationalities.
 - **Contacts.** Personal and work contacts (family, accommodation, insurer, consulate, employer, team coordinator and transport) for travelers and professionals on assignment.
 - **Trip card.** Hotel plan and contacts saved in the browser, downloadable as an image or text for offline use. [Apple Wallet: requirements and limits](docs/apple-wallet.md).
 - **Preparedness.** Situation guides with linked sources and a 14-item emergency kit checklist, saved locally and downloadable. [Emergency flows and magnitude colors](docs/emergency-ux.md).

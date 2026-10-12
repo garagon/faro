@@ -43,3 +43,7 @@ PNG and text travel cards are generated locally after an explicit download actio
 Emergency-kit checkmarks are stored only in `faro-emergency-kit-v1` in this browser, and can be cleared or downloaded from the kit section. Nearby healthcare searches do not read or send the trip profile. Location is requested only on an explicit click; coordinates are rounded to three decimals for the search. The chosen place or approximate coordinates are sent to Google Maps only when the person opens a pharmacy or hospital search. They are not stored by Faro. The external provider has its own privacy policy.
 
 The site language is selected with the ES/EN controls outside onboarding. It persists independently of the trip profile; deleting the profile does not reset the site language. Older profiles remain readable.
+
+## Home-screen installation
+
+The install control uses the browser's installation prompt when available, or displays manual instructions. The manifest and icons are served from the same origin. No install analytics, personal-data transfer, push subscription or service-worker cache is added. Installing does not synchronize the browser profile with another device or domain; verify saved information after opening the installed app.

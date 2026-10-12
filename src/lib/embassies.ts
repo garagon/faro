@@ -53,6 +53,8 @@ export const embassies: Embassy[] = [
   },
   {
     id: 'us-pa',
+    phone: '+5073175000',
+    emergency: '+5073175000',
     nation: 'US',
     country: 'PA',
     name: ['Embajada de Estados Unidos', 'Embassy of the United States'],

@@ -1,4 +1,5 @@
 import { downloadText } from './lib/download.ts';
+import InstallFaro from './components/InstallFaro.tsx';
 import NearbyCare from './components/NearbyCare.tsx';
 import EvacuationPlan from './components/EvacuationPlan.tsx';
 import MagnitudeLegend from './components/MagnitudeLegend.tsx';
@@ -21,7 +22,6 @@ import {
   BookOpenTextIcon,
   UsersThreeIcon,
   XIcon,
-  GlobeHemisphereWestIcon,
   FlagIcon,
   DownloadSimpleIcon,
   CheckCircleIcon,
@@ -485,9 +485,8 @@ export default function App() {
         )}
         <div className="fw-context">
           <div className="fw-country">
-            <GlobeHemisphereWestIcon size={22} />
             <CountrySearch
-              label={t('País de consulta', 'Country to view')}
+              label={t('País', 'Country')}
               value={country}
               lang={lang}
               includeWorld
@@ -507,6 +506,7 @@ export default function App() {
               <FlagIcon size={20} weight={savedCountries.includes(country) ? 'fill' : 'regular'} />
             </button>
           </div>
+          <InstallFaro lang={lang} />
           {screen === 'activity' && (
             <button className="fw-live" onClick={() => setSourceOpen(true)}>
               <i className={stale ? 'stale' : ''} />

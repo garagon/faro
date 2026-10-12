@@ -43,6 +43,10 @@ export function isPublicFile(path) {
     /^\.github\/[\w./-]+\.(yml|yaml|md)$/.test(path) ||
     [
       'public/faro-mark.svg',
+      'public/manifest.webmanifest',
+      'public/icons/icon-192.png',
+      'public/icons/icon-512.png',
+      'public/icons/apple-touch-icon.png',
       'public/data/coastline.json',
       'public/about.html',
       'public/robots.txt',

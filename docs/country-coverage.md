@@ -40,3 +40,7 @@ One typed file per destination plus one entry in the registry. See the [steps an
 - Pharmacies and hospitals: explicit Google Maps searches by area or approximate location, with city shortcuts per country in `src/data/careAreas.ts`. They are not an integration of availability, on-call hours or triage. Official links: MINSA in Panama and SENAPRED's Visor Preparado in Chile.
 - Evacuation: SENAPRED links were corrected. No route, street, hotel exit or safe point was physically verified. Chilean evacuation maps are shown only for Chile.
 - The diplomatic corps PDF linked by Panama's Foreign Ministry returned 404 during this review. It was not transcribed as a complete current list.
+
+## U.S. citizens traveling abroad
+
+Local help includes a nationality-specific State Department resource pack (sources checked October 12, 2026). Destination advisory links are verified for Panama, Colombia, Chile, Mexico, Costa Rica, Peru, Ecuador and Canada; other destinations lead to the official advisory directory. These links do not add a live alert feed or new embassy map markers. The Panama U.S. embassy card includes its officially listed main and after-hours consular telephone. General State Department fallback numbers distinguish callers outside the U.S./Canada from callers within those countries.
