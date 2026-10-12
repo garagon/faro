@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import {
   ArrowRightIcon,
@@ -30,6 +30,30 @@ export default function TravelSetup(p: Props) {
     [email, setEmail] = useState(p.saved?.email || ''),
     [error, setError] = useState(false),
     [confirmDelete, setConfirmDelete] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    function fitViewport() {
+      if (!viewport || !dialogRef.current) return;
+      dialogRef.current.style.setProperty('--setup-height', `${viewport.height}px`);
+      dialogRef.current.style.setProperty('--setup-top', `${viewport.offsetTop}px`);
+      dialogRef.current.dataset.compact = String(viewport.height <= 540);
+    }
+    fitViewport();
+    viewport.addEventListener('resize', fitViewport);
+    viewport.addEventListener('scroll', fitViewport);
+    return () => {
+      viewport.removeEventListener('resize', fitViewport);
+      viewport.removeEventListener('scroll', fitViewport);
+    };
+  }, []);
+  useEffect(() => {
+    bodyRef.current?.scrollTo(0, 0);
+    titleRef.current?.focus({ preventScroll: true });
+  }, [step]);
   const t = (es: string, en: string) => (language === 'es' ? es : en);
   function save(e: React.FormEvent) {
     e.preventDefault();
@@ -60,9 +84,14 @@ export default function TravelSetup(p: Props) {
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="fw-modal-overlay" />
+        <Dialog.Overlay className="fw-modal-overlay fw-setup-overlay" />
         <Dialog.Content
           className="fw-setup"
+          ref={dialogRef}
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            titleRef.current?.focus({ preventScroll: true });
+          }}
           lang={language}
           onEscapeKeyDown={(e) => {
             const focused = document.activeElement;
@@ -80,238 +109,258 @@ export default function TravelSetup(p: Props) {
             });
           }}
         >
-          <div className="fw-setup-brand">
-            <span>
-              <GlobeHemisphereWestIcon size={20} />
-              {t('TU VIAJE EN FARO', 'YOUR TRIP IN FARO')}
-            </span>
-            <Dialog.Close
-              className="fw-setup-close"
-              aria-label={t('Cerrar configuración', 'Close setup')}
-            >
-              <XIcon size={20} />
-            </Dialog.Close>
-          </div>
-          <Dialog.Title>
-            {step === 0 ? t('Tus datos', 'Your details') : t('Tu viaje', 'Your trip')}
-          </Dialog.Title>
-          <Dialog.Description>
-            {step === 0
-              ? t(
-                  'Cómo te llamas y cómo pueden contactarte.',
-                  'Your name and how people can reach you.',
-                )
-              : t(
-                  'Dónde estás y qué representación consular necesitas.',
-                  'Where you are and which consular representation you need.',
-                )}
-          </Dialog.Description>
-          {!p.saved && (
-            <button className="fw-setup-emergency" onClick={() => p.onHelp(destination)}>
-              {t('Necesito ayuda ahora', 'I need help now')}
-            </button>
-          )}
-          <div className="fw-setup-progress" aria-label={t('Progreso', 'Progress')}>
-            <span className={step === 0 ? 'active' : ''}>
-              {t('1 · Tus datos', '1 · Your details')}
-            </span>
-            <span className={step === 1 ? 'active' : ''}>{t('2 · Tu viaje', '2 · Your trip')}</span>
-          </div>
-          <form onSubmit={save}>
-            {step === 1 ? (
-              <>
-                <CountrySearch
-                  label={t('País donde estás', 'Country you are in')}
-                  lang={language}
-                  value={destination}
-                  onChange={setDestination}
-                  required
-                />
-                <CountrySearch
-                  label={t('Nacionalidad', 'Nationality')}
-                  lang={language}
-                  value={nationality}
-                  onChange={setNationality}
-                  required
-                />
-                <p className="fw-setup-hint">
-                  {t(
-                    'La cobertura consular varía según el país. Puedes consultar otras regiones sin cambiar el destino guardado.',
-                    'Consular coverage varies by country. You can browse other regions without changing your saved destination.',
+          <header className="fw-setup-header">
+            <div className="fw-setup-brand">
+              <span>
+                <GlobeHemisphereWestIcon size={18} />
+                {t('Configura tu viaje', 'Set up your trip')}
+              </span>
+              <Dialog.Close
+                className="fw-setup-close"
+                aria-label={t('Cerrar configuración', 'Close setup')}
+              >
+                <XIcon size={20} />
+              </Dialog.Close>
+            </div>
+            <Dialog.Title ref={titleRef} tabIndex={-1}>
+              {step === 0 ? t('Tus datos', 'Your details') : t('Tu viaje', 'Your trip')}
+            </Dialog.Title>
+            <Dialog.Description>
+              {step === 0
+                ? t(
+                    'Para identificarte cuando avises cómo estás.',
+                    'So people know who your update is from.',
+                  )
+                : t(
+                    'Encuentra información local y asistencia consular.',
+                    'Find local information and consular assistance.',
                   )}
-                </p>
-              </>
-            ) : (
-              <div className="fw-setup-personal">
-                <fieldset className="fw-setup-language">
-                  <legend>{t('Idioma', 'Language')}</legend>
-                  <label>
-                    <input
-                      type="radio"
-                      name="setup-language"
-                      checked={language === 'es'}
-                      onChange={() => setLanguage('es')}
-                    />
-                    Español
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="setup-language"
-                      checked={language === 'en'}
-                      onChange={() => setLanguage('en')}
-                    />
-                    English
-                  </label>
-                </fieldset>
-
-                <label className="fw-setup-field">
-                  {t('Tu nombre', 'Your name')} <span>{t('Obligatorio', 'Required')}</span>
-                  <input
-                    name="traveler-name"
-                    autoComplete="name"
-                    maxLength={80}
+            </Dialog.Description>
+            <ol className="fw-setup-progress" aria-label={t('Progreso', 'Progress')}>
+              <li
+                className={step === 0 ? 'active' : ''}
+                aria-current={step === 0 ? 'step' : undefined}
+              >
+                {t('1 · Tus datos', '1 · Your details')}
+              </li>
+              <li
+                className={step === 1 ? 'active' : ''}
+                aria-current={step === 1 ? 'step' : undefined}
+              >
+                {t('2 · Tu viaje', '2 · Your trip')}
+              </li>
+            </ol>
+          </header>
+          <form onSubmit={save} className="fw-setup-form">
+            <div className="fw-setup-body" ref={bodyRef}>
+              {step === 1 ? (
+                <>
+                  <CountrySearch
+                    label={t('País donde estás', 'Country you are in')}
+                    lang={language}
+                    value={destination}
+                    onChange={setDestination}
                     required
-                    value={name}
-                    onChange={(e) => {
-                      e.target.setCustomValidity(
-                        e.target.value.trim() ? '' : t('Escribe tu nombre.', 'Enter your name.'),
-                      );
-                      setName(e.target.value);
-                    }}
-                    autoFocus
                   />
-                </label>
-                <label className="fw-setup-field">
-                  {t('Tu teléfono de contacto', 'Your contact phone')}{' '}
-                  <span>{t('Opcional', 'Optional')}</span>
-                  <input
-                    name="traveler-phone"
-                    type="tel"
-                    autoComplete="tel"
-                    inputMode="tel"
-                    maxLength={40}
-                    value={phone}
-                    onChange={(e) => {
-                      e.target.setCustomValidity(
-                        validProfilePhone(e.target.value)
-                          ? ''
-                          : t(
-                              'Revisa el teléfono e incluye el código de país.',
-                              'Check the number and include the country code.',
-                            ),
-                      );
-                      setPhone(e.target.value);
-                    }}
-                    placeholder="+507 6000 0000"
+                  <CountrySearch
+                    label={t('Nacionalidad', 'Nationality')}
+                    lang={language}
+                    value={nationality}
+                    onChange={setNationality}
+                    required
                   />
-                </label>
-                <label className="fw-setup-field">
-                  {t('Tu correo de contacto', 'Your contact email')}{' '}
-                  <span>{t('Opcional', 'Optional')}</span>
-                  <input
-                    name="traveler-email"
-                    type="email"
-                    autoComplete="email"
-                    inputMode="email"
-                    maxLength={254}
-                    value={email}
-                    onChange={(e) => {
-                      e.target.setCustomValidity(
-                        validProfileEmail(e.target.value)
-                          ? ''
-                          : t('Revisa el correo de contacto.', 'Check the contact email.'),
-                      );
-                      setEmail(e.target.value);
-                    }}
-                    placeholder="nombre@ejemplo.com"
-                  />
-                </label>
-                <p className="fw-setup-hint">
+                  <p className="fw-setup-hint">
+                    {t(
+                      'La cobertura consular varía según el país. Puedes consultar otras regiones sin cambiar el destino guardado.',
+                      'Consular coverage varies by country. You can browse other regions without changing your saved destination.',
+                    )}
+                  </p>
+                </>
+              ) : (
+                <div className="fw-setup-personal">
+                  <fieldset className="fw-setup-language">
+                    <legend>{t('Idioma', 'Language')}</legend>
+                    <label>
+                      <input
+                        type="radio"
+                        name="setup-language"
+                        checked={language === 'es'}
+                        onChange={() => setLanguage('es')}
+                      />
+                      Español
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="setup-language"
+                        checked={language === 'en'}
+                        onChange={() => setLanguage('en')}
+                      />
+                      English
+                    </label>
+                  </fieldset>
+
+                  <label className="fw-setup-field">
+                    {t('Tu nombre', 'Your name')} <span>{t('Obligatorio', 'Required')}</span>
+                    <input
+                      name="traveler-name"
+                      autoComplete="name"
+                      maxLength={80}
+                      required
+                      value={name}
+                      onChange={(e) => {
+                        e.target.setCustomValidity(
+                          e.target.value.trim() ? '' : t('Escribe tu nombre.', 'Enter your name.'),
+                        );
+                        setName(e.target.value);
+                      }}
+                    />
+                  </label>
+                  <div className="fw-setup-contacts">
+                    <label className="fw-setup-field">
+                      {t('Teléfono', 'Phone')} <span>{t('Opcional', 'Optional')}</span>
+                      <input
+                        name="traveler-phone"
+                        type="tel"
+                        autoComplete="tel"
+                        inputMode="tel"
+                        maxLength={40}
+                        value={phone}
+                        onChange={(e) => {
+                          e.target.setCustomValidity(
+                            validProfilePhone(e.target.value)
+                              ? ''
+                              : t(
+                                  'Revisa el teléfono e incluye el código de país.',
+                                  'Check the number and include the country code.',
+                                ),
+                          );
+                          setPhone(e.target.value);
+                        }}
+                        placeholder={t('Incluye el código de país', 'Include country code')}
+                      />
+                    </label>
+                    <label className="fw-setup-field">
+                      {t('Correo electrónico', 'Email')} <span>{t('Opcional', 'Optional')}</span>
+                      <input
+                        name="traveler-email"
+                        type="email"
+                        autoComplete="email"
+                        inputMode="email"
+                        maxLength={254}
+                        value={email}
+                        onChange={(e) => {
+                          e.target.setCustomValidity(
+                            validProfileEmail(e.target.value)
+                              ? ''
+                              : t('Revisa el correo de contacto.', 'Check the contact email.'),
+                          );
+                          setEmail(e.target.value);
+                        }}
+                        placeholder="nombre@ejemplo.com"
+                      />
+                    </label>
+                  </div>
+                  <p className="fw-setup-hint">
+                    {t(
+                      'Tú decides si incluyes tu teléfono o correo al compartir un aviso.',
+                      'You choose whether to include your phone or email when sharing an update.',
+                    )}
+                  </p>
+                </div>
+              )}
+              <div className="fw-setup-privacy">
+                <LockSimpleIcon size={18} />
+                <p>
                   {t(
-                    'Tu nombre aparecerá al preparar un aviso. Tú decides si compartes tu teléfono o correo. No se crea una cuenta.',
-                    'Your name will be used when preparing an update. You decide whether to share your phone or email. No account is created.',
+                    'Solo en este navegador. Sin cuenta ni envío a servidores. Los datos se conservan al volver y no se sincronizan entre dispositivos.',
+                    'Only in this browser. No account or upload to servers. Your details are kept for your next visit and do not sync across devices.',
                   )}
                 </p>
               </div>
-            )}
-            <div className="fw-setup-privacy">
-              <LockSimpleIcon size={18} />
-              <p>
-                {t(
-                  'Se guardan solo en este navegador y se recuperan al volver. Faro no envía estos datos a un servidor. Cada teléfono o computadora conserva su propia copia.',
-                  'Saved only in this browser and restored when you return. Faro does not send this data to a server. Each phone or computer keeps its own copy.',
-                )}
-              </p>
-            </div>
-            {error && (
-              <p className="fw-setup-error" role="alert">
-                {t(
-                  'No se pudo guardar el cambio. Revisa el almacenamiento del navegador o continúa sin guardar.',
-                  'Could not save the change. Check browser storage or continue without saving.',
-                )}
-              </p>
-            )}
-            <button className="fw-setup-save" type="submit">
-              {step === 0
-                ? t('Continuar con mi viaje', 'Continue to my trip')
-                : p.saved
-                  ? t('Guardar cambios', 'Save changes')
-                  : t('Guardar y continuar', 'Save and continue')}
-              <ArrowRightIcon size={18} />
-            </button>
-            {step === 1 && (
-              <button
-                className="fw-setup-back"
-                type="button"
-                onClick={() => {
-                  setStep(0);
-                  setError(false);
-                }}
-              >
-                {t('Volver a mis datos', 'Back to my details')}
-              </button>
-            )}
-            <button className="fw-setup-skip" type="button" onClick={p.onClose}>
-              {p.saved
-                ? t('Cancelar', 'Cancel')
-                : t('Entrar sin guardar', 'Continue without saving')}
-            </button>
-          </form>
-          {p.saved && (
-            <div className="fw-setup-delete">
-              {!confirmDelete ? (
-                <button onClick={() => setConfirmDelete(true)}>
-                  {t('Borrar perfil del viaje', 'Delete trip profile')}
-                </button>
-              ) : (
-                <>
-                  <p>
-                    {t(
-                      'Se borran nombre, teléfono, correo, idioma, destino y nacionalidad del perfil. Los contactos, planes y mensajes anteriores se conservan por separado.',
-                      'Removes name, phone, email, language, destination and nationality from this profile. Contacts, plans and previous messages are kept separately.',
-                    )}
-                  </p>
-                  <div>
-                    <button
-                      onClick={() => {
-                        try {
-                          p.onDelete();
-                        } catch {
-                          setError(true);
-                        }
-                      }}
-                    >
-                      {t('Borrar perfil', 'Delete profile')}
+              {p.saved && (
+                <div className="fw-setup-delete">
+                  {!confirmDelete ? (
+                    <button type="button" onClick={() => setConfirmDelete(true)}>
+                      {t('Borrar perfil del viaje', 'Delete trip profile')}
                     </button>
-                    <button onClick={() => setConfirmDelete(false)}>
-                      {t('Conservar', 'Keep profile')}
-                    </button>
-                  </div>
-                </>
+                  ) : (
+                    <>
+                      <p>
+                        {t(
+                          'Se borran nombre, teléfono, correo, idioma, destino y nacionalidad del perfil. Los contactos, planes y mensajes anteriores se conservan por separado.',
+                          'Removes name, phone, email, language, destination and nationality from this profile. Contacts, plans and previous messages are kept separately.',
+                        )}
+                      </p>
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            try {
+                              p.onDelete();
+                            } catch {
+                              setError(true);
+                            }
+                          }}
+                        >
+                          {t('Borrar perfil', 'Delete profile')}
+                        </button>
+                        <button type="button" onClick={() => setConfirmDelete(false)}>
+                          {t('Conservar', 'Keep profile')}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
             </div>
-          )}
+            <footer className="fw-setup-actions">
+              {error && (
+                <p className="fw-setup-error" role="alert">
+                  {t(
+                    'No se pudo guardar el cambio. Revisa el almacenamiento del navegador o continúa sin guardar.',
+                    'Could not save the change. Check browser storage or continue without saving.',
+                  )}
+                </p>
+              )}
+              <button className="fw-setup-save" type="submit">
+                {step === 0
+                  ? t('Continuar', 'Continue')
+                  : p.saved
+                    ? t('Guardar cambios', 'Save changes')
+                    : t('Guardar y continuar', 'Save and continue')}
+                <ArrowRightIcon size={18} />
+              </button>
+              <div className="fw-setup-secondary">
+                {step === 1 && (
+                  <button
+                    className="fw-setup-back"
+                    type="button"
+                    onClick={() => {
+                      setStep(0);
+                      setError(false);
+                    }}
+                  >
+                    {t('Volver a mis datos', 'Back to my details')}
+                  </button>
+                )}
+                <button className="fw-setup-skip" type="button" onClick={p.onClose}>
+                  {p.saved
+                    ? t('Cancelar', 'Cancel')
+                    : t('Entrar sin guardar', 'Continue without saving')}
+                </button>
+              </div>
+              {!p.saved && (
+                <button
+                  type="button"
+                  className="fw-setup-emergency"
+                  onClick={() => p.onHelp(destination || p.destination)}
+                >
+                  {t('Necesito ayuda ahora', 'I need help now')}
+                </button>
+              )}
+            </footer>
+          </form>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
