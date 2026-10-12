@@ -1,3 +1,5 @@
+import MagnitudeLegend from './components/MagnitudeLegend.tsx';
+import { magnitudeBand } from './lib/magnitude.ts';
 import CountrySearch from './components/CountrySearch.tsx';
 import DestinationInfo from './components/DestinationInfo.tsx';
 import { WORLD, countryCodes, regionFor, regionScope } from './lib/regions.ts';
@@ -428,6 +430,13 @@ export default function App() {
         </nav>
         <div className="fw-sidebar-foot">
           <button
+            className="fw-emergency-trigger fw-emergency-persistent"
+            onClick={() => setEmergencyOpen(true)}
+          >
+            <PhoneIcon size={19} aria-hidden="true" />
+            {t('Emergencias', 'Emergency')}
+          </button>
+          <button
             className="fw-profile-button"
             onClick={() => setSetupOpen(true)}
             aria-label={t('Configurar mi viaje', 'Trip preferences')}
@@ -604,10 +613,6 @@ export default function App() {
                         )}
             </p>
           </div>
-          <button className="fw-emergency-trigger" onClick={() => setEmergencyOpen(true)}>
-            <PhoneIcon size={19} aria-hidden="true" />
-            {t('Emergencias', 'Emergency')}
-          </button>
         </div>
         {((screen !== 'guide' && screen !== 'status') || tracking) && (
           <div className={`fw-location ${geoState === 'idle' ? 'fw-location-idle' : ''}`}>
@@ -778,6 +783,7 @@ export default function App() {
                 </>
               )}
             </p>
+            <MagnitudeLegend lang={lang} />
             <LiveActivity
               events={results}
               updates={live.updates}
@@ -876,7 +882,7 @@ export default function App() {
                       className={`fw-event ${newIds.has(q.id) ? 'is-new' : ''}`}
                       onClick={() => setDetail(q.id)}
                     >
-                      <strong className="fw-mag">
+                      <strong className={`fw-mag fw-mag-band-${magnitudeBand(q.mag)}`}>
                         {q.mag?.toFixed(1) ?? '—'}
                         <small>{t('Magnitud', 'Magnitude')}</small>
                       </strong>

@@ -115,36 +115,52 @@ function deadlineLabel(record: CheckIn, lang: 'es' | 'en', zone?: string) {
 export function checkInMessage(record: CheckIn, lang: 'es' | 'en', zone?: string) {
   const t = (es: string, en: string) => (lang === 'es' ? es : en);
   const status = statusLabels[record.status][lang === 'es' ? 0 : 1];
-  return [
-    `${record.name ? `${t('Soy', 'This is')} ${record.name}. ` : ''}${status}.`,
+  const sentence = (value: string) =>
+    /[.!?…]$/.test(value.trim()) ? value.trim() : `${value.trim()}.`;
+  const reason =
     record.context === 'earthquake'
       ? t('Les escribo por el sismo.', "I'm checking in about the earthquake.")
       : record.context === 'evacuation'
         ? t('Les escribo por una evacuación.', "I'm checking in about an evacuation.")
         : record.context === 'update'
           ? t('Les cuento cómo va mi viaje.', "Here's an update on my trip.")
-          : '',
-    record.place ? `${t('Estoy en', "I'm at")} ${record.place}.` : '',
-    record.companions ? `${t('Estoy con', "I'm with")} ${record.companions}.` : '',
+          : '';
+  const location = [
+    record.place ? sentence(`${t('Estoy en', "I'm at")} ${record.place}`) : '',
+    record.companions ? sentence(`${t('Estoy con', "I'm with")} ${record.companions}`) : '',
     record.status === 'moving' && record.destination
-      ? `${t('Me dirijo a', "I'm heading to")} ${record.destination}.`
+      ? sentence(`${t('Me dirijo a', "I'm heading to")} ${record.destination}`)
       : '',
-    record.status === 'help' && record.needs ? `${t('Necesito', 'I need')}: ${record.needs}.` : '',
-    record.connection ? `${connectionLabels[record.connection][lang === 'es' ? 0 : 1]}.` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return [
+    [record.name ? `${t('Soy', 'This is')} ${record.name}.` : '', `${status}.`, reason]
+      .filter(Boolean)
+      .join(' '),
+    location,
+    record.status === 'help' && record.needs ? sentence(record.needs) : '',
+    [
+      record.connection ? `${connectionLabels[record.connection][lang === 'es' ? 0 : 1]}.` : '',
+      record.nextAt
+        ? `${t('Volveré a escribir a más tardar a las', "I'll check in again by")} ${deadlineLabel(record, lang, zone)}.`
+        : '',
+    ]
+      .filter(Boolean)
+      .join(' '),
+    record.note,
     record.phone ? `${t('Mi teléfono', 'My phone')}: ${record.phone}` : '',
     record.email ? `${t('Mi correo', 'My email')}: ${record.email}` : '',
-    record.note,
-    record.nextAt
-      ? `${t('Volveré a escribir a más tardar a las', "I'll check in again by")} ${deadlineLabel(record, lang, zone)}.`
-      : '',
     record.contact ? `${t('Si no respondo', 'If I do not reply')}: ${record.contact}` : '',
-    record.context
-      ? t(
-          'Por favor, confirmen que recibieron este mensaje.',
-          'Please let me know you received this message.',
-        )
-      : '',
-    record.event
+    record.status === 'help'
+      ? t('Por favor, respondan para coordinar la ayuda.', 'Please reply so we can arrange help.')
+      : record.context
+        ? t(
+            'Por favor, confirmen que recibieron este mensaje.',
+            'Please let me know you received this message.',
+          )
+        : '',
+    record.context === 'earthquake' && record.event
       ? `${t('Reporte de referencia', 'Reference report')}: ${record.event.source} · ${record.event.mag === null ? t('magnitud no informada', 'magnitude not reported') : `M ${record.event.mag.toFixed(1)}`} · ${record.event.place} · ${checkInTime(record.event.time, lang, zone)}. ${t('Es un dato del catálogo, no una medida de cómo me afectó.', 'This is a catalogue record, not a measure of how I was affected.')}`
       : '',
     `${t('Actualizado', 'Updated')}: ${checkInTime(record.at, lang, zone)}`,

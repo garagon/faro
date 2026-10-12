@@ -142,10 +142,7 @@ test('changing status cannot leak an earlier destination or help request into th
     assert.doesNotMatch(message, /Private old/);
     assert.doesNotMatch(message, /sismo|earthquake|evacuation/);
   }
-  assert.match(
-    checkInMessage({ ...contextual, status: 'help' }, 'es'),
-    /Necesito: Private old help request/,
-  );
+  assert.match(checkInMessage({ ...contextual, status: 'help' }, 'es'), /Private old help request/);
 });
 
 test('only an explicitly attached event is included and its occurrence time is preserved', () => {
@@ -213,4 +210,33 @@ test('a message contains contact channels only when explicitly included in its r
   assert.match(checkInMessage(selected, 'es'), /Mi teléfono: \+1 202 555 0123/);
   assert.match(checkInMessage(selected, 'en'), /My email: alex@example.com/);
   assert.equal(validCheckIn({ ...selected, phone: {} }), false);
+});
+
+test('help templates are explicit, compact and do not duplicate sentence endings', async () => {
+  const { helpTemplates } = await import('../src/lib/messageTemplates.ts');
+  for (const template of helpTemplates)
+    for (const lang of ['es', 'en'] as const) {
+      const needs = template.text[lang === 'es' ? 0 : 1];
+      const message = checkInMessage(
+        { ...row, context: 'earthquake', status: 'help', needs, place: 'Hotel de prueba.' },
+        lang,
+        'America/Panama',
+      );
+      assert(message.includes(needs));
+      assert.doesNotMatch(message, /\.\.|Necesito: Necesito|I need: I need/);
+      assert.match(message, lang === 'es' ? /respondan para coordinar/ : /reply so we can arrange/);
+      assert(message.split('\n\n')[0].includes(lang === 'es' ? 'sismo' : 'earthquake'));
+      assert.doesNotMatch(message, /GPS|https|rescate solicitado|rescue dispatched/);
+    }
+});
+test('an earlier event is excluded when the message is no longer about the earthquake', () => {
+  const message = checkInMessage(
+    {
+      ...row,
+      context: 'update',
+      event: { source: 'USGS', place: 'Earlier event', mag: 6, time: row.at },
+    },
+    'en',
+  );
+  assert.doesNotMatch(message, /Earlier event|USGS|Reference report/);
 });

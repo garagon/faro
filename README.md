@@ -36,7 +36,7 @@ El servidor de desarrollo y el de vista previa incluyen los adaptadores `/api/ig
 - Ayuda local con teléfonos y fuentes oficiales para nueve destinos de América; [cobertura y límites por país](docs/country-coverage.md).
 - Plan del hotel y contactos personales guardados en el navegador, con ficha visual descargable como imagen o texto para consultar sin conexión. [Apple Wallet: requisitos y límites](docs/apple-wallet.md).
 - Mensajes de estado con lugar, acompañantes, ayuda necesaria, disponibilidad y próxima hora de contacto; vista previa en español o inglés y envío manual. Puede adjuntarse un reporte sísmico seleccionado explícitamente.
-- Recomendaciones por situación en español e inglés, con enlaces a sus fuentes.
+- Recomendaciones por situación en español e inglés, con enlaces a sus fuentes. [Flujos de emergencia y criterio de colores](docs/emergency-ux.md).
 
 La relación de réplica no se deduce de cercanía entre sismos. Un punto personal no es un refugio certificado. La falta de datos no significa ausencia de peligro. Los teléfonos y las misiones diplomáticas tienen cobertura limitada: [fuentes y cobertura](docs/data-sources.md).
 

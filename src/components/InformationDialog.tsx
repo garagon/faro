@@ -1,3 +1,4 @@
+import { magnitudeBand } from '../lib/magnitude.ts';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowUpRightIcon, InfoIcon, MapPinIcon, XIcon } from '@phosphor-icons/react';
 import { distanceKm, type Quake } from '../lib/domain.ts';
@@ -170,7 +171,7 @@ export default function InformationDialog(p: Props) {
                   className="fw-quake-summary"
                   aria-label={t('Sismo seleccionado', 'Selected earthquake')}
                 >
-                  <div className="fw-quake-magnitude">
+                  <div className={`fw-quake-magnitude fw-mag-band-${magnitudeBand(q.mag)}`}>
                     <span>{t('Magnitud', 'Magnitude')}</span>
                     <strong>{q.mag?.toFixed(1) ?? '—'}</strong>
                   </div>

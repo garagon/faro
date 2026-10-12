@@ -1,3 +1,4 @@
+import { magnitudeBand } from '../lib/magnitude.ts';
 import { useState } from 'react';
 import { ArrowClockwiseIcon, ArrowUpRightIcon, MapPinIcon, XIcon } from '@phosphor-icons/react';
 import type { Quake } from '../lib/domain.ts';
@@ -78,7 +79,7 @@ export default function LiveActivity(p: Props) {
       </div>
       {latest && (
         <div className="fw-latest-event">
-          <div className="fw-latest-magnitude">
+          <div className={`fw-latest-magnitude fw-mag-band-${magnitudeBand(latest.mag)}`}>
             <strong>{latest.mag?.toFixed(1) ?? '—'}</strong>
             <span>{t('Magnitud', 'Magnitude')}</span>
           </div>
@@ -176,7 +177,7 @@ export default function LiveActivity(p: Props) {
           {updates.length ? (
             updates.map((u) => (
               <button key={key(u)} onClick={() => p.onDetails(u.event)}>
-                <strong>
+                <strong className={`fw-update-mag fw-mag-band-${magnitudeBand(u.event.mag)}`}>
                   {u.event.mag?.toFixed(1) ?? '—'}
                   <small>{t('Magnitud', 'Magnitude')}</small>
                 </strong>
