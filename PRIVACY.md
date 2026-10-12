@@ -4,7 +4,7 @@ Faro has no account system, analytics SDK, advertising, server-side personal pro
 
 | Data                                           | Storage and transmission                                                                                  |
 | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Language, destination, nationality             | Browser localStorage after an explicit save; language preference also stored locally                      |
+| Language, destination, nationality             | Trip saved explicitly in localStorage; site language saved separately when selected                       |
 | Hotel plan and optional meeting coordinates    | Browser localStorage after an explicit save                                                               |
 | Personal contacts and prepared-message history | Browser localStorage; manual export/sharing only                                                          |
 | GPS                                            | Browser permission; memory while enabled. Coordinates persist only if explicitly copied into a saved plan |
@@ -41,3 +41,5 @@ PNG and text travel cards are generated locally after an explicit download actio
 ## Preparedness checklist and nearby healthcare
 
 Emergency-kit checkmarks are stored only in `faro-emergency-kit-v1` in this browser, and can be cleared or downloaded from the kit section. Nearby healthcare searches do not read or send the trip profile. Location is requested only on an explicit click; coordinates are rounded to three decimals for the search. The chosen place or approximate coordinates are sent to Google Maps only when the person opens a pharmacy or hospital search. They are not stored by Faro. The external provider has its own privacy policy.
+
+The site language is selected with the ES/EN controls outside onboarding. It persists independently of the trip profile; deleting the profile does not reset the site language. Older profiles remain readable.

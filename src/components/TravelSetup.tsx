@@ -19,8 +19,8 @@ type Props = {
   onHelp: (country: string) => void;
 };
 export default function TravelSetup(p: Props) {
-  const [language, setLanguage] = useState(p.language),
-    [destination, setDestination] = useState(
+  const language = p.language;
+  const [destination, setDestination] = useState(
       p.saved?.destination ?? (p.destination === 'WORLD' ? 'PA' : p.destination),
     ),
     [nationality, setNationality] = useState(p.nationality),
@@ -178,28 +178,6 @@ export default function TravelSetup(p: Props) {
                 </>
               ) : (
                 <div className="fw-setup-personal">
-                  <fieldset className="fw-setup-language">
-                    <legend>{t('Idioma', 'Language')}</legend>
-                    <label>
-                      <input
-                        type="radio"
-                        name="setup-language"
-                        checked={language === 'es'}
-                        onChange={() => setLanguage('es')}
-                      />
-                      Español
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="setup-language"
-                        checked={language === 'en'}
-                        onChange={() => setLanguage('en')}
-                      />
-                      English
-                    </label>
-                  </fieldset>
-
                   <label className="fw-setup-field">
                     {t('Tu nombre', 'Your name')} <span>{t('Obligatorio', 'Required')}</span>
                     <input
@@ -288,8 +266,8 @@ export default function TravelSetup(p: Props) {
                     <>
                       <p>
                         {t(
-                          'Se borran nombre, teléfono, correo, idioma, destino y nacionalidad del perfil. Los contactos, planes y mensajes anteriores se conservan por separado.',
-                          'Removes name, phone, email, language, destination and nationality from this profile. Contacts, plans and previous messages are kept separately.',
+                          'Se borran nombre, teléfono, correo, destino y nacionalidad del perfil. Los contactos, planes y mensajes anteriores se conservan por separado.',
+                          'Removes name, phone, email, destination and nationality from this profile. Contacts, plans and previous messages are kept separately.',
                         )}
                       </p>
                       <div>
