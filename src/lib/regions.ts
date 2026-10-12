@@ -1,18 +1,29 @@
 import countries from '../data/countries.json' with { type: 'json' };
+import { destinationFor } from '../data/destinations/index.ts';
 export const WORLD = { south: -90, north: 90, west: -180, east: 180 };
-const PANAMA = { south: 4, north: 12, west: -85, east: -75 };
 export const countryCodes = countries.map((c) => c.code);
 export function regionFor(code: string) {
-  if (code === 'WORLD') return { bounds: WORLD, view: { lat: 15, lng: 0, zoom: 2, key: 0 } };
-  if (code === 'PA') return { bounds: PANAMA, view: { lat: 8.5, lng: -80, zoom: 6, key: 0 } };
-  const c = countries.find((c) => c.code === code)!;
+  const country = countries.find((c) => c.code === code);
+  if (code === 'WORLD' || !country)
+    return { bounds: WORLD, view: { lat: 15, lng: 0, zoom: 2, key: 0 } };
+  const preset = destinationFor(code)?.region;
+  if (preset) return { bounds: { ...preset.bounds }, view: { ...preset.view, key: 0 } };
   return {
     bounds: {
-      south: Math.max(-90, c.lat - 7),
-      north: Math.min(90, c.lat + 7),
-      west: c.lng - 10,
-      east: c.lng + 10,
+      south: Math.max(-90, country.lat - 7),
+      north: Math.min(90, country.lat + 7),
+      west: country.lng - 10,
+      east: country.lng + 10,
     },
-    view: { lat: c.lat, lng: c.lng, zoom: c.zoom, key: 0 },
+    view: { lat: country.lat, lng: country.lng, zoom: country.zoom, key: 0 },
   };
+}
+export function regionScope(code: string, lang: 'es' | 'en') {
+  if (code === 'WORLD') return lang === 'es' ? 'Vista mundial' : 'Worldwide view';
+  return (
+    destinationFor(code)?.region.scope[lang === 'es' ? 0 : 1] ??
+    (lang === 'es'
+      ? 'Área aproximada alrededor del centro del país. Amplía el mapa para otras zonas.'
+      : 'Approximate area around the country’s centre. Expand the map for other areas.')
+  );
 }

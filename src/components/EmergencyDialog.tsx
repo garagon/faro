@@ -3,7 +3,6 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { XIcon, BookOpenTextIcon, ChatCircleTextIcon } from '@phosphor-icons/react';
 import CountrySearch from './CountrySearch.tsx';
 import EmergencyNumbers from './EmergencyNumbers.tsx';
-import { emergencyFor } from '../lib/emergency.ts';
 type Props = {
   country: string;
   lang: 'es' | 'en';
@@ -14,7 +13,10 @@ type Props = {
 };
 export default function EmergencyDialog(p: Props) {
   const [country, setCountry] = useState(p.country === 'WORLD' ? '' : p.country),
-    [editing, setEditing] = useState(p.country === 'WORLD');
+    [editing, setEditing] = useState(p.country === 'WORLD'),
+    [returnFocus] = useState(() =>
+      document.activeElement instanceof HTMLElement ? document.activeElement : null,
+    );
   const t = (es: string, en: string) => (p.lang === 'es' ? es : en);
   const name = country ? new Intl.DisplayNames([p.lang], { type: 'region' }).of(country) : '';
   return (
@@ -29,6 +31,12 @@ export default function EmergencyDialog(p: Props) {
         <Dialog.Content
           className="fw-modal fw-info-dialog fw-emergency-dialog"
           lang={p.lang}
+          onCloseAutoFocus={(event) => {
+            if (returnFocus?.isConnected) {
+              event.preventDefault();
+              returnFocus.focus();
+            }
+          }}
           onEscapeKeyDown={(e) => {
             const focused = document.activeElement;
             if (
@@ -80,19 +88,7 @@ export default function EmergencyDialog(p: Props) {
               )}
             </div>
             {country && !editing ? (
-              <>
-                <EmergencyNumbers country={country} lang={p.lang} />
-                {emergencyFor(country) && (
-                  <a
-                    className="fw-emergency-source"
-                    href={emergencyFor(country)!.source}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t('Fuente oficial', 'Official source')} · {emergencyFor(country)!.agency} ↗
-                  </a>
-                )}
-              </>
+              <EmergencyNumbers country={country} lang={p.lang} />
             ) : (
               <p className="fw-emergency-prompt">
                 {t(

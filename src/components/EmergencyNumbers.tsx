@@ -25,8 +25,8 @@ export default function EmergencyNumbers({
           </h2>
           <p>
             {t(
-              'País seleccionado. Comprueba que corresponde a donde estás.',
-              'Selected country. Check that it matches where you are.',
+              'Llama desde este país. Si estás en otro lugar, cambia el país arriba.',
+              'Call from within this country. If you are elsewhere, change the country above.',
             )}
           </p>
         </div>
@@ -44,7 +44,7 @@ export default function EmergencyNumbers({
               href={`tel:${n.number}`}
               aria-label={`${t('Llamar', 'Call')} ${n.number} · ${n.label[lang === 'es' ? 0 : 1]}`}
             >
-              <PhoneIcon size={19} />
+              <PhoneIcon size={19} aria-hidden="true" />
               <strong>{n.number}</strong>
               <span>{n.label[lang === 'es' ? 0 : 1]}</span>
             </a>
@@ -58,11 +58,16 @@ export default function EmergencyNumbers({
           )}
         </p>
       )}
+      {data?.note && <p className="fw-emergency-scope">{data.note[lang === 'es' ? 0 : 1]}</p>}
       {data && (
         <small>
           {t(
             'Estos números cortos son para llamadas dentro del país, no desde el extranjero.',
             'These short numbers are for calls within the country, not from abroad.',
+          )}{' '}
+          · {t('Datos revisados', 'Information reviewed')}:{' '}
+          {new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeZone: 'UTC' }).format(
+            new Date(data.reviewedAt + 'T12:00:00Z'),
           )}
         </small>
       )}

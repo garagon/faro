@@ -12,7 +12,7 @@
 
 The initial verified mission directory contains Argentina, Colombia, United States, Mexico and Spain **in Panama**, with approximate building markers. An unsupported combination means Faro has no verified record, not that the country lacks representation. Addresses, source links and caveats are in `src/lib/embassies.ts`. Recheck them before operational deployment; embassy locations do not certify shelter or route safety.
 
-The emergency-number directory covers Panama, Chile, Colombia, Argentina and the United States with explicit source and geographic caveats. No global default number is invented. Some numbers apply only to a specific domestic jurisdiction; see `src/lib/emergency.ts`.
+The emergency-number directory covers Panama, Chile, Colombia, Argentina, the United States, Mexico, Peru, Ecuador and Costa Rica with explicit source and geographic caveats. No global default number is invented. Some numbers apply only to a specific domestic jurisdiction, including SAMU coverage in Peru. See [country coverage](country-coverage.md) and the country modules in `src/data/destinations/`.
 
 Guidance links to SENAPRED, CDC, NOAA and national/local authorities. Chilean evacuation maps apply to Chile; they do not identify safe locations in Panama. Institutions and volunteer links do not imply facilities are open or available.
 

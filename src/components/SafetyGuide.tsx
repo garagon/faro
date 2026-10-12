@@ -1,3 +1,4 @@
+import { destinationFor } from '../data/destinations/index.ts';
 import { useState } from 'react';
 import { ArrowUpRightIcon, DownloadSimpleIcon, ArrowRightIcon } from '@phosphor-icons/react';
 import type { Lang } from '../lib/resources.ts';
@@ -277,17 +278,46 @@ const outdoors: Copy = [
   'En el exterior, permanece fuera y aléjate de edificios y cables.',
   'Outdoors, stay outside and away from buildings and power lines.',
 ];
-function guideText(lang: Lang) {
+function guideText(lang: Lang, country: string) {
   const i = lang === 'es' ? 0 : 1;
-  return (
-    `${lang === 'es' ? 'FARO — GUÍA DE ACTUACIÓN\nInformación general. Sigue las instrucciones locales.' : 'FARO — EARTHQUAKE GUIDE\nGeneral information. Follow local instructions.'}\n\n` +
-    sections
-      .map(
-        (s) =>
-          `${s.label[i]}\n${s.intro[i]}\n${s.steps.map((v, n) => `${n + 1}. ${v.title[i]}: ${v.body[i]}`).join('\n')}\n${s.note?.[i] || ''}${s.id === 'coast' ? '\nSENAPRED · Chile: https://www.senapred.gov.cl/tsunami/\n' + (lang === 'es' ? 'Planos solo de Chile' : 'Maps for Chile only') + ': https://www.senapred.gov.cl/planos-de-evacuacion/' : ''}${s.id === 'during' ? '\n' + outdoors[i] + '\n' + (lang === 'es' ? 'Chile: SENAPRED recomienda evacuar inmediatamente construcciones de adobe o autoconstruidas.' : 'Chile: SENAPRED recommends immediately evacuating adobe or self-built structures.') + ' https://www.senapred.gov.cl/sismos/' : ''}\n${s.url ? `${s.source}: ${s.url}` : lang === 'es' ? 'Preparación personal; confirmar con recepción.' : 'Personal preparation; confirm with reception.'}`,
-      )
-      .join('\n\n')
-  );
+  const local = destinationFor(country);
+  const title =
+    lang === 'es'
+      ? 'FARO — GUÍA DE ACTUACIÓN\nInformación general. Sigue las instrucciones locales.'
+      : 'FARO — EARTHQUAKE GUIDE\nGeneral information. Follow local instructions.';
+  const content = sections.map((section) => {
+    const lines = [
+      section.label[i],
+      section.intro[i],
+      ...section.steps.map((step, n) => `${n + 1}. ${step.title[i]}: ${step.body[i]}`),
+      section.note?.[i] || '',
+    ];
+    if (section.id === 'during') {
+      lines.push(outdoors[i]);
+      if (country === 'CL')
+        lines.push(
+          lang === 'es'
+            ? 'Chile: SENAPRED recomienda evacuar inmediatamente construcciones de adobe o autoconstruidas.'
+            : 'Chile: SENAPRED recommends immediately evacuating adobe or self-built structures.',
+          'https://www.senapred.gov.cl/sismos/',
+        );
+    }
+    if (section.id === 'coast' && local?.evacuation)
+      lines.push(`${local.evacuation.name}: ${local.evacuation.url}`);
+    lines.push(
+      section.url
+        ? `${section.source}: ${section.url}`
+        : lang === 'es'
+          ? 'Preparación personal; confirmar con recepción.'
+          : 'Personal preparation; confirm with reception.',
+    );
+    return lines.filter(Boolean).join('\n');
+  });
+  if (local?.civilProtection)
+    content.push(
+      `${lang === 'es' ? 'Indicaciones locales' : 'Local guidance'}: ${local.civilProtection.name}\n${local.civilProtection.url}`,
+    );
+  return [title, ...content].join('\n\n');
 }
 export default function SafetyGuide({
   lang,
@@ -304,10 +334,11 @@ export default function SafetyGuide({
     [downloaded, setDownloaded] = useState(false);
   const i = lang === 'es' ? 0 : 1,
     t = (es: string, en: string) => (lang === 'es' ? es : en);
+  const destination = destinationFor(country);
   const current = sections.find((s) => s.id === active)!;
   const download = () => {
     const url = URL.createObjectURL(
-      new Blob([guideText(lang)], { type: 'text/plain;charset=utf-8' }),
+      new Blob([guideText(lang, country)], { type: 'text/plain;charset=utf-8' }),
     );
     const a = document.createElement('a');
     a.href = url;
@@ -395,7 +426,7 @@ export default function SafetyGuide({
             <ArrowRightIcon size={16} />
           </button>
         )}
-        {active === 'coast' && (
+        {active === 'coast' && country === 'CL' && (
           <div className="fw-chile-guidance">
             <a href="https://www.senapred.gov.cl/tsunami/" target="_blank" rel="noreferrer">
               {t('Recomendaciones de SENAPRED · Chile', 'SENAPRED guidance · Chile')} ↗
@@ -413,14 +444,19 @@ export default function SafetyGuide({
             >
               {t('Planos de evacuación de Chile', 'Chile evacuation maps')} ↗
             </a>
-            {country !== 'CL' && (
-              <small>
-                {t(
-                  'Para tu destino, confirma la ruta con la autoridad local y el hotel.',
-                  'For your destination, confirm the route with local authorities and your hotel.',
-                )}
-              </small>
-            )}
+          </div>
+        )}
+        {country !== 'CL' && destination?.civilProtection && (
+          <div className="fw-chile-guidance">
+            <a href={destination.civilProtection.url} target="_blank" rel="noreferrer">
+              {t('Indicaciones locales', 'Local guidance')} · {destination.civilProtection.name} ↗
+            </a>
+            <p>
+              {t(
+                'Confirma las instrucciones y las rutas de evacuación del lugar donde estás.',
+                'Check the instructions and evacuation routes for your location.',
+              )}
+            </p>
           </div>
         )}
         {active === 'hotel' && (
