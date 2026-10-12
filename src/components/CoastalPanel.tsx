@@ -1,3 +1,4 @@
+import { destinationFor } from '../data/destinations/index.ts';
 import { useEffect, useState } from 'react';
 import { WavesIcon, ArrowUpRightIcon, ArrowClockwiseIcon } from '@phosphor-icons/react';
 import type { Geo } from './WebMap.tsx';
@@ -100,11 +101,12 @@ export default function CoastalPanel({
       stop = true;
     };
   }, [geo?.lat, geo?.lng]);
+  const authority = destinationFor(country)?.civilProtection;
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const date = (n: number) =>
     new Intl.DateTimeFormat(lang, {
       dateStyle: 'medium',
       timeStyle: 'short',
-      timeZone: 'America/Panama',
     }).format(n);
   const near = geo && distance !== null && distance <= 20 + geo.accuracy / 1000;
   const rows = data ? classifyBulletins(data, now, error) : [];
@@ -129,7 +131,7 @@ export default function CoastalPanel({
         <h3>{b.place}</h3>
         <p className="fw-bulletin-meta">
           {t('Emitido', 'Issued')}:{' '}
-          <time dateTime={new Date(b.issued).toISOString()}>{date(b.issued)}</time> · America/Panama
+          <time dateTime={new Date(b.issued).toISOString()}>{date(b.issued)}</time> · {zone}
         </p>
         <p>
           {b.product} ·{' '}
@@ -328,9 +330,9 @@ export default function CoastalPanel({
               ? t('Conectando con NOAA…', 'Connecting to NOAA…')
               : t('Sin datos recibidos', 'No data received')}
         </span>
-        {country === 'PA' && (
-          <a href="https://www.sinaproc.gob.pa/" target="_blank" rel="noreferrer">
-            SINAPROC
+        {authority && (
+          <a href={authority.url} target="_blank" rel="noreferrer">
+            {authority.name}
           </a>
         )}
         <a href="https://www.tsunami.gov/" target="_blank" rel="noreferrer">

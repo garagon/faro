@@ -1,4 +1,6 @@
-import { WORLD, countryCodes, regionFor } from './lib/regions.ts';
+import CountrySearch from './components/CountrySearch.tsx';
+import DestinationInfo from './components/DestinationInfo.tsx';
+import { WORLD, countryCodes, regionFor, regionScope } from './lib/regions.ts';
 import EmergencyDialog from './components/EmergencyDialog.tsx';
 import LocalDataInfo from './components/LocalDataInfo.tsx';
 import { writeLocal, removeLocal } from './lib/browserStorage.ts';
@@ -490,74 +492,44 @@ export default function App() {
             </button>
           </div>
         )}
-        {(screen === 'guide' || screen === 'status') && (
-          <div className="fw-page-bar">
-            <span>
-              Faro <span aria-hidden="true">/</span>{' '}
-              <strong>{nav.find((n) => n.id === screen)?.title}</strong>
-            </span>
-            <time>
-              {new Intl.DateTimeFormat(lang, {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              }).format(live.now)}
-            </time>
+        <div className="fw-context">
+          <div className="fw-country">
+            <GlobeHemisphereWestIcon size={22} />
+            <CountrySearch
+              label={t('País de consulta', 'Country to view')}
+              value={country}
+              lang={lang}
+              includeWorld
+              onChange={(code) => {
+                if (code) changeCountry(code);
+              }}
+            />
+            <button
+              className="fw-icon"
+              onClick={saveCountry}
+              aria-label={
+                savedCountries.includes(country)
+                  ? t('Quitar zona guardada', 'Remove saved area')
+                  : t('Guardar zona', 'Save area')
+              }
+            >
+              <FlagIcon size={20} weight={savedCountries.includes(country) ? 'fill' : 'regular'} />
+            </button>
           </div>
-        )}
-        {screen !== 'guide' && screen !== 'status' && (
-          <div className="fw-context">
-            <div className="fw-country">
-              <GlobeHemisphereWestIcon size={22} />
-              <label>
-                <span>{t('Región', 'Region')}</span>
-                <select
-                  aria-label={t('País o territorio', 'Country or territory')}
-                  value={country}
-                  onChange={(e) => changeCountry(e.target.value)}
-                >
-                  <option value="WORLD">{t('Todo el mundo', 'Worldwide')}</option>
-                  {[...countries]
-                    .sort((a, b) =>
-                      (names.of(a.code) || a.name).localeCompare(names.of(b.code) || b.name, lang),
-                    )
-                    .map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {names.of(c.code) || c.name}
-                      </option>
-                    ))}
-                </select>
-              </label>
-              <button
-                className="fw-icon"
-                onClick={saveCountry}
-                aria-label={
-                  savedCountries.includes(country)
-                    ? t('Quitar zona guardada', 'Remove saved area')
-                    : t('Guardar zona', 'Save area')
-                }
-              >
-                <FlagIcon
-                  size={20}
-                  weight={savedCountries.includes(country) ? 'fill' : 'regular'}
-                />
-              </button>
-            </div>
-            {screen === 'activity' && (
-              <button className="fw-live" onClick={() => setSourceOpen(true)}>
-                <i className={stale ? 'stale' : ''} />
-                {!live.fetched
-                  ? `${provider} · ${t('Conectando…', 'Connecting…')}`
-                  : stale
-                    ? `${provider} · ${t('datos anteriores', 'older data')}`
-                    : `${provider} · ${t('consulta cada 60 s', 'checked every 60 s')}`}
-                <span>
-                  {live.busy ? t('Consultando…', 'Refreshing…') : t('Ver fuente', 'View source')}
-                </span>
-              </button>
-            )}
-          </div>
-        )}
+          {screen === 'activity' && (
+            <button className="fw-live" onClick={() => setSourceOpen(true)}>
+              <i className={stale ? 'stale' : ''} />
+              {!live.fetched
+                ? `${provider} · ${t('Conectando…', 'Connecting…')}`
+                : stale
+                  ? `${provider} · ${t('datos anteriores', 'older data')}`
+                  : `${provider} · ${t('consulta cada 60 s', 'checked every 60 s')}`}
+              <span>
+                {live.busy ? t('Consultando…', 'Refreshing…') : t('Ver fuente', 'View source')}
+              </span>
+            </button>
+          )}
+        </div>
         {screen !== 'guide' && screen !== 'status' && savedCountries.length > 0 && (
           <div className="fw-saved">
             <small>{t('Guardados', 'Saved')}</small>
@@ -594,27 +566,16 @@ export default function App() {
         )}
         <div className="fw-heading">
           <div>
-            <span className="fw-section-label">
-              {screen === 'activity'
-                ? t('MONITOREO SÍSMICO', 'EARTHQUAKE MONITORING')
-                : screen === 'help'
-                  ? t('ASISTENCIA EN DESTINO', 'ASSISTANCE AT YOUR DESTINATION')
-                  : screen === 'status'
-                    ? t('CONTACTO CON FAMILIA Y AMIGOS', 'KEEP IN TOUCH')
-                    : screen === 'hotel'
-                      ? t('PREPARACIÓN PERSONAL', 'PERSONAL PREPARATION')
-                      : t('ANTE UN SISMO', 'WHEN AN EARTHQUAKE OCCURS')}
-            </span>
             <h1>
               {screen === 'activity'
                 ? t('Actividad sísmica', 'Earthquake activity')
                 : screen === 'help'
-                  ? t('Asistencia local', 'Local assistance')
+                  ? t('Ayuda local', 'Local help')
                   : screen === 'status'
                     ? t('Avisar cómo estoy', 'Send a status update')
                     : screen === 'hotel'
                       ? t('Mi viaje', 'My trip')
-                      : t('Guía de actuación', 'Earthquake guide')}
+                      : t('Qué hacer ante un sismo', 'What to do in an earthquake')}
             </h1>
             <p>
               {screen === 'activity'
@@ -624,8 +585,8 @@ export default function App() {
                   )
                 : screen === 'help'
                   ? t(
-                      'Embajadas, universidades y autoridades locales.',
-                      'Embassies, universities and local authorities.',
+                      'Teléfonos de emergencia, avisos oficiales y asistencia consular.',
+                      'Emergency numbers, official notices and consular assistance.',
                     )
                   : screen === 'status'
                     ? t(
@@ -643,33 +604,10 @@ export default function App() {
                         )}
             </p>
           </div>
-          {screen === 'activity' ? (
-            <button className="fw-emergency-trigger" onClick={() => setEmergencyOpen(true)}>
-              <PhoneIcon size={19} />
-              {t('Emergencias', 'Emergency')}
-            </button>
-          ) : (
-            screen !== 'guide' &&
-            screen !== 'status' && (
-              <button
-                className="fw-primary"
-                aria-label={t('Mi ubicación', 'Locate me')}
-                onClick={locate}
-                disabled={geoState === 'pending'}
-                title={t(
-                  'Requiere permiso. Las distancias se calculan en tu dispositivo.',
-                  'Requires permission. Distances are calculated on your device.',
-                )}
-              >
-                <CrosshairIcon size={20} />
-                {geoState === 'pending'
-                  ? t('Buscando ubicación…', 'Finding location…')
-                  : geo
-                    ? t('Centrar en mi ubicación', 'Centre on my location')
-                    : t('Mi ubicación', 'Locate me')}
-              </button>
-            )
-          )}
+          <button className="fw-emergency-trigger" onClick={() => setEmergencyOpen(true)}>
+            <PhoneIcon size={19} aria-hidden="true" />
+            {t('Emergencias', 'Emergency')}
+          </button>
         </div>
         {((screen !== 'guide' && screen !== 'status') || tracking) && (
           <div className={`fw-location ${geoState === 'idle' ? 'fw-location-idle' : ''}`}>
@@ -827,6 +765,19 @@ export default function App() {
                 {listOnly ? t('Mostrar mapa', 'Show map') : t('Solo lista', 'List only')}
               </button>
             </div>
+            <p className="fw-area-scope">
+              {t('Área inicial', 'Initial area')}: {regionScope(country, lang)}
+              {country !== 'WORLD' && (
+                <>
+                  {' '}
+                  ·{' '}
+                  {t(
+                    'El área puede incluir países vecinos.',
+                    'The area may include neighboring countries.',
+                  )}
+                </>
+              )}
+            </p>
             <LiveActivity
               events={results}
               updates={live.updates}
@@ -1061,6 +1012,7 @@ export default function App() {
         {screen === 'help' && (
           <>
             <EmergencyNumbers country={country} lang={lang} />
+            <DestinationInfo country={country} lang={lang} />
             <EmbassyPanel
               onProfile={() => setSetupOpen(true)}
               savedNationality={profile?.nationality ?? null}
@@ -1079,17 +1031,14 @@ export default function App() {
             />
             <details className="fw-local-directory">
               <summary>
-                {t(
-                  'Autoridades, universidades y voluntariado',
-                  'Authorities, universities and volunteering',
-                )}
+                {t('Más recursos y preparación', 'More resources and preparedness')}
               </summary>
               <p className="fw-help-region">
                 {t('Recursos para la región seleccionada', 'Resources for the selected region')}:{' '}
                 <strong>{countryName}</strong>.{' '}
                 {t(
-                  'Selecciona otro país en el menú Región.',
-                  'Select another country in the Region menu.',
+                  'Cambia el país en el buscador de arriba.',
+                  'Change the country using the search above.',
                 )}
               </p>
               <div className="fw-help-summary">
@@ -1120,7 +1069,7 @@ export default function App() {
                     <small>
                       {r.name === 'USGS'
                         ? t('Consulta automática cada 60 s', 'Checked automatically every 60 s')
-                        : t('Enlace revisado: 11 oct 2026', 'Link checked: Oct 11, 2026')}
+                        : `${t('Datos revisados', 'Information reviewed')}: ${new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(r.reviewedAt + 'T12:00:00Z'))}`}
                     </small>
                   </article>
                 ))}

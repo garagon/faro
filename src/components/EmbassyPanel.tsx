@@ -44,11 +44,11 @@ export default function EmbassyPanel({
       aria-label={t('Asistencia consular', 'Consular assistance')}
     >
       <aside className="fw-nationality">
-        <h2>{t('¿Cuál es tu nacionalidad?', 'What is your nationality?')}</h2>
+        <h2>{t('Asistencia consular', 'Consular assistance')}</h2>
         <p>
           {t(
-            'Selecciona el país cuya representación necesitas.',
-            'Select the country whose representation you need.',
+            'Tu nacionalidad determina qué representación puede ayudarte.',
+            'Your nationality determines which mission can assist you.',
           )}
         </p>
         <CountrySearch
@@ -65,10 +65,7 @@ export default function EmbassyPanel({
         </div>
         <small>
           {savedNationality === nationality && nationality
-            ? t(
-                'Usando la nacionalidad de tu perfil guardado.',
-                'Using the nationality in your saved profile.',
-              )
+            ? t('Nacionalidad guardada en tu perfil.', 'Nationality saved in your profile.')
             : t(
                 'Esta selección se aplica a la consulta actual. Guárdala en tu perfil para otra visita.',
                 'This selection applies to the current search. Save it in your profile for another visit.',
@@ -109,7 +106,11 @@ export default function EmbassyPanel({
       ) : !embassy ? (
         <div className="fw-mission-empty" role="status">
           <span>{names.of(nationality)}</span>
-          <h2>{t('Sin dirección verificada', 'No verified address')}</h2>
+          <h2>
+            {fallback
+              ? t('Consulta el directorio oficial', 'Check the official directory')
+              : t('Sin contacto verificado', 'No verified contact')}
+          </h2>
           <p>
             {t(
               `No tenemos una representación de ${names.of(nationality)} verificada en ${countryName}. Consulta la cancillería de tu país.`,

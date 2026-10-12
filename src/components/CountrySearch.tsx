@@ -6,6 +6,7 @@ type Props = {
   value: string;
   lang: 'es' | 'en';
   required?: boolean;
+  includeWorld?: boolean;
   onChange: (code: string) => void;
 };
 const normalize = (value: string) =>
@@ -14,7 +15,14 @@ const normalize = (value: string) =>
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
     .trim();
-export default function CountrySearch({ label, value, lang, required = false, onChange }: Props) {
+export default function CountrySearch({
+  label,
+  value,
+  lang,
+  required = false,
+  includeWorld = false,
+  onChange,
+}: Props) {
   const id = useId(),
     input = useRef<HTMLInputElement>(null),
     [query, setQuery] = useState<string | null>(null),
@@ -25,20 +33,32 @@ export default function CountrySearch({ label, value, lang, required = false, on
   const options = useMemo(() => {
     const local = new Intl.DisplayNames([lang], { type: 'region' }),
       english = new Intl.DisplayNames(['en'], { type: 'region' });
-    return countries
+    const list = countries
       .map((c) => ({
         code: c.code,
         name: local.of(c.code) || c.name,
         search: normalize(`${c.name} ${english.of(c.code)} ${local.of(c.code)} ${c.code}`),
       }))
       .sort((a, b) => a.name.localeCompare(b.name, lang));
-  }, [lang]);
+    return includeWorld
+      ? [
+          {
+            code: 'WORLD',
+            name: lang === 'es' ? 'Todo el mundo' : 'Worldwide',
+            search: 'todo el mundo worldwide global world',
+          },
+          ...list,
+        ]
+      : list;
+  }, [lang, includeWorld]);
   const selected = options.find((c) => c.code === value),
     search = normalize(query ?? '');
   const matches = options
     .filter((c) => search.split(/\s+/).every((word) => c.search.includes(word)))
-    .sort(
-      (a, b) => Number(b.code.toLowerCase() === search) - Number(a.code.toLowerCase() === search),
+    .sort((a, b) =>
+      query === null
+        ? Number(b.code === value) - Number(a.code === value)
+        : Number(b.code.toLowerCase() === search) - Number(a.code.toLowerCase() === search),
     );
   const shown = matches.slice(0, 8);
   const error = t('Selecciona un país de los resultados.', 'Select a country from the results.');
@@ -117,10 +137,11 @@ export default function CountrySearch({ label, value, lang, required = false, on
               e.preventDefault();
               e.stopPropagation();
               setOpen(false);
+              if (selected) setQuery(null);
             }
           }}
         />
-        {selected && <CheckIcon size={17} className="fw-country-search-check" />}
+        {selected && query === null && <CheckIcon size={17} className="fw-country-search-check" />}
       </div>
       {open && (
         <div className="fw-country-search-menu">

@@ -41,7 +41,7 @@ export default function LiveActivity(p: Props) {
         ? t('Actualización pendiente', 'Update overdue')
         : !p.checked
           ? t('Conectando…', 'Connecting…')
-          : t('Consulta automática activa', 'Automatic updates active');
+          : t('Actualización automática', 'Automatic updates');
   const clock = (time: number) =>
     new Intl.DateTimeFormat(p.lang, { timeStyle: 'medium' }).format(time);
   return (
@@ -84,7 +84,7 @@ export default function LiveActivity(p: Props) {
           </div>
           <div className="fw-latest-place">
             <span className="fw-latest-kicker">
-              {t('Último sismo en esta vista', 'Latest earthquake in this view')}
+              {t('Último sismo en el área', 'Latest earthquake in this area')}
             </span>
             <h2>{latest.place.replace(/^Localizado en\s+/i, '').replace(/(\d)km\b/g, '$1 km')}</h2>
             <p>
@@ -161,7 +161,7 @@ export default function LiveActivity(p: Props) {
           )}
         </span>
         <button aria-expanded={history} onClick={() => setHistory((v) => !v)}>
-          {t('Novedades recibidas', 'Received updates')} <b>{updates.length}</b>{' '}
+          {t('Cambios recibidos', 'Updates received')} <b>{updates.length}</b>{' '}
           <span aria-hidden="true">{history ? '−' : '+'}</span>
         </button>
       </div>

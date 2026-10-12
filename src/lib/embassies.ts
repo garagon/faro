@@ -1,3 +1,4 @@
+import { consularDirectories } from '../data/consularDirectories.ts';
 export type Embassy = {
   id: string;
   nation: string;
@@ -113,14 +114,7 @@ export function consularFallback(
         'Chile’s foreign ministry information published Oct 9, 2026. See the page for channels and forms.',
       ],
     };
-  if (nationality === 'AR')
-    return {
-      url: 'https://cancilleria.gob.ar/es/emergencia-consular',
-      label: [
-        'Directorio consular oficial de Argentina',
-        'Argentina’s official consular directory',
-      ],
-    };
+  if (Object.hasOwn(consularDirectories, nationality)) return consularDirectories[nationality];
   if (country === 'CL' && nationality)
     return {
       url: 'https://www.consulado.gob.cl/redes/consulados-extranjeros-en-chile',

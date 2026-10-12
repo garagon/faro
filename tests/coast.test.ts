@@ -46,7 +46,8 @@ test('nationality selects only the mission for the current host country', async 
 test('consular fallback scopes Chile Panama notice and local directory correctly', async () => {
   const { consularFallback } = await import('../src/lib/embassies.ts');
   assert.match(consularFallback('PA', 'CL')!.url, /emergencia-panama/);
-  assert.equal(consularFallback('CO', 'CL'), null);
-  assert.match(consularFallback('CL', 'CO')!.url, /consulados-extranjeros/);
+  assert.equal(consularFallback('CO', 'CL')!.url, 'https://www.chile.gob.cl/consulados');
+  assert.match(consularFallback('CL', 'CO')!.url, /cancilleria.gov.co/);
+  assert.match(consularFallback('CL', 'FR')!.url, /consulados-extranjeros/);
   assert.equal(consularFallback('CL', ''), null);
 });

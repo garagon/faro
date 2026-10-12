@@ -30,14 +30,20 @@ A `Quake` carries ID, location, magnitude (nullable), depth, occurrence/revision
 
 ## Add or improve country coverage
 
-Country selection is already global. Geographic defaults live in `src/lib/regions.ts`; the country database is `src/data/countries.json` under ODbL-1.0. Approximate country-centered rectangles are not administrative borders.
+Country selection is global. Local help is intentionally partial. `src/data/destinations/` contains one typed module per destination. The same records drive emergency numbers, country source links, coastal authority links, local guide links, the map preset and supplementary resources. Do not add country-specific branches to UI components for ordinary directory additions.
 
-- **Emergency numbers:** add a country entry in `src/lib/emergency.ts` with official source, agency and ES/EN labels. Retain subnational/domestic restrictions. Test unsupported countries and number scopes.
-- **Embassies:** add a record in `src/lib/embassies.ts` with host country, represented nationality, bilingual name, official contact/source, approximate coordinates, address and applicable caveat. Never label a mission a shelter. Test `embassyFor` and outbound routes.
-- **Institutions/volunteering:** add attributed records in `src/lib/resources.ts`. An institution link is not proof of a currently open assistance point.
-- **Guidance:** edit the situation documents in `SafetyGuide.tsx`; provide matching Spanish/English and a responsible source. Keep local evacuation-map scope explicit.
+1. Copy a small module such as `cr.ts` to a new ISO-3166 alpha-2 filename. Set its `code`.
+2. Fill `emergency` only with officially sourced numbers. Retain territorial restrictions in the bilingual label and `note`; never use a universal 911/112 fallback. Set `reviewedAt` to the actual evidence-review date, not today's date automatically.
+3. Add `civilProtection`, `seismicAgency` and optionally `evacuation` with official URLs and review dates. These are external links, **not new automatically ingested earthquake sources**. Adding a feed still follows the adapter steps above.
+4. Set a useful `region` rectangle and map view. These are approximate search presets, not borders or hazard zones. Describe excluded territories/islands explicitly in both `scope` strings. Presets may contain neighboring countries. Unconfigured countries use the documented centre-based fallback.
+5. Add supplementary `resources` with ES/EN category and description. University and municipality links do not certify an open shelter or a volunteer vacancy.
+6. Import the module and add it to the array in `src/data/destinations/index.ts`. No changes to the UI are required.
+7. Run `npm run check` and `npm run build`. `tests/destinations.test.ts` checks every registered record for codes, duplicates, phone shape, bilingual content, HTTPS attribution, dates and bounds. Add a regression for special territorial restrictions. Review the official content manually; schema tests cannot verify the truth of a phone number.
+8. Verify the country search, help page, emergency dialog, coast links, guide, image/text exports, unknown-country fallback and desktop/320px layouts. Update the coverage table in `docs/country-coverage.md`.
 
-Use the neighboring typed record as the schema example. Do not add fictional live directory records merely to demonstrate a format; test fixtures belong under `tests/`.
+**Consular assistance has two distinct datasets:** `src/lib/embassies.ts` stores a mission located in a host country, with coordinates, official contact and address uncertainty; `src/data/consularDirectories.ts` stores official outbound directories by the traveler's nationality, usable across destinations. A directory link does not establish that an embassy exists at a local address. Add verified mission records to enable map markers; do not fabricate coordinates for a directory-only result.
+
+The country-name/centre dataset remains `src/data/countries.json` under ODbL-1.0. Do not replace it with unlicensed scraped geography.
 
 ## Add a personal feature
 
