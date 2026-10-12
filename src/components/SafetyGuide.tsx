@@ -1,3 +1,4 @@
+import { downloadText } from '../lib/download.ts';
 import EmergencyKit from './EmergencyKit.tsx';
 import EvacuationPlan from './EvacuationPlan.tsx';
 import { kitText } from '../data/emergencyKit.ts';
@@ -168,7 +169,7 @@ const sections: Section[] = [
   },
   {
     id: 'contacts',
-    label: ['Contacto con familiares', 'Contacting family'],
+    label: ['Contacto con familia o equipo', 'Contacting family or team'],
     title: ['Acuerda un plan de contacto', 'Agree on a contact plan'],
     intro: [
       'Organiza quién estará pendiente de ti durante el viaje.',
@@ -244,7 +245,7 @@ const sections: Section[] = [
   },
   {
     id: 'hotel',
-    label: ['Preparación en el hotel', 'Hotel preparation'],
+    label: ['Preparación en el alojamiento', 'Accommodation preparation'],
     title: ['Confirma el plan con recepción', 'Confirm the plan with reception'],
     intro: [
       'Anota estas indicaciones antes de que ocurra una emergencia.',
@@ -341,14 +342,7 @@ export default function SafetyGuide({
   const destination = destinationFor(country);
   const current = sections.find((s) => s.id === active)!;
   const download = () => {
-    const url = URL.createObjectURL(
-      new Blob([guideText(lang, country)], { type: 'text/plain;charset=utf-8' }),
-    );
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `faro-guide-${lang}.txt`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadText(guideText(lang, country), `faro-guide-${lang}.txt`);
     setDownloaded(true);
   };
   return (

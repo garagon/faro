@@ -34,11 +34,21 @@ export default function CoastalPanel({
     const run = async () => {
       setBusy(true);
       try {
-        const r = await fetch('/api/tsunami', {
-          signal: AbortSignal.any([ctrl.signal, AbortSignal.timeout(20000)]),
-        });
-        if (!r.ok) throw Error();
-        const d = parseTsunamiData(await r.json());
+        // One controller per request: it aborts on unmount or after 20 s.
+        // (AbortSignal.any would do this, but older Safari does not support it.)
+        const request = new AbortController();
+        const cancel = () => request.abort();
+        ctrl.signal.addEventListener('abort', cancel);
+        const timer = setTimeout(cancel, 20000);
+        let d;
+        try {
+          const r = await fetch('/api/tsunami', { signal: request.signal });
+          if (!r.ok) throw Error();
+          d = parseTsunamiData(await r.json());
+        } finally {
+          clearTimeout(timer);
+          ctrl.signal.removeEventListener('abort', cancel);
+        }
         if (!stop) {
           setData(d);
           setNow(Date.now());

@@ -1,3 +1,4 @@
+import { downloadText } from './lib/download.ts';
 import NearbyCare from './components/NearbyCare.tsx';
 import EvacuationPlan from './components/EvacuationPlan.tsx';
 import MagnitudeLegend from './components/MagnitudeLegend.tsx';
@@ -35,7 +36,7 @@ import '@fontsource/dm-sans/latin-600.css';
 import '@fontsource/dm-sans/latin-700.css';
 import '@fontsource/dm-serif-display/latin-400.css';
 import countries from './data/countries.json';
-import { distanceKm, filterEvents, type Quake, type Bounds } from './lib/domain.ts';
+import { displayPlace, distanceKm, filterEvents, type Quake, type Bounds } from './lib/domain.ts';
 import { useLiveFeed } from './hooks/useLiveFeed.ts';
 import LiveActivity from './components/LiveActivity.tsx';
 import TravelSetup from './components/TravelSetup.tsx';
@@ -98,14 +99,6 @@ function readPlan() {
     return null;
   }
 }
-function download(text: string, name: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 export default function App() {
   const [profile, setProfile] = useState(() => readPreferences(countryCodes));
   const [setupOpen, setSetupOpen] = useState(
@@ -129,8 +122,9 @@ export default function App() {
     [timeZone, setTimeZone] = useState<'local' | 'utc'>('local'),
     [showEmbassies, setShowEmbassies] = useState(false),
     [nationality, setNationality] = useState(profile?.nationality ?? '');
-  const usgs = useLiveFeed(),
-    igc = useIGC();
+  // Only the selected catalog polls; the other keeps its last snapshot.
+  const usgs = useLiveFeed(catalog === 'USGS'),
+    igc = useIGC(catalog === 'IGC');
   const live = catalog === 'IGC' ? igc : usgs,
     provider = catalog === 'IGC' ? 'IGC · UP' : 'USGS';
   const appRef = useRef<HTMLDivElement>(null);
@@ -155,6 +149,7 @@ export default function App() {
     [geoState, setGeoState] = useState<'idle' | 'pending' | 'active' | 'denied' | 'failed'>('idle');
   const watch = useRef<number | null>(null),
     firstFix = useRef(true);
+  const [movePlan, setMovePlan] = useState(false);
   const [plan, setPlan] = useState<HotelPlan | null>(readPlan),
     [draft, setDraft] = useState<HotelPlan>(() => readPlan() || emptyPlan),
     [message, setMessage] = useState<'saved' | 'storage' | 'invalid' | null>(null);
@@ -348,6 +343,8 @@ export default function App() {
       setProfileFeedback('storage');
     }
   };
+  const canMovePlan = !!plan && country !== 'WORLD' && plan.country !== country;
+  const planCountry = plan && !(canMovePlan && movePlan) ? plan.country : country;
   const savePlan = (e: React.FormEvent) => {
     e.preventDefault();
     if ((draft.lat.trim() || draft.lng.trim()) && !planCoordinates(draft)) {
@@ -359,12 +356,14 @@ export default function App() {
       name: draft.name.trim(),
       meeting: draft.meeting.trim(),
       savedAt: Date.now(),
-      country,
+      // Editing keeps the plan in its own country unless the person chooses to move it.
+      country: planCountry,
     };
     try {
       writeLocal('faro-hotel-v1', JSON.stringify(p));
       setPlan(p);
       setDraft(p);
+      setMovePlan(false);
       setMessage('saved');
     } catch {
       setMessage('storage');
@@ -372,7 +371,7 @@ export default function App() {
   };
   const exportPlan = () => {
     if (!plan) return;
-    download(
+    downloadText(
       `FARO · ${t('Plan personal del hotel', 'Personal hotel plan')}\n${t('No es un punto seguro certificado. Confirma la ruta y disponibilidad con recepción.', 'Not a certified safe point. Confirm the route and availability with reception.')}\n\n${plan.name}\n${plan.meeting}\n${plan.notes}\n${point ? point.join(', ') : ''}\n${t('Guardado', 'Saved')}: ${stamp(plan.savedAt)}`,
       'faro-hotel.txt',
     );
@@ -380,13 +379,7 @@ export default function App() {
   const nav = [
     { id: 'activity', title: t('Actividad', 'Activity'), Icon: MapPinIcon },
     { id: 'help', title: t('Ayuda local', 'Local help'), Icon: UsersThreeIcon },
-    {
-      id: 'status',
-      title: t('Mi estado', 'My status'),
-      Icon: ChatCircleTextIcon,
-      UserCircleIcon,
-      PhoneIcon,
-    },
+    { id: 'status', title: t('Mi estado', 'My status'), Icon: ChatCircleTextIcon },
     { id: 'hotel', title: t('Mi viaje', 'My trip'), Icon: BuildingsIcon },
     { id: 'guide', title: t('Qué hacer', 'What to do'), Icon: BookOpenTextIcon },
   ] as const;
@@ -429,12 +422,14 @@ export default function App() {
           <button
             className="fw-profile-button"
             onClick={() => setSetupOpen(true)}
-            aria-label={t('Configurar mi viaje', 'Trip preferences')}
+            aria-label={t('Editar mi perfil', 'Edit my profile')}
           >
             <UserCircleIcon size={22} />
             <span>
-              {t('Datos de mi viaje', 'My trip preferences')}
-              <small>{profile ? names.of(profile.destination) : t('Configurar', 'Set up')}</small>
+              {t('Mi perfil', 'My profile')}
+              <small>
+                {profile ? names.of(profile.destination) : t('Sin configurar', 'Not set up')}
+              </small>
             </span>
           </button>
           <button className="fw-source-access" onClick={() => setSourceOpen(true)}>
@@ -444,7 +439,7 @@ export default function App() {
               <small>IGC · USGS · NOAA</small>
             </span>
           </button>
-          <div className="fw-language" aria-label={t('Idioma', 'Language')}>
+          <div className="fw-language" role="group" aria-label={t('Idioma', 'Language')}>
             <button aria-pressed={lang === 'es'} onClick={() => changeLanguage('es')}>
               ES
             </button>
@@ -464,10 +459,7 @@ export default function App() {
                     'Could not save the change in this browser. Please retry.',
                   )
                 : profileFeedback === 'saved'
-                  ? t(
-                      'Datos del viaje guardados en este navegador.',
-                      'Trip preferences saved in this browser.',
-                    )
+                  ? t('Perfil guardado en este navegador.', 'Profile saved in this browser.')
                   : t(
                       'Perfil borrado. Tus contactos y planes se conservaron.',
                       'Profile deleted. Your contacts and plans were kept.',
@@ -579,8 +571,8 @@ export default function App() {
             <p>
               {screen === 'activity'
                 ? t(
-                    'Consulta los eventos publicados y su ubicación.',
-                    'See published events and their location.',
+                    'Sismos publicados por fuentes oficiales, con su ubicación.',
+                    'Earthquakes published by official sources, with their location.',
                   )
                 : screen === 'help'
                   ? t(
@@ -589,13 +581,13 @@ export default function App() {
                     )
                   : screen === 'status'
                     ? t(
-                        'Diles dónde estás, qué necesitas y cuándo volverás a escribir.',
-                        'Tell them where you are, what you need and when you will check in again.',
+                        'Prepara un mensaje para tu familia o tu equipo: dónde estás, qué necesitas y cuándo volverás a escribir.',
+                        'Prepare a message for your family or team: where you are, what you need and when you will write again.',
                       )
                     : screen === 'hotel'
                       ? t(
-                          'Contactos, punto de encuentro e instrucciones del alojamiento.',
-                          'Contacts, assembly point and accommodation instructions.',
+                          'Contactos, punto de encuentro e indicaciones de tu alojamiento.',
+                          'Contacts, meeting point and instructions from where you are staying.',
                         )
                       : t(
                           'Información general. Sigue las instrucciones de las autoridades locales.',
@@ -763,8 +755,8 @@ export default function App() {
             <p className="fw-area-scope" role="status">
               {scope === 'country' && hasCountryBoundary(country)
                 ? t(
-                    `${countryName}: territorio y hasta 100 km mar adentro. Límites aproximados; no indican riesgo.`,
-                    `${countryName}: land and up to 100 km offshore. Approximate boundaries; not a risk zone.`,
+                    `${countryName} y hasta 100 km mar adentro. Límites aproximados.`,
+                    `${countryName} and up to 100 km offshore. Approximate boundaries.`,
                   )
                 : scope === 'nearby'
                   ? t(
@@ -778,7 +770,6 @@ export default function App() {
                       )
                     : regionScope(country, lang)}
             </p>
-            <MagnitudeLegend lang={lang} />
             <LiveActivity
               events={results}
               updates={live.updates.filter((u) => results.some((e) => e.id === u.event.id))}
@@ -799,6 +790,7 @@ export default function App() {
               onDetails={(q) => setDetail(q.id)}
               onMap={showEpicentre}
             />
+            <MagnitudeLegend lang={lang} />
             <div className={`fw-workspace ${listOnly ? 'list-only' : ''}`}>
               {!listOnly && (
                 <section className="fw-map-card">
@@ -885,7 +877,7 @@ export default function App() {
                       </strong>
                       <span>
                         <b>
-                          {q.place}
+                          {displayPlace(q.place)}
                           {newIds.has(q.id) && (
                             <em className="fw-event-new">
                               {t('Recibido recientemente', 'Recently received')}
@@ -1001,8 +993,8 @@ export default function App() {
               <InfoIcon size={18} />
               <p>
                 {t(
-                  'Los registros se publican después del sismo. No son alertas tempranas. La relación entre sismos y réplicas no está disponible.',
-                  'Records are published after an earthquake. They are not early warnings. Aftershock relationships are not available.',
+                  'Faro muestra sismos que ya ocurrieron y fueron publicados. No es un sistema de alerta temprana y no identifica réplicas.',
+                  'Faro shows earthquakes that already happened and were published. It is not an early warning system and does not identify aftershocks.',
                 )}
               </p>
               <button onClick={() => setSourceOpen(true)}>
@@ -1101,22 +1093,20 @@ export default function App() {
         )}
         {screen === 'hotel' && (
           <>
-            <section className="fw-trip-profile" aria-label={t('Perfil del viaje', 'Trip profile')}>
+            <section className="fw-trip-profile" aria-label={t('Mi perfil', 'My profile')}>
               <div>
-                <h2>{t('Datos de mi viaje', 'My trip preferences')}</h2>
+                <h2>{t('Mi perfil', 'My profile')}</h2>
                 <p>
                   {profile
                     ? `${t('Destino guardado', 'Saved destination')}: ${names.of(profile.destination)} · ${t('Nacionalidad', 'Nationality')}: ${profile.nationality ? names.of(profile.nationality) : t('Sin indicar', 'Not specified')}`
                     : t(
-                        'Guarda tus datos y el destino para la próxima visita.',
-                        'Save your details and destination for your next visit.',
+                        'Tu nombre, destino y nacionalidad para preparar mensajes y encontrar tu consulado.',
+                        'Your name, destination and nationality to prepare messages and find your consulate.',
                       )}
                 </p>
               </div>
               <button className="fw-secondary" onClick={() => setSetupOpen(true)}>
-                {profile
-                  ? t('Editar datos', 'Edit preferences')
-                  : t('Configurar mi viaje', 'Set up my trip')}
+                {profile ? t('Editar perfil', 'Edit profile') : t('Crear perfil', 'Create profile')}
               </button>
             </section>
             <LocalDataInfo lang={lang} />
@@ -1139,6 +1129,21 @@ export default function App() {
                     'Confirm these details with reception. The saved point is personal and unverified.',
                   )}
                 </p>
+                {plan && (
+                  <p className="fw-plan-country">
+                    {t('Plan guardado para', 'Plan saved for')} {names.of(plan.country)}
+                  </p>
+                )}
+                {canMovePlan && (
+                  <label className="fw-plan-move">
+                    <input
+                      type="checkbox"
+                      checked={movePlan}
+                      onChange={(e) => setMovePlan(e.target.checked)}
+                    />
+                    {t(`Usar este plan en ${countryName}`, `Use this plan in ${countryName}`)}
+                  </label>
+                )}
                 <label>
                   {t('Nombre del hotel', 'Hotel name')}
                   <input

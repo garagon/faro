@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import {
   ArrowRightIcon,
   LockSimpleIcon,
+  PhoneIcon,
   XIcon,
   GlobeHemisphereWestIcon,
 } from '@phosphor-icons/react';
@@ -122,6 +123,19 @@ export default function TravelSetup(p: Props) {
                 <XIcon size={20} />
               </Dialog.Close>
             </div>
+            {!p.saved && (
+              <button
+                type="button"
+                className="fw-setup-emergency"
+                onClick={() => p.onHelp(destination || p.destination)}
+              >
+                <PhoneIcon size={18} aria-hidden="true" />
+                {t(
+                  '¿Necesitas ayuda ahora? Ver teléfonos de emergencia',
+                  'Need help now? See emergency numbers',
+                )}
+              </button>
+            )}
             <Dialog.Title ref={titleRef} tabIndex={-1}>
               {step === 0 ? t('Tus datos', 'Your details') : t('Tu viaje', 'Your trip')}
             </Dialog.Title>
@@ -251,8 +265,8 @@ export default function TravelSetup(p: Props) {
                 <LockSimpleIcon size={18} />
                 <p>
                   {t(
-                    'Solo en este navegador. Sin cuenta ni envío a servidores. Los datos se conservan al volver y no se sincronizan entre dispositivos.',
-                    'Only in this browser. No account or upload to servers. Your details are kept for your next visit and do not sync across devices.',
+                    'Se guarda solo en este navegador. Sin cuenta y sin servidores. No se sincroniza con otros dispositivos.',
+                    'Saved only in this browser. No account and no servers. It does not sync with other devices.',
                   )}
                 </p>
               </div>
@@ -295,10 +309,15 @@ export default function TravelSetup(p: Props) {
             <footer className="fw-setup-actions">
               {error && (
                 <p className="fw-setup-error" role="alert">
-                  {t(
-                    'No se pudo guardar el cambio. Revisa el almacenamiento del navegador o continúa sin guardar.',
-                    'Could not save the change. Check browser storage or continue without saving.',
-                  )}
+                  {p.saved
+                    ? t(
+                        'No se pudo guardar el cambio. Revisa el almacenamiento del navegador o cancela la edición.',
+                        'Could not save the change. Check browser storage or cancel editing.',
+                      )
+                    : t(
+                        'No se pudo guardar el cambio. Revisa el almacenamiento del navegador o elige «Omitir por ahora».',
+                        'Could not save the change. Check browser storage or choose “Skip for now”.',
+                      )}
                 </p>
               )}
               <button className="fw-setup-save" type="submit">
@@ -323,20 +342,9 @@ export default function TravelSetup(p: Props) {
                   </button>
                 )}
                 <button className="fw-setup-skip" type="button" onClick={p.onClose}>
-                  {p.saved
-                    ? t('Cancelar', 'Cancel')
-                    : t('Entrar sin guardar', 'Continue without saving')}
+                  {p.saved ? t('Cancelar', 'Cancel') : t('Omitir por ahora', 'Skip for now')}
                 </button>
               </div>
-              {!p.saved && (
-                <button
-                  type="button"
-                  className="fw-setup-emergency"
-                  onClick={() => p.onHelp(destination || p.destination)}
-                >
-                  {t('Necesito ayuda ahora', 'I need help now')}
-                </button>
-              )}
             </footer>
           </form>
         </Dialog.Content>

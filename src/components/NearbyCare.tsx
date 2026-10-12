@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CrosshairIcon, FirstAidKitIcon, PillIcon, ArrowUpRightIcon } from '@phosphor-icons/react';
 import { careSearchUrl, careCoordinates } from '../lib/nearbyCare.ts';
+import { careAreas } from '../data/careAreas.ts';
 import { healthDirectories } from '../data/healthDirectories.ts';
 export default function NearbyCare({
   lang,
@@ -59,8 +60,8 @@ export default function NearbyCare({
           <h2 id="care-title">{t('Farmacias y hospitales', 'Pharmacies and hospitals')}</h2>
           <p>
             {t(
-              'Busca cerca de ti o de una dirección. Confirma por teléfono la atención, el acceso y los medicamentos disponibles.',
-              'Search near you or an address. Call to confirm services, access and medicine availability.',
+              'Usa tu ubicación o escribe una zona. Antes de ir, llama para confirmar que están atendiendo.',
+              'Use your location or enter an area. Before going, call to confirm they are open.',
             )}
           </p>
         </div>
@@ -90,6 +91,30 @@ export default function NearbyCare({
             : t('Usar mi ubicación', 'Use my location')}
         </button>
       </div>
+      {!!careAreas[country]?.length && (
+        <div
+          className="fw-care-areas"
+          role="group"
+          aria-label={t('Zonas frecuentes', 'Common areas')}
+        >
+          <span>{t('Zonas frecuentes', 'Common areas')}</span>
+          {careAreas[country]!.map((name) => (
+            <button
+              key={name}
+              type="button"
+              aria-pressed={!gps && place.trim() === name}
+              onClick={() => {
+                requestId.current += 1;
+                setPlace(name);
+                setGps('');
+                setStatus('idle');
+              }}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
       <p role="status">
         {status === 'failed'
           ? t(
@@ -101,10 +126,12 @@ export default function NearbyCare({
                 `Búsqueda alrededor de ${gps}. Tu ubicación puede estar en otro país que el seleccionado.`,
                 `Search around ${gps}. Your location may be in a different country from the selected one.`,
               )
-            : t(
-                `Buscar en ${countryName || 'el lugar que escribas'}.`,
-                `Search in ${countryName || 'the place you enter'}.`,
-              )}
+            : area
+              ? t(`Se buscará en ${area}.`, `Searching in ${area}.`)
+              : t(
+                  `Buscar en ${countryName || 'el lugar que escribas'}.`,
+                  `Search in ${countryName || 'the place you enter'}.`,
+                )}
       </p>
       <div className="fw-care-actions">
         {(['pharmacy', 'hospital'] as const).map((kind) => {
@@ -128,7 +155,7 @@ export default function NearbyCare({
               <Icon size={26} />
               <span>
                 {label}
-                <small>{t('Indica dónde buscar', 'Choose where to search')}</small>
+                <small>{t('Primero elige una zona', 'Choose an area first')}</small>
               </span>
             </button>
           );
@@ -136,8 +163,8 @@ export default function NearbyCare({
       </div>
       <small>
         {t(
-          'Al abrir la búsqueda, Google Maps recibe el lugar escrito o tu ubicación aproximada. Faro no la guarda. Los resultados no confirman atención disponible tras un desastre.',
-          'Opening a search sends your entered place or approximate location to Google Maps. Faro does not save it. Results do not confirm availability after a disaster.',
+          'La búsqueda se abre en Google Maps con la zona o tu ubicación aproximada. Faro no la guarda. Después de un desastre, un resultado no garantiza que el lugar esté atendiendo.',
+          'The search opens in Google Maps with the area or your approximate location. Faro does not save it. After a disaster, a result does not guarantee the place is open.',
         )}
       </small>
       {!!healthDirectories[country]?.length && (

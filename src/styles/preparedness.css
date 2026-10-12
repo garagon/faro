@@ -177,6 +177,9 @@
   padding: 20px 0;
 }
 .fw-kit-progress strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 18px;
 }
 .fw-kit-progress span {
@@ -184,11 +187,14 @@
   color: #53665e;
 }
 .fw-kit-progress progress {
+  appearance: none;
   width: 100%;
-  height: 8px;
+  height: 10px;
   border: 0;
+  border-radius: 999px;
+  overflow: hidden;
   margin-top: 4px;
-  accent-color: #205f50;
+  background: #e3ebe6;
 }
 .fw-kit fieldset {
   border: 0;
@@ -197,6 +203,9 @@
   min-width: 0;
 }
 .fw-kit legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-weight: 700;
   font-size: 18px;
   margin-bottom: 12px;
@@ -548,5 +557,103 @@
   .fw-consular-card.has-emergency:only-child > .fw-consular-actions,
   .fw-consular-card.has-emergency:only-child > small {
     grid-column: 1 / -1;
+  }
+}
+.fw-kit-progress progress::-webkit-progress-bar {
+  background: #e3ebe6;
+  border-radius: 999px;
+}
+.fw-kit-progress progress::-webkit-progress-value {
+  background: #285b50;
+  border-radius: 999px;
+}
+.fw-kit-progress progress::-moz-progress-bar {
+  background: #285b50;
+  border-radius: 999px;
+}
+.fw-kit-progress.is-complete strong {
+  color: #1d6152;
+}
+.fw-kit-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+  color: #24483b;
+  cursor: pointer;
+  width: fit-content;
+}
+.fw-kit-filter input {
+  width: 18px;
+  height: 18px;
+  accent-color: #205f50;
+}
+.fw-kit-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #53665e;
+  background: #eef3ef;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.fw-kit fieldset.is-complete .fw-kit-count {
+  background: #dcefe5;
+  color: #1d6152;
+}
+.fw-kit-group-done {
+  margin: 0;
+  padding: 12px 0;
+  font-size: 14px;
+  color: #1d6152;
+  border-top: 1px solid #dce5de;
+}
+.fw-kit-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 14px;
+  color: #24483b;
+}
+.fw-care-areas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+.fw-care-areas > span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #53665e;
+  margin-right: 4px;
+}
+.fw-care-areas button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #cfdad4;
+  border-radius: 999px;
+  background: #fff;
+  color: #24483b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.fw-care-areas button:hover {
+  border-color: #285b50;
+}
+.fw-care-areas button[aria-pressed='true'] {
+  background: #e8f1ec;
+  border-color: #285b50;
+  box-shadow: inset 0 0 0 1px #285b50;
+}
+.fw-care-areas button:focus-visible {
+  outline: 3px solid #2f6f5f;
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .fw-care header > .fw-secondary {
+    margin-bottom: 16px;
   }
 }

@@ -267,3 +267,69 @@
   line-height: 1.5;
   color: #60736a;
 }
+.fw-quick-messages {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+}
+.fw-quick-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5a6e66;
+}
+.fw-quick-messages > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fw-quick-messages button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #cfdad4;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f3a34;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+.fw-quick-messages button:hover {
+  border-color: #285b50;
+}
+.fw-quick-messages button[data-status='help'] {
+  border-color: #e3c4b7;
+  color: #8b402c;
+  background: #fffaf6;
+}
+.fw-quick-messages button[aria-pressed='true'] {
+  border-color: #285b50;
+  background: #e8f1ec;
+  color: #183936;
+  box-shadow: inset 0 0 0 1px #285b50;
+}
+.fw-quick-messages button[data-status='help'][aria-pressed='true'] {
+  border-color: #a24a31;
+  background: #fbe9e1;
+  color: #7a3523;
+  box-shadow: inset 0 0 0 1px #a24a31;
+}
+.fw-quick-messages button:focus-visible {
+  outline: 3px solid #2f6f5f;
+  outline-offset: 2px;
+}
+@media (max-width: 480px) {
+  .fw-quick-messages > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .fw-quick-messages button {
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    line-height: 1.3;
+  }
+}

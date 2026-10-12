@@ -1,7 +1,7 @@
 import { magnitudeBand } from '../lib/magnitude.ts';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowUpRightIcon, InfoIcon, MapPinIcon, XIcon } from '@phosphor-icons/react';
-import { distanceKm, type Quake } from '../lib/domain.ts';
+import { displayPlace, distanceKm, type Quake } from '../lib/domain.ts';
 import type { Geo } from './WebMap.tsx';
 type Props = {
   open: boolean;
@@ -176,9 +176,7 @@ export default function InformationDialog(p: Props) {
                     <strong>{q.mag?.toFixed(1) ?? '—'}</strong>
                   </div>
                   <div className="fw-quake-location">
-                    <h3>
-                      {q.place.replace(/^Localizado en\s+/i, '').replace(/(\d)km\b/g, '$1 km')}
-                    </h3>
+                    <h3>{displayPlace(q.place)}</h3>
                     <div className="fw-quake-source">
                       <span>{q.source || 'USGS'}</span>
                       <span className="fw-review-status">

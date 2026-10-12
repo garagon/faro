@@ -12,6 +12,13 @@ export type Quake = {
   reviewed: boolean;
   magType: string;
 };
+/** Readable place label: drops the IGC "Localizado en" prefix and spaces "31km" as "31 km". */
+export function displayPlace(place: string): string {
+  return place
+    .trim()
+    .replace(/^Localizado en\s+/i, '')
+    .replace(/(\d)km\b/g, '$1 km');
+}
 export type Bounds = { south: number; north: number; west: number; east: number };
 export type Feed = { events: Quake[]; generated: number };
 const validDate = (n: unknown): n is number =>
@@ -61,7 +68,11 @@ export function parseFeed(raw: unknown): Feed {
       lng: c[0],
       depth: c[2],
       mag: finite(p.mag) ? p.mag : null,
-      place: typeof p.place === 'string' ? p.place : 'Localización sin nombre',
+      // Coordinates are a language-neutral fallback when the source omits a place name.
+      place:
+        typeof p.place === 'string' && p.place.trim()
+          ? p.place
+          : `${c[1].toFixed(2)}, ${c[0].toFixed(2)}`,
       time: p.time,
       updated: p.updated,
       url,

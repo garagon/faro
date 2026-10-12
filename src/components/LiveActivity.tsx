@@ -1,7 +1,7 @@
 import { magnitudeBand } from '../lib/magnitude.ts';
 import { useState } from 'react';
 import { ArrowClockwiseIcon, ArrowUpRightIcon, MapPinIcon, XIcon } from '@phosphor-icons/react';
-import type { Quake } from '../lib/domain.ts';
+import { displayPlace, type Quake } from '../lib/domain.ts';
 import { ageLabel, type FeedUpdate } from '../lib/feedUpdates.ts';
 type Props = {
   events: Quake[];
@@ -87,7 +87,7 @@ export default function LiveActivity(p: Props) {
             <span className="fw-latest-kicker">
               {t('Último sismo en el área', 'Latest earthquake in this area')}
             </span>
-            <h2>{latest.place.replace(/^Localizado en\s+/i, '').replace(/(\d)km\b/g, '$1 km')}</h2>
+            <h2>{displayPlace(latest.place)}</h2>
             <p>
               <time
                 dateTime={new Date(latest.time).toISOString()}
@@ -124,7 +124,7 @@ export default function LiveActivity(p: Props) {
                 {t('Recibido', 'Received')} {clock(fresh.receivedAt)} · {t('Magnitud', 'Magnitude')}{' '}
                 {fresh.event.mag?.toFixed(1) ?? '—'}
               </strong>{' '}
-              — {fresh.event.place}
+              — {displayPlace(fresh.event.place)}
               <span>
                 {t('Hora del sismo', 'Earthquake time')}: {p.formatTime(fresh.event.time)} ·{' '}
                 {p.provider}
@@ -157,8 +157,8 @@ export default function LiveActivity(p: Props) {
       <div className="fw-monitor-foot">
         <span>
           {t(
-            'Sismos ya ocurridos; la publicación puede demorar.',
-            'Earthquakes already occurred; publication may be delayed.',
+            'Cada sismo aparece cuando la fuente lo publica.',
+            'Each earthquake appears once the source publishes it.',
           )}
         </span>
         <button aria-expanded={history} onClick={() => setHistory((v) => !v)}>
@@ -182,7 +182,7 @@ export default function LiveActivity(p: Props) {
                   <small>{t('Magnitud', 'Magnitude')}</small>
                 </strong>
                 <span>
-                  <b>{u.event.place}</b>
+                  <b>{displayPlace(u.event.place)}</b>
                   <small>
                     {t('Sismo', 'Earthquake')}: {p.formatTime(u.event.time)} ·{' '}
                     {t('Recibido', 'Received')}: {clock(u.receivedAt)}

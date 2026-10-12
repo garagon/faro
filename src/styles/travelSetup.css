@@ -507,7 +507,11 @@
   margin-left: auto;
 }
 .fw-setup .fw-setup-emergency {
-  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0 4px;
   min-height: 44px;
 }
 .fw-setup .fw-country-search-menu {
@@ -567,4 +571,8 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
   }
+}
+.fw-setup[data-compact='true'] .fw-setup-emergency {
+  margin: 4px 0 2px;
+  min-height: 40px;
 }

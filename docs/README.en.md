@@ -24,7 +24,8 @@ Open the local URL printed by Vite. Development binds to `127.0.0.1`. Run `npm r
 - Separate IGC/Panama and USGS/global catalogues, checked every 60 seconds in a visible tab.
 - Automatically loaded map, filters, event list, magnitude, epicentre and explicit timestamps.
 - International NOAA/PTWC tsunami products with source dates; no location-specific all-clear inferred from missing bulletins.
-- Local trip profile, verified consular listings where covered, personal hotel plan and contacts.
+- Local trip profile, verified consular listings where covered, personal hotel plan and personal or work contacts (family, accommodation, insurer, consulate, employer, team coordinator, transport).
+- Ready status messages as editable shortcuts, reviewed before manual sharing.
 - Manually prepared status messages and sourced Spanish/English guidance.
 
 Aftershocks are not inferred from proximity. Personal meeting points are not certified shelters. Emergency numbers and embassy records cover a limited set of countries. See [sources](data-sources.md).
