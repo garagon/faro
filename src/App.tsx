@@ -257,12 +257,8 @@ export default function App() {
     const region = regionFor(code);
     setCountry(code);
     setCatalog(code === 'PA' ? 'IGC' : 'USGS');
-    if (watch.current !== null) navigator.geolocation.clearWatch(watch.current);
-    watch.current = null;
+    // Browsing another country must not discard a separately enabled location fix.
     firstFix.current = false;
-    setTracking(false);
-    setGeo(null);
-    setGeoState('idle');
     setScope('country');
     setLimit(20);
     setFocused(null);
@@ -1347,7 +1343,7 @@ export default function App() {
             profile={profile}
             plan={plan}
             events={results.slice(0, 10)}
-            country={country}
+            location={geo}
             lang={lang}
             history={checkIns}
             onHistory={setCheckIns}

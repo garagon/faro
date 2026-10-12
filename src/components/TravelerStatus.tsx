@@ -1,6 +1,7 @@
 import { helpTemplates } from '../lib/messageTemplates.ts';
 import { removeLocal } from '../lib/browserStorage.ts';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { recentLocation, statusLocation, type LocationFix } from '../lib/statusLocation.ts';
 import {
   CheckCircleIcon,
   ArrowRightIcon,
@@ -26,7 +27,7 @@ import type { Quake } from '../lib/domain.ts';
 import type { HotelPlan, Lang } from '../lib/resources.ts';
 import { prepareCheckIn } from '../lib/prepareCheckIn.ts';
 type Props = {
-  country: string;
+  location: LocationFix | null;
   profile: Preferences | null;
   plan: HotelPlan | null;
   events: Quake[];
@@ -37,7 +38,7 @@ type Props = {
   onHelp: () => void;
 };
 export default function TravelerStatus({
-  country,
+  location,
   profile,
   plan,
   events,
@@ -71,11 +72,17 @@ export default function TravelerStatus({
     [includeEmail, setIncludeEmail] = useState(false);
   const name = nameOverride ?? profile?.name ?? history[0]?.name ?? '';
   const outputLang = messageLanguage || lang;
-  const countryName =
-    country === 'WORLD'
-      ? ''
-      : new Intl.DisplayNames([lang], { type: 'region' }).of(country) || country;
-  const hotel = plan?.country === country ? plan : null;
+  const locationIsRecent = recentLocation(location, now);
+  const suggestedLocation = useMemo(
+    () => statusLocation(location, profile?.destination, now),
+    // Recalculate the country only when the fix, saved trip or freshness changes.
+    [location, profile?.destination, locationIsRecent],
+  );
+  const countryName = suggestedLocation
+    ? new Intl.DisplayNames([lang], { type: 'region' }).of(suggestedLocation.country) ||
+      suggestedLocation.country
+    : '';
+  const hotel = plan?.country === suggestedLocation?.country ? plan : null;
   const makeRecord = (at: number): CheckIn => ({
     id: 'draft',
     status: status || 'ok',
@@ -270,7 +277,13 @@ export default function TravelerStatus({
                     change();
                   }}
                 >
-                  {t('Estoy en', "I'm in")} {countryName}
+                  {suggestedLocation?.source === 'location'
+                    ? t(
+                        'Usar país según ubicación (aprox.):',
+                        'Use country from location (approx.):',
+                      )
+                    : t('Usar destino guardado:', 'Use saved destination:')}{' '}
+                  {countryName}
                 </button>
               )}
               {hotel?.name && (
@@ -281,10 +294,18 @@ export default function TravelerStatus({
                     change();
                   }}
                 >
-                  {t('Estoy en mi hotel', "I'm at my hotel")}
+                  {t('Usar hotel guardado:', 'Use saved hotel:')} {hotel.name}
                 </button>
               )}
             </div>
+          )}
+          {location && !suggestedLocation && (
+            <p className="fw-location-hint">
+              {t(
+                'No se pudo determinar el país con una ubicación reciente. Escribe dónde estás.',
+                'Could not determine the country from a recent location. Enter where you are.',
+              )}
+            </p>
           )}
           {status === 'moving' && (
             <label>

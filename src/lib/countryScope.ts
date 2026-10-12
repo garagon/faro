@@ -41,3 +41,18 @@ export function inCountryScope(event: { lat: number; lng: number }, code: string
     ([other, land]) => other !== code && onLand(lat, lng, land),
   );
 }
+
+/** Approximate country on land only. Offshore browsing buffers are not a person's location. */
+export function countryOnLand(point: { lat: number; lng: number }): string | null {
+  if (
+    !Number.isFinite(point.lat) ||
+    !Number.isFinite(point.lng) ||
+    Math.abs(point.lat) > 90 ||
+    Math.abs(point.lng) > 180
+  )
+    return null;
+  const matches = Object.entries(countries).filter(([, polygons]) =>
+    onLand(point.lat, point.lng, polygons),
+  );
+  return matches.length === 1 ? matches[0][0] : null;
+}
