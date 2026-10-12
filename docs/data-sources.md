@@ -10,7 +10,11 @@
 
 ## Local assistance
 
-The initial verified mission directory contains Argentina, Colombia, United States, Mexico and Spain **in Panama**, with approximate building markers. An unsupported combination means Faro has no verified record, not that the country lacks representation. Addresses, source links and caveats are in `src/lib/embassies.ts`. Recheck them before operational deployment; embassy locations do not certify shelter or route safety.
+The Panama mission directory in `src/data/consularMissions.ts` contains 24 records with current official source links and 26 historical references from the EU's October 2024 directory. Not every current-source record has an address or phone. Historical references are collapsed, dated, and never used for phone calls, routing or map pins. This is not an exhaustive diplomatic registry. An unsupported combination means Faro has no record, not that the country lacks representation. Six building markers have documented coordinates; Spain's marker and directions are withheld while a temporary move remains unconfirmed.
+
+Nearby pharmacies and hospitals are explicit Google Maps searches, not live availability data. The user enters a place or requests approximate GPS coordinates; the query is sent only when they open a search. Official complementary sources are [MINSA's facilities directory](https://instalaciones.minsa.gob.pa/) and [SENAPRED's Visor Preparado](https://www.senapred.gov.cl/visor-preparado/).
+
+The 14-item emergency checklist is based on [SENAPRED's emergency kit](https://www.senapred.gov.cl/kit-de-emergencia/) and [family preparation](https://senapred.cl/familia-preparada/). A power bank is an explicit Faro addition. Checklist marks stay in the browser. The original vector illustrations supplement written instructions; they are not official SENAPRED illustrations.
 
 The emergency-number directory covers Panama, Chile, Colombia, Argentina, the United States, Mexico, Peru, Ecuador and Costa Rica with explicit source and geographic caveats. No global default number is invented. Some numbers apply only to a specific domestic jurisdiction, including SAMU coverage in Peru. See [country coverage](country-coverage.md) and the country modules in `src/data/destinations/`.
 

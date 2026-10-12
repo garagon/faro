@@ -1,3 +1,7 @@
+import EmergencyKit from './EmergencyKit.tsx';
+import SafetyIllustration from './SafetyIllustration.tsx';
+import EvacuationPlan from './EvacuationPlan.tsx';
+import { kitText } from '../data/emergencyKit.ts';
 import { destinationFor } from '../data/destinations/index.ts';
 import { useState } from 'react';
 import { ArrowUpRightIcon, DownloadSimpleIcon, ArrowRightIcon } from '@phosphor-icons/react';
@@ -203,7 +207,7 @@ const sections: Section[] = [
   },
   {
     id: 'kit',
-    label: ['Equipaje de emergencia', 'Emergency supplies'],
+    label: ['Mochila de emergencia', 'Emergency kit'],
     title: ['Ten lo esencial a mano', 'Keep essentials within reach'],
     intro: [
       'Prepara una bolsa accesible y adáptala a las necesidades de quienes viajan contigo.',
@@ -286,6 +290,7 @@ function guideText(lang: Lang, country: string) {
       ? 'FARO — GUÍA DE ACTUACIÓN\nInformación general. Sigue las instrucciones locales.'
       : 'FARO — EARTHQUAKE GUIDE\nGeneral information. Follow local instructions.';
   const content = sections.map((section) => {
+    if (section.id === 'kit') return kitText(lang, []);
     const lines = [
       section.label[i],
       section.intro[i],
@@ -384,103 +389,119 @@ export default function SafetyGuide({
           <span role="status">{downloaded ? t('Archivo generado.', 'File generated.') : ''}</span>
         </div>
       </aside>
-      <article className="fw-safety-document" aria-labelledby="safety-title" key={active}>
-        <header>
-          <span>{current.label[i]}</span>
-          <h2 id="safety-title">{current.title[i]}</h2>
-          <p>{current.intro[i]}</p>
-        </header>
-        <ol className="fw-safety-steps" role="list">
-          {current.steps.map((step, n) => (
-            <li role="listitem" key={n}>
-              <span aria-hidden="true">{n + 1}</span>
-              <div>
-                <h3>{step.title[i]}</h3>
-                <p>{step.body[i]}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-        {current.note && (
-          <div className="fw-safety-note">
-            <p>{current.note[i]}</p>
-          </div>
-        )}
-        {active === 'during' && <p className="fw-safety-outdoors">{outdoors[i]}</p>}
-        {active === 'during' && country === 'CL' && (
-          <div className="fw-chile-guidance">
-            <p>
-              {t(
-                'En Chile, SENAPRED distingue las construcciones de adobe o autoconstruidas: recomienda evacuarlas inmediatamente. Identifica el tipo de construcción y el plan de tu alojamiento antes de una emergencia.',
-                'In Chile, SENAPRED distinguishes adobe and self-built structures: it recommends evacuating them immediately. Identify your accommodation’s construction type and plan before an emergency.',
-              )}
-            </p>
-            <a href="https://www.senapred.gov.cl/sismos/" target="_blank" rel="noreferrer">
-              SENAPRED · {t('Sismos', 'Earthquakes')} ↗
-            </a>
-          </div>
-        )}
-        {active === 'contacts' && (
-          <button className="fw-primary" onClick={onStatus}>
-            {t('Preparar mi actualización', 'Prepare my update')}
-            <ArrowRightIcon size={16} />
-          </button>
-        )}
-        {active === 'coast' && country === 'CL' && (
-          <div className="fw-chile-guidance">
-            <a href="https://www.senapred.gov.cl/tsunami/" target="_blank" rel="noreferrer">
-              {t('Recomendaciones de SENAPRED · Chile', 'SENAPRED guidance · Chile')} ↗
-            </a>
-            <p>
-              {t(
-                'SENAPRED recomienda conocer previamente las rutas y puntos de encuentro de la localidad que visitas. Los planos siguientes corresponden solo a Chile.',
-                'SENAPRED recommends knowing the routes and assembly points in the place you visit. The following maps cover Chile only.',
-              )}
-            </p>
-            <a
-              href="https://www.senapred.gov.cl/planos-de-evacuacion/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t('Planos de evacuación de Chile', 'Chile evacuation maps')} ↗
-            </a>
-          </div>
-        )}
-        {country !== 'CL' && destination?.civilProtection && (
-          <div className="fw-chile-guidance">
-            <a href={destination.civilProtection.url} target="_blank" rel="noreferrer">
-              {t('Indicaciones locales', 'Local guidance')} · {destination.civilProtection.name} ↗
-            </a>
-            <p>
-              {t(
-                'Confirma las instrucciones y las rutas de evacuación del lugar donde estás.',
-                'Check the instructions and evacuation routes for your location.',
-              )}
-            </p>
-          </div>
-        )}
-        {active === 'hotel' && (
-          <button className="fw-primary" onClick={onHotel}>
-            {t('Guardar plan del hotel', 'Save hotel plan')}
-            <ArrowRightIcon size={16} />
-          </button>
-        )}
-        <footer>
-          <span>
-            {current.url
-              ? t('Resumen de recomendaciones', 'Guidance summary')
-              : t('Lista de preparación para viajeros', 'Travel preparation checklist')}
-          </span>
-          {current.url ? (
-            <a href={current.url} target="_blank" rel="noreferrer">
-              {current.source}
-              <ArrowUpRightIcon size={14} />
-            </a>
-          ) : (
-            <span>{t('Confirmar con recepción', 'Confirm with reception')}</span>
+      {active === 'kit' ? (
+        <EmergencyKit lang={lang} />
+      ) : (
+        <article className="fw-safety-document" aria-labelledby="safety-title" key={active}>
+          <header>
+            <span>{current.label[i]}</span>
+            <h2 id="safety-title">{current.title[i]}</h2>
+            <p>{current.intro[i]}</p>
+          </header>
+          {active === 'during' && (
+            <div className="fw-instruction-strip">
+              {(['drop', 'cover', 'hold'] as const).map((scene, n) => (
+                <figure key={scene}>
+                  <SafetyIllustration scene={scene} />
+                  <figcaption>
+                    {n + 1}.{' '}
+                    {t(['Agáchate', 'Cúbrete', 'Sujétate'][n], ['Drop', 'Cover', 'Hold on'][n])}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
           )}
-        </footer>
-      </article>
+          <ol className="fw-safety-steps" role="list">
+            {current.steps.map((step, n) => (
+              <li role="listitem" key={n}>
+                <span aria-hidden="true">{n + 1}</span>
+                <div>
+                  <h3>{step.title[i]}</h3>
+                  <p>{step.body[i]}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          {current.note && (
+            <div className="fw-safety-note">
+              <p>{current.note[i]}</p>
+            </div>
+          )}
+          {active === 'during' && <p className="fw-safety-outdoors">{outdoors[i]}</p>}
+          {active === 'during' && country === 'CL' && (
+            <div className="fw-chile-guidance">
+              <p>
+                {t(
+                  'En Chile, SENAPRED distingue las construcciones de adobe o autoconstruidas: recomienda evacuarlas inmediatamente. Identifica el tipo de construcción y el plan de tu alojamiento antes de una emergencia.',
+                  'In Chile, SENAPRED distinguishes adobe and self-built structures: it recommends evacuating them immediately. Identify your accommodation’s construction type and plan before an emergency.',
+                )}
+              </p>
+              <a href="https://www.senapred.gov.cl/sismos/" target="_blank" rel="noreferrer">
+                SENAPRED · {t('Sismos', 'Earthquakes')} ↗
+              </a>
+            </div>
+          )}
+          {active === 'contacts' && (
+            <button className="fw-primary" onClick={onStatus}>
+              {t('Preparar mi actualización', 'Prepare my update')}
+              <ArrowRightIcon size={16} />
+            </button>
+          )}
+          {active === 'coast' && country === 'CL' && (
+            <div className="fw-chile-guidance">
+              <a href="https://www.senapred.gov.cl/tsunami/" target="_blank" rel="noreferrer">
+                {t('Recomendaciones de SENAPRED · Chile', 'SENAPRED guidance · Chile')} ↗
+              </a>
+              <p>
+                {t(
+                  'SENAPRED recomienda conocer previamente las rutas y puntos de encuentro de la localidad que visitas. Los planos siguientes corresponden solo a Chile.',
+                  'SENAPRED recommends knowing the routes and assembly points in the place you visit. The following maps cover Chile only.',
+                )}
+              </p>
+              <a href="https://senapred.cl/planos-de-evacuacion/" target="_blank" rel="noreferrer">
+                {t('Planos de evacuación de Chile', 'Chile evacuation maps')} ↗
+              </a>
+            </div>
+          )}
+          {country !== 'CL' && destination?.civilProtection && (
+            <div className="fw-chile-guidance">
+              <a href={destination.civilProtection.url} target="_blank" rel="noreferrer">
+                {t('Indicaciones locales', 'Local guidance')} · {destination.civilProtection.name} ↗
+              </a>
+              <p>
+                {t(
+                  'Confirma las instrucciones y las rutas de evacuación del lugar donde estás.',
+                  'Check the instructions and evacuation routes for your location.',
+                )}
+              </p>
+            </div>
+          )}
+          {(active === 'hotel' || active === 'coast') && (
+            <EvacuationPlan country={country} lang={lang} />
+          )}
+          {active === 'hotel' && (
+            <button className="fw-primary" onClick={onHotel}>
+              {t('Guardar plan del hotel', 'Save hotel plan')}
+              <ArrowRightIcon size={16} />
+            </button>
+          )}
+          <footer>
+            <span>
+              {current.url
+                ? t('Resumen de recomendaciones', 'Guidance summary')
+                : t('Lista de preparación para viajeros', 'Travel preparation checklist')}
+            </span>
+            {current.url ? (
+              <a href={current.url} target="_blank" rel="noreferrer">
+                {current.source}
+                <ArrowUpRightIcon size={14} />
+              </a>
+            ) : (
+              <span>{t('Confirmar con recepción', 'Confirm with reception')}</span>
+            )}
+          </footer>
+        </article>
+      )}
     </div>
   );
 }

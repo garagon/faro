@@ -1,6 +1,6 @@
 import { ArrowUpRightIcon } from '@phosphor-icons/react';
 import { destinationFor } from '../data/destinations/index.ts';
-import { embassies } from '../lib/embassies.ts';
+import { missionsFor } from '../data/consularMissions.ts';
 import type { Lang } from '../lib/resources.ts';
 
 export default function DestinationInfo({ country, lang }: { country: string; lang: Lang }) {
@@ -8,7 +8,7 @@ export default function DestinationInfo({ country, lang }: { country: string; la
   const data = destinationFor(country);
   const name =
     country === 'WORLD' ? '' : new Intl.DisplayNames([lang], { type: 'region' }).of(country);
-  const missions = embassies.filter((e) => e.country === country).length;
+  const missions = missionsFor(country).filter((m) => !m.historical).length;
   if (!data)
     return (
       <section className="fw-destination-info fw-destination-missing">

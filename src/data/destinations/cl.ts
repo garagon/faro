@@ -55,7 +55,7 @@ export default {
         'Consulta amenazas, planos de evacuación y puntos de encuentro para localidades de Chile.',
         'Consult hazards, evacuation maps and assembly points for locations in Chile.',
       ],
-      url: 'https://www.senapred.gov.cl/visor-chile-preparado/',
+      url: 'https://www.senapred.cl/visor-preparado/',
       reviewedAt: '2026-10-11',
     },
     {
@@ -65,13 +65,13 @@ export default {
         'Planos oficiales por localidad. Comprueba la versión y sigue las indicaciones locales.',
         'Official local maps. Check the version and follow local instructions.',
       ],
-      url: 'https://www.senapred.gov.cl/planos-de-evacuacion/',
+      url: 'https://senapred.cl/planos-de-evacuacion/',
       reviewedAt: '2026-10-11',
     },
   ],
   evacuation: {
     name: 'SENAPRED · Planos de evacuación',
-    url: 'https://www.senapred.gov.cl/planos-de-evacuacion/',
+    url: 'https://senapred.cl/planos-de-evacuacion/',
     reviewedAt: '2026-10-11',
   },
 } satisfies Destination;

@@ -73,3 +73,7 @@ The status composer keeps location, reachability and the next check-in time visi
 Local emergency numbers and national source links are configured for Panama, Chile, Colombia, Argentina, the United States, Mexico, Peru, Ecuador and Costa Rica. The global country selector does not imply a complete local directory. See [coverage and limitations](country-coverage.md) and [how to add a destination](extending-faro.md#add-or-improve-country-coverage).
 
 See [emergency interactions and magnitude colors](emergency-ux.md) for message review, sharing safeguards and the distinction between magnitude, intensity and impact.
+
+## Preparedness and local assistance
+
+Faro includes a 14-item emergency-kit checklist saved in this browser, text export, and original vector instructions for earthquake protection and evacuation preparation. Nearby pharmacy and hospital searches open Google Maps only on request; facility availability and road access are not verified. Consular cards support multiple offices per nationality, official directories, and separately labelled historical references. See [extension points](extending-faro.md#consular-assistance-healthcare-and-preparedness).

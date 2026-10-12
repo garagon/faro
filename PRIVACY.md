@@ -37,3 +37,7 @@ Onboarding can save your name, phone and email alongside the destination and nat
 ## Downloaded travel cards
 
 PNG and text travel cards are generated locally after an explicit download action. The complete contents can be previewed and include the saved profile and the selected destination’s contacts and hotel plan. GPS coordinates are excluded. A downloaded copy remains on the device outside browser storage; deleting data in Faro does not delete downloaded files. Apple Wallet is not yet enabled; see [integration requirements](docs/apple-wallet.md).
+
+## Preparedness checklist and nearby healthcare
+
+Emergency-kit checkmarks are stored only in `faro-emergency-kit-v1` in this browser, and can be cleared or downloaded from the kit section. Nearby healthcare searches do not read or send the trip profile. Location is requested only on an explicit click; coordinates are rounded to three decimals for the search. The chosen place or approximate coordinates are sent to Google Maps only when the person opens a pharmacy or hospital search. They are not stored by Faro. The external provider has its own privacy policy.

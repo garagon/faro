@@ -33,6 +33,8 @@ El servidor de desarrollo y el de vista previa incluyen los adaptadores `/api/ig
 - Mapa automático con OpenStreetMap, filtros, lista, magnitud, epicentro, hora del evento y hora de consulta.
 - Productos internacionales de tsunami de NOAA/PTWC, con fecha de emisión y límites de cobertura explícitos.
 - Onboarding con nombre, teléfono, correo, nacionalidad y destino guardados localmente; ayuda consular cuando hay una representación verificada en el directorio.
+- Búsqueda de farmacias y hospitales por lugar o ubicación aproximada, con apertura manual de Google Maps y enlaces sanitarios oficiales.
+- Mochila de emergencia: lista de 14 elementos, guardada localmente y descargable, e instrucciones ilustradas.
 - Ayuda local con teléfonos y fuentes oficiales para nueve destinos de América; [cobertura y límites por país](docs/country-coverage.md).
 - Plan del hotel y contactos personales guardados en el navegador, con ficha visual descargable como imagen o texto para consultar sin conexión. [Apple Wallet: requisitos y límites](docs/apple-wallet.md).
 - Mensajes de estado con lugar, acompañantes, ayuda necesaria, disponibilidad y próxima hora de contacto; vista previa en español o inglés y envío manual. Puede adjuntarse un reporte sísmico seleccionado explícitamente.
@@ -61,7 +63,7 @@ Los adaptadores no reciben el perfil del viajero. El mapa consulta solo las tese
 | La consulta y sus estados | [`useCatalogFeed`](src/hooks/useCatalogFeed.ts)                |
 | Países y vista inicial    | [`regions.ts`](src/lib/regions.ts)                             |
 | Teléfonos de emergencia   | [`emergency.ts`](src/lib/emergency.ts)                         |
-| Misiones diplomáticas     | [`embassies.ts`](src/lib/embassies.ts)                         |
+| Misiones diplomáticas     | [`consularMissions.ts`](src/data/consularMissions.ts)          |
 | Instituciones y recursos  | [`resources.ts`](src/lib/resources.ts)                         |
 | Recomendaciones           | [`SafetyGuide.tsx`](src/components/SafetyGuide.tsx)            |
 | Datos personales locales  | [`browserStorage.ts`](src/lib/browserStorage.ts)               |
