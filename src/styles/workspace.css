@@ -346,7 +346,7 @@
 .fw-toolbar select {
   height: 40px;
   background: white;
-  border-color: #d1dcd5;
+  border-color: #7d8d87;
   border-radius: 6px;
   padding: 8px 10px;
   font-size: 12px;
@@ -775,7 +775,7 @@
 .fw-checkin-form select,
 .fw-checkin-form input,
 .fw-checkin-form textarea {
-  border-color: #cddbcf;
+  border-color: #7d8d87;
   border-radius: 6px;
 }
 .fw-next-checkin label {
@@ -1761,7 +1761,7 @@
   }
   .fw-safety-index select {
     font-size: 13px;
-    border-color: #c6d7c2;
+    border-color: #7d8d87;
     border-radius: 6px;
     min-height: 43px;
   }

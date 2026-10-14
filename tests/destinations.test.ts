@@ -4,6 +4,7 @@ import { destinations, destinationFor } from '../src/data/destinations/index.ts'
 import { consularDirectories } from '../src/data/consularDirectories.ts';
 import { countryCodes, regionFor, regionScope } from '../src/lib/regions.ts';
 import { emergencyFor } from '../src/lib/emergency.ts';
+import { telHref, whatsappHref } from '../src/lib/phone.ts';
 import { embassyFor, consularFallback } from '../src/lib/embassies.ts';
 import { cardLines } from '../src/lib/travelCardImage.ts';
 
@@ -20,7 +21,7 @@ test('destination records have unique ISO codes, attributed bilingual data and u
   assert.equal(new Set(destinations.map((d) => d.code)).size, destinations.length);
   for (const d of destinations) {
     assert(countryCodes.includes(d.code));
-    for (const link of [d.civilProtection, d.seismicAgency, d.evacuation])
+    for (const link of [d.civilProtection, d.seismicAgency, d.weatherAgency, d.evacuation])
       if (link) {
         officialURL(link.url);
         date(link.reviewedAt);
@@ -36,21 +37,31 @@ test('destination records have unique ISO codes, attributed bilingual data and u
         d.emergency.numbers.length,
       );
       for (const n of d.emergency.numbers) {
-        assert.match(n.number, /^\d{2,6}$/);
-        assert(n.label.length === 2 && n.label.every((x) => x.trim()));
+        // Short codes, or a full line with its country code so it connects from a foreign SIM.
+        assert.match(n.number, /^(\d{2,6}|\+\d{1,3} \d{3,4}-\d{4})$/);
+        assert.match(telHref(n.number), /^tel:\+?\d+$/);
+        if (n.source) officialURL(n.source);
+        assert(n.label.length === 3 && n.label.every((x) => x.trim()));
       }
       if (d.emergency.note) assert(d.emergency.note.every((x) => x.trim()));
+      // A WhatsApp line is an international number with its own official source.
+      if (d.emergency.whatsapp) {
+        assert.match(d.emergency.whatsapp.number, /^\+\d{1,3} [\d-]{7,12}$/);
+        assert.match(whatsappHref(d.emergency.whatsapp.number), /^https:\/\/wa\.me\/\d{8,15}$/);
+        officialURL(d.emergency.whatsapp.source);
+        assert(d.emergency.whatsapp.label.every((x) => x.trim()));
+      }
     }
     for (const r of d.resources) {
       officialURL(r.url);
       date(r.reviewedAt);
-      assert(r.category.length === 2 && r.description.length === 2);
+      assert(r.category.length === 3 && r.description.length === 3);
     }
     const { bounds: b, view: v, scope } = d.region;
     assert(b.south < b.north && b.west < b.east);
     assert(b.south >= -90 && b.north <= 90 && b.west >= -180 && b.east <= 180);
     assert(v.lat >= b.south && v.lat <= b.north && v.lng >= b.west && v.lng <= b.east);
-    assert(scope.length === 2 && scope.every((x) => x.trim()));
+    assert(scope.length === 3 && scope.every((x) => x.trim()));
   }
 });
 test('new emergency coverage preserves Peru regional restriction in downloadable cards', () => {
@@ -80,6 +91,23 @@ test('consular directories work across destinations without inventing a local mi
   for (const link of Object.values(consularDirectories)) {
     officialURL(link.url);
     date(link.reviewedAt);
-    assert(link.label.length === 2);
+    assert(link.label.length === 3);
   }
+});
+
+test('everyday country names find the right nationality and rank it first', async () => {
+  const { countryAliases, isExactAlias } = await import('../src/lib/countryAliases.ts');
+  assert.ok(isExactAlias('US', 'usa'));
+  assert.ok(isExactAlias('US', 'eeuu'));
+  assert.ok(isExactAlias('GB', 'uk'));
+  assert.ok(!isExactAlias('UA', 'uk'), 'UK must not rank Ukraine first');
+  assert.ok(isExactAlias('NL', 'holanda'));
+  for (const words of Object.values(countryAliases))
+    assert.equal(
+      words,
+      words
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, ''),
+    );
 });

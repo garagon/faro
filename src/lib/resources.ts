@@ -1,9 +1,10 @@
 import { destinations } from '../data/destinations/index.ts';
-export type Lang = 'es' | 'en';
+import type { Localized } from './i18n.ts';
+export type { Lang } from './i18n.ts';
 export type Resource = {
   name: string;
-  category: [string, string];
-  description: [string, string];
+  category: Localized;
+  description: Localized;
   url: string;
   country: string;
   reviewedAt: string;
@@ -13,10 +14,11 @@ export const resources: Resource[] = [
   {
     name: 'USGS',
     country: '*',
-    category: ['Fuente sísmica mundial', 'Global earthquake source'],
+    category: ['Fuente sísmica mundial', 'Global earthquake source', 'Fonte sísmica mundial'],
     description: [
       'Sismos publicados por USGS. La cobertura varía según la región.',
       'Earthquakes published by USGS. Coverage varies by region.',
+      'Terremotos publicados pelo USGS. A cobertura varia conforme a região.',
     ],
     url: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php',
     reviewedAt: '2026-10-11',

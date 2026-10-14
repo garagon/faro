@@ -30,6 +30,7 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
     }, 20000);
     // A request is stale once a newer one started or the effect was cleaned up.
     const current = () => mounted.current && controller.current === ac && !ac.signal.aborted;
+    let ok = false;
     try {
       const data = await reader.read(ac.signal);
       if (!current()) return;
@@ -38,6 +39,7 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
       setFeed(data);
       setChecked(receivedAt);
       setFailed(false);
+      ok = true;
     } catch {
       // A timeout aborts this request on purpose and still counts as a failure.
       if (mounted.current && controller.current === ac && !(ac.signal.aborted && !timedOut))
@@ -50,7 +52,8 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
           setBusy(false);
           const finished = Date.now();
           setNow(finished);
-          due.current = finished + 60000;
+          // After a failure, try again sooner: a slow answer may already be waiting on the server.
+          due.current = finished + (ok ? 60000 : 15000);
           setNext(due.current);
         }
       }
@@ -76,6 +79,8 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
       if (Date.now() >= due.current) void refresh();
     }, 0);
     const tick = setInterval(() => {
+      // A hidden tab does not re-render every second; coming back refreshes the clock and data.
+      if (document.visibilityState !== 'visible') return;
       const time = Date.now();
       setNow(time);
       if (time >= due.current && document.visibilityState === 'visible' && navigator.onLine)
@@ -83,6 +88,7 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
     }, 1000);
     const resume = () => {
       setOnline(navigator.onLine);
+      setNow(Date.now());
       if (navigator.onLine && document.visibilityState === 'visible') void refresh();
     };
     window.addEventListener('online', resume);

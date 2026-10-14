@@ -4,6 +4,7 @@ import {
   classifyBulletins,
   parseTsunamiData,
   RECENT_BULLETIN_WINDOW,
+  reviveTsunami,
   type Bulletin,
 } from '../src/lib/tsunami.ts';
 const now = Date.UTC(2026, 9, 11, 18);
@@ -61,10 +62,51 @@ test('partial, failed and stale fetches cannot confirm an alert state', () => {
     false,
   );
 });
-test('future issued messages are not promoted to recent warnings', () => {
-  const [r] = classify([bulletin({ issued: now + 60000 })]);
-  assert.equal(r.recent, false);
-  assert.equal(r.state, 'unconfirmed');
+test('a slow phone clock never hides a threat, and far-future or old open threats are unresolved', () => {
+  // One minute "ahead": a phone running slow. Still a recent threat to review.
+  const [slow] = classify([bulletin({ issued: now + 60000 })]);
+  assert.equal(slow.recent, true);
+  assert.equal(slow.needsReview, true);
+  // Far ahead or older than the window, and never closed: not reviewable, but not over either.
+  for (const issued of [now + 3 * 3600000, now - 8 * 3600000]) {
+    const [r] = classify([bulletin({ issued })]);
+    assert.equal(r.needsReview, false);
+    assert.equal(r.unresolved, true);
+  }
+  // A threat closed by a later message, or a day old, is neither.
+  const closed = classify([
+    bulletin({ issued: now - 8 * 3600000 }),
+    bulletin({ issued: now - 7 * 3600000, kind: 'ended' }),
+  ]);
+  assert(closed.every((r) => !r.unresolved));
+  assert.equal(classify([bulletin({ issued: now - 25 * 3600000 })])[0].unresolved, false);
+});
+test('the tsunami row is never "none" while an open threat is unresolved', async () => {
+  const { tsunamiStatus } = await import('../src/lib/hazards.ts');
+  const data = (issued: number) => ({
+    bulletins: [bulletin({ issued })],
+    fetched: now,
+    partial: false,
+  });
+  assert.equal(tsunamiStatus(data(now - 60000), false, now).state, 'listed');
+  assert.equal(tsunamiStatus(data(now - 8 * 3600000), false, now).state, 'unknown');
+  // Named with its issue time, so the row is not a bare "not confirmed".
+  assert.equal(tsunamiStatus(data(now - 8 * 3600000), false, now).unclosed, now - 8 * 3600000);
+  assert.equal(tsunamiStatus(data(now - 60000), false, now).unclosed, undefined);
+  assert.equal(tsunamiStatus(data(now + 3 * 3600000), false, now).state, 'unknown');
+  assert.equal(
+    tsunamiStatus({ bulletins: [], fetched: now, partial: false }, false, now).state,
+    'none',
+  );
+});
+test('bulletin times are moved onto this device clock using the adapter clock', () => {
+  // The adapter fetched at T (its clock); this phone is 10 minutes slow.
+  const T = now;
+  const parsed = parseTsunamiData(
+    { bulletins: [bulletin({ issued: T - 60000 })], fetched: T, partial: false, age: 0 },
+    T - 600000,
+  );
+  assert.equal(parsed.bulletins[0].issued, T - 60000 - 600000);
 });
 test('invalid NOAA payloads and unsafe links fail closed', () => {
   const good = { bulletins: [bulletin()], fetched: now, partial: false };
@@ -80,4 +122,33 @@ test('invalid NOAA payloads and unsafe links fail closed', () => {
       parseTsunamiData({ ...good, bulletins: [bulletin(change as Partial<Bulletin>)] }),
     );
   assert.throws(() => parseTsunamiData({ ...good, partial: undefined }));
+});
+test('retrieval time follows this device clock, not the adapter clock', () => {
+  const skewed = { bulletins: [], fetched: now + 600000, partial: false, age: 5000 };
+  assert.equal(parseTsunamiData(skewed, now).fetched, now - 5000);
+  assert.equal(parseTsunamiData({ ...skewed, age: -1 }, now).fetched, now + 600000);
+});
+
+test('a kept copy brings an open threat back after an offline reload, never as confirmed', () => {
+  // As stored by the poller: times already on this device clock.
+  const stored = JSON.parse(
+    JSON.stringify({
+      bulletins: [bulletin({ issued: now - 20 * 60000 })],
+      partial: false,
+      fetched: now - 10 * 60000,
+    }),
+  );
+  const kept = reviveTsunami(stored, now);
+  assert.ok(kept);
+  assert.equal(kept.fetched, now - 10 * 60000);
+  assert.equal(kept.bulletins[0].issued, now - 20 * 60000);
+  const [row] = classifyBulletins(kept, now);
+  assert.equal(row.needsReview, true);
+  assert.equal(row.reliable, false);
+  // A future copy, one older than the unresolved window or a tampered link is not shown.
+  assert.equal(reviveTsunami({ ...stored, fetched: now + 60000 }, now), null);
+  assert.equal(reviveTsunami({ ...stored, fetched: now - 25 * 3600000 }, now), null);
+  const bad = { ...stored, bulletins: [{ ...stored.bulletins[0], url: 'https://evil.example/x' }] };
+  assert.equal(reviveTsunami(bad, now), null);
+  assert.equal(reviveTsunami('garbage', now), null);
 });

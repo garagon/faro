@@ -1,0 +1,1012 @@
+/*
+ * Home, in order of need: three emergency actions, setup that never blocks, warnings in force,
+ * a map with one status row per hazard, the official response and the detail in tabs.
+ * One surface style for every block; color only for the call action, warnings and signals.
+ */
+.fw-home {
+  --ink: #12302b;
+  --body: #2b4a44;
+  --quiet: #5d6f69;
+  --hair: #e1e7e3;
+  --call: #b42318;
+  --call-dark: #93190f;
+  max-width: 1120px;
+}
+.fw-home-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 24px;
+  margin: 22px 0 16px;
+}
+.fw-home-head h1 {
+  margin: 0;
+  font:
+    44px/1.02 'DM Serif Display',
+    serif;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+}
+.fw-home-head p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--quiet);
+  font-variant-numeric: tabular-nums;
+}
+.fw-home-head p .is-stale {
+  color: #8a5a0a;
+  font-weight: 600;
+}
+.fw-home-head .fw-text {
+  min-height: 32px;
+  padding: 0;
+  font-size: 13.5px;
+}
+
+/* Actions. */
+/* The coast rule with the actions: plain text, never red (red only means "call"). A row under
+   the three actions on wide screens; right after the call button on phones. */
+.fw-app .fw-home-coast {
+  grid-column: 1 / -1;
+  order: 1;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.fw-app .fw-home-coast > svg {
+  flex: none;
+  margin-top: 1px;
+  color: #205f50;
+}
+.fw-home-actions {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+.fw-home-action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 84px;
+  padding: 16px 18px;
+  border: 1px solid #d6dfda;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+.fw-home-action > svg {
+  flex: none;
+  color: #285b50;
+}
+.fw-home-action > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.fw-home-action strong {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.fw-home-action small {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--quiet);
+}
+.fw-home-action:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+.fw-home-action.fw-home-call {
+  border-color: var(--call);
+  background: var(--call);
+  color: #fff;
+}
+.fw-home-action.fw-home-call > svg,
+.fw-home-action.fw-home-call small {
+  color: #fff;
+}
+.fw-home-action.fw-home-call small {
+  opacity: 0.88;
+}
+.fw-home-action.fw-home-call strong {
+  font-size: 20px;
+}
+
+/* First-visit setup. */
+.fw-home-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 14px 28px;
+  margin: 0 0 16px;
+  padding: 16px 20px;
+  border: 1px solid #cddbd3;
+  border-radius: 12px;
+  background: #fff;
+}
+.fw-home-setup h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.fw-home-setup p {
+  max-width: 56ch;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-home-setup .fw-home-setup-more {
+  min-height: 30px;
+  margin-top: 4px;
+  padding: 0;
+  font-size: 13px;
+}
+.fw-home-setup-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.fw-home-setup-form .fw-country-search {
+  width: 280px;
+  margin: 0;
+}
+.fw-home-setup-form .fw-country-search > label {
+  font-size: 13px;
+}
+.fw-home-setup-form .fw-country-search-input {
+  min-height: 46px;
+  border-radius: 8px;
+}
+.fw-home-setup-buttons {
+  display: flex;
+  gap: 8px;
+}
+.fw-home-setup-buttons button {
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+.fw-home-setup-buttons .fw-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Warnings in force: the only tinted surface. */
+.fw-home-warnings {
+  margin: 0 0 16px;
+  padding: 14px 20px 12px;
+  border: 1px solid #ead7ab;
+  border-radius: 12px;
+  background: #fdf8ec;
+}
+.fw-home-warnings h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #7a4f08;
+}
+.fw-home-warnings ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fw-home-warnings > ul > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 20px;
+  padding: 10px 0;
+}
+.fw-home-warnings > ul > li + li {
+  border-top: 1px solid #efe1bf;
+}
+.fw-home-warnings > ul > li > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+.fw-home-warnings strong {
+  font-size: 16px;
+  color: #2f2310;
+}
+.fw-home-warnings .fw-severity {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #8a5a0a;
+}
+.fw-home-warnings > ul > li > p {
+  grid-column: 1;
+  margin: 0;
+  font-size: 13px;
+  color: #5c4a28;
+}
+.fw-home-warnings > ul > li > a {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #6b4610;
+}
+.fw-home-warnings .fw-home-warnings-credit {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: #7a6a48;
+}
+
+/* What is happening: map and one row per hazard. */
+.fw-home-now {
+  margin: 0 0 16px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+.fw-home-now > h2 {
+  margin: 0;
+  padding: 15px 20px 13px;
+  border-bottom: 1px solid var(--hair);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.fw-home-now-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(290px, 1fr);
+}
+.fw-home-now-map {
+  min-width: 0;
+  border-right: 1px solid var(--hair);
+}
+.fw-home-now-map .fw-map-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #fff;
+}
+.fw-home-now-map .fw-map-head {
+  display: none;
+}
+.fw-home-now-map .fw-map-wrapper {
+  flex: 1;
+}
+.fw-home-now-map .fw-map {
+  height: 100%;
+  min-height: 380px;
+  border: 0;
+  border-radius: 0;
+}
+.fw-home-now-map .fw-map-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 14px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--hair);
+  font-size: 12px;
+  color: var(--quiet);
+}
+.fw-home-now-map .fw-map-foot button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d6dfda;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.fw-home-now-map .fw-map-embassy[aria-pressed='true'] {
+  border-color: #285b50;
+  background: #eef5f1;
+}
+.fw-home-now-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fw-home-now-list > li + li {
+  border-top: 1px solid var(--hair);
+}
+.fw-now-row {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 11px 18px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.fw-now-row:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.fw-now-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.fw-now-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--quiet);
+}
+.fw-now-text strong {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.fw-now-text small {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--quiet);
+}
+.fw-now-go {
+  color: #5d6f69;
+}
+.fw-now-row .fw-signal {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid #b8c6bf;
+  background: transparent;
+}
+.fw-now-row[data-signal='on'] .fw-signal {
+  border-color: var(--signal, #b5802e);
+  background: var(--signal, #b5802e);
+}
+.fw-now-row[data-signal='unknown'] .fw-signal {
+  border-style: dashed;
+  border-color: #8f9d97;
+}
+.fw-now-row[data-signal='external'] .fw-signal {
+  border-color: #8f9d97;
+}
+.fw-now-row[data-hazard='earthquake'] {
+  --signal: #4f625c;
+}
+.fw-home-note {
+  margin: 0;
+  padding: 11px 20px;
+  border-top: 1px solid var(--hair);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-home-note a {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* Official response, collapsed by default. */
+.fw-home .fw-response {
+  margin: 0 0 16px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: #fff;
+}
+.fw-home .fw-response > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 20px;
+  list-style: none;
+  cursor: pointer;
+}
+.fw-home .fw-response > summary::-webkit-details-marker {
+  display: none;
+}
+.fw-home .fw-response > summary h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.fw-home .fw-response > summary p {
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-response-toggle {
+  flex: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #285b50;
+  white-space: nowrap;
+}
+.fw-response-close,
+.fw-response[open] .fw-response-open {
+  display: none;
+}
+.fw-response[open] .fw-response-close {
+  display: inline;
+}
+.fw-home .fw-response[open] > summary {
+  border-bottom: 1px solid var(--hair);
+}
+.fw-home .fw-response > :not(summary) {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+.fw-home .fw-response > .fw-response-facts {
+  border-top: 0;
+}
+.fw-home .fw-response > .fw-feed-note {
+  margin-top: 12px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+
+/* Earthquake tab: the latest and largest are already in the status rows above. */
+.fw-home-panel .fw-quakes {
+  margin: 0;
+  padding: 0;
+}
+.fw-home-panel .fw-query-controls {
+  margin: 0 0 6px;
+}
+.fw-home-panel :is(.fw-latest-event, .fw-largest-event) {
+  display: none;
+}
+.fw-home-panel .fw-monitor {
+  margin: 10px 0 14px;
+}
+.fw-home-panel .fw-events {
+  border: 1px solid var(--hair, #e1e7e3);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.fw-home-panel .fw-event-list {
+  max-height: none;
+  min-height: 0;
+}
+.fw-home-panel .fw-event {
+  min-height: 60px;
+  padding: 10px 16px;
+}
+.fw-home-panel .fw-event .fw-mag {
+  min-width: 52px;
+  height: 36px;
+  font-size: 18px;
+}
+
+/* Detail tabs. */
+.fw-home-tabs {
+  max-width: 1120px;
+  margin: 8px 0 0;
+  scroll-margin-top: 12px;
+}
+.fw-home-tablist {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid #d3ddd8;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.fw-home-tablist::-webkit-scrollbar {
+  display: none;
+}
+.fw-home-tablist [role='tab'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  margin-bottom: -1px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: 2.5px solid transparent;
+  background: none;
+  color: var(--quiet, #5d6f69);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.fw-home-tablist [role='tab'][aria-selected='true'] {
+  border-bottom-color: #12302b;
+  color: #12302b;
+}
+.fw-home-tablist [role='tab']:focus-visible {
+  outline: 2px solid #12302b;
+  outline-offset: -2px;
+}
+.fw-home-tablist [role='tab'] span {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: #e8eeea;
+  color: #3e5a52;
+  font-size: 12px;
+  text-align: center;
+}
+.fw-home-panel {
+  padding: 18px 0 0;
+}
+.fw-home-panel:focus-visible {
+  outline: 2px solid #12302b;
+  outline-offset: 4px;
+}
+.fw-home-panel > :first-child,
+.fw-home-panel > .fw-quakes > :first-child {
+  margin-top: 0;
+}
+
+@media (max-width: 900px) {
+  .fw-home-now-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-home-now-map {
+    border-right: 0;
+    border-bottom: 1px solid var(--hair);
+  }
+  .fw-home-now-map .fw-map {
+    min-height: 260px;
+    height: 260px;
+  }
+}
+@media (max-width: 760px) {
+  .fw-home-head {
+    margin: 10px 0 12px;
+  }
+  .fw-home-head h1 {
+    font-size: 34px;
+  }
+  .fw-home-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .fw-home-action {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    padding: 14px;
+  }
+  .fw-home-action.fw-home-call {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    padding: 16px;
+  }
+  .fw-app .fw-home-coast {
+    order: 0;
+    font-size: 14.5px;
+  }
+  .fw-home-action strong {
+    font-size: 15.5px;
+  }
+  .fw-home-action small {
+    font-size: 12.5px;
+  }
+  .fw-home-setup {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+  .fw-home-setup-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .fw-home-setup-form .fw-country-search {
+    width: auto;
+  }
+  .fw-home-setup-buttons button {
+    flex: 1;
+  }
+  .fw-home-warnings {
+    padding: 12px 16px 10px;
+  }
+  .fw-home-warnings > ul > li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-home-warnings > ul > li > a {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+    min-height: 36px;
+  }
+  .fw-home-now > h2,
+  .fw-home .fw-response > summary {
+    padding: 13px 16px;
+  }
+  .fw-now-row {
+    padding: 10px 16px;
+  }
+  .fw-home .fw-response > summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .fw-home .fw-response > :not(summary) {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+  .fw-home-tablist [role='tab'] {
+    padding: 0 12px;
+    font-size: 14px;
+  }
+}
+@media (hover: hover) {
+  .fw-home-action:hover {
+    border-color: #9fb7ad;
+  }
+  .fw-home-action.fw-home-call:hover {
+    border-color: var(--call-dark);
+    background: var(--call-dark);
+  }
+  .fw-now-row:hover {
+    background: #f6f9f7;
+  }
+}
+/* The legacy board places its signal in a named area on phones; these rows use plain columns. */
+.fw-now-row .fw-signal {
+  grid-area: auto;
+}
+.fw-main[data-screen='activity'] .fw-warning {
+  max-width: 1120px;
+  margin: 12px 0 0;
+  padding: 12px 16px;
+  border: 1px solid #ead7ab;
+  border-left-width: 1px;
+  border-radius: 12px;
+  background: #fdf8ec;
+  color: #5c4a28;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Each tab is one card: the same header, rows and source note as the rest of the home. */
+.fw-main[data-screen='activity'] .fw-home-panel > :is(.fw-feed, .fw-coast) {
+  margin: 0;
+  padding: 18px 20px 16px;
+  border: 1px solid #e1e7e3;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+.fw-main[data-screen='activity'] .fw-home-panel :is(.fw-feed-head h2, .fw-coast-title h2) {
+  margin: 0 0 3px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #12302b;
+}
+.fw-main[data-screen='activity'] .fw-home-panel :is(.fw-feed-head p, .fw-coast-title small) {
+  display: block;
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: #5d6f69;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-feed-list {
+  border-bottom: 0;
+  background: none;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-feed-list > li {
+  padding: 14px 0;
+}
+.fw-main[data-screen='activity'] .fw-home-panel :is(.fw-feed-empty, .fw-feed-problem) {
+  padding: 14px 0;
+  border-bottom: 0;
+  background: none;
+}
+.fw-main[data-screen='activity'] .fw-home-panel :is(.fw-feed-note, .fw-feed-aside) {
+  max-width: none;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid #e1e7e3;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #5d6f69;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-feed-aside + .fw-feed-note {
+  padding-top: 6px;
+  border-top: 0;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-coast-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-coast-title > svg {
+  display: none;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-coast-title > div {
+  flex: 1;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-coast > p {
+  max-width: 72ch;
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #2b4a44;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-coast-location {
+  font-weight: 600;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-tsunami-status {
+  margin: 14px 0 0;
+  padding: 14px 0;
+  border: 0;
+  border-top: 1px solid #e1e7e3;
+  border-radius: 0;
+  background: none;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-tsunami-status strong {
+  font-size: 15px;
+  color: #12302b;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-tsunami-status p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #4d625b;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-bulletin-archive {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid #e1e7e3;
+  border-bottom: 1px solid #e1e7e3;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-bulletin-archive > summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 46px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #12302b;
+}
+.fw-main[data-screen='activity']
+  .fw-home-panel
+  .fw-bulletin-archive
+  > summary::-webkit-details-marker {
+  display: none;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-bulletin-archive > summary::after {
+  content: '+';
+  margin-left: auto;
+  font-size: 19px;
+  font-weight: 400;
+  color: #5d6f69;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-bulletin-archive[open] > summary::after {
+  content: '−';
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-coast-foot {
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-coast > small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #5d6f69;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-coast .fw-warning {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #ead7ab;
+  border-radius: 8px;
+  background: #fdf8ec;
+}
+@media (max-width: 760px) {
+  .fw-main[data-screen='activity'] .fw-home-panel > :is(.fw-feed, .fw-coast) {
+    padding: 16px;
+  }
+  .fw-main[data-screen='activity'] .fw-home-panel .fw-feed-list > li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-main[data-screen='activity'] .fw-home-panel :is(.fw-feed-list > li > a, .fw-feed-links) {
+    grid-column: 1;
+    grid-row: auto;
+    align-items: flex-start;
+  }
+}
+
+/* The agency's own instructions under each warning. */
+.fw-home-warnings .fw-warning-steps {
+  grid-column: 1;
+  margin: 6px 0 0;
+  padding-left: 18px;
+  list-style: disc;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #3d2f12;
+}
+.fw-home-warnings .fw-warning-steps li + li {
+  margin-top: 2px;
+}
+
+/* Tsunami tab: the natural warning signs first, always; location is optional. */
+.fw-coast-now {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border: 1px solid #ead7ab;
+  border-radius: 10px;
+  background: #fdf8ec;
+  color: #3d2f12;
+}
+.fw-coast-now.is-near {
+  border-color: #c98b2a;
+}
+.fw-coast-now strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.fw-coast-now ol {
+  margin: 8px 0 6px;
+  padding-left: 20px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.fw-coast-now a {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b4610;
+}
+.fw-coast-where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 12px 0 0;
+}
+.fw-main[data-screen='activity'] .fw-home-panel .fw-coast-where .fw-coast-location {
+  flex: 1 1 280px;
+  margin: 0;
+  font-weight: 400;
+  color: #4d625b;
+}
+.fw-coast-where .fw-secondary {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.fw-home-head .fw-home-what {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #4d625b;
+}
+
+/* SINAPROC posts: what the civil protection agency is publishing, newest first. */
+.fw-home-notices {
+  margin: 0 0 16px;
+  padding: 16px 20px 12px;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: #fff;
+}
+.fw-home-notices > header h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.fw-home-notices > header p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-home-notices > ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.fw-home-notices > ul > li {
+  display: grid;
+  gap: 2px;
+  padding: 12px 0;
+}
+.fw-home-notices > ul > li + li {
+  border-top: 1px solid var(--hair);
+}
+.fw-home-notices > ul > li > small {
+  font-size: 13px;
+  color: var(--quiet);
+  font-variant-numeric: tabular-nums;
+}
+.fw-home-notices > ul > li > strong {
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.fw-home-notices > ul > li > p {
+  display: -webkit-box;
+  margin: 2px 0 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--body);
+}
+.fw-home-notices > ul > li > .fw-ext {
+  justify-self: start;
+}
+.fw-home-notices-empty {
+  margin: 10px 0 4px;
+  font-size: 14px;
+  color: var(--body);
+}
+.fw-home-notices-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 20px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hair);
+}
+.fw-home-notices-foot .fw-link-button {
+  min-height: 40px;
+  font-size: 14px;
+}
+@media (max-width: 760px) {
+  .fw-home-notices {
+    padding: 14px 16px 10px;
+  }
+}
+/* Blocks reached from a status row stop below the fixed top bar on phones. */
+@media (max-width: 760px) {
+  .fw-home-notices,
+  .fw-home-warnings,
+  .fw-app .fw-events {
+    scroll-margin-top: 72px;
+  }
+}

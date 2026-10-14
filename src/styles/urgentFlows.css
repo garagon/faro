@@ -502,3 +502,305 @@
     min-height: 44px;
   }
 }
+
+/* Emergency sheet: numbers first, then consular contacts, first minutes and personal plan. */
+.fw-emergency-dialog .fw-dialog-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.fw-emergency-dialog.is-editing .fw-dialog-body {
+  overflow: visible;
+}
+.fw-emergency-dialog :is(.fw-emergency-consular, .fw-first-minutes, .fw-emergency-plan) {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.fw-emergency-dialog h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+.fw-emergency-consular-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 8px 0;
+  border-top: 1px solid #edf1ee;
+}
+.fw-emergency-consular-row > span {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 180px;
+}
+.fw-emergency-consular-row strong {
+  font-size: 13px;
+}
+.fw-emergency-consular-row small,
+.fw-emergency-consular > small,
+.fw-first-minutes > small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.fw-emergency-consular > small {
+  margin-top: 8px;
+}
+.fw-emergency-consular-row a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #ccd8d0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.fw-first-minutes ol {
+  margin: 0 0 10px;
+  padding-left: 22px;
+  display: grid;
+  gap: 10px;
+}
+.fw-first-minutes li {
+  font-size: 13px;
+  line-height: 1.55;
+  padding-left: 2px;
+}
+.fw-first-minutes li::marker {
+  font-weight: 700;
+  color: var(--green);
+}
+.fw-first-minutes li > span {
+  display: block;
+}
+.fw-info-dialog .fw-first-minutes .fw-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--green);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.fw-emergency-plan {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f6f8f5;
+}
+.fw-emergency-plan > div {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.fw-emergency-plan small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.fw-emergency-plan strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.fw-emergency-plan span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.fw-info-dialog .fw-emergency-plan .fw-text,
+.fw-emergency-latest {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: var(--green);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.fw-emergency-latest {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  text-align: left;
+}
+.fw-emergency-latest > span {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  font-weight: 400;
+}
+.fw-emergency-latest small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.fw-emergency-latest b {
+  font-size: 13px;
+}
+.fw-emergency-latest .fw-mag {
+  display: grid;
+  place-items: center;
+  min-width: 48px;
+  min-height: 44px;
+  border-radius: 6px;
+  font-size: 18px;
+  background: var(--mag-bg);
+  color: var(--mag-ink);
+}
+.fw-emergency-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+/* On phones the four shortcuts share one row so the sheet keeps room for its content. */
+@media (max-width: 600px) {
+  .fw-emergency-actions {
+    gap: 6px;
+    padding: 10px 12px max(12px, env(safe-area-inset-bottom));
+  }
+  .fw-info-dialog .fw-emergency-actions :is(button, a) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 58px;
+    padding: 6px 4px;
+    font-size: 11px;
+    line-height: 1.25;
+    text-align: center;
+  }
+}
+
+/* One-tap alternatives when the selected catalog cannot be reached. */
+.fw-source-fallback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
+  margin-top: 8px;
+}
+.fw-warning .fw-source-fallback button {
+  min-height: 40px;
+  font-weight: 700;
+}
+.fw-empty-fallback {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 16px 0 10px;
+}
+.fw-empty-fallback .fw-primary {
+  min-height: 46px;
+}
+
+/* Shown on every screen while the browser reports no connection. */
+.fw-offline {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #253b37;
+  color: #f4f6f3;
+}
+.fw-offline p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #f4f6f3;
+}
+.fw-offline svg {
+  flex: none;
+  margin-top: 1px;
+  color: #f2c879;
+}
+.fw-offline strong {
+  display: block;
+}
+
+.fw-nws {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #d5e0d4;
+}
+.fw-nws > h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.fw-nws > p {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.fw-nws > small {
+  display: block;
+  font-size: 11px;
+  color: #657570;
+}
+
+/* "What is happening" choice in the emergency sheet; the person selects it. */
+.fw-emergency-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+.fw-info-dialog .fw-emergency-kinds button {
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid #cfdad4;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f3a34;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.fw-info-dialog .fw-emergency-kinds button[aria-checked='true'] {
+  border-color: #285b50;
+  background: #e8f1ec;
+  box-shadow: inset 0 0 0 1px #285b50;
+  color: #183936;
+}
+.fw-info-dialog .fw-first-minutes h4 {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #50665b;
+}
+.fw-first-minutes ul {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+.fw-first-minutes ul li {
+  font-size: 13px;
+  line-height: 1.55;
+}

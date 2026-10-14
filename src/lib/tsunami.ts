@@ -12,8 +12,13 @@ export type TsunamiData = { bulletins: Bulletin[]; partial: boolean; fetched: nu
 export type BulletinState = 'ended' | 'cancelled' | 'information' | 'superseded' | 'unconfirmed';
 // A display window, never an official expiry or cancellation time.
 export const RECENT_BULLETIN_WINDOW = 6 * 60 * 60 * 1000;
-export function parseTsunamiData(value: unknown): TsunamiData {
-  const d = value as TsunamiData | null;
+// An unclosed threat older than the display window still blocks "no threat" for this long.
+export const UNRESOLVED_WINDOW = 24 * 60 * 60 * 1000;
+// A phone clock can run a few minutes slow: a message this far "ahead" still counts as recent.
+const CLOCK_TOLERANCE = 10 * 60 * 1000;
+/** `age` from the adapter places the retrieval on this device's clock, like the other feeds. */
+export function parseTsunamiData(value: unknown, received = Date.now()): TsunamiData {
+  const d = value as (TsunamiData & { age?: unknown }) | null;
   if (
     !d ||
     !Array.isArray(d.bulletins) ||
@@ -50,7 +55,35 @@ export function parseTsunamiData(value: unknown): TsunamiData {
       : 'unknown';
     return { ...b, kind } as Bulletin;
   });
-  return { bulletins, partial: d.partial, fetched: d.fetched };
+  const age =
+    typeof d.age === 'number' && Number.isFinite(d.age) && d.age >= 0 && d.age <= 24 * 3600000
+      ? d.age
+      : null;
+  if (age === null) return { bulletins, partial: d.partial, fetched: d.fetched };
+  // Issue times are absolute; shift them by this device's clock error, measured against the
+  // adapter, so a slow or fast phone places each message at the right distance from "now".
+  const offset = received - age - d.fetched;
+  return {
+    bulletins: bulletins.map((b) => ({ ...b, issued: b.issued + offset })),
+    partial: d.partial,
+    fetched: received - age,
+  };
+}
+/**
+ * The last answer kept on this device, for an offline reload: an open threat must not vanish
+ * because the page reloaded without network. It is validated like a live answer and keeps its
+ * retrieval time, so it is never reliable enough to read as "no threat".
+ */
+export function reviveTsunami(value: unknown, now = Date.now()): TsunamiData | null {
+  const v = value as { fetched?: unknown } | null;
+  if (!v || typeof v.fetched !== 'number' || v.fetched > now || now - v.fetched > UNRESOLVED_WINDOW)
+    return null;
+  try {
+    // Without `age` the stored times are used as they are: already on this device's clock.
+    return parseTsunamiData({ ...v, age: undefined });
+  } catch {
+    return null;
+  }
 }
 export function classifyBulletins(data: TsunamiData, now: number, failed = false) {
   const reliable = !failed && !data.partial && now >= data.fetched && now - data.fetched <= 120000;
@@ -68,10 +101,22 @@ export function classifyBulletins(data: TsunamiData, now: number, failed = false
         : ['ended', 'cancelled', 'information'].includes(bulletin.kind)
           ? (bulletin.kind as BulletinState)
           : 'unconfirmed';
-      const recent = now >= bulletin.issued && now - bulletin.issued <= RECENT_BULLETIN_WINDOW;
+      const age = now - bulletin.issued;
+      const recent = age >= -CLOCK_TOLERANCE && age <= RECENT_BULLETIN_WINDOW;
+      // A threat (or unreadable message) with no later message for its event is still open.
+      const open = !newer && (bulletin.kind === 'threat' || bulletin.kind === 'unknown');
       // Preserve unresolved threats when the feed fails; never imply a safe/closed state.
-      const needsReview =
-        !newer && recent && (bulletin.kind === 'threat' || bulletin.kind === 'unknown');
-      return { bulletin, state, recent, needsReview, reliable, replacedAt: newer?.issued };
+      const needsReview = open && recent;
+      // Open but outside the window (older, or dated well ahead): it cannot be confirmed as over.
+      const unresolved = open && !recent && age <= UNRESOLVED_WINDOW;
+      return {
+        bulletin,
+        state,
+        recent,
+        needsReview,
+        unresolved,
+        reliable,
+        replacedAt: newer?.issued,
+      };
     });
 }

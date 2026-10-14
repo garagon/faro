@@ -1,6 +1,20 @@
+export type CatalogId = 'IGC' | 'USGS' | 'EMSC';
+/** Impact products that USGS attaches to an event. Null means USGS has not published one. */
+export type UsgsImpact = {
+  /** PAGER estimate of fatalities and economic losses, not an alert for a person's location. */
+  alert: 'green' | 'yellow' | 'orange' | 'red' | null;
+  /** Number of "Did You Feel It?" responses. */
+  felt: number | null;
+  /** Maximum intensity reported by people (DYFI). */
+  cdi: number | null;
+  /** Maximum instrumental intensity estimated by ShakeMap. */
+  mmi: number | null;
+  /** USGS links large oceanic events to tsunami.gov. It never states that a tsunami exists. */
+  tsunami: boolean;
+};
 export type Quake = {
   id: string;
-  source?: 'IGC' | 'USGS';
+  source?: CatalogId;
   lat: number;
   lng: number;
   depth: number;
@@ -11,6 +25,9 @@ export type Quake = {
   url: string;
   reviewed: boolean;
   magType: string;
+  impact?: UsgsImpact;
+  /** Agency code that EMSC credits for the solution, shown as published. */
+  authority?: string;
 };
 /** Readable place label: drops the IGC "Localizado en" prefix and spaces "31km" as "31 km". */
 export function displayPlace(place: string): string {
@@ -19,11 +36,24 @@ export function displayPlace(place: string): string {
     .replace(/^Localizado en\s+/i, '')
     .replace(/(\d)km\b/g, '$1 km');
 }
+/** IGC publishes place names in Spanish; USGS and EMSC in English. Screen readers need to know. */
+export const placeLang = (q: Pick<Quake, 'source'>) => (q.source === 'IGC' ? 'es' : 'en');
 export type Bounds = { south: number; north: number; west: number; east: number };
 export type Feed = { events: Quake[]; generated: number };
 const validDate = (n: unknown): n is number =>
   typeof n === 'number' && Number.isFinite(n) && n > 0 && n < 8.64e15;
 const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
+const PAGER_LEVELS = ['green', 'yellow', 'orange', 'red'] as const;
+const intensity = (n: unknown) => (finite(n) && n >= 0 && n <= 12 ? n : null);
+export function parseImpact(p: Record<string, unknown>): UsgsImpact {
+  return {
+    alert: PAGER_LEVELS.find((level) => level === p.alert) ?? null,
+    felt: finite(p.felt) && p.felt >= 0 ? Math.round(p.felt) : null,
+    cdi: intensity(p.cdi),
+    mmi: intensity(p.mmi),
+    tsunami: p.tsunami === 1,
+  };
+}
 function record(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -39,9 +69,12 @@ export function parseFeed(raw: unknown): Feed {
   )
     throw new Error('Respuesta de USGS no válida');
   const events: Quake[] = [];
+  let records = 0;
   for (const feature of d.features) {
     const f = record(feature);
     const p = record(f.properties);
+    // Quarry blasts or out-of-range times are real records that are skipped, not a bad format.
+    if (typeof f?.id === 'string' && typeof p?.type === 'string') records++;
     const coordinates = record(f.geometry).coordinates;
     const c = Array.isArray(coordinates) ? coordinates.slice(0, 3) : [];
     if (!c.every(finite)) continue;
@@ -78,8 +111,12 @@ export function parseFeed(raw: unknown): Feed {
       url,
       reviewed: p.status === 'reviewed',
       magType: typeof p.magType === 'string' ? p.magType : '',
+      source: 'USGS',
+      impact: parseImpact(p),
     });
   }
+  // A non-empty feed with no recognisable record is a format change, not "no earthquakes".
+  if (d.features.length > 0 && records === 0) throw new Error('Respuesta de USGS no válida');
   const unique = new Map<string, Quake>();
   for (const e of events) {
     const old = unique.get(e.id);
@@ -87,7 +124,7 @@ export function parseFeed(raw: unknown): Feed {
   }
   return { events: [...unique.values()], generated: metadata.generated };
 }
-export function inBounds(e: Quake, b: Bounds) {
+export function inBounds(e: Pick<Quake, 'lat' | 'lng'>, b: Bounds) {
   if (e.lat < b.south || e.lat > b.north) return false;
   if (b.east - b.west >= 360) return true;
   const norm = (n: number) => ((((n + 180) % 360) + 360) % 360) - 180;

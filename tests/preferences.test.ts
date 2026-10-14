@@ -39,10 +39,11 @@ test('profile restores known countries and language but strips unrelated data', 
   assert.equal(parsePreferences({ ...value, version: 2 }, codes, now), null);
   assert.equal(parsePreferences({ ...value, savedAt: now + 1000 }, codes, now), null);
 });
-test('legacy profiles with empty nationality can be recovered but cannot be saved incomplete', () => {
+test('nationality is optional when saving, but an unknown country is still rejected', () => {
   assert.equal(parsePreferences({ ...value, nationality: '' }, codes, now)?.nationality, '');
   assert.equal(parsePreferences({ ...value, nationality: undefined }, codes, now), null);
-  assert.throws(() => storePreferences({ ...value, nationality: '' }, codes, storage()));
+  assert.equal(storePreferences({ ...value, nationality: '' }, codes, storage()).nationality, '');
+  assert.throws(() => storePreferences({ ...value, nationality: 'ZZ' }, codes, storage()));
 });
 test('save verifies persistence and reports blocked storage', () => {
   const s = storage();
@@ -135,7 +136,8 @@ test('site language persists independently of the trip profile', async () => {
   const s = storage();
   assert.equal(readSiteLanguage(undefined, s, ['es-PA', 'en']), 'es');
   assert.equal(readSiteLanguage(undefined, s, ['en-US', 'es']), 'en');
-  assert.equal(readSiteLanguage(undefined, s, ['pt-BR']), 'en');
+  assert.equal(readSiteLanguage(undefined, s, ['pt-BR']), 'pt');
+  assert.equal(readSiteLanguage(undefined, s, ['fr-FR']), 'en');
   assert.equal(readSiteLanguage(undefined, s, []), 'en');
   assert.equal(readSiteLanguage('en'), 'en');
   assert.equal(readSiteLanguage('en', s), 'en');
@@ -143,6 +145,8 @@ test('site language persists independently of the trip profile', async () => {
   assert.equal(readSiteLanguage('en', s), 'es');
   s.setItem('faro-lang', 'en');
   assert.equal(readSiteLanguage(undefined, s), 'en');
+  s.setItem('faro-lang', 'pt');
+  assert.equal(readSiteLanguage('es', s), 'pt');
   s.setItem('faro-lang', 'invalid');
   assert.equal(readSiteLanguage('es', s), 'es');
   assert.equal(

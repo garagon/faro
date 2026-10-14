@@ -24,12 +24,14 @@ export function createFeedTracker() {
   };
 }
 export function ageLabel(time: number, now: number, lang: string) {
+  const ago = (es: string, en: string, pt: string) =>
+    lang === 'es' ? es : lang === 'pt' ? pt : en;
   const seconds = Math.max(0, Math.floor((now - time) / 1000));
-  if (seconds < 60) return lang === 'es' ? `hace ${seconds} s` : `${seconds}s ago`;
+  if (seconds < 60) return ago(`hace ${seconds} s`, `${seconds}s ago`, `há ${seconds} s`);
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return lang === 'es' ? `hace ${minutes} min` : `${minutes}m ago`;
+  if (minutes < 60) return ago(`hace ${minutes} min`, `${minutes}m ago`, `há ${minutes} min`);
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return lang === 'es' ? `hace ${hours} h` : `${hours}h ago`;
+  if (hours < 24) return ago(`hace ${hours} h`, `${hours}h ago`, `há ${hours} h`);
   const days = Math.floor(hours / 24);
-  return lang === 'es' ? `hace ${days} d` : `${days}d ago`;
+  return ago(`hace ${days} d`, `${days}d ago`, `há ${days} ${days === 1 ? 'dia' : 'dias'}`);
 }

@@ -1,15 +1,20 @@
 import { emergencyFor } from './emergency.ts';
 import type { HotelPlan, Lang } from './resources.ts';
+import { langIndex, pick } from './i18n.ts';
 // Who a traveler or a professional on assignment may need to reach. Stored keys stay stable.
 export const contactKinds = {
-  family: ['Familia o amistad', 'Family or friend'],
-  hotel: ['Recepción del alojamiento', 'Accommodation reception'],
-  insurance: ['Seguro o asistencia al viajero', 'Insurance or travel assistance'],
-  consulate: ['Consulado o embajada', 'Consulate or embassy'],
-  work: ['Empresa o empleador', 'Employer'],
-  team: ['Coordinación del equipo', 'Team coordinator'],
-  transport: ['Transporte o conductor', 'Driver or transport'],
-  other: ['Otro contacto', 'Other contact'],
+  family: ['Familia o amistad', 'Family or friend', 'Família ou amigos'],
+  hotel: ['Recepción del alojamiento', 'Accommodation reception', 'Recepção da hospedagem'],
+  insurance: [
+    'Seguro o asistencia al viajero',
+    'Insurance or travel assistance',
+    'Seguro ou assistência ao viajante',
+  ],
+  consulate: ['Consulado o embajada', 'Consulate or embassy', 'Consulado ou embaixada'],
+  work: ['Empresa o empleador', 'Employer', 'Empresa ou empregador'],
+  team: ['Coordinación del equipo', 'Team coordinator', 'Coordenação da equipe'],
+  transport: ['Transporte o conductor', 'Driver or transport', 'Transporte ou motorista'],
+  other: ['Otro contacto', 'Other contact', 'Outro contato'],
 } as const;
 export const contactGroups = {
   personal: ['family', 'hotel', 'insurance', 'consulate'],
@@ -58,44 +63,51 @@ export function travelCard(
   contacts: TravelContact[],
   plan: HotelPlan | null,
 ) {
-  const t = (es: string, en: string) => (lang === 'es' ? es : en);
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const names = new Intl.DisplayNames([lang], { type: 'region' });
   const emergency = emergencyFor(country);
   const local = contacts.filter((c) => c.country === country);
   return [
-    t('FARO · FICHA DEL VIAJE', 'FARO · TRAVEL CARD'),
+    t('FARO · FICHA DEL VIAJE', 'FARO · TRAVEL CARD', 'FARO · FICHA DA VIAGEM'),
     names.of(country) || country,
-    `${t('Exportada', 'Exported')}: ${new Date().toISOString()}`,
+    `${t('Exportada', 'Exported', 'Exportada')}: ${new Date().toISOString()}`,
     t(
       'Datos personales. Guarda esta ficha de forma privada.',
       'Personal data. Keep this card private.',
+      'Dados pessoais. Guarde esta ficha de forma privada.',
     ),
     '',
-    t('EMERGENCIAS LOCALES', 'LOCAL EMERGENCIES'),
+    t('EMERGENCIAS LOCALES', 'LOCAL EMERGENCIES', 'EMERGÊNCIAS LOCAIS'),
     emergency
-      ? emergency.numbers.map((n) => `${n.number} · ${n.label[lang === 'es' ? 0 : 1]}`).join('\n')
-      : t('Sin números verificados.', 'No verified numbers.'),
+      ? emergency.numbers.map((n) => `${n.number} · ${n.label[langIndex(lang)]}`).join('\n')
+      : t('Sin números verificados.', 'No verified numbers.', 'Sem números verificados.'),
     emergency?.source || '',
     t(
       'Números cortos para llamar dentro del país, no desde el extranjero.',
       'Short numbers for calls within the country, not from abroad.',
+      'Números curtos para ligar dentro do país, não do exterior.',
     ),
     '',
-    t('CONTACTOS DEL VIAJE', 'TRAVEL CONTACTS'),
+    t('CONTACTOS DEL VIAJE', 'TRAVEL CONTACTS', 'CONTATOS DA VIAGEM'),
     ...local.map(
       (c) =>
-        `${contactKinds[c.kind][lang === 'es' ? 0 : 1]} · ${c.name}\n${c.phone}${c.note ? '\n' + c.note : ''}`,
+        `${contactKinds[c.kind][langIndex(lang)]} · ${c.name}\n${c.phone}${c.note ? '\n' + c.note : ''}`,
     ),
     '',
     plan?.country === country
       ? [
-          t('PLAN PERSONAL DEL HOTEL · SIN VERIFICAR', 'PERSONAL HOTEL PLAN · UNVERIFIED'),
+          t(
+            'PLAN PERSONAL DEL HOTEL · SIN VERIFICAR',
+            'PERSONAL HOTEL PLAN · UNVERIFIED',
+            'PLANO PESSOAL DO HOTEL · NÃO VERIFICADO',
+          ),
           plan.name,
           plan.meeting,
           plan.notes,
           t(
             'Confirma ruta y punto de encuentro con recepción.',
             'Confirm route and assembly point with reception.',
+            'Confirme a rota e o ponto de encontro com a recepção.',
           ),
         ].join('\n')
       : '',

@@ -36,3 +36,26 @@ export function coastDistanceKm(lat: number, lng: number, lines: CoastLine[]) {
     }
   return Number.isFinite(min) ? min : null;
 }
+
+/**
+ * Lines from `public/data/coastline.json`: the compact form (each line as integer steps on a
+ * 0.001° grid, see scripts/simplify-coastline.mjs) or plain [lng, lat] pairs. Anything else fails.
+ */
+export function decodeCoastline(data: unknown): CoastLine[] {
+  const d = data as { format?: unknown; lines?: unknown } | null;
+  if (!d || !Array.isArray(d.lines)) throw Error('Invalid coastline');
+  if (d.format === undefined) return d.lines as CoastLine[];
+  if (d.format !== 'delta-1e-3') throw Error('Unknown coastline format');
+  return (d.lines as unknown[]).map((steps) => {
+    if (!Array.isArray(steps) || steps.length % 2) throw Error('Invalid coastline');
+    const line: CoastLine = [];
+    let x = 0,
+      y = 0;
+    for (let i = 0; i < steps.length; i += 2) {
+      x += steps[i];
+      y += steps[i + 1];
+      line.push([x / 1000, y / 1000]);
+    }
+    return line;
+  });
+}

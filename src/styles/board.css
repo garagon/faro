@@ -1,0 +1,1517 @@
+/*
+ * One surface system for the situation screens. Every block is the same white card with a
+ * hairline edge; a block opens with the same heading; rows inside are separated by hairlines.
+ * Type steps: page title 30, block title 18, row title 16, body 15, meta 13. Loaded after the
+ * older stylesheets and before system.css.
+ */
+.fw-app {
+  --board-ink: #12302b;
+  --board-body: #2b4a44;
+  --board-muted: #4f625c;
+  --board-hair: #dde5e0;
+  --board-wash: #f7f9f8;
+  --board-warn: #b5802e;
+}
+
+/* Page titles: one style on every screen. */
+.fw-app .fw-heading h1,
+.fw-app .fw-home-head h1 {
+  margin: 0;
+  font:
+    700 30px/1.2 'DM Sans',
+    sans-serif;
+  letter-spacing: -0.5px;
+  color: var(--board-ink);
+}
+.fw-app .fw-heading p,
+.fw-app .fw-home-head .fw-home-what {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--board-muted);
+}
+.fw-app .fw-home-head {
+  margin: 20px 0 16px;
+}
+
+/* Blocks. */
+.fw-app :is(.fw-official, .fw-home-now, .fw-home .fw-response, .fw-home-setup) {
+  margin: 0 0 16px;
+  border: 1px solid var(--board-hair);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+  overflow: hidden;
+}
+.fw-app .fw-block-head,
+.fw-app .fw-home-now > h2 {
+  margin: 0;
+  padding: 16px 20px 12px;
+}
+.fw-app .fw-block-head h2,
+.fw-app .fw-home-now > h2 {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--board-ink);
+}
+.fw-app .fw-block-head p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--board-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Official now: one line per message, opening in place. */
+.fw-app .fw-official-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--board-hair);
+}
+.fw-app .fw-official-list > li + li {
+  border-top: 1px solid var(--board-hair);
+}
+.fw-app .fw-official-list > li > button {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px;
+  margin: 0;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--board-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fw-app .fw-official-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.fw-app .fw-official-text strong {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--board-ink);
+}
+.fw-app .fw-official-text small {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--board-muted);
+  font-variant-numeric: tabular-nums;
+}
+.fw-app .fw-official-dot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #8a9893;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.fw-app .fw-official-list > li[data-kind='warning'] .fw-official-dot {
+  border-color: var(--board-warn);
+  background: var(--board-warn);
+}
+.fw-app .fw-official-caret {
+  color: var(--board-muted);
+  transition: transform 0.15s ease;
+}
+.fw-app .fw-official-list button[aria-expanded='true'] .fw-official-caret {
+  transform: rotate(180deg);
+}
+.fw-app .fw-official-body {
+  padding: 0 20px 16px 44px;
+}
+.fw-app .fw-official-body > p {
+  max-width: 72ch;
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--board-body);
+}
+.fw-app .fw-official-body > ul {
+  display: grid;
+  gap: 6px;
+  max-width: 72ch;
+  margin: 0 0 10px;
+  padding-left: 18px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--board-ink);
+}
+.fw-app .fw-official-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 20px;
+  padding: 10px 20px 12px;
+  border-top: 1px solid var(--board-hair);
+}
+.fw-app .fw-official-foot > p {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--board-muted);
+  text-align: right;
+}
+.fw-app .fw-official-foot .fw-link-button {
+  min-height: 44px;
+  padding: 0;
+  font-size: 14px;
+}
+
+/* What is happening: map beside one row per hazard, the hazard name in its own column. */
+.fw-app .fw-home-now-grid {
+  border-top: 1px solid var(--board-hair);
+}
+.fw-app .fw-home-now-list {
+  margin: 0;
+}
+.fw-app .fw-now-row {
+  display: grid;
+  grid-template-columns: 10px 96px minmax(0, 1fr) 16px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 2px;
+  min-height: 64px;
+  padding: 12px 20px;
+}
+.fw-app .fw-now-row > .fw-signal {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+.fw-app .fw-now-row > .fw-now-text {
+  display: contents;
+}
+.fw-app .fw-now-row .fw-now-name {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-now-row .fw-now-text > strong {
+  grid-column: 3;
+  grid-row: 1;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--board-ink);
+}
+.fw-app .fw-now-row .fw-now-text > small {
+  grid-column: 3;
+  grid-row: 2;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--board-muted);
+}
+.fw-app .fw-now-row > .fw-now-go {
+  grid-column: 4;
+  grid-row: 1 / span 2;
+}
+.fw-app .fw-now-row .fw-now-text > small.fw-now-natural {
+  grid-column: 3;
+  grid-row: 3;
+  margin-top: 2px;
+  font-weight: 600;
+  color: var(--board-ink);
+}
+@media (hover: hover) {
+  .fw-app :is(.fw-now-row, .fw-official-list > li > button):hover {
+    background: var(--board-wash);
+  }
+}
+
+/* Map footer: the legend on one line, then the two map actions. */
+.fw-app .fw-map-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--board-hair);
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-map-foot > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+  flex: 1 1 100%;
+}
+.fw-app .fw-map-foot b {
+  font-weight: 400;
+}
+.fw-app .fw-home-note {
+  margin: 0;
+  padding: 12px 20px;
+  border-top: 1px solid var(--board-hair);
+  font-size: 13px;
+  color: var(--board-muted);
+}
+
+/* Detail page: a way back to the situation, then the tabs. */
+.fw-app .fw-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #205f50;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.fw-app .fw-back:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .fw-app .fw-heading h1,
+  .fw-app .fw-home-head h1 {
+    font-size: 26px;
+  }
+  .fw-app :is(.fw-block-head, .fw-home-now > h2) {
+    padding: 14px 16px 10px;
+  }
+  .fw-app .fw-official-list > li > button {
+    padding: 12px 16px;
+  }
+  .fw-app .fw-official-body {
+    padding: 0 16px 14px 40px;
+  }
+  .fw-app .fw-official-foot {
+    padding: 8px 16px 12px;
+  }
+  .fw-app .fw-official-foot > p {
+    text-align: left;
+  }
+  .fw-app .fw-now-row {
+    grid-template-columns: 10px 84px minmax(0, 1fr) 16px;
+    column-gap: 12px;
+    padding: 12px 16px;
+  }
+  .fw-app .fw-home-note {
+    padding: 12px 16px;
+  }
+}
+@media (min-width: 761px) {
+  .fw-app .fw-home-now-grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(340px, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  /* Phones: the hazard name sits above its status instead of beside it. */
+  .fw-app .fw-now-row {
+    grid-template-columns: 10px minmax(0, 1fr) 16px;
+    grid-template-rows: auto auto auto;
+  }
+  .fw-app .fw-now-row > .fw-signal {
+    grid-row: 1 / span 3;
+  }
+  .fw-app .fw-now-row .fw-now-name {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 13px;
+  }
+  .fw-app .fw-now-row .fw-now-text > strong {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .fw-app .fw-now-row .fw-now-text > small {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .fw-app .fw-now-row .fw-now-text > small.fw-now-natural {
+    grid-column: 2;
+    grid-row: 4;
+  }
+  .fw-app .fw-now-row > .fw-now-go {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+  }
+  .fw-app .fw-map-foot > button {
+    flex: 0 1 auto;
+    width: auto;
+  }
+}
+
+/* Earthquake page: filters and update status in one card, then coverage and legend, then list. */
+.fw-app .fw-home-panel .fw-query-controls {
+  margin: 0;
+  padding: 0;
+}
+.fw-app .fw-home-panel .fw-query-filters {
+  margin: 0;
+  border: 1px solid var(--board-hair);
+  border-radius: 12px 12px 0 0;
+  background: #fff;
+  box-shadow: none;
+}
+.fw-app .fw-home-panel .fw-query-filters > summary {
+  min-height: 52px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+.fw-app .fw-home-panel .fw-query-filters > summary span {
+  font-size: 14px;
+  color: var(--board-muted);
+}
+.fw-app .fw-home-panel .fw-monitor {
+  margin: 0 0 12px;
+  padding: 0;
+  border: 1px solid var(--board-hair);
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  background: #fff;
+  box-shadow: none;
+}
+.fw-app .fw-home-panel .fw-monitor-connection {
+  margin: 0;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.fw-app .fw-home-panel .fw-monitor-connection strong {
+  font-size: 14px;
+}
+.fw-app .fw-home-panel .fw-monitor-connection :is(span, .fw-monitor-check > span) {
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-home-panel .fw-monitor-foot {
+  margin: 0;
+  padding: 8px 16px;
+  border-top: 1px solid var(--board-hair);
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-home-panel .fw-monitor-foot button {
+  min-height: 44px;
+  font-size: 13px;
+}
+.fw-app .fw-quake-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 24px;
+  margin: 0 0 12px;
+}
+.fw-app .fw-quake-meta > .fw-area-scope {
+  margin: 0;
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-quake-meta .fw-magnitude-legend {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .fw-app .fw-home-panel .fw-monitor-check {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+  }
+  .fw-app .fw-home-panel .fw-monitor-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0 12px;
+  }
+}
+
+/* Urgent official message (a recent NOAA tsunami threat): the warning tone, never call red. */
+.fw-app .fw-tsunami-banner {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 16px 20px;
+  border: 1px solid #ae8138;
+  border-radius: 12px;
+  background: #fdf8ec;
+  color: #3d2a08;
+}
+.fw-app .fw-tsunami-banner > svg {
+  color: #9a6512;
+}
+.fw-app .fw-tsunami-banner h2 {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #4a3207;
+}
+.fw-app .fw-tsunami-banner p {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #3d2a08;
+}
+.fw-app .fw-tsunami-banner .fw-tsunami-banner-action {
+  margin-top: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #4a3207;
+}
+.fw-app .fw-tsunami-banner .fw-tsunami-banner-meta {
+  font-size: 13px;
+  color: #6b4610;
+}
+.fw-app .fw-tsunami-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 20px;
+  margin-top: 6px;
+}
+.fw-app .fw-tsunami-banner :is(.fw-ext, .fw-link-button) {
+  color: #4a3207;
+}
+.fw-app .fw-emergency-screen > .fw-tsunami-banner {
+  grid-column: 1;
+  margin: 16px 0 0;
+}
+@media (max-width: 760px) {
+  /* Phones: the hazard rows come before the map, so the summary is read first. */
+  .fw-app .fw-home-now-grid {
+    display: flex;
+    flex-direction: column;
+  }
+  .fw-app .fw-home-now-list {
+    order: -1;
+    border-bottom: 1px solid var(--board-hair);
+  }
+  .fw-app .fw-home-now-map {
+    border-bottom: 0;
+  }
+}
+
+/* Detail tabs: each panel is one board card; the status leads, then the detail. */
+.fw-app .fw-home-panel :is(.fw-coast, .fw-feed) {
+  margin: 0;
+  padding: 0 0 4px;
+  border: 1px solid var(--board-hair);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+  overflow: hidden;
+}
+.fw-app .fw-home-panel .fw-coast > *,
+.fw-app .fw-home-panel .fw-feed > :not(ul):not(ol) {
+  margin-right: 20px;
+  margin-left: 20px;
+}
+.fw-app .fw-home-panel :is(.fw-coast, .fw-feed) > :is(.fw-coast-title, .fw-feed-head) {
+  margin: 0;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--board-hair);
+  background: none;
+}
+.fw-app .fw-home-panel :is(.fw-coast-title, .fw-feed-head) h2 {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-home-panel :is(.fw-coast-title small, .fw-feed-head p) {
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-home-panel .fw-tsunami-status {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.fw-app .fw-home-panel .fw-tsunami-status > strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--board-ink);
+}
+.fw-app
+  .fw-home-panel
+  .fw-tsunami-status:is([data-state='review'], [data-state='unresolved'])
+  > strong {
+  color: #6b4610;
+}
+.fw-app .fw-home-panel .fw-tsunami-status > p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--board-muted);
+}
+.fw-app .fw-home-panel .fw-coast-now {
+  margin-top: 0;
+  margin-bottom: 16px;
+  border-radius: 10px;
+}
+.fw-app .fw-home-panel :is(.fw-coast-where, .fw-nws, .fw-bulletin-archive, .fw-coast-foot) {
+  padding-top: 14px;
+  border-top: 1px solid var(--board-hair);
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.fw-app .fw-home-panel .fw-feed > :is(ul, ol) {
+  margin: 0;
+  border: 0;
+}
+.fw-app .fw-home-panel .fw-feed .fw-feed-note {
+  margin-top: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-official-snippet {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--board-body);
+}
+
+/* Go bag on the board system: a plain warning line, one card per step, figures without boxes,
+   one list with hairlines. A ticked item shows its check, not a tint. */
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--board-ink);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-warning svg {
+  margin-top: 3px;
+  color: #9a6512;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-card {
+  margin: 0 0 16px;
+  padding: 20px;
+  border: 1px solid var(--board-hair);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit h2 {
+  margin: 0 0 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 20px 0 0;
+  border: 0;
+  border-top: 1px solid var(--board-hair);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats > div {
+  margin: 0;
+  padding: 16px 20px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats > div + div {
+  padding-left: 20px;
+  border-left: 1px solid var(--board-hair);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats dt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--board-muted);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats dd {
+  display: grid;
+  gap: 4px;
+  margin: 2px 0 0;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats strong {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--board-ink);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats span {
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats progress {
+  width: 100%;
+  height: 6px;
+  margin-top: 6px;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-basis {
+  margin: 14px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--board-muted);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-list-head h2 {
+  margin: 0;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-saved {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit fieldset {
+  min-width: 0;
+  margin: 20px 0 0;
+  padding: 0;
+  border: 0;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit legend {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 6px;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-count {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--board-muted);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 32px;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items label {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  min-height: 44px;
+  margin: 0;
+  padding: 12px 0;
+  border: 0;
+  border-top: 1px solid var(--board-hair);
+  border-radius: 0;
+  background: none;
+  cursor: pointer;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items label.is-checked {
+  background: none;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items input {
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: #1d4f45;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items label > span {
+  display: grid;
+  gap: 2px;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--board-ink);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items small {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--board-muted);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-group-done {
+  margin: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--board-hair);
+  font-size: 14px;
+  color: var(--board-muted);
+}
+@media (max-width: 760px) {
+  .fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-card {
+    padding: 16px;
+  }
+  .fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats > div {
+    padding-right: 12px;
+  }
+  .fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats > div + div {
+    padding-left: 12px;
+  }
+  .fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-stats strong {
+    font-size: 22px;
+  }
+}
+
+/* Translation of Spanish-only official text (English interface). */
+.fw-app .fw-official-body .fw-translate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 18px;
+  margin: 4px 0 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--board-hair);
+}
+.fw-app .fw-official-body .fw-translate p {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--board-muted);
+}
+.fw-app .fw-official-body .fw-translate .fw-link-button {
+  min-height: 44px;
+  padding: 0;
+  font-size: 14px;
+}
+.fw-app .fw-official-body .fw-translated-title {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--board-ink);
+}
+
+/* Official now, grouped by source: a heading with its check time, then one line per message. */
+.fw-app .fw-official > .fw-block-head {
+  padding-bottom: 4px;
+}
+.fw-app .fw-official-group + .fw-official-group {
+  margin-top: 8px;
+}
+.fw-app .fw-official-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 16px;
+  padding: 12px 20px 8px;
+}
+.fw-app .fw-official-group-head h3 {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-official-group-head > span {
+  font-size: 13px;
+  color: var(--board-muted);
+  font-variant-numeric: tabular-nums;
+}
+.fw-app :is(.fw-official-note, .fw-official-empty) {
+  margin: 0;
+  padding: 0 20px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--board-muted);
+}
+.fw-app .fw-official-note {
+  font-size: 13px;
+}
+.fw-app .fw-official-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--board-muted);
+  font-variant-numeric: tabular-nums;
+}
+.fw-app .fw-official-facts b {
+  font-weight: 600;
+  color: #6b4610;
+}
+.fw-app .fw-official-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 22px;
+  margin: 2px 0 0;
+}
+.fw-app .fw-official-actions .fw-link-button {
+  min-height: 44px;
+  padding: 0;
+  font-size: 14px;
+}
+.fw-app .fw-official-body :is(.fw-translate-note, .fw-official-edited) {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-official-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 22px;
+  padding: 2px 20px 4px;
+  border-top: 1px solid var(--board-hair);
+}
+.fw-app .fw-official-more:empty {
+  display: none;
+}
+.fw-app .fw-official-more .fw-link-button {
+  min-height: 44px;
+  padding: 0;
+  font-size: 14px;
+}
+.fw-app p.fw-official-foot {
+  display: block;
+  margin: 8px 0 0;
+  padding: 12px 20px 14px;
+  border-top: 1px solid var(--board-hair);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--board-muted);
+  text-align: left;
+}
+/* Who reports water, power, roads and health: one service per line, under the footnote. */
+.fw-app .fw-official-services {
+  padding: 0 20px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--board-muted);
+}
+.fw-app .fw-official-services > p {
+  margin: 0 0 2px;
+}
+.fw-app .fw-official-services > ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fw-app .fw-official-services li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.fw-app .fw-official-services li > span:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 6px;
+}
+.fw-app .fw-official-services li > span:last-child > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fw-app .fw-official-services li > span:first-child {
+  min-width: 72px;
+  color: var(--board-body);
+  font-weight: 600;
+}
+.fw-app .fw-official-services .fw-ext {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+@media (max-width: 760px) {
+  .fw-app .fw-official-group-head,
+  .fw-app :is(.fw-official-note, .fw-official-empty),
+  .fw-app .fw-official-more,
+  .fw-app p.fw-official-foot,
+  .fw-app .fw-official-services {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+}
+.fw-app .fw-official-snippet,
+.fw-app .fw-official-text > strong {
+  max-width: 72ch;
+}
+
+/* The disaster this place is living through: named by magnitude and place, with its date on its
+   own line, the latest official picture, and a clear button to open the full response. */
+.fw-app .fw-home .fw-response > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px 24px;
+  padding: 18px 20px;
+}
+.fw-app .fw-response-head {
+  display: grid;
+  gap: 4px;
+}
+.fw-app .fw-home .fw-response-head h2 {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--board-ink);
+}
+.fw-app .fw-response-when {
+  font-size: 14px;
+  color: var(--board-muted);
+}
+.fw-app .fw-response-highlight {
+  max-width: 72ch;
+  margin-top: 6px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--board-ink);
+}
+.fw-app .fw-home .fw-response-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #7d8d87;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--board-ink);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.fw-app .fw-response[open] .fw-response-toggle svg {
+  transform: rotate(180deg);
+}
+.fw-app .fw-home .fw-response > summary:hover .fw-response-toggle {
+  border-color: #205f50;
+  background: #f4f8f6;
+}
+.fw-app .fw-home .fw-response > .fw-response-sources {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--board-muted);
+}
+@media (max-width: 760px) {
+  .fw-app .fw-home .fw-response > summary {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+  .fw-app .fw-home .fw-response-toggle {
+    justify-self: start;
+  }
+}
+
+/* Country bar: part of the page, not a separate white band. One field like every other field,
+   a labeled save button, the install button on the right. */
+.fw-app .fw-main[data-screen] > .fw-context {
+  padding-top: 16px;
+  padding-bottom: 0;
+  border-bottom: 0;
+  background: none;
+  box-shadow: none;
+}
+.fw-app .fw-context .fw-country {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.fw-app .fw-context .fw-country-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.fw-app .fw-context .fw-country-search > label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--board-ink);
+}
+.fw-app .fw-context .fw-country-search-input {
+  min-height: 44px;
+  min-width: 240px;
+  border: 1px solid var(--line-control);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+.fw-app .fw-context .fw-country-search-input input {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--board-ink);
+}
+.fw-app .fw-context .fw-country-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line-control);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--board-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.fw-app .fw-context .fw-country-save[aria-pressed='true'] {
+  border-color: #1d4f45;
+  color: #1d4f45;
+}
+.fw-app .fw-context .fw-country-save svg {
+  color: #205f50;
+}
+.fw-app .fw-context .fw-install-trigger {
+  border-color: var(--line-control);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--board-ink);
+}
+@media (hover: hover) {
+  .fw-app .fw-context :is(.fw-country-save, .fw-install-trigger):hover {
+    border-color: #205f50;
+    background: #f4f8f6;
+  }
+}
+@media (max-width: 760px) {
+  .fw-app .fw-context .fw-country-search > label {
+    font-size: 13px;
+  }
+  .fw-app .fw-context .fw-country-search-input {
+    min-width: 0;
+  }
+  .fw-app .fw-context .fw-country-save span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+/* Cards that hold a country search must not clip its list. */
+.fw-app .fw-home-setup {
+  overflow: visible;
+}
+.fw-app .fw-context .fw-country-save {
+  margin-left: 8px;
+}
+
+/* Live status of "What is happening": live only while checks succeed; otherwise the last data. */
+.fw-app .fw-home-now > .fw-home-now-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 16px 20px 12px;
+}
+.fw-app .fw-home-now-head h2 {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-home-now-head > div > p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--board-muted);
+}
+.fw-app .fw-monitor-state {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--board-hair);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--board-muted);
+  font-variant-numeric: tabular-nums;
+}
+.fw-app .fw-monitor-state strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-monitor-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8a9893;
+}
+.fw-app .fw-monitor-state[data-state='live'] {
+  border-color: #b9d6c4;
+  background: #f1f8f3;
+}
+.fw-app .fw-monitor-state[data-state='live'] .fw-monitor-dot {
+  background: #2d7650;
+  box-shadow: 0 0 0 0 rgb(45 118 80 / 0.5);
+}
+.fw-app .fw-monitor-state[data-state='live'] strong {
+  color: #1f5c3d;
+}
+.fw-app .fw-monitor-state:is([data-state='stale'], [data-state='failed']) {
+  border-color: #e3cfa3;
+  background: #fdf8ec;
+}
+.fw-app .fw-monitor-state:is([data-state='stale'], [data-state='failed']) .fw-monitor-dot {
+  background: #9a6512;
+}
+.fw-app .fw-monitor-state:is([data-state='stale'], [data-state='failed']) strong {
+  color: #6b4610;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fw-app .fw-monitor-state[data-state='live'] .fw-monitor-dot {
+    /* A few pulses when data turns live, not forever: an endless animation costs battery. */
+    animation: fw-live-pulse 2s ease-out 3;
+  }
+  @keyframes fw-live-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgb(45 118 80 / 0.5);
+    }
+    70% {
+      box-shadow: 0 0 0 7px rgb(45 118 80 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(45 118 80 / 0);
+    }
+  }
+}
+@media (max-width: 760px) {
+  .fw-app .fw-home-now > .fw-home-now-head {
+    padding: 14px 16px 10px;
+  }
+}
+
+/* Go bag items: checkbox, a picture of the item, then its name and note. */
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items label {
+  grid-template-columns: 22px 26px minmax(0, 1fr);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-item-icon {
+  margin-top: 0;
+  color: #205f50;
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-items label.is-checked .fw-kit-item-icon {
+  color: #4f625c;
+}
+/* The water basis: its own line under a hairline, with an info mark. */
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-basis {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--board-hair);
+}
+.fw-app .fw-main[data-screen='kit'] .fw-kit .fw-kit-basis svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--board-muted);
+}
+.fw-app .fw-context .fw-country-search {
+  flex: none;
+  width: auto;
+  max-width: none;
+}
+.fw-app .fw-context .fw-country {
+  flex: none;
+}
+@media (max-width: 760px) {
+  .fw-app .fw-context .fw-country {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .fw-app .fw-context .fw-country-search {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+@media (max-width: 760px) {
+  .fw-app .fw-context .fw-country,
+  .fw-app .fw-context .fw-country-search {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .fw-app .fw-context {
+    flex-wrap: nowrap;
+  }
+}
+
+/* International alerts: the answer first, then one plain row per event. */
+.fw-app .fw-home-panel .fw-alerts-answer {
+  margin: 16px 20px 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-home-panel .fw-alerts .fw-feed-list {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.fw-app .fw-alert-row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--board-hair);
+}
+.fw-app .fw-alert-row:last-child {
+  border-bottom: 1px solid var(--board-hair);
+}
+.fw-app .fw-alert-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: #3f8a55;
+}
+.fw-app .fw-alert-row[data-level='orange'] .fw-alert-dot {
+  background: #c66a1b;
+}
+.fw-app .fw-alert-row[data-level='red'] .fw-alert-dot {
+  background: #6d3a8f;
+}
+.fw-app .fw-alert-row strong {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-alert-row p {
+  max-width: 72ch;
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--board-body);
+}
+.fw-app .fw-alert-row .fw-alert-when {
+  font-size: 13px;
+  color: var(--board-muted);
+  font-variant-numeric: tabular-nums;
+}
+.fw-app .fw-alert-row a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #205f50;
+}
+.fw-app .fw-home-panel .fw-alerts :is(.fw-feed-aside, .fw-feed-note) {
+  margin: 12px 20px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--board-muted);
+}
+@media (max-width: 760px) {
+  .fw-app .fw-alert-row {
+    padding: 14px 16px;
+  }
+  .fw-app .fw-home-panel .fw-alerts-answer,
+  .fw-app .fw-home-panel .fw-alerts :is(.fw-feed-aside, .fw-feed-note) {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+}
+/* Same weight as the shared card rule, later in the file: the setup card never clips (and so
+   never scrolls its own content) when the country list opens. */
+.fw-app .fw-home .fw-home-setup {
+  overflow: visible;
+}
+.fw-app .fw-context .fw-country-locate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-left: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--line-control);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--board-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.fw-app .fw-context .fw-country-locate svg {
+  color: #205f50;
+}
+.fw-app .fw-context .fw-country-locate:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+@media (hover: hover) {
+  .fw-app .fw-context .fw-country-locate:not(:disabled):hover {
+    border-color: #205f50;
+    background: #f4f8f6;
+  }
+}
+.fw-app .fw-context .fw-context-status {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 14px;
+  color: var(--board-ink);
+}
+@media (max-width: 760px) {
+  .fw-app .fw-context .fw-country-locate span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .fw-app .fw-context .fw-country-locate {
+    padding: 0 11px;
+  }
+  .fw-app .fw-context {
+    flex-wrap: wrap;
+  }
+  .fw-app .fw-context .fw-country {
+    flex: 1 1 0;
+  }
+}
+.fw-app .fw-context :is(.fw-country-locate, .fw-country-save) {
+  flex: none;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .fw-app .fw-context .fw-country-search > label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+
+/* Local help: the shelter pointer is a card like its neighbours, not a tinted panel. */
+.fw-app .fw-help-summary {
+  margin: 0 0 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--board-hair);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--board-body);
+}
+.fw-app .fw-help-summary h2 {
+  color: var(--board-ink);
+}
+.fw-app .fw-help-summary p {
+  font-size: 14px;
+  color: var(--board-body);
+}
+.fw-app .fw-help-summary > svg {
+  color: var(--board-muted);
+}
+
+/* Offline map through the Google Maps app: a card like Local help's, with numbered steps. */
+.fw-app .fw-offline-map {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--board-hair);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--board-body);
+}
+.fw-app .fw-offline-map > svg {
+  color: var(--board-muted);
+}
+.fw-app .fw-offline-map h2 {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--board-ink);
+}
+.fw-app .fw-offline-map p {
+  margin: 4px 0 0;
+  max-width: 72ch;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.fw-app .fw-offline-map .fw-offline-map-open {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+.fw-app .fw-offline-map ol {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.fw-app .fw-offline-map li + li {
+  margin-top: 4px;
+}
+.fw-app .fw-offline-map .fw-offline-map-note {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--board-muted);
+}
+@media (max-width: 760px) {
+  .fw-app .fw-offline-map {
+    padding: 16px;
+  }
+}

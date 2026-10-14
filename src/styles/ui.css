@@ -1,0 +1,166 @@
+/* Shared phone buttons and external links. */
+.fw-phones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fw-app .fw-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 7px 18px 7px 14px;
+  border: 1px solid #b42318;
+  border-radius: 10px;
+  background: #b42318;
+  color: #fff;
+  text-decoration: none;
+}
+.fw-app .fw-phone > span {
+  display: grid;
+  gap: 1px;
+  line-height: 1.2;
+}
+.fw-app .fw-phone small {
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+}
+.fw-app .fw-phone strong {
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* Every number other than the local emergency line: white, dark edge, no red. */
+.fw-app .fw-phone[data-tone='neutral'] {
+  border-color: #7d8d87;
+  background: #fff;
+  color: #12302b;
+}
+.fw-app .fw-phone[data-tone='neutral'] svg {
+  color: #205f50;
+}
+.fw-app .fw-phone[data-tone='neutral'] small {
+  color: #4f625c;
+}
+.fw-app .fw-phone:focus-visible {
+  outline: 3px solid #12302b;
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  .fw-app .fw-phone:hover {
+    border-color: #93190f;
+    background: #93190f;
+  }
+  .fw-app .fw-phone[data-tone='neutral']:hover {
+    border-color: #205f50;
+    background: #f4f8f6;
+  }
+}
+
+.fw-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 22px;
+}
+.fw-app .fw-ext {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  color: #285b50;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.fw-app .fw-ext > span {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.fw-app .fw-ext > svg {
+  flex: none;
+}
+.fw-app .fw-ext:focus-visible {
+  outline: 2px solid #12302b;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Inline external marks placed after link text elsewhere. */
+.fw-app .fw-ext-icon {
+  margin-left: 4px;
+  vertical-align: -2px;
+}
+
+/* Pagination: previous, page numbers, next. Phones show "Page 2 of 4" instead of numbers. */
+.fw-app .fw-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid #dde5e0;
+}
+.fw-app .fw-pagination button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #7d8d87;
+  border-radius: 8px;
+  background: #fff;
+  color: #12302b;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.fw-app .fw-pagination button:disabled {
+  border-color: #dde5e0;
+  color: #8a9893;
+  cursor: default;
+}
+.fw-app .fw-pagination button[aria-current='page'] {
+  border-color: #1d4f45;
+  background: #1d4f45;
+  color: #fff;
+}
+.fw-app .fw-pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fw-app .fw-pagination-pages > li[aria-hidden] {
+  min-width: 20px;
+  text-align: center;
+  color: #4f625c;
+}
+.fw-app .fw-pagination-count {
+  display: none;
+  font-size: 14px;
+  color: #4f625c;
+  font-variant-numeric: tabular-nums;
+}
+@media (hover: hover) {
+  .fw-app .fw-pagination button:not(:disabled):not([aria-current='page']):hover {
+    border-color: #205f50;
+    background: #f4f8f6;
+  }
+}
+@media (max-width: 640px) {
+  .fw-app .fw-pagination-pages {
+    display: none;
+  }
+  .fw-app .fw-pagination-count {
+    display: block;
+  }
+}

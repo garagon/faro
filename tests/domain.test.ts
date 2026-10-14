@@ -26,6 +26,10 @@ test('rejects malformed feeds and dates instead of treating them as no danger', 
   assert.throws(() => parseFeed({ ...feed([]), metadata: { generated: 1e100 } }));
   assert.equal(parseFeed(feed([feature('x', { time: 1e100 })])).events.length, 0);
 });
+test('a feed whose records are all unrecognisable fails instead of reading as no earthquakes', () => {
+  assert.throws(() => parseFeed(feed([{ id: 1, properties: {} }, { nope: true }])));
+  assert.equal(parseFeed(feed([feature('b', { type: 'quarry blast' })])).events.length, 0);
+});
 test('preserves coordinates, review and source but blocks untrusted outbound URLs', () => {
   const e = parseFeed(feed([feature('a', { url: 'https://evil.example/usgs' })])).events[0];
   assert.equal(e.lat, 8);
@@ -154,4 +158,22 @@ test('displayPlace removes the IGC prefix and spaces distances', async () => {
     displayPlace('Sur de Panamá a 56km al oeste de Coiba'),
     'Sur de Panamá a 56 km al oeste de Coiba',
   );
+});
+
+test('the stored USGS copy keeps only what the parser reads and parses the same', async () => {
+  const { slimFeed } = await import('../src/catalogs/usgs.ts');
+  const raw = feed([feature('a', { mag: 5.1, alert: 'yellow', felt: 12, title: 'x'.repeat(500) })]);
+  const slim = slimFeed(raw);
+  assert.deepEqual(parseFeed(slim), parseFeed(raw));
+  assert.ok(JSON.stringify(slim).length < JSON.stringify(raw).length);
+  assert.equal('title' in slim.features[0].properties, false);
+});
+
+test('an answer that sat in a shared cache is dated by its HTTP Age', async () => {
+  const { receivedAt } = await import('../src/lib/http.ts');
+  const headers = (age?: string) => ({ headers: new Headers(age ? { age } : {}) });
+  assert.equal(receivedAt(headers('30'), now), now - 30_000);
+  assert.equal(receivedAt(headers(), now), now);
+  assert.equal(receivedAt(headers('-5'), now), now);
+  assert.equal(receivedAt(headers('nonsense'), now), now);
 });

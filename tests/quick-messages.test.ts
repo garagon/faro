@@ -67,7 +67,7 @@ test('ready text follows the message language, edited text does not', () => {
 });
 
 test('every ready message produces a complete message in both languages', () => {
-  for (const lang of ['es', 'en'] as const) {
+  for (const lang of ['es', 'en', 'pt'] as const) {
     for (const m of quickMessages) {
       const fields = applyQuickMessage(empty, m, null, lang);
       const record: CheckIn = {
@@ -87,4 +87,16 @@ test('every ready message produces a complete message in both languages', () => 
       assert.doesNotMatch(text, /undefined|\.\./);
     }
   }
+});
+
+test('a ready message keeps no reason when the person has not chosen one', async () => {
+  const { applyQuickMessage, quickMessages } = await import('../src/lib/messageTemplates.ts');
+  const ok = quickMessages.find((m) => m.status === 'ok' && !m.context)!;
+  const fields = applyQuickMessage(
+    { status: '', context: '', connection: '', note: '', needs: '', companions: '' },
+    ok,
+    null,
+    'es',
+  );
+  assert.equal(fields.context, '');
 });

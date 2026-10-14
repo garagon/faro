@@ -1,7 +1,8 @@
 import { writeLocal, removeLocal } from './browserStorage.ts';
+import { isLang, type Lang } from './i18n.ts';
 export type Preferences = {
   version: 1;
-  language: 'es' | 'en';
+  language: Lang;
   destination: string;
   nationality: string;
   savedAt: number;
@@ -35,7 +36,7 @@ export function parsePreferences(
   if (
     !p ||
     p.version !== 1 ||
-    !['es', 'en'].includes(p.language ?? '') ||
+    !isLang(p.language) ||
     !codes.includes(p.destination ?? '') ||
     !(p.nationality === '' || codes.includes(p.nationality ?? '')) ||
     typeof p.savedAt !== 'number' ||
@@ -74,8 +75,9 @@ export function storePreferences(
   codes: readonly string[],
   storage: Pick<Storage, 'setItem' | 'getItem'> = localStorage,
 ) {
+  // Every field but the destination is optional: a traveler may save a name before a nationality.
   const valid = parsePreferences(value, codes);
-  if (!valid || !codes.includes(valid.nationality)) throw Error('Nationality required');
+  if (!valid) throw Error('Invalid profile');
   writeLocal(PREFERENCES_KEY, JSON.stringify(valid), storage);
   return valid;
 }
@@ -83,24 +85,26 @@ export function forgetPreferences(storage: Pick<Storage, 'removeItem' | 'getItem
   removeLocal(PREFERENCES_KEY, storage);
 }
 
-/** Site language takes precedence over the copy retained in older trip profiles. */
-/** Saved choice first, then the profile, then the browser language. Non-Spanish browsers get English. */
+/**
+ * Saved choice first, then the profile, then the browser language: Spanish and Portuguese
+ * browsers get their language, any other gets English.
+ */
 export function readSiteLanguage(
-  profileLanguage?: 'es' | 'en',
+  profileLanguage?: Lang,
   storage?: Pick<Storage, 'getItem'>,
   browserLanguages: readonly string[] = typeof navigator === 'undefined'
     ? []
     : navigator.languages?.length
       ? navigator.languages
       : [navigator.language],
-): 'es' | 'en' {
+): Lang {
   try {
     const saved = (storage ?? localStorage).getItem('faro-lang');
-    if (saved === 'es' || saved === 'en') return saved;
+    if (isLang(saved)) return saved;
   } catch {
     /* The site still works when browser storage is unavailable. */
   }
   if (profileLanguage) return profileLanguage;
   const first = browserLanguages.find(Boolean)?.toLowerCase() ?? '';
-  return first.startsWith('es') ? 'es' : 'en';
+  return first.startsWith('es') ? 'es' : first.startsWith('pt') ? 'pt' : 'en';
 }

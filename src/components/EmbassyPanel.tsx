@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { ArrowUpRightIcon, MapPinIcon, PhoneIcon } from '@phosphor-icons/react';
+import { displayPhone } from '../lib/phone.ts';
+import { ArrowUpRightIcon, MapPinIcon } from '@phosphor-icons/react';
 import { consularFallback, type Embassy } from '../lib/embassies.ts';
 import {
   missionsFor,
@@ -9,11 +10,14 @@ import {
   type Mission,
 } from '../data/consularMissions.ts';
 import CountrySearch from './CountrySearch.tsx';
+import { hostOf, reviewDate, splitName } from '../lib/links.ts';
 import TravelerSupport from './TravelerSupport.tsx';
+import { ExternalLink, LinkRow, PhoneButton, PhoneRow } from './Ui.tsx';
+import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 type Props = {
   savedNationality: string | null;
   onProfile: () => void;
-  lang: 'es' | 'en';
+  lang: Lang;
   country: string;
   nationality: string;
   onNationalityChange: (value: string) => void;
@@ -32,8 +36,8 @@ export default function EmbassyPanel({
     [query, setQuery] = useState(''),
     [kind, setKind] = useState('all');
   const [mode, setMode] = useState<'walking' | 'driving'>('walking');
-  const t = (es: string, en: string) => (lang === 'es' ? es : en),
-    i = lang === 'es' ? 0 : 1;
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
+    i = langIndex(lang);
   const names = useMemo(() => new Intl.DisplayNames([lang], { type: 'region' }), [lang]);
   const normal = (s: string) =>
     s
@@ -51,63 +55,88 @@ export default function EmbassyPanel({
   const fallback = consularFallback(country, nationality);
   function card(m: Mission) {
     const route = missionDirections(m, mode);
+    const sameLine = !!m.phone && m.phone === m.emergency;
     return (
-      <article
-        className={`fw-consular-card${!m.historical && m.emergency ? ' has-emergency' : ''}`}
-        key={m.id}
-      >
+      <article className="fw-consular-card" key={m.id}>
         <div className="fw-consular-card-main">
           <div>
-            <span>
-              {names.of(m.nation)} · {missionKinds[m.kind][i]}
-            </span>
-            <h3>{m.historical ? `${m.name[i]} · ${m.city}` : m.name[i]}</h3>
+            {all && (
+              <span>
+                {names.of(m.nation)}, {missionKinds[m.kind][i].toLowerCase()}
+              </span>
+            )}
+            <h3>{m.historical ? `${m.name[i]}, ${m.city}` : m.name[i]}</h3>
           </div>
           {m.address && <address>{m.address}</address>}
-          {!m.historical && m.phone && (
-            <a className="fw-consular-phone" href={`tel:${m.phone}`}>
-              <PhoneIcon size={17} />
-              {t('Llamar', 'Call')} {m.phone}
-            </a>
-          )}
           {m.note && <p>{m.note[i]}</p>}
         </div>
-        {!m.historical && m.emergency && (
-          <div className="fw-consular-emergency">
-            <strong>{t('Emergencia consular', 'Consular emergency')}</strong>
-            <a href={`tel:${m.emergency}`}>{m.emergency}</a>
-            <p>
-              {m.emergencyNote?.[i] ||
-                t(
-                  `Para emergencias de ciudadanos de ${names.of(m.nation)}. No sustituye al servicio local de emergencias.`,
-                  `For citizens of ${names.of(m.nation)} in an emergency. Does not replace local emergency services.`,
-                )}
-            </p>
-          </div>
+        {!m.historical && (m.phone || m.emergency) && (
+          <PhoneRow>
+            {m.emergency && !sameLine && (
+              <PhoneButton
+                href={`tel:${m.emergency}`}
+                number={displayPhone(m.emergency)}
+                label={t('Emergencia consular', 'Consular emergency', 'Emergência consular')}
+                tone="neutral"
+              />
+            )}
+            {m.phone && (
+              <PhoneButton
+                href={`tel:${m.phone}`}
+                number={displayPhone(m.phone)}
+                label={
+                  sameLine
+                    ? t(
+                        'Oficina y emergencia consular',
+                        'Office and consular emergency',
+                        'Atendimento e emergência consular',
+                      )
+                    : t('Oficina', 'Office', 'Atendimento')
+                }
+                tone="neutral"
+              />
+            )}
+          </PhoneRow>
         )}
-
-        <div className="fw-consular-actions">
-          <a href={m.source} target="_blank" rel="noreferrer">
+        {!m.historical && m.emergency && (
+          <p className="fw-consular-emergency-note">
+            {m.emergencyNote?.[i] ||
+              t(
+                `Para emergencias de ciudadanos de ${names.of(m.nation)}. No sustituye al servicio local de emergencias.`,
+                `For citizens of ${names.of(m.nation)} in an emergency. Does not replace local emergency services.`,
+                `Para emergências de cidadãos (${names.of(m.nation)}). Não substitui o serviço de emergência local.`,
+              )}
+          </p>
+        )}
+        <LinkRow>
+          <ExternalLink href={m.source}>
             {m.historical
-              ? t('Ver referencia oficial', 'Official reference')
-              : t('Contacto oficial', 'Official contact')}
-            <ArrowUpRightIcon size={16} />
-          </a>
+              ? t('Ver referencia oficial', 'Official reference', 'Ver referência oficial')
+              : t('Contacto oficial', 'Official contact', 'Contato oficial')}
+          </ExternalLink>
           {route && (
-            <a href={route} target="_blank" rel="noreferrer">
-              {t('Cómo llegar · Google Maps', 'Directions · Google Maps')} ↗
-            </a>
+            <ExternalLink href={route}>
+              {t(
+                'Cómo llegar (Google Maps)',
+                'Directions (Google Maps)',
+                'Como chegar (Google Maps)',
+              )}
+            </ExternalLink>
           )}
           {!m.historical && !m.locationUnconfirmed && m.map && (
-            <button className="fw-text" onClick={() => onMap(m.map!)}>
-              <MapPinIcon size={16} />
-              {t('Ver en Faro', 'View in Faro')}
+            <button className="fw-text fw-map-link" onClick={() => onMap(m.map!)}>
+              <MapPinIcon size={16} aria-hidden="true" />
+              {t('Ver en el mapa', 'Show on the map', 'Ver no mapa')}
             </button>
           )}
-        </div>
+        </LinkRow>
         <small>
-          {t('Fuente consultada', 'Source checked')}: {m.reviewedAt}
-          {m.sourceDate ? ` · ${t('Publicación', 'Published')}: ${m.sourceDate}` : ''}
+          {t('Fuente revisada el', 'Source reviewed', 'Fonte revisada em')}{' '}
+          {reviewDate(m.reviewedAt, lang)}
+          {m.sourceDate
+            ? `. ${t('Fecha de publicación', 'Publication date', 'Data de publicação')}: ${reviewDate(m.sourceDate, lang)}`
+            : ''}
+          .
         </small>
       </article>
     );
@@ -116,21 +145,24 @@ export default function EmbassyPanel({
     <section className="fw-consular-directory" aria-labelledby="consular-title">
       <header>
         <div>
-          <h2 id="consular-title">{t('Embajadas y consulados', 'Embassies and consulates')}</h2>
+          <h2 id="consular-title">
+            {t('Embajadas y consulados', 'Embassies and consulates', 'Embaixadas e consulados')}
+          </h2>
           <p>
             {t(
               'Encuentra tu representación y consulta cómo contactar o llegar.',
               'Find your representation, contact details and directions.',
+              'Encontre sua representação e veja como entrar em contato ou chegar.',
             )}
           </p>
         </div>
         <button className="fw-text" onClick={onProfile}>
-          {t('Editar mi perfil', 'Edit my profile')}
+          {t('Editar mi perfil', 'Edit my profile', 'Editar meu perfil')}
         </button>
       </header>
       <div className="fw-consular-filters">
         <CountrySearch
-          label={t('Nacionalidad', 'Nationality')}
+          label={t('Nacionalidad', 'Nationality', 'Nacionalidade')}
           lang={lang}
           value={nationality}
           onChange={(value) => {
@@ -150,25 +182,29 @@ export default function EmbassyPanel({
           }}
         >
           {all
-            ? t('Filtrar por nacionalidad', 'Filter by nationality')
-            : t('Explorar el directorio', 'Browse directory')}
+            ? t('Filtrar por nacionalidad', 'Filter by nationality', 'Filtrar por nacionalidade')
+            : t('Explorar el directorio', 'Browse directory', 'Explorar o diretório')}
         </button>
       </div>
       {!all && savedNationality === nationality && nationality && (
         <small>
-          {t('Nacionalidad guardada en tu perfil.', 'Nationality saved in your profile.')}
+          {t(
+            'Nacionalidad guardada en tu perfil.',
+            'Nationality saved in your profile.',
+            'Nacionalidade salva no seu perfil.',
+          )}
         </small>
       )}
       {all && (
         <div className="fw-consular-filters">
           <label>
-            {t('Buscar país u oficina', 'Search country or office')}
+            {t('Buscar país u oficina', 'Search country or office', 'Buscar país ou representação')}
             <input value={query} onChange={(e) => setQuery(e.target.value)} type="search" />
           </label>
           <label>
-            {t('Tipo de oficina', 'Office type')}
+            {t('Tipo de oficina', 'Office type', 'Tipo de representação')}
             <select value={kind} onChange={(e) => setKind(e.target.value)}>
-              <option value="all">{t('Todas', 'All')}</option>
+              <option value="all">{t('Todas', 'All', 'Todas')}</option>
               {Object.entries(missionKinds).map(([id, name]) => (
                 <option value={id} key={id}>
                   {name[i]}
@@ -183,29 +219,34 @@ export default function EmbassyPanel({
           ? t(
               'Selecciona el país donde necesitas ayuda.',
               'Choose the country where you need help.',
+              'Selecione o país onde você precisa de ajuda.',
             )
           : t(
               `Oficinas en ${names.of(country)}. Cobertura parcial; usa también los directorios oficiales.`,
               `Offices in ${names.of(country)}. Partial coverage; also check the official directories.`,
+              `Representações · ${names.of(country)}. Cobertura parcial; consulte também os diretórios oficiais.`,
             )}
       </p>
       {!!current.length && (
         <>
           {current.some((m) => missionDirections(m, mode)) && (
             <div className="fw-consular-route-mode">
-              <span>{t('Rutas en Google Maps', 'Google Maps directions')}</span>
+              <span>
+                {t('Rutas en Google Maps', 'Google Maps directions', 'Rotas no Google Maps')}
+              </span>
               <button aria-pressed={mode === 'walking'} onClick={() => setMode('walking')}>
-                {t('A pie', 'Walking')}
+                {t('A pie', 'Walking', 'A pé')}
               </button>
               <button aria-pressed={mode === 'driving'} onClick={() => setMode('driving')}>
-                {t('En vehículo', 'Driving')}
+                {t('En vehículo', 'Driving', 'De carro')}
               </button>
             </div>
           )}
           <p className="fw-preparation-note">
             {t(
               'Confirma atención antes de ir. Las oficinas no son refugios y las rutas no están verificadas tras un desastre.',
-              'Confirm services before travelling. Offices are not shelters and routes have not been verified after a disaster.',
+              'Confirm services before traveling. Offices are not shelters and routes have not been verified after a disaster.',
+              'Confirme o atendimento antes de ir. As representações não são abrigos e as rotas não foram verificadas após um desastre.',
             )}
           </p>
           <div className="fw-consular-cards">{current.map(card)}</div>
@@ -217,15 +258,18 @@ export default function EmbassyPanel({
             ? t(
                 'Selecciona tu nacionalidad o explora las oficinas registradas.',
                 'Select your nationality or browse the listed offices.',
+                'Selecione sua nacionalidade ou explore as representações registradas.',
               )
             : nationality === country && !all
               ? t(
                   'Estás consultando tu propio país. Usa las autoridades y servicios locales.',
                   'You are viewing your own country. Use local authorities and services.',
+                  'Você está consultando seu próprio país. Use as autoridades e os serviços locais.',
                 )
               : t(
                   'No hay fichas actuales para esta selección. Revisa las referencias y directorios oficiales.',
                   'No current contact cards for this selection. Check the references and official directories.',
+                  'Não há fichas atuais para esta seleção. Consulte as referências e os diretórios oficiais.',
                 )}
         </p>
       )}
@@ -236,6 +280,7 @@ export default function EmbassyPanel({
             {t(
               'Referencias históricas · vigencia sin confirmar',
               'Historical references · current status unconfirmed',
+              'Referências históricas · vigência não confirmada',
             )}{' '}
             ({archived.length})
           </summary>
@@ -243,6 +288,7 @@ export default function EmbassyPanel({
             {t(
               'No confirman que la oficina siga operativa. Se omiten los teléfonos y las rutas antiguos hasta volver a comprobarlos.',
               'These do not confirm the office still operates. Old phone numbers and directions are omitted pending re-verification.',
+              'Não confirmam que a representação continua funcionando. Os telefones e as rotas antigos ficam de fora até serem verificados de novo.',
             )}
           </p>
           <div className="fw-consular-cards">{archived.map(card)}</div>
@@ -250,20 +296,41 @@ export default function EmbassyPanel({
       )}
       {(fallback || destinationConsularDirectories[country]) && (
         <footer>
-          <h3>{t('Otros contactos oficiales', 'Other official contacts')}</h3>
-          {fallback && nationality !== country && (
-            <a href={fallback.url} target="_blank" rel="noreferrer">
-              {fallback.label[i]} ↗
-            </a>
-          )}
-          {destinationConsularDirectories[country]?.map((d) => (
-            <div key={d.url}>
-              <a href={d.url} target="_blank" rel="noreferrer">
-                {d.name} ↗
-              </a>
-              {d.note && <small>{d.note[i]}</small>}
-            </div>
-          ))}
+          <h3>
+            {t('Otros contactos oficiales', 'Other official contacts', 'Outros contatos oficiais')}
+          </h3>
+          <ul className="fw-link-rows">
+            {fallback && nationality !== country && (
+              <li>
+                <a href={fallback.url} target="_blank" rel="noreferrer">
+                  <span>
+                    <strong>{fallback.label[i]}</strong>
+                  </span>
+                  <small>
+                    {hostOf(fallback.url)}
+                    <ArrowUpRightIcon size={14} aria-hidden="true" />
+                  </small>
+                </a>
+              </li>
+            )}
+            {destinationConsularDirectories[country]?.map((d) => {
+              const [agency, what] = splitName(d.name);
+              return (
+                <li key={d.url}>
+                  <a href={d.url} target="_blank" rel="noreferrer">
+                    <span>
+                      <strong>{what ? `${agency}: ${what}` : agency}</strong>
+                      {d.note && <span>{d.note[i]}</span>}
+                    </span>
+                    <small>
+                      {hostOf(d.url)}
+                      <ArrowUpRightIcon size={14} aria-hidden="true" />
+                    </small>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
         </footer>
       )}
     </section>

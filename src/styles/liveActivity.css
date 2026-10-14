@@ -356,3 +356,43 @@
   color: #194f3e;
   filter: drop-shadow(0 0 4px #fff);
 }
+
+/* Largest event of the period, shown when it is not the latest one. */
+.fw-largest-event {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 20px;
+  border: 0;
+  border-top: 1px solid #e0e7e1;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fw-largest-event:hover {
+  background: #f6f8f5;
+}
+.fw-largest-event > span {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.fw-largest-event small {
+  font-size: 11px;
+  color: #657570;
+}
+.fw-largest-event b {
+  font-size: 14px;
+}
+.fw-app .fw-largest-event .fw-mag {
+  display: grid;
+  place-items: center;
+  min-width: 52px;
+  min-height: 46px;
+  border-radius: 7px;
+  border: 1px solid;
+  font-size: 19px;
+}

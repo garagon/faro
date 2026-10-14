@@ -11,13 +11,14 @@
   --mag-ink: #a45218;
   --mag-bg: #fff1e6;
 }
+/* No red in the scale: red only means "call". 6.0–6.9 violet, 7 and above deep indigo. */
 .fw-mag-band-6 {
-  --mag-ink: #ab343b;
-  --mag-bg: #fff0f1;
+  --mag-ink: #6d3a8f;
+  --mag-bg: #f4eefa;
 }
 .fw-mag-band-7plus {
-  --mag-ink: #713874;
-  --mag-bg: #f8edf9;
+  --mag-ink: #3b2f7a;
+  --mag-bg: #eeedf8;
 }
 .fw-mag-band-unknown {
   --mag-ink: #58616b;
@@ -151,7 +152,8 @@
   }
 }
 
-@media (max-width: 360px) {
+/* With three language buttons, the wordmark fits only from about 414px; keep a margin. */
+@media (max-width: 419px) {
   .fw-header .fw-brand {
     font-size: 0 !important;
     gap: 0;

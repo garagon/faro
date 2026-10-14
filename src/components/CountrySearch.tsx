@@ -1,10 +1,12 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { MagnifyingGlassIcon, CheckIcon } from '@phosphor-icons/react';
 import countries from '../data/countries.json';
+import { countryAliases, isExactAlias } from '../lib/countryAliases.ts';
+import { langTag, pick, type Lang } from '../lib/i18n.ts';
 type Props = {
   label: string;
   value: string;
-  lang: 'es' | 'en';
+  lang: Lang;
   required?: boolean;
   includeWorld?: boolean;
   onChange: (code: string) => void;
@@ -29,23 +31,27 @@ export default function CountrySearch({
     [open, setOpen] = useState(false),
     [active, setActive] = useState(0),
     [invalid, setInvalid] = useState(false);
-  const t = (es: string, en: string) => (lang === 'es' ? es : en);
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const options = useMemo(() => {
-    const local = new Intl.DisplayNames([lang], { type: 'region' }),
-      english = new Intl.DisplayNames(['en'], { type: 'region' });
+    // Spanish (c.name), English and Portuguese names always match, whatever the interface language.
+    const local = new Intl.DisplayNames([langTag(lang)], { type: 'region' }),
+      english = new Intl.DisplayNames(['en'], { type: 'region' }),
+      portuguese = new Intl.DisplayNames(['pt-BR'], { type: 'region' });
     const list = countries
       .map((c) => ({
         code: c.code,
         name: local.of(c.code) || c.name,
-        search: normalize(`${c.name} ${english.of(c.code)} ${local.of(c.code)} ${c.code}`),
+        search: normalize(
+          `${c.name} ${english.of(c.code)} ${portuguese.of(c.code)} ${local.of(c.code)} ${c.code} ${countryAliases[c.code] ?? ''}`,
+        ),
       }))
-      .sort((a, b) => a.name.localeCompare(b.name, lang));
+      .sort((a, b) => a.name.localeCompare(b.name, langTag(lang)));
     return includeWorld
       ? [
           {
             code: 'WORLD',
-            name: lang === 'es' ? 'Todo el mundo' : 'Worldwide',
-            search: 'todo el mundo worldwide global world',
+            name: pick(lang, 'Todo el mundo', 'Worldwide', 'Mundo inteiro'),
+            search: 'todo el mundo worldwide global world mundo inteiro todo o mundo',
           },
           ...list,
         ]
@@ -58,10 +64,15 @@ export default function CountrySearch({
     .sort((a, b) =>
       query === null
         ? Number(b.code === value) - Number(a.code === value)
-        : Number(b.code.toLowerCase() === search) - Number(a.code.toLowerCase() === search),
+        : Number(b.code.toLowerCase() === search || isExactAlias(b.code, search)) -
+          Number(a.code.toLowerCase() === search || isExactAlias(a.code, search)),
     );
   const shown = matches.slice(0, 8);
-  const error = t('Selecciona un país de los resultados.', 'Select a country from the results.');
+  const error = t(
+    'Selecciona un país de los resultados.',
+    'Select a country from the results.',
+    'Selecione um país nos resultados.',
+  );
   useEffect(() => {
     input.current?.setCustomValidity((required || !!query) && !selected ? error : '');
   }, [required, query, selected, error]);
@@ -79,10 +90,7 @@ export default function CountrySearch({
   }
   return (
     <div className="fw-country-search">
-      <label htmlFor={id}>
-        {label}
-        {required && <span> {t('Obligatorio', 'Required')}</span>}
-      </label>
+      <label htmlFor={id}>{label}</label>
       <div className="fw-country-search-input">
         <MagnifyingGlassIcon size={19} />
         <input
@@ -101,7 +109,7 @@ export default function CountrySearch({
           spellCheck={false}
           required={required}
           value={query ?? selected?.name ?? ''}
-          placeholder={t('Buscar país…', 'Search countries…')}
+          placeholder={t('Buscar país…', 'Search countries…', 'Buscar país…')}
           onFocus={(e) => {
             setOpen(true);
             setActive(0);
@@ -145,7 +153,9 @@ export default function CountrySearch({
       </div>
       {open && (
         <div className="fw-country-search-menu">
-          <div id={`${id}-results`} role="listbox" aria-label={label}>
+          {/* Not a tab stop: Chrome would otherwise focus the scrolling list, which closes on blur
+              and leaves focus on the page instead of the next control. */}
+          <div id={`${id}-results`} role="listbox" aria-label={label} tabIndex={-1}>
             {shown.map((c, i) => (
               <button
                 type="button"
@@ -165,15 +175,24 @@ export default function CountrySearch({
           </div>
           <p role="status">
             {!matches.length
-              ? t('No hay coincidencias. Prueba otro nombre.', 'No matches. Try another name.')
+              ? t(
+                  'No hay coincidencias. Prueba otro nombre.',
+                  'No matches. Try another name.',
+                  'Nenhum resultado. Tente outro nome.',
+                )
               : !search
-                ? t('Escribe para encontrar tu país.', 'Type to find your country.')
+                ? t(
+                    'Escribe para encontrar tu país.',
+                    'Type to find your country.',
+                    'Digite para encontrar seu país.',
+                  )
                 : matches.length > 8
                   ? t(
                       'Escribe más letras para acotar la búsqueda.',
                       'Keep typing to narrow your search.',
+                      'Continue digitando para refinar a busca.',
                     )
-                  : `${matches.length} ${t(matches.length === 1 ? 'resultado' : 'resultados', matches.length === 1 ? 'result' : 'results')}`}
+                  : `${matches.length} ${t(matches.length === 1 ? 'resultado' : 'resultados', matches.length === 1 ? 'result' : 'results', matches.length === 1 ? 'resultado' : 'resultados')}`}
           </p>
         </div>
       )}

@@ -1,0 +1,139 @@
+/*
+ * Sources and updates: a status board (one row per source), then plain sections separated by
+ * hairlines. Colour only on the state dot; the state is always written out.
+ */
+.fw-app .fw-sources {
+  max-width: 1120px;
+  color: #12302b;
+}
+.fw-app .fw-sources > section {
+  margin: 0;
+  padding: 24px 0;
+  border-top: 1px solid #dde5e0;
+}
+.fw-app .fw-sources > section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.fw-app .fw-sources h2 {
+  margin: 0 0 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #12302b;
+}
+.fw-app .fw-sources > section > p {
+  max-width: 72ch;
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #2b4a44;
+}
+.fw-app .fw-sources .fw-sources-intro {
+  color: #4f625c;
+}
+
+/* Status board. */
+.fw-app .fw-sources-board {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #dde5e0;
+  border-radius: 12px;
+  background: #fff;
+}
+.fw-app .fw-sources-board > li {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1.3fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 14px 20px;
+}
+.fw-app .fw-sources-board > li + li {
+  border-top: 1px solid #dde5e0;
+}
+.fw-app .fw-sources-board p {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+.fw-app .fw-sources-board p > strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #12302b;
+}
+.fw-app .fw-sources-board p > span {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #4f625c;
+  font-variant-numeric: tabular-nums;
+}
+.fw-app .fw-sources-dot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #8a9893;
+  border-radius: 50%;
+}
+.fw-app .fw-sources-board > li[data-state='ok'] .fw-sources-dot {
+  border-color: #2d7650;
+  background: #2d7650;
+}
+.fw-app .fw-sources-board > li:is([data-state='partial'], [data-state='stale']) .fw-sources-dot {
+  border-color: #9a6512;
+  background: #9a6512;
+}
+.fw-app .fw-sources-board > li[data-state='failed'] .fw-sources-dot {
+  border-color: #6b4610;
+}
+.fw-app .fw-sources-board > li:is([data-state='checking'], [data-state='idle']) .fw-sources-dot {
+  border-style: dashed;
+}
+.fw-app
+  .fw-sources-board
+  > li:is([data-state='failed'], [data-state='stale'])
+  .fw-sources-state
+  > strong {
+  color: #6b4610;
+}
+
+/* What each source publishes. */
+.fw-app .fw-sources-notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px 40px;
+  margin: 12px 0 0;
+}
+.fw-app .fw-sources-notes > div {
+  margin: 0;
+}
+.fw-app .fw-sources-notes dt {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #12302b;
+}
+.fw-app .fw-sources-notes dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #2b4a44;
+}
+.fw-app .fw-sources .fw-sources-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+
+@media (max-width: 760px) {
+  .fw-app .fw-sources-board > li {
+    grid-template-columns: 12px minmax(0, 1fr);
+    align-items: start;
+    padding: 14px 16px;
+  }
+  .fw-app .fw-sources-dot {
+    margin-top: 5px;
+  }
+  .fw-app .fw-sources-board > li > :is(.fw-sources-state, .fw-ext) {
+    grid-column: 2;
+  }
+}

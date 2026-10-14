@@ -6,30 +6,44 @@
     <meta name="theme-color" content="#20584f" />
     <meta
       name="description"
-      content="Faro: earthquake information from official sources, local help, travel contacts and preparedness for people away from home. Free and open source, in English and Spanish."
+      content="Faro: earthquakes, tsunami, hurricanes and floods from official sources, local emergency help, travel contacts and preparedness for people away from home. Free and open source, in English, Spanish and Portuguese."
     />
-    <title>Faro · Earthquake information and local help</title>
+    <title>Faro · Emergency information and local help for travelers</title>
     <link rel="icon" type="image/svg+xml" href="/faro-mark.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <!-- Styles for the text shown before the app starts; bundled by Vite, no inline CSS. -->
+    <link rel="stylesheet" href="/src/styles/boot.css" />
     <meta name="apple-mobile-web-app-title" content="Faro" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="author" content="Oktsec" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Faro" />
-    <meta property="og:title" content="Faro · Earthquake information and local help" />
+    <meta property="og:title" content="Faro · Emergency information and local help for travelers" />
     <meta
       property="og:description"
-      content="Check official earthquake sources, find local help and prepare a message for your contacts. English and Spanish. Personal data stays in your browser."
+      content="Check official earthquake sources, find local help and prepare a message for your contacts. English, Spanish and Portuguese. Personal data stays in your browser."
+    />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Faro: earthquakes from official sources, local help and check-ins for people away from home."
     />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="es_PA" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Faro · Earthquake information and local help" />
+    <meta property="og:locale:alternate" content="pt_BR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/og-image.png" />
+    <meta
+      name="twitter:title"
+      content="Faro · Emergency information and local help for travelers"
+    />
     <meta
       name="twitter:description"
-      content="Earthquake information, local help and preparedness for people away from home. Free and open source."
+      content="Earthquakes, hurricanes and floods from official sources, local help and check-ins for people away from home. Free and open source."
     />
     <script type="application/ld+json">
       {
@@ -39,14 +53,17 @@
         "alternateName": "Faro by Oktsec",
         "applicationCategory": "UtilitiesApplication",
         "operatingSystem": "Web",
-        "inLanguage": ["es", "en"],
+        "inLanguage": ["es", "en", "pt-BR"],
         "isAccessibleForFree": true,
-        "description": "Earthquake information from USGS and IGC, local help, travel contacts and preparedness. Not an early-warning or emergency dispatch service.",
+        "description": "Earthquakes from USGS, EMSC and IGC, GDACS alerts for cyclones, floods and volcanoes, tsunami bulletins, local help, travel contacts and preparedness. Not an early-warning or emergency dispatch service.",
         "creator": { "@type": "Organization", "name": "Oktsec", "url": "https://oktsec.com" },
         "license": "https://www.apache.org/licenses/LICENSE-2.0",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "featureList": [
           "Official earthquake catalogues",
+          "International multi-hazard alerts",
+          "Emergency sheet with first-minute actions",
+          "Offline opening after the first visit",
           "Local emergency and consular resources",
           "Locally saved travel information",
           "Manual status sharing",
@@ -57,31 +74,52 @@
   </head>
   <body>
     <div id="root">
-      <main>
-        <h1>Faro · Earthquake information and local help</h1>
-        <p>
-          Created by <a href="https://oktsec.com">Oktsec</a>. Earthquakes from USGS and IGC, local
-          help and preparedness for people away from home.
+      <main class="fw-boot">
+        <img src="/faro-mark.svg" alt="" />
+        <h1>Faro</h1>
+        <p class="fw-boot-lead" lang="es">Información de emergencia y ayuda local para viajeros.</p>
+        <p class="fw-boot-lead">Emergency information and local help for travelers.</p>
+        <p class="fw-boot-lead" lang="pt-BR">
+          Informações de emergência e ajuda local para viajantes.
         </p>
-        <p>
-          The app checks the catalogs every 60 seconds while it is open. Records can be published
-          with a delay; it is not an early warning system.
+        <!-- Works before the app loads, and without JavaScript, on a slow or failing network. -->
+        <a class="fw-boot-call" href="tel:911">
+          Panamá: llamar al 911 · Call 911
+          <small>Emergencias · Emergencies · <span lang="pt-BR">Ligar para o 911</span></small>
+        </a>
+        <ul class="fw-boot-steps">
+          <li lang="es">
+            Si tiembla: agáchate, cúbrete y sujétate. Si estás en la costa y el sismo fue fuerte o
+            largo, ve a pie a un lugar alto apenas pare.
+          </li>
+          <li>
+            If it shakes: drop, cover and hold on. If you are on the coast and the shaking was
+            strong or long, go on foot to high ground as soon as it stops.
+          </li>
+          <li lang="pt-BR">
+            Se tremer: abaixe-se, proteja-se e segure-se. Se você estiver no litoral e o tremor foi
+            forte ou longo, vá a pé para um lugar alto assim que parar.
+          </li>
+        </ul>
+        <p class="fw-boot-note">
+          Created by <a href="https://oktsec.com">Oktsec</a>. Earthquakes from USGS, EMSC and IGC,
+          warnings in force, local help and preparedness. Records can be published with a delay; it
+          is not an early warning system. Your personal data stays in this browser.
         </p>
-        <p>
-          Available in English and Spanish. Your personal data stays in this browser; sharing a
-          message always requires your action.
+        <a href="/about.html">Fuentes y cobertura · Sources and coverage · Fontes e cobertura</a>
+        <p class="fw-boot-status" role="status">
+          Cargando Faro… · Loading Faro… · <span lang="pt-BR">Carregando o Faro…</span>
         </p>
-        <a href="/about.html"
-          >Sources, coverage and FAQ / Fuentes, cobertura y preguntas frecuentes</a
+        <noscript
+          ><p class="fw-boot-note">
+            Activa JavaScript para usar el mapa y consultar los catálogos. · Enable JavaScript to
+            use the map and check the catalogs. ·
+            <span lang="pt-BR">Ative o JavaScript para usar o mapa e consultar os catálogos.</span>
+            <a href="/about.html">Information and official links / Información y enlaces</a>
+          </p></noscript
         >
       </main>
     </div>
-    <noscript
-      ><p>
-        Enable JavaScript to use the map and check the catalogs.
-        <a href="/about.html">Information and official links are available without JavaScript.</a>
-      </p></noscript
-    >
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

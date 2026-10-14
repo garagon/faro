@@ -1,0 +1,690 @@
+/*
+ * Local help screen. Same language as the situation screen: one white surface per section,
+ * rows separated by hairlines, color reserved for the emergency numbers. Rules here are scoped
+ * to the screen so they win over the older card styles without !important.
+ */
+.fw-main[data-screen='help'] {
+  --hair: #e1e7e3;
+  --quiet: #66756f;
+  --ink-strong: #12302b;
+  --call: #b42318;
+}
+.fw-main[data-screen='help']
+  :is(
+    .fw-emergency-numbers,
+    .fw-care,
+    .fw-destination-info,
+    .fw-consular-directory,
+    .fw-family-links,
+    .fw-local-directory
+  ) {
+  margin: 0 0 18px;
+  padding: 26px 30px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: none;
+}
+
+/* Section heads: one size, one description style, no eyebrows or icons. */
+.fw-main[data-screen='help']
+  :is(
+    .fw-emergency-numbers h2,
+    .fw-care header h2,
+    .fw-destination-info > h2,
+    .fw-consular-directory header h2,
+    .fw-family-links h2
+  ) {
+  margin: 0 0 6px;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+  color: var(--ink-strong);
+}
+.fw-main[data-screen='help']
+  :is(
+    .fw-emergency-numbers header p,
+    .fw-care header p,
+    .fw-destination-info > p,
+    .fw-consular-directory header p,
+    .fw-family-links header p
+  ) {
+  max-width: 64ch;
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #4d625b;
+}
+.fw-main[data-screen='help'] :is(.fw-care, .fw-family-links, .fw-consular-directory) > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin: 0 0 20px;
+}
+.fw-main[data-screen='help'] .fw-care > header {
+  display: block;
+}
+
+/* Emergency numbers: the only colored element on the screen. */
+.fw-main[data-screen='help'] .fw-emergency-numbers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 32px;
+}
+.fw-main[data-screen='help'] .fw-emergency-numbers header {
+  display: block;
+  margin: 0;
+}
+.fw-main[data-screen='help'] .fw-emergency-lines {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0;
+}
+.fw-main[data-screen='help'] .fw-emergency-lines > a {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  min-height: 64px;
+  padding: 8px 22px 8px 18px;
+  border: 1px solid #e3c3b8;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--call);
+  text-decoration: none;
+}
+.fw-main[data-screen='help'] .fw-emergency-lines > a:hover {
+  background: #fdf5f2;
+  border-color: var(--call);
+}
+.fw-main[data-screen='help'] .fw-emergency-lines > a svg {
+  grid-row: 1 / span 2;
+}
+.fw-main[data-screen='help'] .fw-emergency-lines strong {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+.fw-main[data-screen='help'] .fw-emergency-lines span {
+  font-size: 12.5px;
+  color: #6b4a40;
+}
+.fw-main[data-screen='help'] .fw-emergency-numbers > :is(small, .fw-emergency-scope) {
+  grid-column: 1;
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-main[data-screen='help'] .fw-emergency-numbers > small a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Pharmacies and hospitals. */
+.fw-main[data-screen='help'] .fw-care-location {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+.fw-main[data-screen='help'] .fw-care-location > label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d3a35;
+}
+.fw-main[data-screen='help'] .fw-care-location input {
+  height: 48px;
+  margin: 0;
+  border: 1px solid #7d8d87;
+  border-radius: 8px;
+  font-size: 16px;
+}
+.fw-main[data-screen='help'] .fw-care-location > button {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.fw-main[data-screen='help'] .fw-care-areas {
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.fw-main[data-screen='help'] .fw-care-areas > span {
+  font-size: 13px;
+  color: var(--quiet);
+}
+.fw-main[data-screen='help'] .fw-care-areas button {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  font-size: 13.5px;
+}
+.fw-main[data-screen='help'] .fw-care > .fw-area-status {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--quiet);
+}
+.fw-main[data-screen='help'] .fw-care-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 12px;
+}
+.fw-main[data-screen='help'] .fw-care-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 16px;
+  border: 1px solid #cfd9d3;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink-strong);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+}
+.fw-main[data-screen='help'] a.fw-care-search:hover {
+  border-color: #285b50;
+  background: #f6f9f7;
+}
+.fw-main[data-screen='help'] .fw-care-search > span {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+}
+.fw-main[data-screen='help'] .fw-care-search small {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--quiet);
+}
+.fw-main[data-screen='help'] .fw-care-search:disabled {
+  border-style: dashed;
+  background: #fff;
+  color: #8a9893;
+  opacity: 1;
+  cursor: not-allowed;
+}
+.fw-main[data-screen='help'] .fw-care > small {
+  display: block;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-main[data-screen='help'] .fw-care-official {
+  display: block;
+  margin: 22px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+/* Sub-headings inside a section. */
+.fw-main[data-screen='help'] :is(.fw-care-official h3, .fw-consular-directory > footer h3) {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+
+/* Link rows: name and purpose on the left, the site that opens on the right. */
+.fw-link-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fw-link-rows > li + li {
+  border-top: 1px solid var(--hair, #e1e7e3);
+}
+.fw-link-rows a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 24px;
+  min-height: 56px;
+  padding: 12px 2px;
+  color: inherit;
+  text-decoration: none;
+}
+.fw-link-rows a > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.fw-link-rows strong {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--ink-strong, #12302b);
+}
+.fw-link-rows a > span > span {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #5a6b65;
+}
+.fw-link-rows small {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #3e6a5e;
+}
+.fw-link-rows a:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.fw-link-rows a:focus-visible {
+  outline: 2px solid #285b50;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.fw-main[data-screen='help'] .fw-destination-info > .fw-link-rows,
+.fw-main[data-screen='help'] .fw-family-links > .fw-link-rows {
+  margin: 14px 0 0;
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+}
+.fw-main[data-screen='help'] .fw-family-links > .fw-link-rows {
+  margin: 0;
+}
+.fw-main[data-screen='help'] .fw-consular-directory > footer .fw-link-rows {
+  border-top: 1px solid var(--hair);
+}
+.fw-main[data-screen='help'] .fw-family-links > small {
+  display: block;
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--quiet);
+}
+
+/* Disclosure rows. */
+.fw-main[data-screen='help'] :is(.fw-destination-info details, .fw-local-directory) > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  list-style: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d3a35;
+}
+.fw-main[data-screen='help']
+  :is(.fw-destination-info details, .fw-local-directory)
+  > summary::-webkit-details-marker {
+  display: none;
+}
+.fw-main[data-screen='help']
+  :is(.fw-destination-info details, .fw-local-directory)
+  > summary::after {
+  content: '+';
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--quiet);
+}
+.fw-main[data-screen='help']
+  :is(.fw-destination-info details, .fw-local-directory)[open]
+  > summary::after {
+  content: '−';
+}
+.fw-main[data-screen='help'] .fw-destination-info details {
+  margin: 8px 0 0;
+  border: 0;
+  padding: 0;
+}
+.fw-main[data-screen='help'] .fw-destination-info dl {
+  display: grid;
+  gap: 12px;
+  margin: 4px 0 6px;
+}
+.fw-main[data-screen='help'] .fw-destination-info dl > div {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.fw-main[data-screen='help'] .fw-destination-info dt {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+.fw-main[data-screen='help'] .fw-destination-info dd {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #4d625b;
+}
+.fw-main[data-screen='help'] .fw-local-directory {
+  padding-block: 10px;
+}
+.fw-main[data-screen='help'] .fw-local-directory[open] {
+  padding-bottom: 24px;
+}
+
+/* Embassies: filters in one row, contacts as rows. */
+.fw-main[data-screen='help'] .fw-consular-directory > header > .fw-text {
+  flex: none;
+  min-height: 40px;
+  font-size: 13.5px;
+}
+.fw-main[data-screen='help'] .fw-consular-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) auto;
+  align-items: end;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+.fw-main[data-screen='help'] .fw-consular-filters > .fw-country-search {
+  margin: 0;
+}
+.fw-main[data-screen='help'] .fw-consular-filters .fw-country-search > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d3a35;
+}
+.fw-main[data-screen='help'] .fw-consular-filters .fw-country-search-input {
+  min-height: 48px;
+  height: 48px;
+  border-color: #cfd9d3;
+  border-radius: 8px;
+}
+.fw-main[data-screen='help'] .fw-consular-filters > button {
+  width: auto;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.fw-main[data-screen='help'] :is(.fw-consular-scope, .fw-consular-directory > p[role='status']) {
+  margin: 0 0 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-main[data-screen='help'] .fw-consular-directory > footer {
+  margin: 22px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+@media (max-width: 760px) {
+  .fw-main[data-screen='help']
+    :is(
+      .fw-emergency-numbers,
+      .fw-care,
+      .fw-destination-info,
+      .fw-consular-directory,
+      .fw-family-links,
+      .fw-local-directory
+    ) {
+    padding: 20px 18px;
+    border-radius: 10px;
+  }
+  .fw-main[data-screen='help']
+    :is(
+      .fw-emergency-numbers h2,
+      .fw-care header h2,
+      .fw-destination-info > h2,
+      .fw-consular-directory header h2,
+      .fw-family-links h2
+    ) {
+    font-size: 19px;
+  }
+  .fw-main[data-screen='help'] .fw-emergency-numbers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-main[data-screen='help'] .fw-emergency-lines {
+    grid-column: 1;
+    grid-row: auto;
+    justify-content: stretch;
+    margin: 12px 0 0;
+  }
+  .fw-main[data-screen='help'] .fw-emergency-lines {
+    flex-direction: row;
+  }
+  .fw-main[data-screen='help'] .fw-emergency-lines > a {
+    flex: 1 1 140px;
+    justify-content: start;
+  }
+  .fw-main[data-screen='help'] :is(.fw-care, .fw-family-links, .fw-consular-directory) > header {
+    flex-direction: column;
+  }
+  .fw-main[data-screen='help'] :is(.fw-care-location, .fw-consular-filters) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-main[data-screen='help'] .fw-care-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-link-rows a {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Embassy contact: flat, the consular emergency line in a second column without a tinted box. */
+.fw-main[data-screen='help'] .fw-consular-filters {
+  justify-content: start;
+}
+.fw-main[data-screen='help'] .fw-consular-route-mode {
+  margin: 14px 0 6px;
+}
+.fw-main[data-screen='help'] .fw-consular-route-mode button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 19px;
+}
+.fw-main[data-screen='help'] .fw-consular-directory > .fw-preparation-note {
+  margin: 0 0 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  color: var(--quiet);
+}
+.fw-main[data-screen='help'] .fw-consular-cards {
+  display: block;
+  border-top: 1px solid var(--hair);
+  margin-top: 14px;
+}
+.fw-main[data-screen='help'] .fw-consular-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 10px 40px;
+  padding: 20px 0;
+  border: 0;
+  border-bottom: 1px solid var(--hair);
+  border-radius: 0;
+}
+.fw-main[data-screen='help'] .fw-consular-card:not(.has-emergency) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.fw-main[data-screen='help'] .fw-consular-card h3 {
+  margin: 0;
+  font-size: 19px;
+  color: var(--ink-strong);
+}
+.fw-main[data-screen='help'] .fw-consular-card-main {
+  gap: 8px;
+}
+.fw-main[data-screen='help'] .fw-consular-card address {
+  font-size: 14.5px;
+  color: #2b4a44;
+}
+.fw-main[data-screen='help'] .fw-consular-phone {
+  font-size: 15px;
+  font-weight: 600;
+}
+.fw-main[data-screen='help'] .fw-consular-card p {
+  font-size: 13.5px;
+  color: #4d625b;
+}
+.fw-main[data-screen='help'] .fw-consular-emergency {
+  align-self: start;
+  gap: 4px;
+  padding: 0 0 0 24px;
+  border: 0;
+  border-left: 1px solid var(--hair);
+  border-radius: 0;
+  background: none;
+}
+.fw-main[data-screen='help'] .fw-consular-emergency strong {
+  font-size: 13px;
+  color: var(--ink-strong);
+}
+.fw-main[data-screen='help'] .fw-consular-emergency a {
+  display: inline-flex;
+  align-items: center;
+  font-size: 24px;
+  color: var(--call);
+  text-underline-offset: 4px;
+}
+.fw-main[data-screen='help'] .fw-consular-emergency p {
+  color: var(--quiet);
+}
+.fw-main[data-screen='help'] .fw-consular-card > :is(.fw-consular-actions, small) {
+  grid-column: 1 / -1;
+}
+.fw-main[data-screen='help'] .fw-consular-actions {
+  gap: 4px 22px;
+}
+.fw-main[data-screen='help'] .fw-consular-actions :is(a, button) {
+  gap: 5px;
+  font-size: 14px;
+}
+.fw-main[data-screen='help'] .fw-consular-card:last-child {
+  border-bottom: 0;
+}
+.fw-main[data-screen='help'] .fw-consular-actions button {
+  padding: 0;
+}
+.fw-main[data-screen='help'] .fw-consular-card > small {
+  font-size: 12.5px;
+  color: var(--quiet);
+}
+
+/* Help from the traveler's own government: flat, phones as the focus. */
+.fw-main[data-screen='help'] .fw-traveler-support {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--hair);
+}
+.fw-main[data-screen='help'] .fw-traveler-support > header {
+  display: block;
+  margin: 0 0 14px;
+}
+.fw-main[data-screen='help'] .fw-traveler-support h3 {
+  margin: 0 0 2px;
+  font-size: 17px;
+  color: var(--ink-strong);
+}
+.fw-main[data-screen='help'] .fw-support-contact {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+.fw-main[data-screen='help'] .fw-support-contact h4 {
+  font-size: 14.5px;
+  color: var(--ink-strong);
+}
+.fw-main[data-screen='help'] .fw-support-contact > p {
+  margin: 4px 0 10px;
+  font-size: 13.5px;
+  color: #4d625b;
+}
+.fw-main[data-screen='help'] .fw-support-phones a {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--call);
+}
+.fw-main[data-screen='help'] .fw-support-advisory {
+  padding: 12px 0 16px;
+}
+.fw-main[data-screen='help'] .fw-support-topics summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  font-size: 14px;
+  color: #1d3a35;
+}
+.fw-main[data-screen='help'] .fw-support-topics summary::-webkit-details-marker {
+  display: none;
+}
+.fw-main[data-screen='help'] .fw-support-topics summary::after {
+  content: '+';
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--quiet);
+}
+.fw-main[data-screen='help'] .fw-support-topics details[open] > summary::after {
+  content: '−';
+}
+.fw-main[data-screen='help'] .fw-link-rows small {
+  display: inline-flex;
+  gap: 5px;
+}
+@media (max-width: 760px) {
+  .fw-main[data-screen='help'] .fw-consular-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-main[data-screen='help'] .fw-consular-emergency {
+    padding: 12px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--hair);
+  }
+}
+
+.fw-main[data-screen='help'] .fw-family-links > header > button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Embassy card and the traveler's own government: phones as buttons, links in one row. */
+.fw-main[data-screen='help'] .fw-consular-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.fw-main[data-screen='help'] .fw-consular-emergency-note {
+  max-width: 72ch;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #5d6f69;
+}
+.fw-main[data-screen='help'] .fw-consular-card .fw-map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0;
+  font-size: 14px;
+}
+.fw-main[data-screen='help'] .fw-traveler-support .fw-phones {
+  margin: 4px 0 0;
+}
+.fw-main[data-screen='help'] .fw-traveler-support > .fw-link-row {
+  margin: 14px 0 6px;
+}
+.fw-main[data-screen='help'] .fw-support-topics details .fw-ext {
+  margin-bottom: 10px;
+}

@@ -1627,7 +1627,7 @@
   margin: 12px 0;
 }
 .fw-share-feedback:empty {
-  display: none;
+  margin: 0;
 }
 .fw-checkin-history {
   border-bottom: 1px solid var(--line);

@@ -29,3 +29,51 @@ select {
 button {
   cursor: pointer;
 }
+
+/* Fallback when the app cannot render: emergency numbers stay one tap away. */
+.fw-fallback {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: #12302b;
+}
+.fw-fallback h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+}
+.fw-fallback p {
+  margin: 0 0 20px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.fw-fallback h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+.fw-fallback a {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 10px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: #b42318;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.fw-fallback a small {
+  font-size: 14px;
+  font-weight: 500;
+}
+.fw-fallback button {
+  min-height: 48px;
+  margin-top: 8px;
+  padding: 0 20px;
+  border: 1px solid #7d8d87;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-weight: 600;
+}

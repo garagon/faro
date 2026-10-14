@@ -1,6 +1,6 @@
 # Faro
 
-> Faro is a free, open-source earthquake information and travel preparedness web application created by Oktsec. Available in English and Spanish.
+> Faro is a free, open-source emergency information and travel preparedness web application created by Oktsec: earthquakes, tsunami, tropical cyclones, floods and volcanoes from official sources, plus local help. Available in English, Spanish and Brazilian Portuguese.
 
 ## Product and provenance
 - [About Faro, sources and limitations](/about.html): Crawlable bilingual product facts and frequently asked questions.
@@ -8,7 +8,7 @@
 - [Source code](https://github.com/garagon/faro): Apache-2.0 application code; third-party materials retain their terms.
 
 ## What Faro does
-Displays earthquake catalogues from USGS and IGC (Panama), with automatic checks every 60 seconds while the app is active. Includes country-specific emergency and consular resources where coverage is available, nearby healthcare searches, travel contacts, an emergency kit checklist and manually shared status messages.
+Displays earthquake catalogues from USGS, EMSC and IGC (Panama), kept separate, with automatic checks every 60 seconds while the app is active. Shows warnings in force from national meteorological services that publish alert feeds (Panama, Costa Rica, Dominican Republic, Ecuador, Argentina), NOAA National Hurricane Center active cyclones, GDACS multi-hazard alerts per country, NOAA/PTWC tsunami bulletins, the latest posts from Panama's civil protection agency (SINAPROC) and, for U.S. areas, NWS tsunami, hurricane and flood alerts. An emergency screen combines the local emergency number, the traveler's consular contacts, cited first-minute actions and their saved meeting point. Includes country-specific emergency resources for 14 destinations in the Americas, nearby healthcare searches, family reunification services, travel contacts, an emergency kit checklist and manually shared status messages.
 
 ## Important distinctions
 - Catalogue events have already occurred; publication may be delayed. Faro is not an early-warning system.
@@ -17,4 +17,7 @@ Displays earthquake catalogues from USGS and IGC (Panama), with automatic checks
 - Missing earthquake records do not establish safety.
 - Saved contacts and profile information stay in browser storage. Map providers receive ordinary map requests. Sharing and external searches are user-initiated.
 - Faro does not dispatch responders, track recipients, verify route safety or certify shelters and healthcare availability.
-- Coverage varies by country; USGS is not a complete substitute for national networks.
+- Coverage varies by country; USGS and EMSC are not complete substitutes for national networks.
+- USGS PAGER colors, ShakeMap intensity and "Did You Feel It?" counts are regional USGS products shown as published, not a measure of risk at a person's location.
+- GDACS alerts are automatic estimates of humanitarian impact for international responders, not local warnings or evacuation orders.
+- After a first visit the application opens offline; official reports and map tiles are never served from the offline copy.

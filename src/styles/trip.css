@@ -1,0 +1,336 @@
+/*
+ * My trip: a form in five short sections on the left, the card it produces on the right.
+ * Sections collapse to one line that says what is already filled in.
+ */
+.fw-trip {
+  --ink: #12302b;
+  --quiet: #5d6f69;
+  --hair: #e1e7e3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  align-items: start;
+  gap: 18px;
+  margin: 0 0 18px;
+}
+.fw-trip-form,
+.fw-ficha {
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  background: #fff;
+}
+.fw-trip-section + .fw-trip-section {
+  border-top: 1px solid var(--hair);
+}
+.fw-trip-section > summary {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  list-style: none;
+  cursor: pointer;
+}
+.fw-trip-section > summary::-webkit-details-marker {
+  display: none;
+}
+.fw-trip-section > summary::after {
+  content: '+';
+  font-size: 20px;
+  color: var(--quiet);
+}
+.fw-trip-section[open] > summary::after {
+  content: '−';
+}
+.fw-trip-section > summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.fw-trip-step {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #cfd9d3;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  color: #285b50;
+}
+.fw-trip-heading {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.fw-trip-heading strong {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.fw-trip-heading small {
+  overflow: hidden;
+  font-size: 13px;
+  color: var(--quiet);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* An empty section's hint says what goes there, so it wraps instead of being cut. */
+.fw-trip-heading small[data-filled='false'] {
+  white-space: normal;
+}
+.fw-trip-heading small[data-filled='true'] {
+  color: #285b50;
+  font-weight: 600;
+}
+.fw-trip-fields {
+  display: grid;
+  gap: 14px;
+  padding: 0 20px 20px 64px;
+}
+.fw-trip-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.fw-trip-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.fw-trip-field > span,
+.fw-trip .fw-country-search > label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d3a35;
+}
+.fw-trip-field :is(input, select, textarea) {
+  width: 100%;
+  min-height: 46px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid #7d8d87;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+.fw-trip-field textarea {
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.fw-trip-field :is(input, select, textarea):focus {
+  border-color: #285b50;
+  box-shadow: 0 0 0 3px #285b5026;
+  outline: none;
+}
+.fw-trip-field > small {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--quiet);
+}
+.fw-trip-field.has-error :is(input, select) {
+  border-color: #b42318;
+}
+.fw-trip-field.has-error > small {
+  color: #b42318;
+  font-weight: 600;
+}
+.fw-trip .fw-country-search {
+  margin: 0;
+}
+.fw-trip .fw-country-search-input {
+  min-height: 46px;
+  border-color: #cfd9d3;
+  border-radius: 8px;
+}
+.fw-trip-note {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-trip-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+.fw-trip-check input {
+  width: 20px;
+  height: 20px;
+  accent-color: #1d4f45;
+}
+.fw-trip-coordinates > summary {
+  min-height: 36px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #285b50;
+}
+.fw-trip-coordinates[open] > summary {
+  margin-bottom: 10px;
+}
+.fw-trip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--hair);
+}
+.fw-trip-actions .fw-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 26px;
+  border-radius: 8px;
+  font-size: 15px;
+}
+.fw-trip-actions > p {
+  margin: 0;
+  font-size: 14px;
+}
+.fw-trip-actions > p.is-saved {
+  color: #2d7650;
+  font-weight: 600;
+}
+.fw-trip-actions > p.is-error {
+  color: #b42318;
+  font-weight: 600;
+}
+.fw-trip-actions > .fw-text,
+.fw-trip-confirm {
+  margin-left: auto;
+  font-size: 13.5px;
+}
+.fw-trip-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  color: var(--ink);
+}
+
+/* The card. */
+.fw-ficha {
+  position: sticky;
+  top: 16px;
+  padding: 20px;
+}
+.fw-ficha h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.fw-ficha > p {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-ficha-text {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border: 1px solid #d5e5da;
+  border-radius: 12px 12px 12px 4px;
+  background: #eef6f1;
+  color: #1d3a35;
+  font-size: 14.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.fw-ficha-text > span {
+  color: var(--quiet);
+}
+.fw-ficha-image {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-top: 6px;
+  font-size: 13.5px;
+}
+.fw-ficha-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--hair);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--quiet);
+}
+.fw-ficha-privacy svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+@media (max-width: 1100px) {
+  .fw-trip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-ficha {
+    position: static;
+  }
+}
+@media (max-width: 760px) {
+  .fw-trip-section > summary {
+    padding: 14px 16px;
+  }
+  .fw-trip-fields {
+    padding: 0 16px 18px;
+  }
+  .fw-trip-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fw-trip-actions {
+    padding: 14px 16px;
+  }
+  .fw-trip-actions .fw-primary {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .fw-trip-actions > .fw-text,
+  .fw-trip-confirm {
+    margin-left: 0;
+  }
+  .fw-ficha {
+    padding: 16px;
+  }
+}
+
+/* Other contacts: the directory now spans the card; starters in a responsive grid. */
+.fw-main[data-screen='hotel'] .fw-trip-contacts {
+  margin: 0 0 18px;
+  padding: 22px 24px;
+  border: 1px solid var(--hair, #e1e7e3);
+  border-radius: 12px;
+  background: #fff;
+}
+.fw-main[data-screen='hotel'] .fw-trip-contacts h2 {
+  margin: 0 0 4px;
+  font-size: 19px;
+  font-weight: 700;
+  color: #12302b;
+}
+.fw-main[data-screen='hotel'] .fw-trip-contacts header p {
+  margin: 0;
+  font-size: 14px;
+  color: #5d6f69;
+}
+.fw-main[data-screen='hotel'] .fw-trip-contacts .fw-trip-kit {
+  display: block;
+  margin-top: 16px;
+}
+.fw-main[data-screen='hotel'] .fw-contact-starters {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
