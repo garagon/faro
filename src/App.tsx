@@ -3,7 +3,7 @@ import NearbyCare from './components/NearbyCare.tsx';
 import EvacuationPlan from './components/EvacuationPlan.tsx';
 import MagnitudeLegend from './components/MagnitudeLegend.tsx';
 import { magnitudeBand } from './lib/magnitude.ts';
-import CountrySearch from './components/CountrySearch.tsx';
+import CountryScreen from './components/CountryScreen.tsx';
 import DestinationInfo from './components/DestinationInfo.tsx';
 import { WORLD, countryCodes, regionFor, regionScope } from './lib/regions.ts';
 import EmergencyScreen from './components/EmergencyScreen.tsx';
@@ -21,30 +21,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import InformationDialog from './components/InformationDialog.tsx';
 import {
   ArrowUpRightIcon,
-  CaretLeftIcon,
   CaretRightIcon,
   MapPinIcon,
   CrosshairIcon,
-  BuildingsIcon,
   BookOpenTextIcon,
   UsersThreeIcon,
   XIcon,
   FlagIcon,
-  BookmarkSimpleIcon,
   BackpackIcon,
   InfoIcon,
   ChatCircleTextIcon,
-  UserCircleIcon,
-  PhoneIcon,
   WifiSlashIcon,
   PulseIcon,
+  SuitcaseRollingIcon,
+  DatabaseIcon,
+  ShieldCheckIcon,
 } from '@phosphor-icons/react';
-import '@fontsource/dm-sans/latin-400.css';
-import '@fontsource/dm-sans/latin-500.css';
-import '@fontsource/dm-sans/latin-600.css';
-import '@fontsource/dm-sans/latin-700.css';
-import '@fontsource/dm-serif-display/latin-400.css';
-import countries from './data/countries.json';
 import {
   displayPlace,
   distanceKm,
@@ -80,19 +72,6 @@ import {
   type HotelPlan,
   type Lang,
 } from './lib/resources.ts';
-import './styles/web.css';
-import './styles/professional.css';
-import './styles/workspace.css';
-import './styles/liveActivity.css';
-import './styles/travelSetup.css';
-import './styles/countrySearch.css';
-import './styles/dialogs.css';
-import './styles/urgentFlows.css';
-import './styles/checkIn.css';
-import './styles/situation.css';
-import './styles/help.css';
-import './styles/home.css';
-import './styles/layout.css';
 import { useIGC } from './hooks/useIGC.ts';
 import { useEMSC } from './hooks/useEMSC.ts';
 import { usePolled } from './hooks/usePolled.ts';
@@ -112,7 +91,8 @@ import { destinationFor } from './data/destinations/index.ts';
 import { classifyBulletins, parseTsunamiData, reviveTsunami } from './lib/tsunami.ts';
 import { receivedAt } from './lib/http.ts';
 import { scrollMotion } from './lib/motion.ts';
-import { NHC_REGION, graphicsUrl, parseStorms, stormClassLabels, windKmh } from './lib/storms.ts';
+import { NHC_REGION, graphicsUrl, parseStorms, stormClassLabels, wind } from './lib/storms.ts';
+import { distance, shortDistance } from './lib/units.ts';
 import StormsPanel from './components/StormsPanel.tsx';
 import NwsPanel from './components/NwsPanel.tsx';
 import {
@@ -134,9 +114,24 @@ import TravelerStatus from './components/TravelerStatus.tsx';
 import TravelContacts from './components/TravelContacts.tsx';
 import EmergencyNumbers from './components/EmergencyNumbers.tsx';
 import ResponsePanel from './components/ResponsePanel.tsx';
-import HomeActions from './components/HomeActions.tsx';
+import HomeActions, { HomeCall } from './components/HomeActions.tsx';
 import HomeTabs from './components/HomeTabs.tsx';
-import SetupCard from './components/SetupCard.tsx';
+import {
+  AppFrame,
+  BackLink,
+  Header,
+  List,
+  ListRow,
+  Magnitude,
+  MapFrame,
+  Note,
+  ScreenHead,
+  Section,
+  Sidebar,
+  StatusBar,
+  TabBar,
+  type Tab,
+} from './ui/index.ts';
 import { responsesFor } from './data/responses.ts';
 import { readCheckIns, checkInDue } from './lib/traveler.ts';
 import { type Embassy } from './lib/embassies.ts';
@@ -171,15 +166,9 @@ async function readStorms(signal: AbortSignal) {
   if (!response.ok) throw Error('NHC unavailable');
   return parseStorms(await response.json(), receivedAt(response));
 }
-function setupCardDismissed() {
-  try {
-    return localStorage.getItem('faro-setup-card-v1') === 'dismissed';
-  } catch {
-    return false;
-  }
-}
 const SCREENS = [
   'activity',
+  'country',
   'detail',
   'emergency',
   'sources',
@@ -210,9 +199,10 @@ const OFFICIAL_MAX_AGE = 25 * 60000;
 
 export default function App() {
   const [profile, setProfile] = useState(() => readPreferences(countryCodes));
-  // Setup never blocks the app: the home shows a card instead of opening a dialog.
-  const [setupDismissed, setSetupDismissed] = useState(setupCardDismissed),
-    [profileFeedback, setProfileFeedback] = useState<'saved' | 'deleted' | 'storage' | null>(null);
+  // Setup never blocks the app: the nationality is asked once, from the embassy row.
+  const [profileFeedback, setProfileFeedback] = useState<'saved' | 'deleted' | 'storage' | null>(
+    null,
+  );
   useEffect(() => {
     if (!profileFeedback || profileFeedback === 'storage') return;
     const timer = setTimeout(() => setProfileFeedback(null), 6000);
@@ -239,7 +229,7 @@ export default function App() {
     storms = usePolled(readStorms, 300000);
   const live = catalog === 'IGC' ? igc : catalog === 'EMSC' ? emsc : usgs,
     provider = providerNames[catalog];
-  const appRef = useRef<HTMLDivElement>(null);
+  const appRef = useRef<HTMLElement>(null);
   // Losing or regaining the connection is announced once through a region that is always on the
   // page; the banner itself appears already filled in, which screen readers often skip.
   const [connection, setConnection] = useState<'' | 'lost' | 'back'>('');
@@ -337,14 +327,23 @@ export default function App() {
       return [];
     }
   });
-  // A new screen starts at the top. After the first render, focus moves to its heading so
-  // keyboard and screen-reader users know the screen changed (Emergency focuses its call button
-  // and the detail page its tab instead).
+  // A new screen starts at the top; going back returns to where the person was on that screen.
+  // After the first render, focus moves to its heading so keyboard and screen-reader users know
+  // the screen changed (Emergency focuses its call button and the detail page its tab instead).
   // Each screen is a browser history entry, so the phone's Back button returns to the previous
   // screen instead of leaving Faro (people often arrive from a link in a chat).
   const screenRef = useRef(screen);
   screenRef.current = screen;
   const fromHistory = useRef(false);
+  const restoring = useRef(false);
+  const scrollMemory = useRef<Partial<Record<Screen, number>>>({});
+  useEffect(() => {
+    const app = appRef.current;
+    if (!app) return;
+    const remember = () => (scrollMemory.current[screenRef.current] = app.scrollTop);
+    app.addEventListener('scroll', remember, { passive: true });
+    return () => app.removeEventListener('scroll', remember);
+  }, []);
   useEffect(() => {
     history.replaceState({ ...(history.state ?? {}), faroScreen: screenRef.current }, '');
     const back = (e: PopStateEvent) => {
@@ -352,6 +351,7 @@ export default function App() {
       const next = isScreen(target) ? target : 'activity';
       if (next === screenRef.current) return;
       fromHistory.current = true;
+      restoring.current = true;
       // An open earthquake sheet belongs to the screen being left.
       setDetail(null);
       setScreen(next);
@@ -369,7 +369,11 @@ export default function App() {
   }, [screen]);
   const firstScreen = useRef(true);
   useEffect(() => {
-    appRef.current?.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const top = restoring.current ? (scrollMemory.current[screen] ?? 0) : 0;
+    restoring.current = false;
+    // Content can arrive a moment later (lists, the map): restore again on the next frame.
+    appRef.current?.scrollTo({ top, left: 0, behavior: 'instant' });
+    if (top) requestAnimationFrame(() => appRef.current?.scrollTo({ top, behavior: 'instant' }));
     if (firstScreen.current) {
       firstScreen.current = false;
       return;
@@ -492,11 +496,12 @@ export default function App() {
       { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 },
     );
   };
-  // The result line clears itself after a few seconds.
+  // A country found from the location takes the person back to where they were; a failure stays
+  // on the country screen until they act, as messages that ask for an action must.
   useEffect(() => {
-    if (!placeState || placeState.kind === 'pending') return;
-    const timer = setTimeout(() => setPlaceState(null), 8000);
-    return () => clearTimeout(timer);
+    if (placeState?.kind !== 'found') return;
+    if (screenRef.current === 'country') history.back();
+    setPlaceState(null);
   }, [placeState]);
   const changeCountry = (code: string) => {
     const region = regionFor(code);
@@ -516,22 +521,6 @@ export default function App() {
     setPending(region.bounds);
     center(region.view.lat, region.view.lng, region.view.zoom);
   };
-  const saveProfile = (value: Preferences) => {
-    let saved: Preferences;
-    try {
-      saved = storePreferences(value, countryCodes);
-    } catch {
-      // Blocked or full storage: say so instead of failing silently.
-      setProfileFeedback('storage');
-      return;
-    }
-    setProfile(saved);
-    setLang(saved.language);
-    setNationality(saved.nationality);
-    setShowEmbassies(!!saved.nationality);
-    changeCountry(saved.destination);
-    setProfileFeedback('saved');
-  };
   // The language is stored only when the person chooses it.
   const changeLanguage = (value: Lang) => {
     setLang(value);
@@ -541,20 +530,8 @@ export default function App() {
       setProfileFeedback('storage');
     }
   };
-  const showSetupCard = !profile?.nationality && !setupDismissed && country !== 'WORLD';
-  const saveNationality = (value: string) =>
-    saveProfile({
-      version: 1,
-      language: lang,
-      destination: countryCodes.includes(country) ? country : (profile?.destination ?? 'PA'),
-      nationality: value,
-      savedAt: Date.now(),
-      ...(profile?.name ? { name: profile.name } : {}),
-      ...(profile?.phone ? { phone: profile.phone } : {}),
-      ...(profile?.email ? { email: profile.email } : {}),
-    });
-  // A nationality chosen on the emergency or local help screen is kept like the one from the home
-  // card, without moving the country being viewed or changing the rest of the profile.
+  // A nationality chosen on the emergency or local help screen is kept, without moving the country
+  // being viewed or changing the rest of the profile.
   const rememberNationality = (code: string) => {
     setNationality(code);
     setShowEmbassies(!!code);
@@ -573,14 +550,6 @@ export default function App() {
           countryCodes,
         ),
       );
-    } catch {
-      setProfileFeedback('storage');
-    }
-  };
-  const dismissSetupCard = () => {
-    setSetupDismissed(true);
-    try {
-      writeLocal('faro-setup-card-v1', 'dismissed');
     } catch {
       setProfileFeedback('storage');
     }
@@ -770,7 +739,7 @@ export default function App() {
       title: `${stormClassLabels[st.classification][idx]} ${st.name}`,
       detail:
         st.intensityKt !== null
-          ? `${t('Viento máx.', 'Max. wind', 'Vento máx.')} ${windKmh(st.intensityKt)} km/h`
+          ? `${t('Viento máx.', 'Max. wind', 'Vento máx.')} ${wind(st.intensityKt, lang)}`
           : '',
       source: 'NHC',
       url: graphicsUrl(st),
@@ -893,9 +862,6 @@ export default function App() {
       (live.generated > 0 && live.now - live.generated > 600000),
     dirty =
       Math.abs(bounds.west - pending.west) > 0.5 || Math.abs(bounds.north - pending.north) > 0.5;
-  const otherSaved = savedCountries.filter(
-    (c) => c !== country && (c === 'WORLD' || countries.some((x) => x.code === c)),
-  );
   const saveCountry = () => {
     const list = savedCountries.includes(country)
       ? savedCountries.filter((x) => x !== country)
@@ -1116,14 +1082,9 @@ export default function App() {
         'De onde vem cada dado, quando foi consultado pela última vez e o que cobre.',
       ),
     ],
+    country: [t('País', 'Country', 'País'), ''],
     emergency: [
-      country === 'WORLD'
-        ? t('Emergencia', 'Emergency', 'Emergência')
-        : t(
-            `Emergencia en ${countryName}`,
-            `Emergency in ${countryName}`,
-            `Emergência · ${countryName}`,
-          ),
+      t('Emergencia', 'Emergency', 'Emergência'),
       t(
         'Al tocar un número se abre tu teléfono. Faro no llama ni pide ayuda por ti.',
         'Tapping a number opens your phone. Faro does not call or request help for you.',
@@ -1131,7 +1092,7 @@ export default function App() {
       ),
     ],
     help: [
-      t('Ayuda local', 'Local help', 'Ajuda local'),
+      t('Ayuda', 'Help', 'Ajuda'),
       t(
         'Teléfonos de emergencia, farmacias y hospitales, fuentes oficiales y tu embajada.',
         'Emergency numbers, pharmacies and hospitals, official sources and your embassy.',
@@ -1139,7 +1100,7 @@ export default function App() {
       ),
     ],
     status: [
-      t('Avisar cómo estoy', 'Tell people how I am', 'Avisar como estou'),
+      t('Avisar', 'Check in', 'Avisar'),
       t(
         'Prepara un mensaje para tu familia o tu equipo: cómo estás, dónde y cuándo volverás a escribir.',
         'Prepare a message for your family or team: how you are, where, and when you will write again.',
@@ -1147,7 +1108,7 @@ export default function App() {
       ),
     ],
     kit: [
-      t('Mochila de emergencia', 'Go bag', 'Mochila de emergência'),
+      t('Mochila', 'Go bag', 'Mochila'),
       t(
         'Calcula tu reserva, marca lo que ya tienes y encuentra dónde comprar lo que falta.',
         'Work out your supplies, tick what you have and find where to buy what is missing.',
@@ -1155,7 +1116,7 @@ export default function App() {
       ),
     ],
     hotel: [
-      t('Mi viaje', 'My trip', 'Minha viagem'),
+      t('Viaje', 'Trip', 'Viagem'),
       t(
         'Tus datos para una emergencia, listos para enviar por WhatsApp, Telegram, SMS o correo. Todo es opcional.',
         'Your details for an emergency, ready to send by WhatsApp, Telegram, SMS or email. Everything is optional.',
@@ -1163,11 +1124,7 @@ export default function App() {
       ),
     ],
     guide: [
-      t(
-        'Qué hacer en una emergencia',
-        'What to do in an emergency',
-        'O que fazer em uma emergência',
-      ),
+      t('Guía', 'Guide', 'Guia'),
       t(
         'Pasos generales por tipo de emergencia. Sigue siempre las instrucciones de las autoridades locales.',
         'General steps by type of emergency. Always follow instructions from local authorities.',
@@ -1187,420 +1144,1112 @@ export default function App() {
   useEffect(() => {
     document.title = pageTitle;
   }, [pageTitle]);
-  const nav = [
-    { id: 'activity', title: t('Situación', 'Situation', 'Situação'), Icon: PulseIcon },
-    { id: 'help', title: t('Ayuda local', 'Local help', 'Ajuda local'), Icon: UsersThreeIcon },
-    { id: 'status', title: t('Mi estado', 'My status', 'Meu status'), Icon: ChatCircleTextIcon },
-    { id: 'kit', title: t('Mochila', 'Go bag', 'Mochila'), Icon: BackpackIcon },
-    { id: 'hotel', title: t('Mi viaje', 'My trip', 'Minha viagem'), Icon: BuildingsIcon },
-    { id: 'guide', title: t('Guía', 'Guide', 'Guia'), Icon: BookOpenTextIcon },
-  ] as const;
+  // One word per destination; each screen's title is the same word.
+  const nav: readonly Tab<Screen>[] = [
+    { id: 'activity', label: t('Situación', 'Situation', 'Situação'), Icon: PulseIcon },
+    { id: 'help', label: t('Ayuda', 'Help', 'Ajuda'), Icon: UsersThreeIcon },
+    { id: 'status', label: t('Avisar', 'Check in', 'Avisar'), Icon: ChatCircleTextIcon },
+    { id: 'kit', label: t('Mochila', 'Go bag', 'Mochila'), Icon: BackpackIcon },
+    { id: 'hotel', label: t('Viaje', 'Trip', 'Viagem'), Icon: SuitcaseRollingIcon },
+    { id: 'guide', label: t('Guía', 'Guide', 'Guia'), Icon: BookOpenTextIcon },
+  ];
+  // The detail pages belong to Situación; the country screen to wherever it was opened from.
+  const currentTab: Screen | null =
+    screen === 'detail' ? 'activity' : nav.some((n) => n.id === screen) ? screen : null;
+  const shellText = {
+    home: t('Faro, inicio', 'Faro, home', 'Faro, início'),
+    place: t(
+      `Cambiar de país: ${countryName}`,
+      `Change country: ${countryName}`,
+      `Mudar de país: ${countryName}`,
+    ),
+    language: t('Idioma', 'Language', 'Idioma'),
+    emergency: t('Emergencia', 'Emergency', 'Emergência'),
+    menu: t('Navegación principal', 'Main navigation', 'Navegação principal'),
+  };
+  const frame = {
+    text: shellText,
+    placeName: countryName,
+    lang,
+    onHome: () => setScreen('activity'),
+    onPlace: () => setScreen('country'),
+    onLanguage: changeLanguage,
+    onEmergency: () => openEmergency('call'),
+    emergencyCurrent: screen === 'emergency',
+  };
+  // What "Use my location" found or why it could not, said on the country screen.
+  const locateStatus =
+    placeState && placeState.kind !== 'pending' && placeState.kind !== 'found'
+      ? placeState.kind === 'denied'
+        ? t(
+            'No diste permiso de ubicación. Elige el país en la lista.',
+            'Location permission was not given. Choose the country from the list.',
+            'Você não deu permissão de localização. Escolha o país na lista.',
+          )
+        : placeState.kind === 'unknown'
+          ? t(
+              'No pudimos saber en qué país estás. Elígelo en la lista.',
+              'We could not tell which country you are in. Choose it from the list.',
+              'Não conseguimos saber em que país você está. Escolha-o na lista.',
+            )
+          : t(
+              'No se pudo obtener tu ubicación. Elige el país en la lista.',
+              'Your location could not be found. Choose the country from the list.',
+              'Não foi possível obter sua localização. Escolha o país na lista.',
+            )
+      : undefined;
   return (
-    <div className="fw-app" ref={appRef} data-screen={screen}>
-      <a className="fw-skip" href="#main">
+    <AppFrame>
+      <a className="f-skip" href="#main">
         {t('Saltar al contenido', 'Skip to content', 'Pular para o conteúdo')}
       </a>
-      <header className="fw-header">
-        <button
-          className="fw-brand"
-          onClick={() => setScreen('activity')}
-          aria-label={t('Faro, inicio', 'Faro, home', 'Faro, início')}
-        >
-          <img src="/faro-mark.svg" alt="" />
-          Faro
-        </button>
-        <span className="fw-nav-caption">{t('En este viaje', 'On this trip', 'Nesta viagem')}</span>
-        <nav aria-label={t('Navegación principal', 'Main navigation', 'Navegação principal')}>
-          {nav.map(({ id, title, Icon }) => (
+      <Sidebar
+        {...frame}
+        tabs={nav}
+        current={currentTab}
+        onSelect={setScreen}
+        label={shellText.menu}
+        foot={
+          <>
             <button
-              key={id}
-              // The detail page belongs to the situation screen.
-              className={
-                screen === id || (id === 'activity' && screen === 'detail') ? 'current' : ''
-              }
-              aria-current={
-                screen === id
-                  ? 'page'
-                  : id === 'activity' && screen === 'detail'
-                    ? 'true'
-                    : undefined
-              }
-              onClick={() => setScreen(id)}
+              type="button"
+              className="f-side-link"
+              aria-current={screen === 'sources' ? 'page' : undefined}
+              onClick={() => setScreen('sources')}
             >
-              <Icon size={19} />
-              <span>{title}</span>
+              <DatabaseIcon size={20} aria-hidden="true" />
+              {t('Fuentes', 'Sources', 'Fontes')}
             </button>
-          ))}
-        </nav>
-        <div className="fw-sidebar-foot">
-          <button
-            className={`fw-emergency-trigger fw-emergency-persistent ${screen === 'emergency' ? 'current' : ''}`}
-            aria-current={screen === 'emergency' ? 'page' : undefined}
-            onClick={() => openEmergency('call')}
-          >
-            <PhoneIcon size={19} aria-hidden="true" />
-            {t('Emergencias', 'Emergency', 'Emergência')}
-          </button>
-          {/* On phones only the icon shows, so the name comes from the label. */}
-          <button
-            className="fw-profile-button"
-            aria-label={`${t('Mis datos', 'My details', 'Meus dados')}: ${
-              profile
-                ? names.of(profile.destination)
-                : t('Sin configurar', 'Not set up', 'Não configurado')
-            }`}
-            onClick={() => setScreen('hotel')}
-          >
-            <UserCircleIcon size={22} />
-            <span>
-              {t('Mis datos', 'My details', 'Meus dados')}
-              <small>
-                {profile
-                  ? names.of(profile.destination)
-                  : t('Sin configurar', 'Not set up', 'Não configurado')}
-              </small>
-            </span>
-          </button>
-          <button
-            className={`fw-source-access ${screen === 'sources' ? 'current' : ''}`}
-            aria-current={screen === 'sources' ? 'page' : undefined}
-            onClick={() => setScreen('sources')}
-          >
-            <InfoIcon size={19} />
-            <span>
-              {t('Fuentes y actualización', 'Sources & updates', 'Fontes e atualizações')}
-              <small>IGC · EMSC · USGS · NOAA · GDACS</small>
-            </span>
-          </button>
-          <div className="fw-language" role="group" aria-label={t('Idioma', 'Language', 'Idioma')}>
-            <button aria-pressed={lang === 'es'} onClick={() => changeLanguage('es')}>
-              ES
-            </button>
-            <button aria-pressed={lang === 'en'} onClick={() => changeLanguage('en')}>
-              EN
-            </button>
-            <button aria-pressed={lang === 'pt'} onClick={() => changeLanguage('pt')}>
-              PT
-            </button>
-          </div>
-        </div>
-      </header>
-      <main id="main" className="fw-main" data-screen={screen}>
-        <p className="fw-visually-hidden" role="status">
-          {connection === 'lost'
+            <a className="f-side-link" href="/privacy.html">
+              <ShieldCheckIcon size={20} aria-hidden="true" />
+              {t('Privacidad', 'Privacy', 'Privacidade')}
+            </a>
+          </>
+        }
+      />
+      <Header {...frame} />
+      {!live.online && (
+        <StatusBar>
+          <WifiSlashIcon size={16} aria-hidden="true" />
+          {live.fetched
             ? t(
-                'Sin conexión. Los números de emergencia y la guía siguen disponibles.',
-                'Offline. Emergency numbers and guidance are still available.',
-                'Sem conexão. Os números de emergência e o guia continuam disponíveis.',
+                `Sin conexión · datos de ${atLabel(live.fetched, live.now, lang)}`,
+                `Offline · data from ${atLabel(live.fetched, live.now, lang)}`,
+                `Sem conexão · dados de ${atLabel(live.fetched, live.now, lang)}`,
               )
-            : connection === 'back'
+            : t(
+                'Sin conexión · los números y la guía funcionan',
+                'Offline · numbers and guidance still work',
+                'Sem conexão · números e guia funcionam',
+              )}
+        </StatusBar>
+      )}
+      {/* The scrolling region keeps the older screens' classes while they move to the design system. */}
+      <main id="main" className="f-content fw-app" ref={appRef} data-screen={screen}>
+        <div
+          className="f-page fw-main"
+          data-screen={screen}
+          data-legacy={
+            (screen !== 'activity' && screen !== 'emergency' && screen !== 'country') || undefined
+          }
+        >
+          <p className="fw-visually-hidden" role="status">
+            {connection === 'lost'
               ? t(
-                  'Conexión recuperada. Los datos oficiales se están actualizando.',
-                  'Back online. Official data is updating.',
-                  'Conexão restabelecida. Os dados oficiais estão sendo atualizados.',
+                  'Sin conexión. Los números de emergencia y la guía siguen disponibles.',
+                  'Offline. Emergency numbers and guidance are still available.',
+                  'Sem conexão. Os números de emergência e o guia continuam disponíveis.',
                 )
-              : ''}
-        </p>
-        {!live.online && (
-          <div className="fw-offline">
-            <WifiSlashIcon size={20} aria-hidden="true" />
-            <p>
-              <strong>{t('Sin conexión', 'Offline', 'Sem conexão')}</strong>
-              {t(
-                'Puedes usar lo guardado en este dispositivo: números de emergencia, guía, tu plan y tus contactos. Los datos oficiales no se actualizan hasta que vuelva la conexión.',
-                'You can use what is stored on this device: emergency numbers, guidance, your plan and contacts. Official data will not update until the connection returns.',
-                'Você pode usar o que está salvo neste dispositivo: números de emergência, guia, seu plano e seus contatos. Os dados oficiais não são atualizados até a conexão voltar.',
-              )}
-            </p>
-          </div>
-        )}
-        {profileFeedback && (
-          <div className="fw-save-feedback">
-            <span role="status">
-              {profileFeedback === 'storage'
+              : connection === 'back'
                 ? t(
-                    'No se pudo guardar el cambio en este navegador. Inténtalo de nuevo.',
-                    'Could not save the change in this browser. Please retry.',
-                    'Não foi possível salvar a alteração neste navegador. Tente de novo.',
+                    'Conexión recuperada. Los datos oficiales se están actualizando.',
+                    'Back online. Official data is updating.',
+                    'Conexão restabelecida. Os dados oficiais estão sendo atualizados.',
                   )
-                : profileFeedback === 'saved'
+                : ''}
+          </p>
+          {profileFeedback && (
+            <div className="fw-save-feedback">
+              <span role="status">
+                {profileFeedback === 'storage'
                   ? t(
-                      'Perfil guardado en este navegador.',
-                      'Profile saved in this browser.',
-                      'Perfil salvo neste navegador.',
+                      'No se pudo guardar el cambio en este navegador. Inténtalo de nuevo.',
+                      'Could not save the change in this browser. Please retry.',
+                      'Não foi possível salvar a alteração neste navegador. Tente de novo.',
                     )
-                  : t(
-                      'Perfil borrado. Tus contactos y planes se conservaron.',
-                      'Profile deleted. Your contacts and plans were kept.',
-                      'Perfil apagado. Seus contatos e planos foram mantidos.',
-                    )}
-            </span>
-            {profileFeedback === 'saved' && (
-              <button
-                onClick={() => {
-                  setScreen('hotel');
-                  setProfileFeedback(null);
-                }}
-              >
-                {t('Preparar mi viaje', 'Prepare my trip', 'Preparar minha viagem')}
-              </button>
-            )}
-            <button
-              aria-label={t('Cerrar confirmación', 'Dismiss confirmation', 'Fechar confirmação')}
-              onClick={() => setProfileFeedback(null)}
-            >
-              <XIcon size={18} />
-            </button>
-          </div>
-        )}
-        <div className="fw-context">
-          <div className="fw-country">
-            <CountrySearch
-              label={t('País', 'Country', 'País')}
-              value={country}
-              lang={lang}
-              includeWorld
-              onChange={(code) => {
-                if (code) changeCountry(code);
-              }}
-            />
-            <button
-              className="fw-country-locate"
-              onClick={countryFromLocation}
-              disabled={placeState?.kind === 'pending'}
-              aria-label={t(
-                'Usar mi ubicación para elegir el país',
-                'Use my location to choose the country',
-                'Usar minha localização para escolher o país',
-              )}
-            >
-              <CrosshairIcon size={18} aria-hidden="true" />
-              <span>
-                {placeState?.kind === 'pending'
-                  ? t('Ubicando…', 'Locating…', 'Localizando…')
-                  : t('Mi ubicación', 'My location', 'Minha localização')}
-              </span>
-            </button>
-            {/* Saves the country for one-tap switching later; the label says so. */}
-            <button
-              className="fw-country-save"
-              onClick={saveCountry}
-              aria-pressed={savedCountries.includes(country)}
-              aria-label={
-                savedCountries.includes(country)
-                  ? t(
-                      'Quitar de mis países guardados',
-                      'Remove from my saved countries',
-                      'Remover dos meus países salvos',
-                    )
-                  : t('Guardar este país', 'Save this country', 'Salvar este país')
-              }
-            >
-              <BookmarkSimpleIcon
-                size={18}
-                weight={savedCountries.includes(country) ? 'fill' : 'regular'}
-                aria-hidden="true"
-              />
-              <span>
-                {savedCountries.includes(country)
-                  ? t('País guardado', 'Country saved', 'País salvo')
-                  : t('Guardar país', 'Save country', 'Salvar país')}
-              </span>
-            </button>
-          </div>
-          <InstallFaro lang={lang} />
-          {placeState && placeState.kind !== 'pending' && (
-            <p className="fw-context-status" role="status">
-              {placeState.kind === 'found'
-                ? t(
-                    `Según tu ubicación: ${names.of(placeState.code)}.`,
-                    `Based on your location: ${names.of(placeState.code)}.`,
-                    `Pela sua localização: ${names.of(placeState.code)}.`,
-                  )
-                : placeState.kind === 'denied'
-                  ? t(
-                      'No diste permiso de ubicación. Elige el país en la lista.',
-                      'Location permission was not given. Choose the country from the list.',
-                      'Você não deu permissão de localização. Escolha o país na lista.',
-                    )
-                  : placeState.kind === 'unknown'
+                  : profileFeedback === 'saved'
                     ? t(
-                        'No pudimos saber en qué país estás. Elígelo en la lista.',
-                        'We could not tell which country you are in. Choose it from the list.',
-                        'Não conseguimos saber em que país você está. Escolha-o na lista.',
+                        'Perfil guardado en este navegador.',
+                        'Profile saved in this browser.',
+                        'Perfil salvo neste navegador.',
                       )
                     : t(
-                        'No se pudo obtener tu ubicación. Elige el país en la lista.',
-                        'Your location could not be found. Choose the country from the list.',
-                        'Não foi possível obter sua localização. Escolha o país na lista.',
+                        'Perfil borrado. Tus contactos y planes se conservaron.',
+                        'Profile deleted. Your contacts and plans were kept.',
+                        'Perfil apagado. Seus contatos e planos foram mantidos.',
                       )}
-            </p>
-          )}
-        </div>
-        {/* One-tap switches to other saved countries; the one on screen is not repeated. */}
-        {screen !== 'guide' && screen !== 'status' && otherSaved.length > 0 && (
-          <div className="fw-saved">
-            <small>{t('Guardados', 'Saved', 'Salvos')}</small>
-            {otherSaved.map((c) => (
-              <button key={c} onClick={() => changeCountry(c)}>
-                {c === 'WORLD' ? t('Mundo', 'World', 'Mundo') : names.of(c)}
-              </button>
-            ))}
-          </div>
-        )}
-        {/* A source that answers but whose newest record is more than a day old: said with its
-            date, with the other catalogs one tap away. Never read as "no earthquakes". */}
-        {screen === 'detail' && homeTab === 'quakes' && !stale && quietSince && live.online && (
-          <div className="fw-warning" role="status">
-            {t(
-              `El registro más reciente de ${provider} es del ${stamp(quietSince)}. Otras fuentes pueden tener datos más nuevos:`,
-              `${provider}'s most recent record is from ${stamp(quietSince)}. Other sources may have newer data:`,
-              `O registro mais recente de ${provider} é de ${stamp(quietSince)}. Outras fontes podem ter dados mais novos:`,
-            )}{' '}
-            <span className="fw-source-fallback">
-              {alternatives.map((c) => (
-                <button key={c} onClick={() => switchCatalog(c)}>
-                  {providerNames[c]}
+              </span>
+              {profileFeedback === 'saved' && (
+                <button
+                  onClick={() => {
+                    setScreen('hotel');
+                    setProfileFeedback(null);
+                  }}
+                >
+                  {t('Preparar mi viaje', 'Prepare my trip', 'Preparar minha viagem')}
                 </button>
-              ))}
-            </span>
-          </div>
-        )}
-        {/* Offline is already explained by the banner above; this box is for a failing source. */}
-        {screen === 'detail' && homeTab === 'quakes' && stale && live.online && (
-          <div className="fw-warning" role="status">
-            {t(
-              'No hay una actualización reciente. Estos registros pueden estar desactualizados.',
-              'No recent update. These records may be out of date.',
-              'Não há uma atualização recente. Estes registros podem estar desatualizados.',
-            )}{' '}
-            {live.fetched
-              ? `${t('Última consulta correcta', 'Last successful check', 'Última consulta bem-sucedida')}: ${stamp(live.fetched)}`
-              : t(
-                  'Todavía no se recibieron datos.',
-                  'No data received yet.',
-                  'Ainda não foram recebidos dados.',
-                )}
-            <button onClick={() => void live.refresh()}>
-              {t('Reintentar', 'Retry', 'Tentar de novo')}
-            </button>
-            {live.online && (
+              )}
+              <button
+                aria-label={t('Cerrar confirmación', 'Dismiss confirmation', 'Fechar confirmação')}
+                onClick={() => setProfileFeedback(null)}
+              >
+                <XIcon size={18} />
+              </button>
+            </div>
+          )}
+          {/* A source that answers but whose newest record is more than a day old: said with its
+            date, with the other catalogs one tap away. Never read as "no earthquakes". */}
+          {screen === 'detail' && homeTab === 'quakes' && !stale && quietSince && live.online && (
+            <div className="fw-warning" role="status">
+              {t(
+                `El registro más reciente de ${provider} es del ${stamp(quietSince)}. Otras fuentes pueden tener datos más nuevos:`,
+                `${provider}'s most recent record is from ${stamp(quietSince)}. Other sources may have newer data:`,
+                `O registro mais recente de ${provider} é de ${stamp(quietSince)}. Outras fontes podem ter dados mais novos:`,
+              )}{' '}
               <span className="fw-source-fallback">
-                {t(
-                  'Mientras tanto, consulta otra fuente:',
-                  'Meanwhile, check another source:',
-                  'Enquanto isso, consulte outra fonte:',
-                )}
                 {alternatives.map((c) => (
                   <button key={c} onClick={() => switchCatalog(c)}>
                     {providerNames[c]}
                   </button>
                 ))}
               </span>
-            )}
-          </div>
-        )}
-        {screen !== 'status' && checkInDue(checkIns[0], live.now) && (
-          <div className="fw-checkin-reminder" role="status">
-            <span>
+            </div>
+          )}
+          {/* Offline is already explained by the banner above; this box is for a failing source. */}
+          {screen === 'detail' && homeTab === 'quakes' && stale && live.online && (
+            <div className="fw-warning" role="status">
               {t(
-                'Tienes pendiente avisar cómo estás.',
-                'Your planned check-in is overdue.',
-                'Você ainda precisa avisar como está.',
-              )}
-            </span>
-            <button onClick={() => setScreen('status')}>
-              {t('Actualizar mi estado', 'Update my status', 'Atualizar meu status')}
-            </button>
-          </div>
-        )}
-        {screen !== 'activity' && (
-          <div className="fw-heading">
-            <div>
-              {screen === 'detail' && (
-                <button className="fw-back" onClick={() => setScreen('activity')}>
-                  <CaretLeftIcon size={16} aria-hidden="true" />
-                  {t(
-                    `Situación en ${countryName}`,
-                    `Situation in ${countryName}`,
-                    `Situação · ${countryName}`,
+                'No hay una actualización reciente. Estos registros pueden estar desactualizados.',
+                'No recent update. These records may be out of date.',
+                'Não há uma atualização recente. Estes registros podem estar desatualizados.',
+              )}{' '}
+              {live.fetched
+                ? `${t('Última consulta correcta', 'Last successful check', 'Última consulta bem-sucedida')}: ${stamp(live.fetched)}`
+                : t(
+                    'Todavía no se recibieron datos.',
+                    'No data received yet.',
+                    'Ainda não foram recebidos dados.',
                   )}
+              <button onClick={() => void live.refresh()}>
+                {t('Reintentar', 'Retry', 'Tentar de novo')}
+              </button>
+              {live.online && (
+                <span className="fw-source-fallback">
+                  {t(
+                    'Mientras tanto, consulta otra fuente:',
+                    'Meanwhile, check another source:',
+                    'Enquanto isso, consulte outra fonte:',
+                  )}
+                  {alternatives.map((c) => (
+                    <button key={c} onClick={() => switchCatalog(c)}>
+                      {providerNames[c]}
+                    </button>
+                  ))}
+                </span>
+              )}
+            </div>
+          )}
+          {screen !== 'status' && checkInDue(checkIns[0], live.now) && (
+            <div className="fw-checkin-reminder" role="status">
+              <span>
+                {t(
+                  'Tienes pendiente avisar cómo estás.',
+                  'Your planned check-in is overdue.',
+                  'Você ainda precisa avisar como está.',
+                )}
+              </span>
+              <button onClick={() => setScreen('status')}>
+                {t('Actualizar mi estado', 'Update my status', 'Atualizar meu status')}
+              </button>
+            </div>
+          )}
+          {screen !== 'activity' && screen !== 'emergency' && screen !== 'country' && (
+            <div className="f-stack" data-gap="sm" data-head="">
+              {screen === 'detail' && (
+                <BackLink onClick={() => setScreen('activity')}>
+                  {t('Situación', 'Situation', 'Situação')}
+                </BackLink>
+              )}
+              <ScreenHead title={headings[screen][0]} lead={headings[screen][1]} />
+            </div>
+          )}
+          {/* Location matters where distances are shown: the earthquake list and local help. */}
+          {((screen === 'detail' && homeTab === 'quakes') || screen === 'help' || tracking) && (
+            <div className={`fw-location ${geoState === 'idle' ? 'fw-location-idle' : ''}`}>
+              <InfoIcon size={16} />
+              <span>
+                {geo
+                  ? `${t('Precisión aproximada', 'Approximate accuracy', 'Precisão aproximada')}: ${shortDistance(geo.accuracy, lang)} · ${t('Ubicación', 'Location', 'Localização')}: ${shortTime(geo.at)}`
+                  : geoState === 'denied'
+                    ? t(
+                        'Permiso de ubicación denegado. Puedes seguir usando el selector de país.',
+                        'Location permission denied. You can still choose a country.',
+                        'Permissão de localização negada. Você ainda pode usar o seletor de país.',
+                      )
+                    : geoState === 'failed'
+                      ? t(
+                          'No se pudo obtener la ubicación. Elige un país o inténtalo otra vez.',
+                          'Could not get your location. Choose a country or try again.',
+                          'Não foi possível obter a localização. Escolha um país ou tente de novo.',
+                        )
+                      : t(
+                          'La ubicación es opcional. Las distancias se calculan en tu dispositivo; el GPS no se guarda automáticamente.',
+                          'Location is optional. Distances are calculated on your device; GPS is not saved automatically.',
+                          'A localização é opcional. As distâncias são calculadas no seu dispositivo; o GPS não é salvo automaticamente.',
+                        )}
+              </span>
+              {tracking && (
+                <button onClick={stopLocation}>
+                  {t('Detener ubicación', 'Stop location', 'Parar localização')}
                 </button>
               )}
-              <h1 tabIndex={-1}>{headings[screen][0]}</h1>
-              <p>{headings[screen][1]}</p>
             </div>
-          </div>
-        )}
-        {/* Location matters where distances are shown: the earthquake list and local help. */}
-        {((screen === 'detail' && homeTab === 'quakes') || screen === 'help' || tracking) && (
-          <div className={`fw-location ${geoState === 'idle' ? 'fw-location-idle' : ''}`}>
-            <InfoIcon size={16} />
-            <span>
-              {geo
-                ? `${t('Precisión aproximada', 'Approximate accuracy', 'Precisão aproximada')}: ${Math.round(geo.accuracy)} m · ${t('Ubicación', 'Location', 'Localização')}: ${shortTime(geo.at)}`
-                : geoState === 'denied'
-                  ? t(
-                      'Permiso de ubicación denegado. Puedes seguir usando el selector de país.',
-                      'Location permission denied. You can still choose a country.',
-                      'Permissão de localização negada. Você ainda pode usar o seletor de país.',
-                    )
-                  : geoState === 'failed'
+          )}
+          {screen === 'activity' && (
+            <>
+              <SituationBriefing
+                lang={lang}
+                countryName={countryName}
+                quakes={{
+                  count: quakeSummary.count,
+                  largest: quakeSummary.largest,
+                  latest: latestEvent,
+                  // After "Search this area" the row counts the map area, not the country: said.
+                  period:
+                    scope === 'area'
+                      ? `${periodLabel} ${t('en el área del mapa', 'in the map area', 'na área do mapa')}`
+                      : scope === 'nearby'
+                        ? `${periodLabel} ${t(`a ${distance(radius, lang)}`, `within ${distance(radius, lang)}`, `a ${distance(radius, lang)}`)}`
+                        : periodLabel,
+                  provider,
+                  // Never answered: "checking" while online, "no data" offline, never "none".
+                  loading: !live.fetched,
+                  offline: !live.fetched && !live.online,
+                  failed: live.failed,
+                  staleSince: live.fetched && stale ? live.fetched : undefined,
+                  quietSince,
+                }}
+                monitor={{
+                  state: !live.online
+                    ? 'offline'
+                    : !live.checked
+                      ? live.failed
+                        ? 'failed'
+                        : 'checking'
+                      : stale
+                        ? 'stale'
+                        : 'live',
+                  // The time of the data itself: an old copy served during an outage keeps its age.
+                  checked: live.fetched || live.checked || null,
+                }}
+                alert={
+                  tsunamiAlert && (
+                    <TsunamiBanner
+                      lang={lang}
+                      now={live.now}
+                      bulletin={tsunamiAlert}
+                      lastData={tsunamiLastData}
+                      onOpen={() => openTab('tsunami')}
+                    />
+                  )
+                }
+                hazards={hazardStates}
+                notes={hazardNotes}
+                nwsArea={inNws}
+                onFloodGuide={() => {
+                  setGuideTopic('flood-during');
+                  go('guide');
+                }}
+                leads={{
+                  flood: nwsCount('flood')
                     ? t(
-                        'No se pudo obtener la ubicación. Elige un país o inténtalo otra vez.',
-                        'Could not get your location. Choose a country or try again.',
-                        'Não foi possível obter a localização. Escolha um país ou tente de novo.',
+                        `NWS: ${nwsCount('flood')} avisos de inundación en vigor`,
+                        `NWS: ${nwsCount('flood')} flood alerts in force`,
+                        `NWS: ${nwsCount('flood')} avisos de inundação em vigor`,
                       )
-                    : t(
-                        'La ubicación es opcional. Las distancias se calculan en tu dispositivo; el GPS no se guarda automáticamente.',
-                        'Location is optional. Distances are calculated on your device; GPS is not saved automatically.',
-                        'A localização é opcional. As distâncias são calculadas no seu dispositivo; o GPS não é salvo automaticamente.',
-                      )}
-            </span>
-            {tracking && (
-              <button onClick={stopLocation}>
-                {t('Detener ubicación', 'Stop location', 'Parar localização')}
-              </button>
-            )}
-          </div>
-        )}
-        {screen === 'activity' && (
-          <>
-            <SituationBriefing
+                    : undefined,
+                  cyclone: nwsCount('tropical')
+                    ? t(
+                        `NWS: ${nwsCount('tropical')} avisos tropicales en vigor`,
+                        `NWS: ${nwsCount('tropical')} tropical alerts in force`,
+                        `NWS: ${nwsCount('tropical')} avisos tropicais em vigor`,
+                      )
+                    : undefined,
+                }}
+                national={
+                  inNational
+                    ? {
+                        // Only an answer for this country names its agency or counts as checked.
+                        agency:
+                          (national.data?.country === country ? national.data.agency : undefined) ??
+                          destinationFor(country)?.weatherAgency?.name ??
+                          '',
+                        warnings:
+                          national.data?.country === country
+                            ? activeWarnings(national.data.warnings, live.now)
+                            : null,
+                        failed: national.failed,
+                        partial: national.data?.country === country && national.data.partial,
+                        checked: national.data?.country === country ? national.data.fetched : null,
+                        // The adapter's previous copy during an outage never reads as "no warnings".
+                        stale:
+                          !live.online ||
+                          (national.data?.country === country &&
+                            (national.data.stale ||
+                              live.now - national.data.fetched > OFFICIAL_MAX_AGE)),
+                      }
+                    : undefined
+                }
+                stormsInBasin={inNhcRegion && storms.data ? activeStorms.length : undefined}
+                floodAdvice={floodAdvice}
+                floodNotice={floodNotice}
+                civil={
+                  inCivil
+                    ? {
+                        agency: 'SINAPROC',
+                        posts: civil.data?.posts ?? null,
+                        failed: civil.failed,
+                        stale:
+                          !live.online ||
+                          !!civil.data?.stale ||
+                          (!!civil.data && live.now - civil.data.fetched > OFFICIAL_MAX_AGE),
+                        checked: civil.data?.fetched ?? null,
+                        offline: !live.online,
+                      }
+                    : undefined
+                }
+                // U.S. territories follow the U.S. agencies, as their emergency numbers do.
+                authority={destinationFor(US_AREAS.has(country) ? 'US' : country)?.civilProtection}
+                weather={destinationFor(US_AREAS.has(country) ? 'US' : country)?.weatherAgency}
+                services={destinationFor(country)?.services}
+                now={live.now}
+                onSources={() => setScreen('sources')}
+                call={
+                  <HomeCall
+                    lang={lang}
+                    country={country}
+                    onEmergency={() => openEmergency('call')}
+                  />
+                }
+                actions={
+                  <HomeActions
+                    lang={lang}
+                    country={country}
+                    onEmergency={() => openEmergency('call')}
+                    onSteps={() => openEmergency('steps')}
+                    onStatus={() => setScreen('status')}
+                    onEmbassy={() => setScreen('help')}
+                    nationalityName={
+                      profile?.nationality || nationality
+                        ? names.of(profile?.nationality || nationality)
+                        : undefined
+                    }
+                  />
+                }
+                map={
+                  <div className="f-stack" data-gap="lg">
+                    <div className="f-stack" data-gap="sm">
+                      {/* The map's markers are focusable; keyboard users can pass them in one step. */}
+                      <a className="f-skip" href="#fw-map-foot">
+                        {t('Saltar el mapa', 'Skip the map', 'Pular o mapa')}
+                      </a>
+                      <MapFrame>
+                        <WebMap
+                          embassies={mappedEmbassies}
+                          hazards={mapHazards}
+                          areas={warningAreas}
+                          lang={lang}
+                          events={results}
+                          view={view}
+                          geo={geo}
+                          point={visiblePoint}
+                          selected={detail || focused || undefined}
+                          onSelect={(q) => setDetail(q.id)}
+                          onBounds={setPending}
+                        />
+                      </MapFrame>
+                      <div id="fw-map-foot" tabIndex={-1} className="f-stack" data-gap="sm">
+                        <Note>
+                          {[
+                            scope === 'nearby'
+                              ? `${distance(radius, lang)} ${t('cerca de ti', 'near you', 'perto de você')}`
+                              : scope === 'area'
+                                ? t('Área del mapa', 'Map area', 'Área do mapa')
+                                : countryName,
+                            t(
+                              'puntos publicados, no zonas de riesgo',
+                              'published points, not hazard zones',
+                              'pontos publicados, não zonas de risco',
+                            ),
+                            t('marcador: magnitud', 'pin: magnitude', 'marcador: magnitude'),
+                            t('círculo: cantidad', 'circle: count', 'círculo: quantidade'),
+                            t(
+                              'línea morada: placas tectónicas',
+                              'purple line: tectonic plates',
+                              'linha roxa: placas tectônicas',
+                            ),
+                            mapHazards.length > 0
+                              ? t(
+                                  'ícono redondo: alerta GDACS',
+                                  'round icon: GDACS alert',
+                                  'ícone redondo: alerta do GDACS',
+                                )
+                              : '',
+                            warningAreas.length > 0
+                              ? t(
+                                  `área sombreada: aviso de ${national.data!.agency}`,
+                                  `shaded area: ${national.data!.agency} warning`,
+                                  `área sombreada: aviso do ${national.data!.agency}`,
+                                )
+                              : '',
+                            visiblePoint
+                              ? t(
+                                  'bandera: punto personal no verificado',
+                                  'flag: unverified personal point',
+                                  'bandeira: ponto pessoal não verificado',
+                                )
+                              : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </Note>
+                        {(availableEmbassy || dirty) && (
+                          <div className="f-actions">
+                            {availableEmbassy && (
+                              <button
+                                type="button"
+                                aria-pressed={showEmbassies}
+                                onClick={() => setShowEmbassies((v) => !v)}
+                              >
+                                {showEmbassies
+                                  ? t(
+                                      'Ocultar mi embajada',
+                                      'Hide my embassy',
+                                      'Ocultar minha embaixada',
+                                    )
+                                  : t(
+                                      'Mostrar mi embajada',
+                                      'Show my embassy',
+                                      'Mostrar minha embaixada',
+                                    )}
+                              </button>
+                            )}
+                            {dirty && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setBounds(pending);
+                                  setScope('area');
+                                  setPage(1);
+                                }}
+                              >
+                                {t('Buscar en esta área', 'Search this area', 'Buscar nesta área')}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {/* Wide screens have room for the latest earthquakes beside the hazards. */}
+                    {results.length > 0 && (
+                      <div className="f-when-split">
+                        <Section
+                          id="fw-latest"
+                          title={t('Últimos sismos', 'Latest earthquakes', 'Últimos terremotos')}
+                          aside={provider}
+                        >
+                          <List>
+                            {[...results]
+                              .sort((a, b) => b.time - a.time)
+                              .slice(0, 5)
+                              .map((q) => (
+                                <ListRow
+                                  key={q.id}
+                                  lead={<Magnitude value={q.mag} />}
+                                  title={displayPlace(q.place)}
+                                  meta={`${shortTime(q.time)} · ${distance(q.depth, lang)} ${t('de prof.', 'deep', 'de prof.')}`}
+                                  onClick={() => setDetail(q.id)}
+                                />
+                              ))}
+                          </List>
+                        </Section>
+                      </div>
+                    )}
+                  </div>
+                }
+                response={
+                  responsesFor(country, live.now).length > 0 ? (
+                    <>
+                      {responsesFor(country, live.now).map((r) => (
+                        <ResponsePanel
+                          key={r.id}
+                          lang={lang}
+                          response={r}
+                          nationality={profile?.nationality || nationality}
+                          now={live.now}
+                        />
+                      ))}
+                    </>
+                  ) : undefined
+                }
+                onOpen={(key) =>
+                  openTab(
+                    key === 'earthquake'
+                      ? 'quakes'
+                      : key === 'tsunami'
+                        ? 'tsunami'
+                        : key === 'cyclone' && nwsCount('tropical')
+                          ? 'nws'
+                          : key === 'cyclone' && inNhcRegion
+                            ? 'storms'
+                            : key === 'cyclone' && inNws
+                              ? 'nws'
+                              : key === 'flood' && inNws
+                                ? 'nws'
+                                : 'alerts',
+                  )
+                }
+              />
+            </>
+          )}
+          {screen === 'detail' && (
+            <div className="fw-detail">
+              <HomeTabs
+                label={t('Detalle por fuente', 'Detail by source', 'Detalhe por fonte')}
+                active={homeTab}
+                onChange={setHomeTab}
+                tabs={[
+                  {
+                    id: 'quakes',
+                    label: t('Sismos', 'Earthquakes', 'Terremotos'),
+                    // No answer yet (or a failing source): no count, never a "0".
+                    // No count from old data: "0" would read as "no earthquakes".
+                    count: (live.checked || live.fetched) && !stale ? results.length : undefined,
+                    content: (
+                      <div className="fw-quakes" id="sismos">
+                        <div className="fw-query-controls">
+                          <details className="fw-query-filters">
+                            <summary>
+                              <strong>{t('Filtros', 'Filters', 'Filtros')}</strong>
+                              <span>
+                                {catalog} ·{' '}
+                                {hours === 168 ? t('7 días', '7 days', '7 dias') : `${hours} h`} ·{' '}
+                                {minMag
+                                  ? `${t('Magnitud', 'Magnitude', 'Magnitude')} ≥ ${minMag}`
+                                  : t(
+                                      'Todas las magnitudes',
+                                      'All magnitudes',
+                                      'Todas as magnitudes',
+                                    )}
+                                {maxDepth < 800 ? ` · ≤ ${distance(maxDepth, lang)}` : ''}
+                                {scope === 'nearby' ? ` · ${distance(radius, lang)}` : ''}
+                              </span>
+                            </summary>{' '}
+                            <div className="fw-toolbar fw-catalog-toolbar">
+                              <label>
+                                {t('Fuente', 'Source', 'Fonte')}
+                                <select
+                                  value={catalog}
+                                  onChange={(e) => switchCatalog(e.target.value as CatalogId)}
+                                >
+                                  {country === 'PA' && (
+                                    <option value="IGC">IGC · UP · Panamá</option>
+                                  )}
+                                  <option value="EMSC">
+                                    EMSC · {t('Mundo, M2.5+', 'Worldwide, M2.5+', 'Mundo, M2.5+')}
+                                  </option>
+                                  <option value="USGS">
+                                    USGS · {t('Mundo', 'Worldwide', 'Mundo')}
+                                  </option>
+                                </select>
+                              </label>
+                              <label>
+                                {t('Período', 'Period', 'Período')}
+                                <select
+                                  value={hours}
+                                  onChange={(e) => {
+                                    setHours(+e.target.value);
+                                    setPage(1);
+                                  }}
+                                >
+                                  <option value={1}>{t('1 hora', '1 hour', '1 hora')}</option>
+                                  <option value={24}>
+                                    {t('24 horas', '24 hours', '24 horas')}
+                                  </option>
+                                  <option value={168}>{t('7 días', '7 days', '7 dias')}</option>
+                                </select>
+                              </label>
+                              <label>
+                                {t('Magnitud', 'Magnitude', 'Magnitude')}
+                                <select value={minMag} onChange={(e) => setMinMag(+e.target.value)}>
+                                  <option value={0}>{t('Todas', 'All', 'Todas')}</option>
+                                  {[2.5, 4, 5, 6].map((m) => (
+                                    <option key={m} value={m}>
+                                      ≥ {m}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <details className="fw-filter-extra">
+                                <summary>
+                                  {t('Más filtros', 'More filters', 'Mais filtros')}
+                                </summary>
+                                <div>
+                                  <label>
+                                    {t('Zona horaria', 'Time zone', 'Fuso horário')}
+                                    <select
+                                      value={timeZone}
+                                      onChange={(e) =>
+                                        setTimeZone(e.target.value as 'local' | 'utc')
+                                      }
+                                    >
+                                      <option value="local">
+                                        {t('Local', 'Local', 'Local')} ·{' '}
+                                        {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                                      </option>
+                                      <option value="utc">UTC</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    {t('Profundidad', 'Depth', 'Profundidade')}
+                                    <select
+                                      value={maxDepth}
+                                      onChange={(e) => setMaxDepth(+e.target.value)}
+                                    >
+                                      <option value={800}>{t('Todas', 'All', 'Todas')}</option>
+                                      <option value={70}>≤ {distance(70, lang)}</option>
+                                      <option value={30}>≤ {distance(30, lang)}</option>
+                                    </select>
+                                  </label>
+                                  {geo && (
+                                    <label>
+                                      {t('Área', 'Area', 'Área')}
+                                      <select
+                                        value={scope === 'nearby' ? radius : 0}
+                                        onChange={(e) => {
+                                          setScope(+e.target.value ? 'nearby' : 'area');
+                                          if (+e.target.value) setRadius(+e.target.value);
+                                        }}
+                                      >
+                                        <option value={0}>
+                                          {t(
+                                            'Área seleccionada',
+                                            'Selected area',
+                                            'Área selecionada',
+                                          )}
+                                        </option>
+                                        {[50, 100, 300, 500].map((k) => (
+                                          <option key={k} value={k}>
+                                            {distance(k, lang)} ·{' '}
+                                            {t('cerca de mí', 'near me', 'perto de mim')}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                  )}
+                                </div>
+                              </details>
+                            </div>
+                            <div className="fw-filter-location">
+                              <button
+                                className="fw-secondary"
+                                onClick={locate}
+                                disabled={geoState === 'pending'}
+                              >
+                                <CrosshairIcon size={18} />
+                                {geoState === 'pending'
+                                  ? t(
+                                      'Buscando ubicación…',
+                                      'Finding location…',
+                                      'Buscando localização…',
+                                    )
+                                  : t(
+                                      'Sismos cerca de mí',
+                                      'Earthquakes near me',
+                                      'Terremotos perto de mim',
+                                    )}
+                              </button>
+                              <button className="fw-text" onClick={() => setScreen('sources')}>
+                                {t(
+                                  'Fuentes y cobertura',
+                                  'Sources & coverage',
+                                  'Fontes e cobertura',
+                                )}
+                              </button>
+                              <small>
+                                {t(
+                                  'La ubicación es opcional y requiere tu permiso.',
+                                  'Location is optional and requires your permission.',
+                                  'A localização é opcional e precisa da sua permissão.',
+                                )}
+                              </small>
+                            </div>
+                          </details>
+                        </div>
+                        <LiveActivity
+                          events={results}
+                          updates={live.updates.filter((u) =>
+                            results.some((e) => e.id === u.event.id),
+                          )}
+                          provider={provider}
+                          catalog={catalog}
+                          lang={lang}
+                          now={live.now}
+                          next={live.next}
+                          checked={live.checked}
+                          fetched={live.fetched}
+                          busy={live.busy}
+                          online={live.online}
+                          stale={stale}
+                          period={periodLabel}
+                          formatTime={(n) =>
+                            `${shortTime(n)} ${timeZone === 'utc' ? 'UTC' : new Intl.DateTimeFormat(lang, { timeZoneName: 'short' }).formatToParts(n).find((p) => p.type === 'timeZoneName')?.value || ''}`
+                          }
+                          onRefresh={() => void live.refresh()}
+                          onDetails={(q) => setDetail(q.id)}
+                          onMap={showEpicentre}
+                        />
+                        <div className="fw-quake-meta">
+                          <p className="fw-area-scope" role="status">
+                            {scope === 'country' && hasBorders(country)
+                              ? t(
+                                  `${countryName} y hasta 100 km mar adentro. Límites aproximados.`,
+                                  `${countryName} and up to ${distance(100, lang)} offshore. Approximate boundaries.`,
+                                  `${countryName} e até 100 km mar adentro. Limites aproximados.`,
+                                )
+                              : scope === 'nearby'
+                                ? t(
+                                    `Sismos a menos de ${radius} km de tu ubicación.`,
+                                    `Earthquakes within ${distance(radius, lang)} of your location.`,
+                                    `Terremotos a menos de ${radius} km da sua localização.`,
+                                  )
+                                : scope === 'area'
+                                  ? t(
+                                      'Área del mapa: incluye todos los países visibles.',
+                                      'Map area: includes all visible countries.',
+                                      'Área do mapa: inclui todos os países visíveis.',
+                                    )
+                                  : regionScope(country, lang)}
+                          </p>
+                          <MagnitudeLegend lang={lang} />
+                        </div>
+                        <section
+                          className="fw-events"
+                          aria-label={t(
+                            'Lista de sismos',
+                            'Earthquake list',
+                            'Lista de terremotos',
+                          )}
+                        >
+                          <div className="fw-events-title">
+                            <div>
+                              <h2 id="fw-events-title" tabIndex={-1}>
+                                {/* No count before the catalog has answered: "0" would read as none. */}
+                                {!live.fetched
+                                  ? t('Sismos', 'Earthquakes', 'Terremotos')
+                                  : `${results.length} ${
+                                      results.length === 1
+                                        ? t('sismo', 'earthquake', 'terremoto')
+                                        : t('sismos', 'earthquakes', 'terremotos')
+                                    }`}
+                              </h2>
+                              {listPage.pages > 1 && (
+                                <p>
+                                  {t(
+                                    `Mostrando ${listPage.start + 1}–${listPage.end}`,
+                                    `Showing ${listPage.start + 1}–${listPage.end}`,
+                                    `Mostrando ${listPage.start + 1}–${listPage.end}`,
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                            <select
+                              aria-label={t('Ordenar eventos', 'Sort events', 'Ordenar eventos')}
+                              value={order}
+                              onChange={(e) => setOrder(e.target.value)}
+                            >
+                              <option value="time">
+                                {t('Más recientes', 'Most recent', 'Mais recentes')}
+                              </option>
+                              <option value="magnitude">
+                                {t('Mayor magnitud', 'Largest magnitude', 'Maior magnitude')}
+                              </option>
+                              {geo && (
+                                <option value="distance">
+                                  {t('Más cercanos', 'Nearest', 'Mais próximos')}
+                                </option>
+                              )}
+                            </select>
+                          </div>
+                          <div className="fw-event-list">
+                            {results.slice(listPage.start, listPage.end).map((q) => (
+                              <button
+                                key={q.id}
+                                className={`fw-event ${newIds.has(q.id) ? 'is-new' : ''}`}
+                                onClick={() => setDetail(q.id)}
+                              >
+                                <strong className={`fw-mag fw-mag-band-${magnitudeBand(q.mag)}`}>
+                                  {q.mag?.toFixed(1) ?? '—'}
+                                  <small className="fw-visually-hidden">
+                                    {t('Magnitud', 'Magnitude', 'Magnitude')}
+                                  </small>
+                                </strong>
+                                <span>
+                                  <b>
+                                    {displayPlace(q.place)}
+                                    {newIds.has(q.id) && (
+                                      <em className="fw-event-new">
+                                        {t(
+                                          'Recibido recientemente',
+                                          'Recently received',
+                                          'Recebido recentemente',
+                                        )}
+                                      </em>
+                                    )}
+                                  </b>
+                                  <small>
+                                    {shortTime(q.time)} {timeZone === 'utc' ? 'UTC' : ''} ·{' '}
+                                    {q.source || 'USGS'} · {distance(q.depth, lang)}{' '}
+                                    {t('prof.', 'deep', 'de prof.')}
+                                    {geo
+                                      ? ` · ${distance(distanceKm([geo.lat, geo.lng], [q.lat, q.lng]), lang)} ${t('de ti', 'away', 'de você')}`
+                                      : ''}
+                                  </small>
+                                </span>
+                                <CaretRightIcon size={18} aria-hidden="true" />
+                              </button>
+                            ))}
+                            {!results.length && (
+                              <div className="fw-empty">
+                                <MapPinIcon size={32} />
+                                <h3>
+                                  {!live.online
+                                    ? t('Sin conexión', 'Offline', 'Sem conexão')
+                                    : live.busy
+                                      ? `${t('Consultando', 'Checking', 'Consultando')} ${provider}…`
+                                      : live.failed
+                                        ? t(
+                                            'No pudimos consultar la fuente',
+                                            'Could not reach the source',
+                                            'Não conseguimos consultar a fonte',
+                                          )
+                                        : t(
+                                            'Sin registros en esta consulta',
+                                            'No records in this query',
+                                            'Sem registros nesta consulta',
+                                          )}
+                                </h3>
+                                <p>
+                                  {!live.online
+                                    ? t(
+                                        'Cuando vuelva la conexión, intentaremos actualizar los datos. La ayuda y tus datos guardados siguen disponibles en esta página.',
+                                        'When the connection returns, we will try to update. Help and your saved data remain available on this page.',
+                                        'Quando a conexão voltar, vamos tentar atualizar os dados. A ajuda e seus dados salvos continuam disponíveis nesta página.',
+                                      )
+                                    : live.busy && !live.fetched
+                                      ? t(
+                                          'Esperando la respuesta de la fuente. Tras un sismo, los sitios oficiales pueden tardar más.',
+                                          'Waiting for the source to respond. After an earthquake, official sites can be slower.',
+                                          'Aguardando a resposta da fonte. Depois de um terremoto, os sites oficiais podem demorar mais.',
+                                        )
+                                      : live.failed
+                                        ? t(
+                                            'La consulta falló; esto no significa que no haya sismos. Puedes reintentar o elegir otra fuente.',
+                                            'The request failed; this does not mean there are no earthquakes. Retry or choose another source.',
+                                            'A consulta falhou; isso não significa que não haja terremotos. Você pode tentar de novo ou escolher outra fonte.',
+                                          )
+                                        : t(
+                                            'Amplía el período o el área. La ausencia de registros no significa ausencia de peligro.',
+                                            'Widen the period or area. No records does not mean no danger.',
+                                            'Amplie o período ou a área. A ausência de registros não significa ausência de perigo.',
+                                          )}
+                                </p>
+                                {(live.failed || stale || quietSince) && live.online && (
+                                  <div className="fw-empty-fallback">
+                                    {alternatives.map((c) => (
+                                      <button
+                                        key={c}
+                                        className="fw-primary"
+                                        onClick={() => switchCatalog(c)}
+                                      >
+                                        {t('Ver', 'Use', 'Usar')} {providerNames[c]}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                                <button
+                                  className="fw-secondary"
+                                  onClick={() => {
+                                    setHours(24);
+                                    setMinMag(0);
+                                    setMaxDepth(800);
+                                    setScope('country');
+                                    setBounds(regionFor(country).bounds);
+                                    setPage(1);
+                                  }}
+                                >
+                                  {t('Restablecer filtros', 'Reset filters', 'Redefinir filtros')}
+                                </button>
+                              </div>
+                            )}
+                            <Pagination
+                              lang={lang}
+                              label={t(
+                                'Páginas de sismos',
+                                'Earthquake pages',
+                                'Páginas de terremotos',
+                              )}
+                              current={listPage.current}
+                              pages={listPage.pages}
+                              onPage={(n) => {
+                                setPage(n);
+                                // The new page starts at the top of the list, with focus there.
+                                const title = document.getElementById('fw-events-title');
+                                title?.focus({ preventScroll: true });
+                                title
+                                  ?.closest('.fw-events')
+                                  ?.scrollIntoView({ block: 'start', behavior: scrollMotion() });
+                              }}
+                            />
+                          </div>
+                        </section>
+                        <div className="fw-disclaimer">
+                          <InfoIcon size={18} />
+                          <p>
+                            {t(
+                              'Faro muestra sismos que ya ocurrieron y fueron publicados. No es un sistema de alerta temprana y no identifica réplicas.',
+                              'Faro shows earthquakes that already happened and were published. It is not an early warning system and does not identify aftershocks.',
+                              'O Faro mostra terremotos que já aconteceram e foram publicados. Não é um sistema de alerta antecipado e não identifica réplicas.',
+                            )}
+                          </p>
+                          <button onClick={() => setScreen('sources')}>
+                            {t('Fuentes y cobertura', 'Sources & coverage', 'Fontes e cobertura')}
+                          </button>
+                        </div>
+                      </div>
+                    ),
+                  },
+                  {
+                    id: 'tsunami',
+                    label: t('Tsunami', 'Tsunami', 'Tsunami'),
+                    content: (
+                      <CoastalPanel
+                        lang={lang}
+                        geo={geo}
+                        country={country}
+                        data={tsunami.data}
+                        failed={tsunami.failed}
+                        busy={tsunami.busy}
+                        online={live.online}
+                        now={live.now}
+                        onRefresh={() => void tsunami.refresh()}
+                        onLocate={locate}
+                        locating={geoState === 'pending'}
+                        nws={inNws ? { data: nws.data, failed: nws.failed } : null}
+                      />
+                    ),
+                  },
+                  ...(inNhcRegion
+                    ? [
+                        {
+                          id: 'storms',
+                          label: t('Ciclones', 'Cyclones', 'Ciclones'),
+                          // No count: storms active in the basin read as storms affecting the place,
+                          // and the row may say none has an alert here. The tab explains both.
+                          count: undefined,
+                          content: (
+                            <StormsPanel
+                              lang={lang}
+                              data={storms.data}
+                              failed={storms.failed}
+                              online={live.online}
+                              now={live.now}
+                              weather={destinationFor(country)?.weatherAgency}
+                            />
+                          ),
+                        },
+                      ]
+                    : []),
+                  ...(inNws
+                    ? [
+                        {
+                          id: 'nws',
+                          label: t('Avisos NWS', 'NWS alerts', 'Avisos do NWS'),
+                          content: (
+                            <NwsPanel
+                              lang={lang}
+                              country={country}
+                              data={nws.data}
+                              failed={nws.failed}
+                            />
+                          ),
+                        },
+                      ]
+                    : []),
+                  {
+                    id: 'alerts',
+                    label: t(
+                      'Alertas internacionales',
+                      'International alerts',
+                      'Alertas internacionais',
+                    ),
+                    content: (
+                      <AlertsPanel
+                        lang={lang}
+                        country={country}
+                        countryName={countryName}
+                        bounds={regionFor(country).bounds}
+                        data={alerts.data}
+                        failed={alerts.failed}
+                        online={live.online}
+                        now={live.now}
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </div>
+          )}
+          {screen === 'sources' && (
+            <SourcesScreen lang={lang} now={live.now} countryName={countryName} rows={sourceRows} />
+          )}
+          {screen === 'country' && (
+            <CountryScreen
               lang={lang}
-              countryName={countryName}
-              quakes={{
-                count: quakeSummary.count,
-                largest: quakeSummary.largest,
-                latest: latestEvent,
-                // After "Search this area" the row counts the map area, not the country: said.
-                period:
-                  scope === 'area'
-                    ? `${periodLabel} ${t('en el área del mapa', 'in the map area', 'na área do mapa')}`
-                    : scope === 'nearby'
-                      ? `${periodLabel} ${t(`a ${radius} km`, `within ${radius} km`, `a ${radius} km`)}`
-                      : periodLabel,
-                provider,
-                // Never answered: "checking" while online, "no data" offline, never "none".
-                loading: !live.fetched,
-                offline: !live.fetched && !live.online,
-                failed: live.failed,
-                staleSince: live.fetched && stale ? live.fetched : undefined,
-                quietSince,
+              country={country}
+              saved={savedCountries}
+              onChoose={(code) => {
+                changeCountry(code);
+                history.back();
               }}
-              monitor={{
-                state: !live.online
-                  ? 'offline'
-                  : !live.checked
-                    ? live.failed
-                      ? 'failed'
-                      : 'checking'
-                    : stale
-                      ? 'stale'
-                      : 'live',
-                // The time of the data itself: an old copy served during an outage keeps its age.
-                checked: live.fetched || live.checked || null,
-              }}
+              onToggleSave={saveCountry}
+              onLocate={countryFromLocation}
+              locating={placeState?.kind === 'pending'}
+              locateStatus={locateStatus}
+              onLanguage={changeLanguage}
+              onBack={() => history.back()}
+              backLabel={t('Volver', 'Back', 'Voltar')}
+              install={<InstallFaro lang={lang} />}
+            />
+          )}
+          {screen === 'emergency' && (
+            <EmergencyScreen
+              country={country}
+              lang={lang}
+              nationality={nationality}
+              plan={plan}
+              latest={latestEvent}
+              latestStaleSince={live.fetched && stale ? live.fetched : undefined}
               alert={
                 tsunamiAlert && (
                   <TsunamiBanner
@@ -1608,1024 +2257,244 @@ export default function App() {
                     now={live.now}
                     bulletin={tsunamiAlert}
                     lastData={tsunamiLastData}
-                    onOpen={() => openTab('tsunami')}
+                    onOpen={() => {
+                      go('activity');
+                      openTab('tsunami');
+                    }}
                   />
                 )
               }
-              hazards={hazardStates}
-              notes={hazardNotes}
-              nwsArea={inNws}
-              onFloodGuide={() => {
-                setGuideTopic('flood-during');
+              provider={provider}
+              now={live.now}
+              onCountry={changeCountry}
+              onNationality={rememberNationality}
+              kind={emergencyKind}
+              onKind={setEmergencyKind}
+              start={emergencyStart}
+              onGuide={(kind) => {
+                setGuideTopic(
+                  kind === 'hurricane'
+                    ? 'hurricane-during'
+                    : kind === 'flood'
+                      ? 'flood-during'
+                      : 'during',
+                );
                 go('guide');
               }}
-              leads={{
-                flood: nwsCount('flood')
-                  ? t(
-                      `NWS: ${nwsCount('flood')} avisos de inundación en vigor`,
-                      `NWS: ${nwsCount('flood')} flood alerts in force`,
-                      `NWS: ${nwsCount('flood')} avisos de inundação em vigor`,
-                    )
-                  : undefined,
-                cyclone: nwsCount('tropical')
-                  ? t(
-                      `NWS: ${nwsCount('tropical')} avisos tropicales en vigor`,
-                      `NWS: ${nwsCount('tropical')} tropical alerts in force`,
-                      `NWS: ${nwsCount('tropical')} avisos tropicais em vigor`,
-                    )
-                  : undefined,
-              }}
-              national={
-                inNational
-                  ? {
-                      // Only an answer for this country names its agency or counts as checked.
-                      agency:
-                        (national.data?.country === country ? national.data.agency : undefined) ??
-                        destinationFor(country)?.weatherAgency?.name ??
-                        '',
-                      warnings:
-                        national.data?.country === country
-                          ? activeWarnings(national.data.warnings, live.now)
-                          : null,
-                      failed: national.failed,
-                      partial: national.data?.country === country && national.data.partial,
-                      checked: national.data?.country === country ? national.data.fetched : null,
-                      // The adapter's previous copy during an outage never reads as "no warnings".
-                      stale:
-                        !live.online ||
-                        (national.data?.country === country &&
-                          (national.data.stale ||
-                            live.now - national.data.fetched > OFFICIAL_MAX_AGE)),
-                    }
-                  : undefined
-              }
-              stormsInBasin={inNhcRegion && storms.data ? activeStorms.length : undefined}
-              floodAdvice={floodAdvice}
-              floodNotice={floodNotice}
-              civil={
-                inCivil
-                  ? {
-                      agency: 'SINAPROC',
-                      posts: civil.data?.posts ?? null,
-                      failed: civil.failed,
-                      stale:
-                        !live.online ||
-                        !!civil.data?.stale ||
-                        (!!civil.data && live.now - civil.data.fetched > OFFICIAL_MAX_AGE),
-                      checked: civil.data?.fetched ?? null,
-                      offline: !live.online,
-                    }
-                  : undefined
-              }
-              // U.S. territories follow the U.S. agencies, as their emergency numbers do.
-              authority={destinationFor(US_AREAS.has(country) ? 'US' : country)?.civilProtection}
-              weather={destinationFor(US_AREAS.has(country) ? 'US' : country)?.weatherAgency}
-              services={destinationFor(country)?.services}
-              now={live.now}
-              updated={
-                <>
-                  <span className={stale ? 'is-stale' : ''}>
-                    {!live.fetched
-                      ? !live.online
-                        ? t(
-                            'Sin conexión: todavía no hay datos oficiales',
-                            'Offline: no official data yet',
-                            'Sem conexão: ainda não há dados oficiais',
-                          )
-                        : live.failed
-                          ? // Only the earthquake catalog is behind this line: it is named, so the
-                            // other sources that did answer are not reported as down.
-                            t(
-                              `La fuente de sismos (${provider}) no responde`,
-                              `The earthquake source (${provider}) is not responding`,
-                              `A fonte de terremotos (${provider}) não responde`,
-                            )
-                          : t(
-                              'Consultando fuentes oficiales…',
-                              'Checking official sources…',
-                              'Consultando fontes oficiais…',
-                            )
-                      : stale
-                        ? t(
-                            `Sismos (${provider}): sin actualizar desde ${atLabel(live.fetched, live.now, lang)}`,
-                            `Earthquakes (${provider}): not updated since ${atLabel(live.fetched, live.now, lang)}`,
-                            `Terremotos (${provider}): sem atualização desde ${atLabel(live.fetched, live.now, lang)}`,
-                          )
-                        : t(
-                            `Datos oficiales consultados a ${atLabel(live.fetched, live.now, lang)}`,
-                            `Official data checked at ${atLabel(live.fetched, live.now, lang)}`,
-                            `Dados oficiais consultados: ${atLabel(live.fetched, live.now, lang)}`,
-                          )}
-                  </span>
-                  <button className="fw-text" onClick={() => setScreen('sources')}>
-                    {t('Fuentes', 'Sources', 'Fontes')}
-                  </button>
-                </>
-              }
-              actions={
-                <HomeActions
-                  lang={lang}
-                  country={country}
-                  onEmergency={() => openEmergency('call')}
-                  onSteps={() => openEmergency('steps')}
-                  onStatus={() => setScreen('status')}
-                />
-              }
-              setup={
-                showSetupCard ? (
-                  <SetupCard
-                    lang={lang}
-                    countryName={countryName}
-                    onSave={saveNationality}
-                    onMore={() => setScreen('hotel')}
-                    onDismiss={dismissSetupCard}
-                  />
-                ) : undefined
-              }
-              map={
-                <section className="fw-map-card">
-                  <div className="fw-map-head">
-                    <span>
-                      <MapPinIcon size={17} />
-                      {scope === 'nearby'
-                        ? `${radius} km · ${t('cerca de ti', 'near you', 'perto de você')}`
-                        : scope === 'area'
-                          ? t('Área del mapa', 'Map area', 'Área do mapa')
-                          : countryName}
-                    </span>
-                    <small>
-                      {t(
-                        'Puntos publicados, no zonas de riesgo',
-                        'Published points, not hazard zones',
-                        'Pontos publicados, não zonas de risco',
-                      )}
-                    </small>
-                  </div>
-                  {/* The map's markers are focusable; keyboard users can pass them in one step. */}
-                  <a className="fw-skip" href="#fw-map-foot">
-                    {t('Saltar el mapa', 'Skip the map', 'Pular o mapa')}
-                  </a>
-                  <WebMap
-                    embassies={mappedEmbassies}
-                    hazards={mapHazards}
-                    areas={warningAreas}
-                    lang={lang}
-                    events={results}
-                    view={view}
-                    geo={geo}
-                    point={visiblePoint}
-                    selected={detail || focused || undefined}
-                    onSelect={(q) => setDetail(q.id)}
-                    onBounds={setPending}
-                  />
-                  <div className="fw-map-foot" id="fw-map-foot" tabIndex={-1}>
-                    {/* Each entry with a small copy of what it describes on the map. */}
-                    <span className="fw-map-legend">
-                      <span>
-                        <i className="fw-legend-pin" aria-hidden="true" />
-                        {t('Marcador: magnitud', 'Pin: magnitude', 'Marcador: magnitude')}
-                      </span>
-                      <span>
-                        <i className="fw-legend-count" aria-hidden="true" />
-                        {t(
-                          'Círculo: cantidad de sismos',
-                          'Circle: earthquake count',
-                          'Círculo: quantidade de terremotos',
-                        )}
-                      </span>
-                      <span>
-                        <i className="fw-legend-plate" aria-hidden="true" />
-                        {t(
-                          'Línea morada: límite entre placas tectónicas',
-                          'Purple line: tectonic plate boundary',
-                          'Linha roxa: limite entre placas tectônicas',
-                        )}
-                      </span>
-                      {mapHazards.length > 0 && (
-                        <span>
-                          <i className="fw-legend-hazard" aria-hidden="true" />
-                          {t(
-                            'Ícono redondo: alerta GDACS',
-                            'Round icon: GDACS alert',
-                            'Ícone redondo: alerta do GDACS',
-                          )}
-                        </span>
-                      )}
-                      {warningAreas.length > 0 && (
-                        <span>
-                          <i className="fw-legend-area" aria-hidden="true" />
-                          {t(
-                            `Área sombreada: bajo aviso de ${national.data!.agency}`,
-                            `Shaded area: ${national.data!.agency} warning area`,
-                            `Área sombreada: sob aviso (${national.data!.agency})`,
-                          )}
-                        </span>
-                      )}
-                      {visiblePoint && (
-                        <span className="fw-personal-legend">
-                          <FlagIcon size={14} aria-hidden="true" />
-                          {t(
-                            'Bandera: punto personal no verificado',
-                            'Flag: unverified personal point',
-                            'Bandeira: ponto pessoal não verificado',
-                          )}
-                        </span>
-                      )}
-                    </span>
-                    {availableEmbassy && (
-                      <button
-                        className="fw-map-embassy"
-                        aria-pressed={showEmbassies}
-                        onClick={() => setShowEmbassies((v) => !v)}
-                      >
-                        <FlagIcon size={15} aria-hidden="true" />
-                        {showEmbassies
-                          ? t('Ocultar mi embajada', 'Hide my embassy', 'Ocultar minha embaixada')
-                          : t('Mostrar mi embajada', 'Show my embassy', 'Mostrar minha embaixada')}
-                      </button>
-                    )}
-                    {dirty && (
-                      <button
-                        onClick={() => {
-                          setBounds(pending);
-                          setScope('area');
-                          setPage(1);
-                        }}
-                      >
-                        {t('Buscar en esta área', 'Search this area', 'Buscar nesta área')}
-                      </button>
-                    )}
-                  </div>
-                </section>
-              }
-              response={
-                <>
-                  {responsesFor(country, live.now).map((r) => (
-                    <ResponsePanel
-                      key={r.id}
-                      lang={lang}
-                      response={r}
-                      nationality={profile?.nationality || nationality}
-                      now={live.now}
-                    />
-                  ))}
-                </>
-              }
-              onOpen={(key) =>
-                openTab(
-                  key === 'earthquake'
-                    ? 'quakes'
-                    : key === 'tsunami'
-                      ? 'tsunami'
-                      : key === 'cyclone' && nwsCount('tropical')
-                        ? 'nws'
-                        : key === 'cyclone' && inNhcRegion
-                          ? 'storms'
-                          : key === 'cyclone' && inNws
-                            ? 'nws'
-                            : key === 'flood' && inNws
-                              ? 'nws'
-                              : 'alerts',
-                )
-              }
-            />
-          </>
-        )}
-        {screen === 'detail' && (
-          <div className="fw-detail">
-            <HomeTabs
-              label={t('Detalle por fuente', 'Detail by source', 'Detalhe por fonte')}
-              active={homeTab}
-              onChange={setHomeTab}
-              tabs={[
-                {
-                  id: 'quakes',
-                  label: t('Sismos', 'Earthquakes', 'Terremotos'),
-                  // No answer yet (or a failing source): no count, never a "0".
-                  // No count from old data: "0" would read as "no earthquakes".
-                  count: (live.checked || live.fetched) && !stale ? results.length : undefined,
-                  content: (
-                    <div className="fw-quakes" id="sismos">
-                      <div className="fw-query-controls">
-                        <details className="fw-query-filters">
-                          <summary>
-                            <strong>{t('Filtros', 'Filters', 'Filtros')}</strong>
-                            <span>
-                              {catalog} ·{' '}
-                              {hours === 168 ? t('7 días', '7 days', '7 dias') : `${hours} h`} ·{' '}
-                              {minMag
-                                ? `${t('Magnitud', 'Magnitude', 'Magnitude')} ≥ ${minMag}`
-                                : t(
-                                    'Todas las magnitudes',
-                                    'All magnitudes',
-                                    'Todas as magnitudes',
-                                  )}
-                              {maxDepth < 800 ? ` · ≤ ${maxDepth} km` : ''}
-                              {scope === 'nearby' ? ` · ${radius} km` : ''}
-                            </span>
-                          </summary>{' '}
-                          <div className="fw-toolbar fw-catalog-toolbar">
-                            <label>
-                              {t('Fuente', 'Source', 'Fonte')}
-                              <select
-                                value={catalog}
-                                onChange={(e) => switchCatalog(e.target.value as CatalogId)}
-                              >
-                                {country === 'PA' && <option value="IGC">IGC · UP · Panamá</option>}
-                                <option value="EMSC">
-                                  EMSC · {t('Mundo, M2.5+', 'Worldwide, M2.5+', 'Mundo, M2.5+')}
-                                </option>
-                                <option value="USGS">
-                                  USGS · {t('Mundo', 'Worldwide', 'Mundo')}
-                                </option>
-                              </select>
-                            </label>
-                            <label>
-                              {t('Período', 'Period', 'Período')}
-                              <select
-                                value={hours}
-                                onChange={(e) => {
-                                  setHours(+e.target.value);
-                                  setPage(1);
-                                }}
-                              >
-                                <option value={1}>{t('1 hora', '1 hour', '1 hora')}</option>
-                                <option value={24}>{t('24 horas', '24 hours', '24 horas')}</option>
-                                <option value={168}>{t('7 días', '7 days', '7 dias')}</option>
-                              </select>
-                            </label>
-                            <label>
-                              {t('Magnitud', 'Magnitude', 'Magnitude')}
-                              <select value={minMag} onChange={(e) => setMinMag(+e.target.value)}>
-                                <option value={0}>{t('Todas', 'All', 'Todas')}</option>
-                                {[2.5, 4, 5, 6].map((m) => (
-                                  <option key={m} value={m}>
-                                    ≥ {m}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-                            <details className="fw-filter-extra">
-                              <summary>{t('Más filtros', 'More filters', 'Mais filtros')}</summary>
-                              <div>
-                                <label>
-                                  {t('Zona horaria', 'Time zone', 'Fuso horário')}
-                                  <select
-                                    value={timeZone}
-                                    onChange={(e) => setTimeZone(e.target.value as 'local' | 'utc')}
-                                  >
-                                    <option value="local">
-                                      {t('Local', 'Local', 'Local')} ·{' '}
-                                      {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                                    </option>
-                                    <option value="utc">UTC</option>
-                                  </select>
-                                </label>
-                                <label>
-                                  {t('Profundidad', 'Depth', 'Profundidade')}
-                                  <select
-                                    value={maxDepth}
-                                    onChange={(e) => setMaxDepth(+e.target.value)}
-                                  >
-                                    <option value={800}>{t('Todas', 'All', 'Todas')}</option>
-                                    <option value={70}>≤ 70 km</option>
-                                    <option value={30}>≤ 30 km</option>
-                                  </select>
-                                </label>
-                                {geo && (
-                                  <label>
-                                    {t('Área', 'Area', 'Área')}
-                                    <select
-                                      value={scope === 'nearby' ? radius : 0}
-                                      onChange={(e) => {
-                                        setScope(+e.target.value ? 'nearby' : 'area');
-                                        if (+e.target.value) setRadius(+e.target.value);
-                                      }}
-                                    >
-                                      <option value={0}>
-                                        {t(
-                                          'Área seleccionada',
-                                          'Selected area',
-                                          'Área selecionada',
-                                        )}
-                                      </option>
-                                      {[50, 100, 300, 500].map((k) => (
-                                        <option key={k} value={k}>
-                                          {k} km · {t('cerca de mí', 'near me', 'perto de mim')}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </label>
-                                )}
-                              </div>
-                            </details>
-                          </div>
-                          <div className="fw-filter-location">
-                            <button
-                              className="fw-secondary"
-                              onClick={locate}
-                              disabled={geoState === 'pending'}
-                            >
-                              <CrosshairIcon size={18} />
-                              {geoState === 'pending'
-                                ? t(
-                                    'Buscando ubicación…',
-                                    'Finding location…',
-                                    'Buscando localização…',
-                                  )
-                                : t(
-                                    'Sismos cerca de mí',
-                                    'Earthquakes near me',
-                                    'Terremotos perto de mim',
-                                  )}
-                            </button>
-                            <button className="fw-text" onClick={() => setScreen('sources')}>
-                              {t('Fuentes y cobertura', 'Sources & coverage', 'Fontes e cobertura')}
-                            </button>
-                            <small>
-                              {t(
-                                'La ubicación es opcional y requiere tu permiso.',
-                                'Location is optional and requires your permission.',
-                                'A localização é opcional e precisa da sua permissão.',
-                              )}
-                            </small>
-                          </div>
-                        </details>
-                      </div>
-                      <LiveActivity
-                        events={results}
-                        updates={live.updates.filter((u) =>
-                          results.some((e) => e.id === u.event.id),
-                        )}
-                        provider={provider}
-                        catalog={catalog}
-                        lang={lang}
-                        now={live.now}
-                        next={live.next}
-                        checked={live.checked}
-                        fetched={live.fetched}
-                        busy={live.busy}
-                        online={live.online}
-                        stale={stale}
-                        period={periodLabel}
-                        formatTime={(n) =>
-                          `${shortTime(n)} ${timeZone === 'utc' ? 'UTC' : new Intl.DateTimeFormat(lang, { timeZoneName: 'short' }).formatToParts(n).find((p) => p.type === 'timeZoneName')?.value || ''}`
-                        }
-                        onRefresh={() => void live.refresh()}
-                        onDetails={(q) => setDetail(q.id)}
-                        onMap={showEpicentre}
-                      />
-                      <div className="fw-quake-meta">
-                        <p className="fw-area-scope" role="status">
-                          {scope === 'country' && hasBorders(country)
-                            ? t(
-                                `${countryName} y hasta 100 km mar adentro. Límites aproximados.`,
-                                `${countryName} and up to 100 km offshore. Approximate boundaries.`,
-                                `${countryName} e até 100 km mar adentro. Limites aproximados.`,
-                              )
-                            : scope === 'nearby'
-                              ? t(
-                                  `Sismos a menos de ${radius} km de tu ubicación.`,
-                                  `Earthquakes within ${radius} km of your location.`,
-                                  `Terremotos a menos de ${radius} km da sua localização.`,
-                                )
-                              : scope === 'area'
-                                ? t(
-                                    'Área del mapa: incluye todos los países visibles.',
-                                    'Map area: includes all visible countries.',
-                                    'Área do mapa: inclui todos os países visíveis.',
-                                  )
-                                : regionScope(country, lang)}
-                        </p>
-                        <MagnitudeLegend lang={lang} />
-                      </div>
-                      <section
-                        className="fw-events"
-                        aria-label={t('Lista de sismos', 'Earthquake list', 'Lista de terremotos')}
-                      >
-                        <div className="fw-events-title">
-                          <div>
-                            <h2 id="fw-events-title" tabIndex={-1}>
-                              {/* No count before the catalog has answered: "0" would read as none. */}
-                              {!live.fetched
-                                ? t('Sismos', 'Earthquakes', 'Terremotos')
-                                : `${results.length} ${
-                                    results.length === 1
-                                      ? t('sismo', 'earthquake', 'terremoto')
-                                      : t('sismos', 'earthquakes', 'terremotos')
-                                  }`}
-                            </h2>
-                            {listPage.pages > 1 && (
-                              <p>
-                                {t(
-                                  `Mostrando ${listPage.start + 1}–${listPage.end}`,
-                                  `Showing ${listPage.start + 1}–${listPage.end}`,
-                                  `Mostrando ${listPage.start + 1}–${listPage.end}`,
-                                )}
-                              </p>
-                            )}
-                          </div>
-                          <select
-                            aria-label={t('Ordenar eventos', 'Sort events', 'Ordenar eventos')}
-                            value={order}
-                            onChange={(e) => setOrder(e.target.value)}
-                          >
-                            <option value="time">
-                              {t('Más recientes', 'Most recent', 'Mais recentes')}
-                            </option>
-                            <option value="magnitude">
-                              {t('Mayor magnitud', 'Largest magnitude', 'Maior magnitude')}
-                            </option>
-                            {geo && (
-                              <option value="distance">
-                                {t('Más cercanos', 'Nearest', 'Mais próximos')}
-                              </option>
-                            )}
-                          </select>
-                        </div>
-                        <div className="fw-event-list">
-                          {results.slice(listPage.start, listPage.end).map((q) => (
-                            <button
-                              key={q.id}
-                              className={`fw-event ${newIds.has(q.id) ? 'is-new' : ''}`}
-                              onClick={() => setDetail(q.id)}
-                            >
-                              <strong className={`fw-mag fw-mag-band-${magnitudeBand(q.mag)}`}>
-                                {q.mag?.toFixed(1) ?? '—'}
-                                <small className="fw-visually-hidden">
-                                  {t('Magnitud', 'Magnitude', 'Magnitude')}
-                                </small>
-                              </strong>
-                              <span>
-                                <b>
-                                  {displayPlace(q.place)}
-                                  {newIds.has(q.id) && (
-                                    <em className="fw-event-new">
-                                      {t(
-                                        'Recibido recientemente',
-                                        'Recently received',
-                                        'Recebido recentemente',
-                                      )}
-                                    </em>
-                                  )}
-                                </b>
-                                <small>
-                                  {shortTime(q.time)} {timeZone === 'utc' ? 'UTC' : ''} ·{' '}
-                                  {q.source || 'USGS'} · {q.depth.toFixed(0)} km{' '}
-                                  {t('prof.', 'deep', 'de prof.')}
-                                  {geo
-                                    ? ` · ${Math.round(distanceKm([geo.lat, geo.lng], [q.lat, q.lng]))} km ${t('de ti', 'away', 'de você')}`
-                                    : ''}
-                                </small>
-                              </span>
-                              <CaretRightIcon size={18} aria-hidden="true" />
-                            </button>
-                          ))}
-                          {!results.length && (
-                            <div className="fw-empty">
-                              <MapPinIcon size={32} />
-                              <h3>
-                                {!live.online
-                                  ? t('Sin conexión', 'Offline', 'Sem conexão')
-                                  : live.busy
-                                    ? `${t('Consultando', 'Checking', 'Consultando')} ${provider}…`
-                                    : live.failed
-                                      ? t(
-                                          'No pudimos consultar la fuente',
-                                          'Could not reach the source',
-                                          'Não conseguimos consultar a fonte',
-                                        )
-                                      : t(
-                                          'Sin registros en esta consulta',
-                                          'No records in this query',
-                                          'Sem registros nesta consulta',
-                                        )}
-                              </h3>
-                              <p>
-                                {!live.online
-                                  ? t(
-                                      'Cuando vuelva la conexión, intentaremos actualizar los datos. La ayuda y tus datos guardados siguen disponibles en esta página.',
-                                      'When the connection returns, we will try to update. Help and your saved data remain available on this page.',
-                                      'Quando a conexão voltar, vamos tentar atualizar os dados. A ajuda e seus dados salvos continuam disponíveis nesta página.',
-                                    )
-                                  : live.busy && !live.fetched
-                                    ? t(
-                                        'Esperando la respuesta de la fuente. Tras un sismo, los sitios oficiales pueden tardar más.',
-                                        'Waiting for the source to respond. After an earthquake, official sites can be slower.',
-                                        'Aguardando a resposta da fonte. Depois de um terremoto, os sites oficiais podem demorar mais.',
-                                      )
-                                    : live.failed
-                                      ? t(
-                                          'La consulta falló; esto no significa que no haya sismos. Puedes reintentar o elegir otra fuente.',
-                                          'The request failed; this does not mean there are no earthquakes. Retry or choose another source.',
-                                          'A consulta falhou; isso não significa que não haja terremotos. Você pode tentar de novo ou escolher outra fonte.',
-                                        )
-                                      : t(
-                                          'Amplía el período o el área. La ausencia de registros no significa ausencia de peligro.',
-                                          'Widen the period or area. No records does not mean no danger.',
-                                          'Amplie o período ou a área. A ausência de registros não significa ausência de perigo.',
-                                        )}
-                              </p>
-                              {(live.failed || stale || quietSince) && live.online && (
-                                <div className="fw-empty-fallback">
-                                  {alternatives.map((c) => (
-                                    <button
-                                      key={c}
-                                      className="fw-primary"
-                                      onClick={() => switchCatalog(c)}
-                                    >
-                                      {t('Ver', 'Use', 'Usar')} {providerNames[c]}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                              <button
-                                className="fw-secondary"
-                                onClick={() => {
-                                  setHours(24);
-                                  setMinMag(0);
-                                  setMaxDepth(800);
-                                  setScope('country');
-                                  setBounds(regionFor(country).bounds);
-                                  setPage(1);
-                                }}
-                              >
-                                {t('Restablecer filtros', 'Reset filters', 'Redefinir filtros')}
-                              </button>
-                            </div>
-                          )}
-                          <Pagination
-                            lang={lang}
-                            label={t(
-                              'Páginas de sismos',
-                              'Earthquake pages',
-                              'Páginas de terremotos',
-                            )}
-                            current={listPage.current}
-                            pages={listPage.pages}
-                            onPage={(n) => {
-                              setPage(n);
-                              // The new page starts at the top of the list, with focus there.
-                              const title = document.getElementById('fw-events-title');
-                              title?.focus({ preventScroll: true });
-                              title
-                                ?.closest('.fw-events')
-                                ?.scrollIntoView({ block: 'start', behavior: scrollMotion() });
-                            }}
-                          />
-                        </div>
-                      </section>
-                      <div className="fw-disclaimer">
-                        <InfoIcon size={18} />
-                        <p>
-                          {t(
-                            'Faro muestra sismos que ya ocurrieron y fueron publicados. No es un sistema de alerta temprana y no identifica réplicas.',
-                            'Faro shows earthquakes that already happened and were published. It is not an early warning system and does not identify aftershocks.',
-                            'O Faro mostra terremotos que já aconteceram e foram publicados. Não é um sistema de alerta antecipado e não identifica réplicas.',
-                          )}
-                        </p>
-                        <button onClick={() => setScreen('sources')}>
-                          {t('Fuentes y cobertura', 'Sources & coverage', 'Fontes e cobertura')}
-                        </button>
-                      </div>
-                    </div>
-                  ),
-                },
-                {
-                  id: 'tsunami',
-                  label: t('Tsunami', 'Tsunami', 'Tsunami'),
-                  content: (
-                    <CoastalPanel
-                      lang={lang}
-                      geo={geo}
-                      country={country}
-                      data={tsunami.data}
-                      failed={tsunami.failed}
-                      busy={tsunami.busy}
-                      online={live.online}
-                      now={live.now}
-                      onRefresh={() => void tsunami.refresh()}
-                      onLocate={locate}
-                      locating={geoState === 'pending'}
-                      nws={inNws ? { data: nws.data, failed: nws.failed } : null}
-                    />
-                  ),
-                },
-                ...(inNhcRegion
-                  ? [
-                      {
-                        id: 'storms',
-                        label: t('Ciclones', 'Cyclones', 'Ciclones'),
-                        // No count: storms active in the basin read as storms affecting the place,
-                        // and the row may say none has an alert here. The tab explains both.
-                        count: undefined,
-                        content: (
-                          <StormsPanel
-                            lang={lang}
-                            data={storms.data}
-                            failed={storms.failed}
-                            online={live.online}
-                            now={live.now}
-                            weather={destinationFor(country)?.weatherAgency}
-                          />
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(inNws
-                  ? [
-                      {
-                        id: 'nws',
-                        label: t('Avisos NWS', 'NWS alerts', 'Avisos do NWS'),
-                        content: (
-                          <NwsPanel
-                            lang={lang}
-                            country={country}
-                            data={nws.data}
-                            failed={nws.failed}
-                          />
-                        ),
-                      },
-                    ]
-                  : []),
-                {
-                  id: 'alerts',
-                  label: t(
-                    'Alertas internacionales',
-                    'International alerts',
-                    'Alertas internacionais',
-                  ),
-                  content: (
-                    <AlertsPanel
-                      lang={lang}
-                      country={country}
-                      countryName={countryName}
-                      bounds={regionFor(country).bounds}
-                      data={alerts.data}
-                      failed={alerts.failed}
-                      online={live.online}
-                      now={live.now}
-                    />
-                  ),
-                },
-              ]}
-            />
-          </div>
-        )}
-        {screen === 'sources' && (
-          <SourcesScreen lang={lang} now={live.now} countryName={countryName} rows={sourceRows} />
-        )}
-        {screen === 'emergency' && (
-          <EmergencyScreen
-            country={country}
-            lang={lang}
-            nationality={nationality}
-            plan={plan}
-            latest={latestEvent}
-            latestStaleSince={live.fetched && stale ? live.fetched : undefined}
-            alert={
-              tsunamiAlert && (
-                <TsunamiBanner
-                  lang={lang}
-                  now={live.now}
-                  bulletin={tsunamiAlert}
-                  lastData={tsunamiLastData}
-                  onOpen={() => {
-                    go('activity');
-                    openTab('tsunami');
-                  }}
-                />
-              )
-            }
-            provider={provider}
-            now={live.now}
-            onCountry={changeCountry}
-            onNationality={rememberNationality}
-            kind={emergencyKind}
-            onKind={setEmergencyKind}
-            start={emergencyStart}
-            onGuide={(kind) => {
-              setGuideTopic(
-                kind === 'hurricane'
-                  ? 'hurricane-during'
-                  : kind === 'flood'
-                    ? 'flood-during'
-                    : 'during',
-              );
-              go('guide');
-            }}
-            onStatus={() => go('status')}
-            onHelp={() => go('help')}
-            onTrip={() => go('hotel')}
-            onActivity={(section) => {
-              go('activity');
-              if (section === 'tsunami') openTab('tsunami');
-            }}
-          />
-        )}
-        {screen === 'help' && (
-          <>
-            <EmergencyNumbers country={country} lang={lang} />
-            <EmbassyPanel
-              onProfile={() => setScreen('hotel')}
-              savedNationality={profile?.nationality ?? null}
-              lang={lang}
-              country={country}
-              nationality={nationality}
-              onNationalityChange={rememberNationality}
-              onMap={(e: Embassy) => {
-                setNationality(e.nation);
-                setShowEmbassies(true);
-                center(e.lat, e.lng, 14);
-                setScreen('activity');
+              onStatus={() => go('status')}
+              onHelp={() => go('help')}
+              onTrip={() => go('hotel')}
+              onActivity={(section) => {
+                go('activity');
+                if (section === 'tsunami') openTab('tsunami');
               }}
             />
-            <NearbyCare key={country} country={country} lang={lang} />
-            <OfflineMap lang={lang} {...offlineArea(visiblePoint)} />
-            <DestinationInfo country={country} lang={lang} />
-            <FamilyLinks country={country} lang={lang} onStatus={() => setScreen('status')} />
-            {/* Shelters: who announces them, never a list Faro cannot verify. */}
-            <div className="fw-help-summary">
-              <FlagIcon size={29} aria-hidden="true" />
-              <div>
-                <h2>{t('Albergues', 'Shelters', 'Abrigos')}</h2>
-                <p>
-                  {civilProtection ? (
-                    <>
-                      {t(
-                        `Los albergues abiertos los anuncia ${civilProtection.name}. Faro no los verifica; pregunta también en tu alojamiento.`,
-                        `Open shelters are announced by ${civilProtection.name}. Faro does not verify them; also ask where you are staying.`,
-                        `Quem anuncia os abrigos abertos: ${civilProtection.name}. O Faro não os verifica; pergunte também na sua hospedagem.`,
-                      )}{' '}
-                      <ExternalLink href={civilProtection.url}>
-                        {t('Sitio oficial', 'Official website', 'Site oficial')}
-                      </ExternalLink>
-                    </>
-                  ) : (
-                    t(
-                      'Faro no tiene datos verificados de albergues aquí. Pregunta a las autoridades locales o en tu alojamiento antes de desplazarte.',
-                      'Faro has no verified shelter data here. Ask local authorities or where you are staying before you travel.',
-                      'O Faro não tem dados verificados de abrigos aqui. Pergunte às autoridades locais ou na sua hospedagem antes de se deslocar.',
-                    )
-                  )}
-                </p>
-              </div>
-              <button className="fw-secondary" onClick={() => setScreen('hotel')}>
-                {t('Preparar mi plan', 'Prepare my plan', 'Preparar meu plano')}
-              </button>
-            </div>
-            <details className="fw-local-directory">
-              <summary>
-                {t(
-                  'Más recursos y preparación',
-                  'More resources and preparedness',
-                  'Mais recursos e preparação',
-                )}
-              </summary>
-              <p className="fw-help-region">
-                {t(
-                  'Recursos para la región seleccionada',
-                  'Resources for the selected region',
-                  'Recursos para a região selecionada',
-                )}
-                : <strong>{countryName}</strong>.{' '}
-                {t(
-                  'Cambia el país en el buscador de arriba.',
-                  'Change the country using the search above.',
-                  'Altere o país na busca acima.',
-                )}
-              </p>
-              <div className="fw-resource-grid">
-                {regionResources.map((r) => (
-                  <article key={r.url} className="fw-resource">
-                    <span className="fw-eyebrow">{r.category[idx]}</span>
-                    <h2>{r.name}</h2>
-                    <p>{r.description[idx]}</p>
-                    <a href={r.url} target="_blank" rel="noreferrer">
-                      {t('Sitio oficial', 'Official website', 'Site oficial')}
-                      <ArrowUpRightIcon size={18} />
-                    </a>
-                    <small>
-                      {r.name === 'USGS'
-                        ? t(
-                            'Consulta automática cada 60 s',
-                            'Checked automatically every 60 s',
-                            'Consulta automática a cada 60 s',
-                          )
-                        : `${t('Datos revisados', 'Information reviewed', 'Dados revisados')}: ${new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(r.reviewedAt + 'T12:00:00Z'))}`}
-                    </small>
-                  </article>
-                ))}
-              </div>
-              <div className="fw-note">
-                <UsersThreeIcon size={24} />
+          )}
+          {screen === 'help' && (
+            <>
+              <EmergencyNumbers country={country} lang={lang} />
+              <EmbassyPanel
+                onProfile={() => setScreen('hotel')}
+                savedNationality={profile?.nationality ?? null}
+                lang={lang}
+                country={country}
+                nationality={nationality}
+                onNationalityChange={rememberNationality}
+                onMap={(e: Embassy) => {
+                  setNationality(e.nation);
+                  setShowEmbassies(true);
+                  center(e.lat, e.lng, 14);
+                  setScreen('activity');
+                }}
+              />
+              <NearbyCare key={country} country={country} lang={lang} />
+              <OfflineMap lang={lang} {...offlineArea(visiblePoint)} />
+              <DestinationInfo country={country} lang={lang} />
+              <FamilyLinks country={country} lang={lang} onStatus={() => setScreen('status')} />
+              {/* Shelters: who announces them, never a list Faro cannot verify. */}
+              <div className="fw-help-summary">
+                <FlagIcon size={29} aria-hidden="true" />
                 <div>
-                  <h3>{t('Voluntariado', 'Volunteering', 'Voluntariado')}</h3>
+                  <h2>{t('Albergues', 'Shelters', 'Abrigos')}</h2>
                   <p>
-                    {t(
-                      'Sin convocatorias verificadas. Consulta la disponibilidad y los requisitos con la universidad o el municipio.',
-                      'No verified openings. Contact the university or municipality for availability and requirements.',
-                      'Sem chamadas verificadas. Consulte a disponibilidade e os requisitos com a universidade ou o município.',
+                    {civilProtection ? (
+                      <>
+                        {t(
+                          `Los albergues abiertos los anuncia ${civilProtection.name}. Faro no los verifica; pregunta también en tu alojamiento.`,
+                          `Open shelters are announced by ${civilProtection.name}. Faro does not verify them; also ask where you are staying.`,
+                          `Quem anuncia os abrigos abertos: ${civilProtection.name}. O Faro não os verifica; pergunte também na sua hospedagem.`,
+                        )}{' '}
+                        <ExternalLink href={civilProtection.url}>
+                          {t('Sitio oficial', 'Official website', 'Site oficial')}
+                        </ExternalLink>
+                      </>
+                    ) : (
+                      t(
+                        'Faro no tiene datos verificados de albergues aquí. Pregunta a las autoridades locales o en tu alojamiento antes de desplazarte.',
+                        'Faro has no verified shelter data here. Ask local authorities or where you are staying before you travel.',
+                        'O Faro não tem dados verificados de abrigos aqui. Pergunte às autoridades locais ou na sua hospedagem antes de se deslocar.',
+                      )
                     )}
                   </p>
                 </div>
+                <button className="fw-secondary" onClick={() => setScreen('hotel')}>
+                  {t('Preparar mi plan', 'Prepare my plan', 'Preparar meu plano')}
+                </button>
               </div>
-            </details>
-          </>
-        )}
-        {screen === 'hotel' && (
-          <>
-            <TripProfile
+              <details className="fw-local-directory">
+                <summary>
+                  {t(
+                    'Más recursos y preparación',
+                    'More resources and preparedness',
+                    'Mais recursos e preparação',
+                  )}
+                </summary>
+                <p className="fw-help-region">
+                  {t(
+                    'Recursos para la región seleccionada',
+                    'Resources for the selected region',
+                    'Recursos para a região selecionada',
+                  )}
+                  : <strong>{countryName}</strong>.{' '}
+                  {t(
+                    'Cambia el país en el buscador de arriba.',
+                    'Change the country using the search above.',
+                    'Altere o país na busca acima.',
+                  )}
+                </p>
+                <div className="fw-resource-grid">
+                  {regionResources.map((r) => (
+                    <article key={r.url} className="fw-resource">
+                      <span className="fw-eyebrow">{r.category[idx]}</span>
+                      <h2>{r.name}</h2>
+                      <p>{r.description[idx]}</p>
+                      <a href={r.url} target="_blank" rel="noreferrer">
+                        {t('Sitio oficial', 'Official website', 'Site oficial')}
+                        <ArrowUpRightIcon size={18} />
+                      </a>
+                      <small>
+                        {r.name === 'USGS'
+                          ? t(
+                              'Consulta automática cada 60 s',
+                              'Checked automatically every 60 s',
+                              'Consulta automática a cada 60 s',
+                            )
+                          : `${t('Datos revisados', 'Information reviewed', 'Dados revisados')}: ${new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(r.reviewedAt + 'T12:00:00Z'))}`}
+                      </small>
+                    </article>
+                  ))}
+                </div>
+                <div className="fw-note">
+                  <UsersThreeIcon size={24} />
+                  <div>
+                    <h3>{t('Voluntariado', 'Volunteering', 'Voluntariado')}</h3>
+                    <p>
+                      {t(
+                        'Sin convocatorias verificadas. Consulta la disponibilidad y los requisitos con la universidad o el municipio.',
+                        'No verified openings. Contact the university or municipality for availability and requirements.',
+                        'Sem chamadas verificadas. Consulte a disponibilidade e os requisitos com a universidade ou o município.',
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </details>
+            </>
+          )}
+          {screen === 'hotel' && (
+            <>
+              <TripProfile
+                lang={lang}
+                country={country}
+                countryCodes={countryCodes}
+                profile={profile}
+                plan={plan}
+                geo={geo}
+                onSave={saveTrip}
+                onDeleteAll={deleteTrip}
+              />
+              <OfflineMap lang={lang} {...offlineArea(point)} />
+              <TravelContacts key={country} country={country} lang={lang} />
+              <EvacuationPlan country={country} lang={lang} />
+              <LocalDataInfo lang={lang} />
+            </>
+          )}
+          {screen === 'kit' && <EmergencyKit lang={lang} country={country} />}
+          {screen === 'guide' && (
+            <SafetyGuide
               lang={lang}
               country={country}
-              countryCodes={countryCodes}
+              topic={guideTopic}
+              onHotel={() => setScreen('hotel')}
+              onStatus={() => setScreen('status')}
+              onKit={() => setScreen('kit')}
+            />
+          )}
+          <div hidden={screen !== 'status'}>
+            <TravelerStatus
+              countryAt={borders?.countryOnLand}
               profile={profile}
               plan={plan}
-              geo={geo}
-              onSave={saveTrip}
-              onDeleteAll={deleteTrip}
+              events={results.slice(0, 10)}
+              location={geo}
+              lang={lang}
+              history={checkIns}
+              onHistory={setCheckIns}
+              now={live.now}
+              onHelp={() => openEmergency('call')}
+              country={country}
             />
-            <OfflineMap lang={lang} {...offlineArea(point)} />
-            <TravelContacts key={country} country={country} lang={lang} />
-            <EvacuationPlan country={country} lang={lang} />
-            <LocalDataInfo lang={lang} />
-          </>
-        )}
-        {screen === 'kit' && <EmergencyKit lang={lang} country={country} />}
-        {screen === 'guide' && (
-          <SafetyGuide
-            lang={lang}
-            country={country}
-            topic={guideTopic}
-            onHotel={() => setScreen('hotel')}
-            onStatus={() => setScreen('status')}
-            onKit={() => setScreen('kit')}
-          />
-        )}
-        <div hidden={screen !== 'status'}>
-          <TravelerStatus
-            countryAt={borders?.countryOnLand}
-            profile={profile}
-            plan={plan}
-            events={results.slice(0, 10)}
-            location={geo}
-            lang={lang}
-            history={checkIns}
-            onHistory={setCheckIns}
-            now={live.now}
-            onHelp={() => openEmergency('call')}
-            country={country}
-          />
-        </div>
-        <footer className="fw-footer">
-          <span>
-            Faro · {t('Creado por', 'Created by', 'Criado por')}{' '}
-            <a href="https://oktsec.com" target="_blank" rel="noopener">
-              Oktsec
-            </a>{' '}
-            · <a href="/about.html">{t('Acerca de Faro', 'About Faro', 'Sobre o Faro')}</a> ·{' '}
-            <a href="/privacy.html">
-              {t('Privacidad y condiciones', 'Privacy and terms', 'Privacidade e termos')}
-            </a>{' '}
-            ·{' '}
-            <button className="fw-footer-link" onClick={() => setScreen('sources')}>
-              {t('Fuentes y actualización', 'Sources & updates', 'Fontes e atualizações')}
-            </button>
-            {offlineReady && (
-              <>
-                {' '}
-                ·{' '}
-                <span className="fw-offline-ready">
-                  {t(
-                    'Disponible sin conexión en este dispositivo',
-                    'Available offline on this device',
-                    'Disponível sem conexão neste dispositivo',
-                  )}
-                </span>
-              </>
-            )}
-          </span>
-          <span>
-            {screen === 'status'
-              ? t(
-                  'Mensajes personales · Envío manual',
-                  'Personal messages · Sent manually',
-                  'Mensagens pessoais · Envio manual',
-                )
-              : screen === 'guide'
+          </div>
+          <footer className="f-footer">
+            <span>
+              Faro · {t('Creado por', 'Created by', 'Criado por')}{' '}
+              <a href="https://oktsec.com" target="_blank" rel="noopener">
+                Oktsec
+              </a>{' '}
+              · <a href="/about.html">{t('Acerca de Faro', 'About Faro', 'Sobre o Faro')}</a> ·{' '}
+              <a href="/privacy.html">
+                {t('Privacidad y condiciones', 'Privacy and terms', 'Privacidade e termos')}
+              </a>{' '}
+              ·{' '}
+              <button type="button" className="f-inline-link" onClick={() => setScreen('sources')}>
+                {t('Fuentes y actualización', 'Sources & updates', 'Fontes e atualizações')}
+              </button>
+              {offlineReady && (
+                <>
+                  {' '}
+                  ·{' '}
+                  <span className="fw-offline-ready">
+                    {t(
+                      'Disponible sin conexión en este dispositivo',
+                      'Available offline on this device',
+                      'Disponível sem conexão neste dispositivo',
+                    )}
+                  </span>
+                </>
+              )}
+            </span>
+            <span>
+              {screen === 'status'
                 ? t(
-                    'Recomendaciones: SENAPRED, CDC, NOAA, Ready.gov y FCC',
-                    'Guidance: SENAPRED, CDC, NOAA, Ready.gov and FCC',
-                    'Recomendações: SENAPRED, CDC, NOAA, Ready.gov e FCC',
+                    'Mensajes personales · Envío manual',
+                    'Personal messages · Sent manually',
+                    'Mensagens pessoais · Envio manual',
                   )
-                : t(
-                    'Sismos: IGC-UP / EMSC / USGS · Tsunami y ciclones: NOAA · Avisos: servicios meteorológicos y GDACS · Mapa: OpenFreeMap y OpenStreetMap',
-                    'Earthquakes: IGC-UP / EMSC / USGS · Tsunami and cyclones: NOAA · Warnings: weather services and GDACS · Map: OpenFreeMap and OpenStreetMap',
-                    'Terremotos: IGC-UP / EMSC / USGS · Tsunami e ciclones: NOAA · Avisos: serviços meteorológicos e GDACS · Mapa: OpenFreeMap e OpenStreetMap',
-                  )}
-          </span>
-        </footer>
+                : screen === 'guide'
+                  ? t(
+                      'Recomendaciones: SENAPRED, CDC, NOAA, Ready.gov y FCC',
+                      'Guidance: SENAPRED, CDC, NOAA, Ready.gov and FCC',
+                      'Recomendações: SENAPRED, CDC, NOAA, Ready.gov e FCC',
+                    )
+                  : t(
+                      'Sismos: IGC-UP / EMSC / USGS · Tsunami y ciclones: NOAA · Avisos: servicios meteorológicos y GDACS · Mapa: OpenFreeMap y OpenStreetMap',
+                      'Earthquakes: IGC-UP / EMSC / USGS · Tsunami and cyclones: NOAA · Warnings: weather services and GDACS · Map: OpenFreeMap and OpenStreetMap',
+                      'Terremotos: IGC-UP / EMSC / USGS · Tsunami e ciclones: NOAA · Avisos: serviços meteorológicos e GDACS · Mapa: OpenFreeMap e OpenStreetMap',
+                    )}
+            </span>
+          </footer>
+        </div>
       </main>
+      <TabBar tabs={nav} current={currentTab} onSelect={setScreen} label={shellText.menu} />
 
       <InformationDialog
         open={!!detail}
@@ -2643,6 +2512,6 @@ export default function App() {
           openTab('tsunami');
         }}
       />
-    </div>
+    </AppFrame>
   );
 }

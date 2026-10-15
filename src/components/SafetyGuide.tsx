@@ -6,7 +6,6 @@ import { destinationFor } from '../data/destinations/index.ts';
 import { useState } from 'react';
 import { ArrowUpRightIcon, DownloadSimpleIcon, ArrowRightIcon } from '@phosphor-icons/react';
 import type { Lang } from '../lib/resources.ts';
-import '../styles/guide.css';
 import { langIndex, langTag, pick, type Localized } from '../lib/i18n.ts';
 
 type Copy = Localized;
@@ -332,7 +331,7 @@ const sections: Section[] = [
         term: ['Vigilancia de huracán', 'Hurricane watch', 'Vigilância de furacão'],
         meaning: [
           'Condiciones de huracán (vientos de 119 km/h o más) posibles en la zona; se emite unas 48 h antes de los vientos de tormenta tropical.',
-          'Hurricane conditions (winds of 119 km/h or more) are possible in the area; issued about 48 h before tropical-storm-force winds.',
+          'Hurricane conditions (winds of 74 mph or more) are possible in the area; issued about 48 h before tropical-storm-force winds.',
           'Condições de furacão (ventos de 119 km/h ou mais) são possíveis na área; é emitida cerca de 48 h antes dos ventos de tempestade tropical.',
         ],
       },
@@ -348,7 +347,7 @@ const sections: Section[] = [
         term: ['Tormenta tropical', 'Tropical storm', 'Tempestade tropical'],
         meaning: [
           'Vientos de 63 a 118 km/h: posibles en 48 h (vigilancia) o esperados en 36 h (aviso).',
-          'Winds of 63–118 km/h: possible within 48 h (watch) or expected within 36 h (warning).',
+          'Winds of 39–73 mph: possible within 48 h (watch) or expected within 36 h (warning).',
           'Ventos de 63 a 118 km/h: possíveis em 48 h (vigilância) ou esperados em 36 h (aviso).',
         ],
       },
@@ -488,7 +487,7 @@ const sections: Section[] = [
         title: ['No cruces el agua', 'Do not cross the water', 'Não atravesse a água'],
         body: [
           'No camines, nades ni manejes por agua de inundación, aunque parezca quieta. 15 cm de agua en movimiento pueden derribarte y 30 cm arrastrar un vehículo.',
-          'Do not walk, swim or drive through floodwater, even if it looks still. Six inches (15 cm) of moving water can knock you down; one foot (30 cm) can sweep a vehicle away.',
+          'Do not walk, swim or drive through floodwater, even if it looks still. Six inches of moving water can knock you down; one foot can sweep a vehicle away.',
           'Não caminhe, nade nem dirija pela água da inundação, mesmo que pareça parada. 15 cm de água em movimento podem derrubar você e 30 cm podem arrastar um veículo.',
         ],
       },

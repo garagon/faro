@@ -1,0 +1,138 @@
+/*
+ * Faro design tokens: the only place where colours, type sizes, spacing, radii, shadows and
+ * layers are written as values. Components and screens use these names, never literals.
+ *
+ * Colour roles have one meaning each:
+ * - red is only for calling for help;
+ * - amber, orange and the alert red are only for official warning levels and stale data;
+ * - green is the brand and the main action, and "answered / up to date" when paired with a dot;
+ * - everything else is ink and neutrals.
+ */
+:root {
+  /* Primitives */
+  --f-white: #ffffff;
+  --f-neutral-25: #f7f8f7;
+  --f-neutral-50: #f0f2f1;
+  --f-neutral-100: #e3e7e5;
+  --f-neutral-200: #d1d7d4;
+  --f-neutral-400: #8b9692;
+  --f-neutral-600: #55615d;
+  --f-neutral-700: #3d4845;
+  --f-neutral-900: #151f1c;
+  --f-green-50: #edf6f2;
+  --f-green-100: #d3e9df;
+  --f-green-600: #1f7a62;
+  --f-green-700: #16634f;
+  --f-green-800: #114d3e;
+  --f-green-900: #0c3a2f;
+  --f-red-50: #fef3f2;
+  --f-red-700: #b42318;
+  --f-red-800: #912018;
+  --f-amber-50: #fffaeb;
+  --f-amber-400: #f5b33d;
+  --f-amber-800: #8a4b06;
+  --f-orange-50: #fff4ed;
+  --f-orange-500: #e8620c;
+  --f-orange-800: #8f350a;
+  --f-alert-50: #fdf2f1;
+  --f-alert-600: #c9302c;
+  --f-alert-800: #8c1d1a;
+  --f-blue-600: #1f5fd1;
+
+  /* Semantic colours */
+  --f-color-page: var(--f-neutral-50);
+  --f-color-surface: var(--f-white);
+  --f-color-surface-muted: var(--f-neutral-25);
+  --f-color-text: var(--f-neutral-900);
+  --f-color-text-muted: var(--f-neutral-600);
+  --f-color-text-subtle: var(--f-neutral-700);
+  --f-color-border: var(--f-neutral-100);
+  --f-color-border-strong: var(--f-neutral-200);
+  --f-color-action: var(--f-green-700);
+  --f-color-action-hover: var(--f-green-800);
+  --f-color-action-soft: var(--f-green-50);
+  --f-color-on-action: var(--f-white);
+  --f-color-brand: var(--f-green-900);
+  --f-color-ok: var(--f-green-600);
+  --f-color-call: var(--f-red-700);
+  --f-color-call-hover: var(--f-red-800);
+  --f-color-call-soft: var(--f-red-50);
+  --f-color-focus: var(--f-blue-600);
+  /* Official warning levels (and stale data, which uses the first). */
+  --f-color-level-1: var(--f-amber-400);
+  --f-color-level-1-soft: var(--f-amber-50);
+  --f-color-level-1-text: var(--f-amber-800);
+  --f-color-level-2: var(--f-orange-500);
+  --f-color-level-2-soft: var(--f-orange-50);
+  --f-color-level-2-text: var(--f-orange-800);
+  --f-color-level-3: var(--f-alert-600);
+  --f-color-level-3-soft: var(--f-alert-50);
+  --f-color-level-3-text: var(--f-alert-800);
+  /* Magnitude: one hue from light to dark, so a larger number is always darker. Every step
+     keeps 4.5:1 or more against white, as text and behind white pin labels. */
+  --f-mag-1: #5b7090;
+  --f-mag-2: #4a6385;
+  --f-mag-3: #3a5479;
+  --f-mag-4: #2c4569;
+  --f-mag-5: #142a4b;
+
+  /* Type: Public Sans. Roles are listed in components.css. Sizes in rem follow the reader's settings. */
+  --f-font: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --f-text-nav: 0.75rem; /* 12: bottom tab labels only, under their icon */
+  --f-text-xs: 0.8125rem; /* 13: map attribution and legal only */
+  --f-text-sm: 0.875rem; /* 14: captions: descriptions, sources, notes */
+  --f-text-md: 1rem; /* 16: body, row titles, buttons, fields */
+  --f-text-lg: 1.125rem; /* 18: section titles, figures, large buttons */
+  --f-text-2xl: 1.75rem; /* 28: screen titles */
+  --f-text-3xl: 2.125rem; /* 34: the one exception, the magnitude in an earthquake's detail */
+  --f-leading-tight: 1.2;
+  --f-leading-snug: 1.35;
+  --f-leading-body: 1.5;
+  --f-weight-regular: 400;
+  --f-weight-medium: 600;
+  --f-weight-bold: 700;
+
+  /* Space: a 4 px grid. */
+  --f-space-1: 0.25rem;
+  --f-space-2: 0.5rem;
+  --f-space-3: 0.75rem;
+  --f-space-4: 1rem;
+  --f-space-5: 1.25rem;
+  --f-space-6: 1.5rem;
+  --f-space-8: 2rem;
+  --f-space-10: 2.5rem;
+  --f-space-12: 3rem;
+
+  /* Shape and depth */
+  --f-radius-sm: 8px;
+  --f-radius-md: 12px;
+  --f-radius-full: 999px;
+  --f-hairline: 1px solid var(--f-color-border);
+  --f-shadow-raised: 0 1px 2px rgb(21 31 28 / 6%), 0 1px 3px rgb(21 31 28 / 8%);
+  --f-shadow-overlay: 0 12px 32px rgb(21 31 28 / 18%);
+
+  /* Sizes */
+  --f-touch: 44px;
+  /* The leading column of a list row (icon circle or magnitude): one text edge per screen. */
+  --f-lead: 36px;
+  --f-control-md: 44px;
+  --f-control-lg: 56px;
+  --f-header: 56px;
+  --f-tabbar: 60px;
+  --f-reading: 42rem;
+  /* The call button: as wide as a phone screen at most, on every device. */
+  --f-call-width: 26rem;
+
+  /* Layers */
+  --f-z-sticky: 10;
+  --f-z-nav: 20;
+  --f-z-overlay: 30;
+  --f-z-toast: 40;
+
+  /* Motion */
+  --f-press: 100ms;
+  --f-move: 220ms;
+  --f-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Breakpoints (also in src/ui/breakpoints.ts): 600 small tablet, 900 desktop, 1200 wide. */

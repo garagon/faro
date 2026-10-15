@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { DownloadSimpleIcon, XIcon } from '@phosphor-icons/react';
 import { installPlatform, type InstallPlatform } from '../lib/install.ts';
-import '../styles/install.css';
 import { langTag, pick, type Lang } from '../lib/i18n.ts';
 
 type InstallPrompt = Event & {

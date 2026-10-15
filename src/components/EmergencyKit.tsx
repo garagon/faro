@@ -41,7 +41,7 @@ import {
   parseKitPlan,
   shoppingList,
   storeLabels,
-  waterLitres,
+  waterShown,
   type KitGroup,
   type KitHazard,
   type KitPlan,
@@ -49,7 +49,6 @@ import {
 import { careSearchUrl, type PlaceKind } from '../lib/nearbyCare.ts';
 import { writeLocal, removeLocal } from '../lib/browserStorage.ts';
 import { AreaFields, useSearchArea } from './AreaPicker.tsx';
-import '../styles/kit.css';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 
 // One recognizable picture per item, so the list can be scanned without reading every line.
@@ -108,7 +107,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
     i = langIndex(lang);
   const items = kitItemsFor(plan);
   const done = items.filter((item) => checked.includes(item.id)).length;
-  const water = waterLitres(plan);
+  const water = waterShown(plan, lang);
   const groups: { id: KitGroup; title: string }[] = [
     {
       id: 'supplies',
@@ -231,7 +230,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
           <div>
             <dt>{t('Agua', 'Water', 'Água')}</dt>
             <dd>
-              <strong>{water.minimum} L</strong>
+              <strong>{water.minimum}</strong>
               <span>
                 {t(
                   `como mínimo, para ${people(plan.people)} y ${plan.days} días`,
@@ -282,9 +281,9 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
         <p className="fw-kit-basis">
           <InfoIcon size={16} aria-hidden="true" />
           {t(
-            `Agua: 2 L por persona y día para beber, según SENAPRED (Chile). Ready.gov recomienda ${water.ready} L para este caso, porque incluye higiene; con calor, lleva más.`,
-            `Water: 2 L per person per day for drinking, according to SENAPRED (Chile). Ready.gov recommends ${water.ready} L here, as it includes hygiene; in heat, carry more.`,
-            `Água: 2 L por pessoa por dia para beber, segundo o SENAPRED (Chile). O Ready.gov recomenda ${water.ready} L para este caso, porque inclui higiene; no calor, leve mais.`,
+            `Agua: 2 L por persona y día para beber, según SENAPRED (Chile). Ready.gov recomienda ${water.ready} para este caso, porque incluye higiene; con calor, lleva más.`,
+            `Water: about half a gallon (2 L) per person per day for drinking, according to SENAPRED (Chile). Ready.gov recommends ${water.ready} here, one per person per day, as it includes hygiene; in heat, carry more.`,
+            `Água: 2 L por pessoa por dia para beber, segundo o SENAPRED (Chile). O Ready.gov recomenda ${water.ready} para este caso, porque inclui higiene; no calor, leve mais.`,
           )}
         </p>
         {plan.hazards.length > 0 && (
@@ -473,7 +472,7 @@ function KitShopping({
     i = langIndex(lang);
   const search = useSearchArea(country, lang);
   const list = shoppingList(checked, plan);
-  const water = waterLitres(plan);
+  const water = waterShown(plan, lang);
   return (
     <section className="fw-kit-card fw-kit-shop" aria-labelledby="kit-shop-title">
       <h2 id="kit-shop-title">
@@ -514,7 +513,7 @@ function KitShopping({
                       {items
                         .map((item) =>
                           item.id === 'water'
-                            ? `${item.title[i]} (${water.minimum} L)`
+                            ? `${item.title[i]} (${water.minimum})`
                             : item.title[i],
                         )
                         .join(', ')}

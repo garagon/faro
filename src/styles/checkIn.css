@@ -272,13 +272,6 @@
   gap: 8px;
   margin: 0 0 18px;
 }
-.fw-quick-title {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #5a6e66;
-}
 .fw-quick-messages > div {
   display: flex;
   flex-wrap: wrap;

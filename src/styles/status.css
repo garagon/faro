@@ -68,7 +68,7 @@
 .fw-main[data-screen='status'] .fw-message-reason {
   margin: 18px 0 0;
 }
-.fw-main[data-screen='status'] :is(.fw-quick-title, .fw-message-reason legend) {
+.fw-main[data-screen='status'] :is(.fw-message-reason legend) {
   display: block;
   margin: 0 0 8px;
   padding: 0;

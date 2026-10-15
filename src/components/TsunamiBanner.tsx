@@ -1,9 +1,8 @@
-import { WarningIcon } from '@phosphor-icons/react';
-import { ExternalLink } from './Ui.tsx';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import { atLabel } from '../lib/time.ts';
 import type { Bulletin } from '../lib/tsunami.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
+import { Actions, Badge, OutLink, SafetyNotice, Section, SourceStamp } from '../ui/index.ts';
 
 type Props = {
   lang: Lang;
@@ -27,30 +26,29 @@ export default function TsunamiBanner({ lang, now, bulletin: b, lastData, onOpen
       ? t('Pacífico', 'Pacific', 'Pacífico')
       : t('Caribe', 'Caribbean', 'Caribe');
   return (
-    <section className="fw-tsunami-banner" role="alert" aria-labelledby="fw-tsunami-banner-title">
-      <WarningIcon size={24} weight="fill" aria-hidden="true" />
-      <div>
-        <h2 id="fw-tsunami-banner-title">
-          {b.kind === 'threat'
-            ? t(
-                `Mensaje de amenaza de tsunami de NOAA · ${basin}`,
-                `NOAA tsunami threat message · ${basin}`,
-                `Mensagem de ameaça de tsunami da NOAA · ${basin}`,
-              )
-            : t(
-                `Mensaje de tsunami de NOAA por revisar · ${basin}`,
-                `NOAA tsunami message to review · ${basin}`,
-                `Mensagem de tsunami da NOAA para revisar · ${basin}`,
-              )}
-        </h2>
+    <div role="alert">
+      <Section
+        id="fw-tsunami-banner"
+        title={
+          <>
+            Tsunami{' '}
+            <Badge level={b.kind === 'threat' ? 3 : 1}>
+              {b.kind === 'threat'
+                ? t('Mensaje de amenaza', 'Threat message', 'Mensagem de ameaça')
+                : t('Mensaje por revisar', 'Message to review', 'Mensagem para revisar')}
+            </Badge>
+          </>
+        }
+        aside={`NOAA · ${basin}`}
+      >
         {/* The natural-warning step comes first: on a phone it must be read before anything else. */}
-        <p className="fw-tsunami-banner-action">
+        <SafetyNotice>
           {t(
             'Si estás en la costa y sentiste un sismo fuerte o largo, ve a pie a un lugar alto ahora.',
             'If you are on the coast and felt strong or long shaking, go on foot to high ground now.',
             'Se você está na costa e sentiu um terremoto forte ou longo, vá a pé para um lugar alto agora.',
           )}
-        </p>
+        </SafetyNotice>
         <p>
           {t(
             'Revisa si el boletín nombra tu costa y sigue a las autoridades locales.',
@@ -58,27 +56,24 @@ export default function TsunamiBanner({ lang, now, bulletin: b, lastData, onOpen
             'Veja se o boletim cita a sua costa e siga as autoridades locais.',
           )}
         </p>
-        <p className="fw-tsunami-banner-meta">
-          {b.place} · {t('publicado', 'issued', 'publicado')} {ageLabel(b.issued, now, lang)}
-        </p>
-        {lastData && (
-          <p className="fw-tsunami-banner-meta">
-            {t(
-              `Sin actualizar desde ${atLabel(lastData, now, lang)}: puede haber un mensaje más nuevo.`,
-              `Not updated since ${atLabel(lastData, now, lang)}: there may be a newer message.`,
-              `Sem atualização desde ${atLabel(lastData, now, lang)}: pode haver uma mensagem mais recente.`,
+        <SourceStamp issuer={b.place} state={lastData ? 'stale' : undefined}>
+          {t('publicado', 'issued', 'publicado')} {ageLabel(b.issued, now, lang)}
+          {lastData &&
+            t(
+              ` · sin actualizar desde ${atLabel(lastData, now, lang)}: puede haber un mensaje más nuevo`,
+              ` · not updated since ${atLabel(lastData, now, lang)}: there may be a newer message`,
+              ` · sem atualização desde ${atLabel(lastData, now, lang)}: pode haver uma mensagem mais recente`,
             )}
-          </p>
-        )}
-        <div className="fw-tsunami-banner-actions">
-          <ExternalLink href={b.url}>
+        </SourceStamp>
+        <Actions>
+          <OutLink href={b.url}>
             {t('Leer el boletín (en inglés)', 'Read the bulletin', 'Ler o boletim (em inglês)')}
-          </ExternalLink>
-          <button className="fw-link-button" onClick={onOpen}>
+          </OutLink>
+          <button type="button" onClick={onOpen}>
             {t('Ver todos los boletines', 'See all bulletins', 'Ver todos os boletins')}
           </button>
-        </div>
-      </div>
-    </section>
+        </Actions>
+      </Section>
+    </div>
   );
 }

@@ -6,11 +6,12 @@ import { classifyBulletins, type TsunamiData } from './tsunami.ts';
 export type HazardKey = 'earthquake' | 'tsunami' | 'cyclone' | 'flood' | 'volcano';
 /**
  * listed: the source lists at least one item for the place (a fact, not a risk level).
- * none: the source answered and lists nothing. unknown: no usable answer yet or it failed.
+ * none: the source answered and lists nothing. pending: the first answer has not arrived yet.
+ * unknown: there is no usable answer (it failed, is incomplete, too old or the device is offline).
  */
 export type HazardStatus = {
   key: HazardKey;
-  state: 'listed' | 'none' | 'unknown';
+  state: 'listed' | 'none' | 'pending' | 'unknown';
   level: AlertLevel | 'review' | null;
   count: number;
   /** Events from the last 14 days that are no longer updated. */
@@ -39,7 +40,8 @@ export function gdacsStatus(
   failed: boolean,
   now: number,
 ): HazardStatus {
-  if (!alerts) return { key, state: 'unknown', level: null, count: 0, recent: 0 };
+  if (!alerts)
+    return { key, state: failed ? 'unknown' : 'pending', level: null, count: 0, recent: 0 };
   const rows = alerts.filter((a) => a.type === gdacsType[key]);
   const active = rows.filter((a) => now - a.to <= ACTIVE_WINDOW);
   const recent = rows.length - active.length;
@@ -55,7 +57,13 @@ export function gdacsStatus(
  */
 export function tsunamiStatus(data: TsunamiData | null, failed: boolean, now: number) {
   const key = 'tsunami' as const;
-  if (!data) return { key, state: 'unknown', level: null, count: 0 } satisfies HazardStatus;
+  if (!data)
+    return {
+      key,
+      state: failed ? 'unknown' : 'pending',
+      level: null,
+      count: 0,
+    } satisfies HazardStatus;
   const rows = classifyBulletins(data, now, failed);
   const review = rows.filter((r) => r.needsReview);
   if (review.length)
@@ -84,7 +92,8 @@ export function earthquakeSummary(events: readonly Quake[]) {
 
 /**
  * "None" is only shown while the answer is recent and the device is online. Otherwise the
- * status becomes unknown, keeping the time of the last answer; listed items stay listed.
+ * status becomes unknown, keeping the time of the last answer; listed items stay listed. A first
+ * answer that cannot arrive because the device is offline is unknown, not pending.
  */
 export function confirmFresh(
   status: HazardStatus,
@@ -94,6 +103,7 @@ export function confirmFresh(
   maxAge: number,
 ): HazardStatus {
   const withTime = checked ? { ...status, checked } : status;
+  if (status.state === 'pending') return online ? withTime : { ...withTime, state: 'unknown' };
   if (status.state !== 'none') return withTime;
   return !online || !checked || now - checked > maxAge
     ? { ...withTime, state: 'unknown' }

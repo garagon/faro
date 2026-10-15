@@ -37,38 +37,6 @@
   min-height: 44px;
   font-size: 13px;
 }
-.fw-support-phones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 32px;
-}
-.fw-support-phones > div {
-  display: grid;
-}
-.fw-support-phones span {
-  font-size: 12px;
-  color: var(--muted);
-}
-.fw-support-phones a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-size: 20px;
-  font-weight: 600;
-}
-.fw-support-advisory {
-  display: grid;
-  gap: 6px;
-  padding: 18px 0;
-  text-decoration: none;
-}
-.fw-support-advisory strong {
-  text-decoration: underline;
-}
-.fw-support-advisory span {
-  font-size: 13px;
-  color: var(--muted);
-}
 .fw-support-topics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -9,7 +9,7 @@ import {
   issuerOf,
   position,
   stormClassLabels,
-  windKmh,
+  wind,
   type StormsSnapshot,
 } from '../lib/storms.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
@@ -100,7 +100,7 @@ export default function StormsPanel(p: Props) {
                 </div>
                 <p>
                   {s.intensityKt !== null &&
-                    `${t('Viento máximo', 'Maximum wind', 'Vento máximo')} ${windKmh(s.intensityKt)} km/h. `}
+                    `${t('Viento máximo', 'Maximum wind', 'Vento máximo')} ${wind(s.intensityKt, p.lang)}. `}
                   {s.pressureMb !== null && `${s.pressureMb} hPa. `}
                   {t('Centro en', 'Centre at', 'Centro em')} {position(s)}.
                 </p>

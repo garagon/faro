@@ -8,7 +8,7 @@
 .fw-app .fw-main[data-screen] {
   max-width: none;
 }
-.fw-app .fw-main[data-screen] > :not(.fw-context) {
+.fw-app .fw-main[data-screen] > * {
   max-width: var(--column);
   margin-left: auto;
   margin-right: auto;
@@ -17,20 +17,7 @@
  * The top bar bleeds to the edges by the main gutter; its contents line up with the column.
  * The gutter matches the bar's negative margin: 32px, or 24px up to 1200px wide.
  */
-@media (min-width: 761px) {
-  .fw-app .fw-main[data-screen] > .fw-context {
-    --gutter: 32px;
-    padding-left: max(var(--gutter), calc((100% - var(--column)) / 2 + var(--gutter)));
-    padding-right: max(var(--gutter), calc((100% - var(--column)) / 2 + var(--gutter)));
-  }
-}
-@media (min-width: 761px) and (max-width: 1200px) {
-  .fw-app .fw-main[data-screen] > .fw-context {
-    --gutter: 24px;
-  }
-}
 /* Nested screen wrappers fill the column instead of setting their own width. */
-.fw-home,
 .fw-home-tabs,
 .fw-traveler,
 .fw-safety-layout {
@@ -38,17 +25,7 @@
 }
 
 /* Touch screens keep :hover after a tap; only the current screen may look selected. */
-@media (hover: none) {
-  .fw-header nav button:not(.current):hover {
-    background: transparent;
-    color: inherit;
-  }
-}
 /* Focus must stay visible on the dark sidebar and header (3:1 against #143d35). */
-.fw-header :is(button, a):focus-visible {
-  outline: 2px solid #f2c94c;
-  outline-offset: 2px;
-}
 /* Tabs that do not fit: a soft edge says the row scrolls. */
 @media (max-width: 760px) {
   .fw-home-tablist {

@@ -9,11 +9,25 @@ export type FirstMinutesStep = {
 };
 /** What the person says is happening. Faro never chooses it from a feed. */
 export type EmergencyKind = 'earthquake' | 'hurricane' | 'flood';
-export const emergencyKinds: readonly { id: EmergencyKind; label: Localized }[] = [
-  { id: 'earthquake', label: ['Sismo', 'Earthquake', 'Terremoto'] },
-  { id: 'hurricane', label: ['Huracán o tormenta', 'Hurricane or storm', 'Furacão ou tempestade'] },
-  { id: 'flood', label: ['Inundación', 'Flood', 'Inundação'] },
-];
+/** `short` labels a compact selector; `label` is the full name. */
+export const emergencyKinds: readonly { id: EmergencyKind; label: Localized; short: Localized }[] =
+  [
+    {
+      id: 'earthquake',
+      label: ['Sismo', 'Earthquake', 'Terremoto'],
+      short: ['Sismo', 'Earthquake', 'Terremoto'],
+    },
+    {
+      id: 'hurricane',
+      label: ['Huracán o tormenta', 'Hurricane or storm', 'Furacão ou tempestade'],
+      short: ['Huracán', 'Hurricane', 'Furacão'],
+    },
+    {
+      id: 'flood',
+      label: ['Inundación', 'Flood', 'Inundação'],
+      short: ['Inundación', 'Flood', 'Inundação'],
+    },
+  ];
 
 const cdcDuring = {
   name: 'CDC',
@@ -56,7 +70,7 @@ export const hazardSteps: Record<EmergencyKind, readonly FirstMinutesStep[]> = {
       text: [
         'Si sigue temblando: agáchate, cúbrete y sujétate.',
         'If it is still shaking: drop, cover and hold on.',
-        'Se ainda estiver tremendo: abaixe-se, proteja-se e segure-se.',
+        'Se ainda estiver tremendo: abaixe‑se, proteja‑se e segure‑se.',
       ],
       source: cdcDuring,
     },
@@ -65,7 +79,7 @@ export const hazardSteps: Record<EmergencyKind, readonly FirstMinutesStep[]> = {
       text: [
         'Si el edificio está dañado, sal cuando deje de temblar y aléjate rápido de él. No vuelvas a entrar.',
         'If the building is damaged, go outside once shaking stops and quickly move away from it. Do not go back in.',
-        'Se o prédio estiver danificado, saia quando o tremor parar e afaste-se dele rapidamente. Não volte a entrar.',
+        'Se o prédio estiver danificado, saia quando o tremor parar e afaste‑se dele rapidamente. Não volte a entrar.',
       ],
       source: ready,
     },
@@ -83,7 +97,7 @@ export const hazardSteps: Record<EmergencyKind, readonly FirstMinutesStep[]> = {
       text: [
         'Si estás en la playa o junto al mar, ve a pie a un lugar alto o tierra adentro apenas pare el sismo, aunque haya sido leve. En el resto de la costa, hazlo si fue fuerte o largo. No esperes una alerta. Si no puedes llegar, sube lo más alto posible o aléjate del mar todo lo que puedas. Puede haber olas durante horas o días: no vuelvas hasta que la autoridad diga que es seguro.',
         'If you are on the beach or by the water, go on foot to high ground or inland as soon as the shaking stops, even if it was weak. Elsewhere on the coast, do so if it was strong or long. Do not wait for an alert. If you cannot get there, go as high as possible or as far from the sea as you can. Waves can continue for hours or days: do not return until officials say it is safe.',
-        'Se você estiver na praia ou junto ao mar, vá a pé para um lugar alto ou para longe da costa assim que o tremor parar, mesmo que tenha sido fraco. No resto da costa, faça isso se foi forte ou longo. Não espere um alerta. Se não conseguir chegar, suba o mais alto possível ou afaste-se do mar o máximo que puder. Pode haver ondas durante horas ou dias: não volte até que as autoridades digam que é seguro.',
+        'Se você estiver na praia ou junto ao mar, vá a pé para um lugar alto ou para longe da costa assim que o tremor parar, mesmo que tenha sido fraco. No resto da costa, faça isso se foi forte ou longo. Não espere um alerta. Se não conseguir chegar, suba o mais alto possível ou afaste‑se do mar o máximo que puder. Pode haver ondas durante horas ou dias: não volte até que as autoridades digam que é seguro.',
       ],
       action: 'tsunami',
       source: nwsTsunami,
@@ -111,7 +125,7 @@ export const hazardSteps: Record<EmergencyKind, readonly FirstMinutesStep[]> = {
       text: [
         'Puede volver a temblar. Si pasa, agáchate, cúbrete y sujétate otra vez.',
         'More shaking is possible. If it happens, drop, cover and hold on again.',
-        'Pode voltar a tremer. Se acontecer, abaixe-se, proteja-se e segure-se de novo.',
+        'Pode voltar a tremer. Se acontecer, abaixe‑se, proteja‑se e segure‑se de novo.',
       ],
       source: cdcAfter,
     },
@@ -149,7 +163,7 @@ export const hazardSteps: Record<EmergencyKind, readonly FirstMinutesStep[]> = {
       text: [
         'Si te quedas, refúgiate en una habitación interior, lejos de ventanas y puertas de vidrio.',
         'If you stay, shelter in an interior room away from windows and glass doors.',
-        'Se ficar, abrigue-se em um cômodo interno, longe de janelas e portas de vidro.',
+        'Se ficar, abrigue‑se em um cômodo interno, longe de janelas e portas de vidro.',
       ],
       source: nwsHurricane,
     },
@@ -186,7 +200,7 @@ export const hazardSteps: Record<EmergencyKind, readonly FirstMinutesStep[]> = {
       id: 'no-crossing',
       text: [
         'No camines, nades ni manejes por agua de inundación, aunque parezca quieta. 15 cm de agua en movimiento pueden derribarte y 30 cm arrastrar un vehículo. Da la vuelta.',
-        "Do not walk, swim or drive through floodwater, even if it looks still. 6 in (15 cm) of moving water can knock you down and 1 ft (30 cm) can sweep a vehicle away. Turn around, don't drown.",
+        "Do not walk, swim or drive through floodwater, even if it looks still. 6 inches of moving water can knock you down and 1 foot can sweep a vehicle away. Turn around, don't drown.",
         'Não ande, nade nem dirija pela água da inundação, mesmo que pareça parada. 15 cm de água em movimento podem derrubar você e 30 cm podem arrastar um veículo. Dê meia-volta.',
       ],
       source: readyFloods,
@@ -205,7 +219,7 @@ export const hazardSteps: Record<EmergencyKind, readonly FirstMinutesStep[]> = {
       text: [
         'Con lluvias fuertes en zonas de cerros, aléjate de laderas y cauces. Si un río cambia de golpe o se pone turbio, o escuchas ruidos de tierra, sube a un lugar alto y seguro.',
         'In heavy rain near hills, stay away from slopes and stream beds. If a stream suddenly changes flow or turns muddy, or you hear rumbling ground, move to high, safe ground.',
-        'Com chuva forte em áreas de morros, afaste-se de encostas e leitos de rios. Se um rio mudar de repente ou ficar turvo, ou se você ouvir barulho de terra se movendo, suba para um lugar alto e seguro.',
+        'Com chuva forte em áreas de morros, afaste‑se de encostas e leitos de rios. Se um rio mudar de repente ou ficar turvo, ou se você ouvir barulho de terra se movendo, suba para um lugar alto e seguro.',
       ],
       source: readyLandslides,
     },

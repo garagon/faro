@@ -106,8 +106,11 @@ test('situation cards count only active GDACS events and never call silence safe
   assert.equal(gdacsStatus('cyclone', [old], false, now).state, 'none');
   assert.equal(gdacsStatus('cyclone', [old], false, now).recent, 1);
   assert.equal(gdacsStatus('flood', [], true, now).state, 'unknown');
-  assert.equal(gdacsStatus('flood', null, false, now).state, 'unknown');
-  assert.equal(tsunamiStatus(null, false, now).state, 'unknown');
+  // Before the first answer the row says "checking", never "could not be checked".
+  assert.equal(gdacsStatus('flood', null, false, now).state, 'pending');
+  assert.equal(gdacsStatus('flood', null, true, now).state, 'unknown');
+  assert.equal(tsunamiStatus(null, false, now).state, 'pending');
+  assert.equal(tsunamiStatus(null, true, now).state, 'unknown');
   const bulletin = {
     product: 'WEPA40',
     issued: now - 3600000,
@@ -341,7 +344,7 @@ test('GDACS earthquake severity reads naturally and other text stays as publishe
   );
   assert.equal(
     readableSeverity('Magnitude 7.7M, Depth:12.647km', 'en'),
-    'Magnitude 7.7, depth 13 km',
+    'Magnitude 7.7, depth 8 mi',
   );
   assert.equal(readableSeverity('Category 3 hurricane', 'es'), 'Category 3 hurricane');
 });

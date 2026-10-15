@@ -8,6 +8,8 @@ import {
   kitText,
   shoppingList,
   waterLitres,
+  waterShown,
+  planSummary,
 } from '../src/data/emergencyKit.ts';
 import { careSearchUrl, careCoordinates } from '../src/lib/nearbyCare.ts';
 import { langIndex } from '../src/lib/i18n.ts';
@@ -114,6 +116,20 @@ test('kit plan storage accepts only known values and falls back to one person fo
 test('water uses the SENAPRED baseline and the Ready.gov gallon, rounded up', () => {
   assert.deepEqual(waterLitres({ people: 1, days: 3 }), { minimum: 6, ready: 12 });
   assert.deepEqual(waterLitres({ people: 2, days: 3 }), { minimum: 12, ready: 23 });
+});
+test('English shows the water in U.S. gallons, never less than the liters', () => {
+  assert.deepEqual(waterShown({ people: 1, days: 3 }, 'es'), { minimum: '6 L', ready: '12 L' });
+  assert.deepEqual(waterShown({ people: 1, days: 3 }, 'en'), {
+    minimum: '1.6 gal',
+    ready: '3 gal',
+  });
+  assert.deepEqual(waterShown({ people: 2, days: 7 }, 'en'), {
+    minimum: '7.4 gal',
+    ready: '14 gal',
+  });
+  const summary = planSummary('en', { people: 1, days: 3, hazards: [] });
+  assert.ok(summary.includes('1.6 gal') && summary.includes('3 gal') && !/\d L\b/.test(summary));
+  assert.ok(!planSummary('pt', { people: 1, days: 3, hazards: [] }).includes('gal'));
 });
 test('hazard items appear only for their hazards and missing items group by shop', () => {
   const base = kitItemsFor({ hazards: [] }).map((item) => item.id);

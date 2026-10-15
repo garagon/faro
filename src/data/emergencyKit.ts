@@ -1,6 +1,7 @@
 import type { Localized } from './destinations/types.ts';
 import type { PlaceKind } from '../lib/nearbyCare.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
+import { usUnits, volume } from '../lib/units.ts';
 export type KitGroup = 'supplies' | 'tools' | 'personal';
 export type KitHazard = 'earthquake' | 'hurricane' | 'flood' | 'volcano';
 export type KitItem = {
@@ -85,6 +86,15 @@ export function waterLitres(plan: Pick<KitPlan, 'people' | 'days'>) {
     ready: Math.ceil(plan.people * plan.days * WATER_PER_DAY.ready),
   };
 }
+/** The same amounts as shown: liters, or U.S. gallons in English. */
+export function waterShown(plan: Pick<KitPlan, 'people' | 'days'>, lang: Lang) {
+  const { minimum, ready } = waterLitres(plan);
+  return {
+    minimum: volume(minimum, lang),
+    // Ready.gov counts whole gallons: one per person per day.
+    ready: usUnits(lang) ? `${plan.people * plan.days} gal` : volume(ready, lang),
+  };
+}
 /** Items that apply to the selected hazards; with no plan, every item. */
 export function kitItemsFor(plan?: Pick<KitPlan, 'hazards'>) {
   return kitItems.filter(
@@ -100,7 +110,7 @@ export const kitItems: KitItem[] = [
     title: ['Agua potable', 'Drinking water', 'Água potável'],
     detail: [
       'Referencia de SENAPRED (Chile) para beber: 2 litros por persona y día; 6 litros para 3 días. Con calor o para higiene, lleva más.',
-      'SENAPRED (Chile) drinking baseline: 2 liters per person per day; 6 liters for 3 days. In heat or for hygiene, carry more.',
+      'SENAPRED (Chile) drinking baseline: about half a gallon (2 liters) per person per day; 1.6 gallons for 3 days. In heat or for hygiene, carry more.',
       'Referência do SENAPRED (Chile) para beber: 2 litros por pessoa por dia; 6 litros para 3 dias. No calor ou para higiene, leve mais.',
     ],
   },
@@ -314,25 +324,25 @@ export function shoppingList(checked: string[], plan?: Pick<KitPlan, 'hazards'>)
   return [...groups].map(([store, items]) => ({ store, items }));
 }
 export function planSummary(lang: Lang, plan: KitPlan) {
-  const { minimum, ready } = waterLitres(plan);
+  const { minimum, ready } = waterShown(plan, lang);
   const one = plan.people === 1;
   const people = `${plan.people} ${pick(lang, one ? 'persona' : 'personas', one ? 'person' : 'people', one ? 'pessoa' : 'pessoas')}`;
   return pick(
     lang,
-    `Para ${people} y ${plan.days} días. Agua: al menos ${minimum} L (SENAPRED, 2 L por persona y día). Ready.gov recomienda ${ready} L, para beber e higiene.`,
-    `For ${people} and ${plan.days} days. Water: at least ${minimum} L (SENAPRED, 2 L per person per day). Ready.gov recommends ${ready} L, for drinking and hygiene.`,
-    `Para ${people} e ${plan.days} dias. Água: pelo menos ${minimum} L (SENAPRED, 2 L por pessoa por dia). O Ready.gov recomenda ${ready} L, para beber e para higiene.`,
+    `Para ${people} y ${plan.days} días. Agua: al menos ${minimum} (SENAPRED, 2 L por persona y día). Ready.gov recomienda ${ready}, para beber e higiene.`,
+    `For ${people} and ${plan.days} days. Water: at least ${minimum} (SENAPRED, about half a gallon per person per day). Ready.gov recommends ${ready}, for drinking and hygiene.`,
+    `Para ${people} e ${plan.days} dias. Água: pelo menos ${minimum} (SENAPRED, 2 L por pessoa por dia). O Ready.gov recomenda ${ready}, para beber e para higiene.`,
   );
 }
 /** An item's line, with water and food sized to the person's plan when there is one. */
 export function itemDetail(item: KitItem, lang: Lang, plan?: KitPlan) {
   if (plan && item.id === 'water') {
-    const { minimum } = waterLitres(plan);
+    const { minimum } = waterShown(plan, lang);
     return pick(
       lang,
-      `${minimum} L para tu reserva. Adapta la cantidad al clima y a tus necesidades.`,
-      `${minimum} L for your supplies. Adapt the amount to the climate and your needs.`,
-      `${minimum} L para seus suprimentos. Ajuste a quantidade ao clima e às suas necessidades.`,
+      `${minimum} para tu reserva. Adapta la cantidad al clima y a tus necesidades.`,
+      `${minimum} for your supplies. Adapt the amount to the climate and your needs.`,
+      `${minimum} para seus suprimentos. Ajuste a quantidade ao clima e às suas necessidades.`,
     );
   }
   if (plan && item.id === 'food')

@@ -9,123 +9,15 @@
   color: var(--ink);
   font-size: 14px;
 }
-.fw-header {
-  min-height: 64px;
-  padding: 0 32px;
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  gap: 24px;
-}
-.fw-brand {
-  font-family: 'DM Sans', sans-serif !important;
-  font-size: 27px !important;
-  font-weight: 700;
-  letter-spacing: -1px;
-  gap: 8px;
-}
-.fw-brand img {
-  height: 29px;
-  width: 20px;
-}
-.fw-header nav {
-  align-self: stretch;
-  gap: 18px;
-}
-.fw-header nav button {
-  border-radius: 0;
-  padding: 0 10px;
-  border-bottom: 2px solid transparent;
-  font-size: 13px;
-  color: #56636a;
-}
-.fw-header nav button.current {
-  background: none;
-  color: var(--green);
-  border-bottom-color: var(--green);
-  font-weight: 600;
-}
-.fw-language {
-  border-radius: 4px;
-  padding: 2px;
-}
-.fw-language button {
-  border-radius: 2px;
-  padding: 5px 8px;
-}
 .fw-main {
   max-width: 1440px;
   padding: 18px 32px 0;
-}
-.fw-context {
-  min-height: 36px;
-}
-.fw-country {
-  gap: 9px;
-}
-.fw-country label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.fw-country label > span {
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: 12px;
-}
-.fw-country select {
-  font-size: 14px;
-  max-width: 230px;
-}
-.fw-country > svg {
-  width: 18px;
-  height: 18px;
 }
 .fw-icon {
   width: 34px;
   height: 34px;
   border-radius: 4px;
   background: #fff;
-}
-.fw-live {
-  font-size: 12px;
-  display: flex;
-  gap: 7px;
-}
-.fw-live span {
-  font-size: 11px;
-}
-.fw-saved {
-  margin: 6px 0 0;
-  gap: 5px;
-}
-.fw-saved small {
-  font-size: 11px;
-}
-.fw-saved button {
-  padding: 3px 8px;
-  border-radius: 3px;
-  background: #edf0f1;
-  font-size: 11px;
-}
-.fw-heading {
-  margin: 20px 0 9px;
-  gap: 14px;
-}
-.fw-heading h1 {
-  font:
-    600 27px/1.25 'DM Sans',
-    sans-serif;
-  letter-spacing: -0.6px;
-  color: var(--ink);
-  margin: 0;
-}
-.fw-heading p {
-  font-size: 13px;
-  margin: 7px 0 0;
-  color: var(--muted);
-}
-.fw-main[data-screen='activity'] .fw-heading p {
-  display: none;
 }
 .fw-primary,
 .fw-secondary {
@@ -142,40 +34,12 @@
 .fw-primary {
   background: var(--green);
 }
-.fw-heading > .fw-primary svg {
-  width: 17px;
-  height: 17px;
-}
 .fw-location {
   font-size: 12px;
   margin: 8px 0 14px;
 }
 .fw-location-idle {
   display: none;
-}
-.fw-freshness {
-  border: 0;
-  background: none;
-  padding: 0;
-  margin: 0 0 17px;
-  gap: 16px;
-  border-radius: 0;
-  display: flex;
-  flex-wrap: wrap;
-  color: var(--muted);
-  font-size: 12px;
-}
-.fw-freshness time {
-  color: var(--ink);
-}
-.fw-freshness button {
-  padding: 0;
-  background: none;
-  border: 0;
-  color: var(--green);
-  font-size: 12px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .fw-toolbar.fw-catalog-toolbar {
   display: flex;
@@ -204,26 +68,9 @@
   border-radius: 4px;
   border-color: #cdd5d9;
 }
-.fw-toolbar .fw-view {
-  font-size: 12px;
-  min-height: 38px;
-  margin-left: 0;
-  white-space: nowrap;
-}
-.fw-workspace {
-  grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr);
-  gap: 16px;
-}
 .fw-map-card,
 .fw-events {
   border-radius: 5px;
-}
-.fw-map-head {
-  min-height: 44px;
-  padding: 10px 14px;
-}
-.fw-map-head small {
-  font-size: 11px;
 }
 .fw-map {
   height: 430px;
@@ -234,7 +81,7 @@
 }
 .fw-events-title h2 {
   font:
-    600 17px/1.3 'DM Sans',
+    600 17px/1.3 'Public Sans',
     sans-serif;
   margin: 0;
 }
@@ -276,13 +123,6 @@
   width: 14px;
   color: #69777d;
 }
-.fw-feed-foot {
-  background: #fafbfc;
-  padding: 10px 16px;
-}
-.fw-feed-foot small {
-  font-size: 11px;
-}
 .fw-map-foot {
   min-height: 48px;
   font-size: 11px;
@@ -291,12 +131,6 @@
   border-radius: 3px;
   background: #edf1f2;
   color: var(--ink);
-}
-.fw-embassy-toggle {
-  min-height: 34px;
-  padding: 6px 10px;
-  margin-top: 12px;
-  font-size: 12px;
 }
 .fw-disclaimer {
   padding: 12px 0;
@@ -309,8 +143,7 @@
 .fw-disclaimer button {
   display: none;
 }
-.fw-coast,
-.fw-embassies {
+.fw-coast {
   border-radius: 5px;
   background: #fff;
   border-color: var(--line);
@@ -351,8 +184,7 @@
 .fw-bulletin h3 {
   font-size: 15px;
 }
-.fw-warning,
-.fw-embassy-note {
+.fw-warning {
   background: #fbf4e6;
   border-left: 3px solid #b5802e;
   border-radius: 2px;
@@ -404,16 +236,6 @@
 .fw-resource button {
   align-self: start;
 }
-.fw-embassies .fw-resource {
-  padding-top: 20px;
-}
-.fw-embassies > .fw-resource-grid {
-  gap: 0;
-}
-.fw-embassies > small {
-  font-size: 12px;
-  color: var(--muted);
-}
 .fw-help-region {
   font-size: 12px;
   color: var(--muted);
@@ -438,40 +260,6 @@
 .fw-note > svg {
   width: 20px;
 }
-.fw-form,
-.fw-plan-card {
-  border-radius: 5px;
-  background: #fff;
-  padding: 24px;
-}
-.fw-form h2,
-.fw-plan-card h2 {
-  font-size: 19px;
-  font-weight: 600;
-}
-.fw-form input,
-.fw-form textarea {
-  border-radius: 4px;
-  background: #fff;
-}
-.fw-guide-grid h2 {
-  font-size: 20px;
-}
-.fw-guide-grid p {
-  font-size: 15px;
-  line-height: 1.7;
-}
-.fw-step {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--muted);
-}
-.fw-footer {
-  margin-top: 28px;
-  padding: 18px 0;
-  font-size: 11px;
-}
 .fw-modal {
   border-radius: 6px;
   background: #fff;
@@ -484,9 +272,6 @@
   font-size: 13px;
   color: var(--muted);
 }
-.fw-tag {
-  border-radius: 3px;
-}
 .fw-app button:focus-visible,
 .fw-app a:focus-visible,
 .fw-app select:focus-visible {
@@ -494,9 +279,6 @@
   outline-offset: 3px;
 }
 @media (max-width: 1100px) {
-  .fw-header {
-    padding: 0 22px;
-  }
   .fw-main {
     padding-left: 22px;
     padding-right: 22px;
@@ -507,118 +289,10 @@
   .fw-toolbar label:nth-child(-n + 2) {
     min-width: 160px;
   }
-  .fw-workspace {
-    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr);
-  }
-  .fw-live {
-    display: grid;
-  }
-  .fw-live span {
-    grid-column: 2;
-  }
-  .fw-heading h1 {
-    font-size: 25px;
-  }
 }
 @media (max-width: 760px) {
-  .fw-header {
-    min-height: 60px;
-    padding: 0 16px;
-  }
-  .fw-brand {
-    font-size: 25px !important;
-  }
-  .fw-brand img {
-    height: 27px;
-    width: 18px;
-  }
-  .fw-header nav {
-    background: #fff;
-    gap: 0;
-    padding: 5px 6px calc(5px + env(safe-area-inset-bottom));
-  }
-  .fw-header nav button {
-    padding: 7px 3px;
-    border: 0;
-    color: #58656d;
-    font-size: 10px;
-    gap: 4px;
-    min-height: 48px;
-  }
-  .fw-header nav button.current {
-    background: #edf3f0;
-    border: 0;
-    border-radius: 4px;
-  }
-  .fw-header nav button svg {
-    width: 21px;
-    height: 21px;
-  }
   .fw-main {
     padding: 12px 14px 90px;
-  }
-  .fw-country label > span {
-    display: none;
-  }
-  .fw-country select {
-    font-size: 13px;
-    max-width: 135px;
-  }
-  .fw-context {
-    min-height: 34px;
-  }
-  .fw-live {
-    font-size: 10px;
-    max-width: 142px;
-  }
-  .fw-live span {
-    font-size: 10px;
-  }
-  .fw-saved {
-    margin-top: 4px;
-  }
-  .fw-heading,
-  .fw-main[data-screen='activity'] .fw-heading {
-    display: flex;
-    align-items: center;
-    margin: 18px 0 8px;
-    gap: 10px;
-  }
-  .fw-heading h1,
-  .fw-main[data-screen='activity'] .fw-heading h1 {
-    font-size: 23px;
-    letter-spacing: -0.5px;
-    max-width: none;
-    margin: 0;
-  }
-  .fw-heading p {
-    font-size: 12px;
-  }
-  .fw-heading > .fw-primary,
-  .fw-main[data-screen='activity'] .fw-heading > .fw-primary {
-    margin: 0;
-    padding: 8px;
-    min-height: 36px;
-    font-size: 11px;
-    gap: 5px;
-    white-space: nowrap;
-  }
-  .fw-heading > .fw-primary svg {
-    width: 15px;
-    height: 15px;
-  }
-  .fw-freshness {
-    font-size: 11px;
-    margin-bottom: 12px;
-    gap: 5px 12px;
-    padding: 0;
-    display: flex;
-  }
-  .fw-freshness button {
-    font-size: 11px;
-  }
-  .fw-freshness time {
-    width: 100%;
   }
   .fw-location {
     font-size: 11px;
@@ -646,25 +320,8 @@
     padding: 6px;
     max-width: 100%;
   }
-  .fw-toolbar .fw-view {
-    grid-column: 1/-1;
-    min-height: 30px;
-    padding: 5px;
-    font-size: 11px;
-  }
-  .fw-workspace {
-    display: flex;
-    gap: 12px;
-  }
   .fw-map {
     height: 300px;
-  }
-  .fw-map-head {
-    min-height: 40px;
-    padding: 9px 11px;
-  }
-  .fw-map-head small {
-    font-size: 10px;
   }
   .fw-map-foot {
     font-size: 10px;
@@ -684,8 +341,7 @@
   .fw-event-list {
     max-height: 380px;
   }
-  .fw-coast,
-  .fw-embassies {
+  .fw-coast {
     padding: 16px 14px;
     margin: 16px 0;
   }
@@ -695,8 +351,7 @@
   .fw-coast-title small {
     font-size: 11px;
   }
-  .fw-resource-grid,
-  .fw-embassies > .fw-resource-grid {
+  .fw-resource-grid {
     grid-template-columns: 1fr;
   }
   .fw-resource,
@@ -725,287 +380,8 @@
   .fw-disclaimer svg {
     width: 15px;
   }
-  .fw-form {
-    padding: 20px 16px;
-  }
-  .fw-footer {
-    font-size: 10px;
-  }
-}
-@media (max-width: 360px) {
-  .fw-heading h1,
-  .fw-main[data-screen='activity'] .fw-heading h1 {
-    font-size: 20px;
-  }
-  .fw-heading > .fw-primary svg {
-    display: none;
-  }
-  .fw-live {
-    max-width: 115px;
-  }
-  .fw-country select {
-    max-width: 115px;
-  }
-  .fw-country > svg {
-    display: none;
-  }
-}
-
-@media (max-width: 760px) {
-  .fw-embassies > .fw-toolbar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 12px 0;
-  }
-  .fw-embassies > .fw-toolbar label {
-    grid-column: auto;
-    min-width: 0;
-  }
 }
 /* One nationality, one relevant mission. */
-.fw-consular {
-  display: grid;
-  grid-template-columns: 244px minmax(0, 1fr);
-  border: 1px solid #dce1e3;
-  border-radius: 5px;
-  background: #fff;
-  margin: 20px 0;
-  overflow: hidden;
-  min-height: 285px;
-}
-.fw-nationality {
-  padding: 24px 20px;
-  background: #f1f4f5;
-  border-right: 1px solid #dce1e3;
-}
-.fw-nationality h2 {
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 1.4;
-  margin: 0 0 8px;
-  letter-spacing: -0.2px;
-}
-.fw-nationality p {
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 0 0 22px;
-  color: #596971;
-}
-.fw-nationality label {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-  margin-bottom: 7px;
-}
-.fw-nationality select {
-  width: 100%;
-  min-height: 40px;
-  padding: 8px;
-  border: 1px solid #bfcbd0;
-  border-radius: 4px;
-  background: #fff;
-  font-size: 13px;
-  color: #202b31;
-}
-.fw-nationality-context {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 24px 0;
-}
-.fw-nationality-context span {
-  font-size: 11px;
-  color: #5e6b72;
-}
-.fw-nationality-context strong {
-  font-size: 13px;
-  font-weight: 600;
-}
-.fw-nationality > small {
-  display: block;
-  font-size: 11px;
-  line-height: 1.6;
-  color: #64747c;
-}
-.fw-mission {
-  display: grid;
-  grid-template-columns: minmax(270px, 1fr) minmax(280px, 1.05fr);
-  min-width: 0;
-}
-.fw-mission-info {
-  padding: 28px 24px;
-  min-width: 0;
-}
-.fw-mission-kicker {
-  font-size: 12px;
-  color: #5e6b72;
-  margin-bottom: 10px;
-}
-.fw-mission-kicker span {
-  color: #a1aeb4;
-  margin: 0 6px;
-}
-.fw-mission-info h2 {
-  font-size: 23px;
-  line-height: 1.3;
-  letter-spacing: -0.5px;
-  margin: 0 0 20px;
-  font-weight: 600;
-}
-.fw-mission-info address {
-  display: flex;
-  gap: 10px;
-  font-style: normal;
-  font-size: 13px;
-  line-height: 1.65;
-  color: #394a53;
-  margin: 0 0 15px;
-}
-.fw-mission-info address svg {
-  flex-shrink: 0;
-  margin-top: 3px;
-}
-.fw-mission-notice {
-  font-size: 12px;
-  line-height: 1.6;
-  border-left: 2px solid #b7843e;
-  padding: 0 0 0 11px;
-  margin: 14px 0;
-  color: #745625 !important;
-}
-.fw-official-contact {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  text-decoration: none;
-  margin: 6px 0 20px;
-}
-.fw-official-contact:hover {
-  text-decoration: underline;
-}
-.fw-route {
-  border-top: 1px solid #dce1e3;
-  padding-top: 17px;
-}
-.fw-route > span {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-.fw-route-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.fw-route-modes {
-  display: flex;
-  border: 1px solid #ced7db;
-  border-radius: 4px;
-  padding: 2px;
-  gap: 2px;
-}
-.fw-route-modes button {
-  background: none;
-  border: 0;
-  padding: 7px 10px;
-  font-size: 12px;
-  border-radius: 2px;
-  min-height: 32px;
-}
-.fw-route-modes button[aria-pressed='true'] {
-  background: #e9efec;
-  color: #225649;
-  font-weight: 600;
-}
-.fw-route .fw-primary {
-  font-size: 12px;
-  min-height: 38px;
-}
-.fw-route > small {
-  display: block;
-  font-size: 11px;
-  color: #64747c;
-  margin-top: 9px;
-  line-height: 1.5;
-}
-.fw-mission-safety {
-  font-size: 12px;
-  line-height: 1.6;
-  color: #5e6b72 !important;
-  margin: 19px 0 12px;
-}
-.fw-mission-source {
-  font-size: 11px;
-  color: #5e6b72;
-}
-.fw-mission-source summary {
-  cursor: pointer;
-  padding: 5px 0;
-}
-.fw-mission-source p {
-  font-size: 12px;
-  line-height: 1.6;
-}
-.fw-mission-map {
-  margin: 20px 20px 20px 0;
-  align-self: start;
-  overflow: hidden;
-  border: 1px solid #dce1e3;
-  border-radius: 4px;
-}
-.fw-mission-map .fw-map {
-  height: 330px;
-}
-.fw-mission-map > div:last-child {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px;
-  font-size: 10px;
-  color: #5e6b72;
-}
-.fw-mission-map > div:last-child button {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  border: 0;
-  background: none;
-  padding: 5px 0;
-  color: #245b50;
-  font-size: 11px;
-  font-weight: 500;
-}
-.fw-mission-empty {
-  padding: 48px 36px;
-  align-self: center;
-  max-width: 620px;
-}
-.fw-mission-empty > span {
-  font-size: 12px;
-  color: #5e6b72;
-}
-.fw-mission-empty h2 {
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-  margin: 10px 0;
-}
-.fw-mission-empty p {
-  font-size: 14px;
-  line-height: 1.6;
-  margin: 0 0 22px;
-}
-.fw-mission-empty > small {
-  font-size: 12px;
-  line-height: 1.6;
-  color: #5e6b72;
-}
 .fw-local-directory {
   border-top: 1px solid #dce1e3;
   margin-top: 24px;
@@ -1020,110 +396,16 @@
   border-bottom: 1px solid #dce1e3;
   margin-bottom: 16px;
 }
-@media (max-width: 1100px) {
-  .fw-consular {
-    grid-template-columns: 220px minmax(0, 1fr);
-  }
-  .fw-mission {
-    grid-template-columns: 1fr;
-  }
-  .fw-mission-map {
-    margin: 0 24px 24px;
-  }
-  .fw-mission-map .fw-map {
-    height: 290px;
-  }
-}
 @media (max-width: 760px) {
-  .fw-consular {
-    grid-template-columns: 1fr;
-    margin: 16px 0;
-  }
-  .fw-nationality {
-    padding: 18px;
-    border-right: 0;
-    border-bottom: 1px solid #dce1e3;
-  }
-  .fw-nationality h2 {
-    font-size: 17px;
-  }
-  .fw-nationality p {
-    margin-bottom: 14px;
-    font-size: 12px;
-  }
-  .fw-nationality-context {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    margin: 14px 0 8px;
-  }
-  .fw-nationality > small {
-    font-size: 10px;
-  }
-  .fw-nationality select {
-    font-size: 16px;
-    min-height: 42px;
-  }
-  .fw-mission-info {
-    padding: 22px 18px;
-  }
-  .fw-mission-info h2 {
-    font-size: 21px;
-    margin-bottom: 16px;
-  }
-  .fw-mission-map {
-    margin: 0 18px 18px;
-  }
-  .fw-mission-map .fw-map {
-    height: 260px;
-  }
-  .fw-mission-empty {
-    padding: 26px 18px;
-  }
-  .fw-mission-empty h2 {
-    font-size: 21px;
-  }
-  .fw-mission-empty p {
-    font-size: 13px;
-    margin-bottom: 16px;
-  }
-  .fw-route-controls {
-    gap: 8px;
-  }
-  .fw-route-modes button {
-    padding: 7px 8px;
-  }
   .fw-local-directory > summary {
     font-size: 13px;
     line-height: 1.5;
-  }
-}
-
-@media (max-width: 760px) {
-  .fw-consular.has-nationality .fw-nationality {
-    padding: 14px 18px;
-  }
-  .fw-consular.has-nationality .fw-nationality h2,
-  .fw-consular.has-nationality .fw-nationality > p,
-  .fw-consular.has-nationality .fw-nationality-context,
-  .fw-consular.has-nationality .fw-nationality > small {
-    display: none;
   }
 }
 /* Safety reference: situation index and a single reading column. */
 .fw-main[data-screen='guide'] {
   max-width: 1180px;
   padding-top: 30px;
-}
-.fw-main[data-screen='guide'] > .fw-heading {
-  margin: 0 0 28px;
-}
-.fw-main[data-screen='guide'] > .fw-heading h1 {
-  font-size: 27px;
-}
-.fw-main[data-screen='guide'] > .fw-heading p {
-  font-size: 13px;
-  margin-top: 8px;
 }
 .fw-safety-layout {
   display: grid;
@@ -1324,16 +606,6 @@
   .fw-main[data-screen='guide'] {
     padding-top: 22px;
   }
-  .fw-main[data-screen='guide'] > .fw-heading {
-    margin: 0 0 20px;
-  }
-  .fw-main[data-screen='guide'] > .fw-heading h1 {
-    font-size: 24px;
-  }
-  .fw-main[data-screen='guide'] > .fw-heading p {
-    font-size: 12px;
-    line-height: 1.6;
-  }
   .fw-safety-layout {
     display: flex;
     flex-direction: column;
@@ -1427,9 +699,6 @@
   max-width: 1200px;
   padding-top: 24px;
 }
-.fw-main[data-screen='status'] > .fw-heading {
-  margin: 6px 0 24px;
-}
 .fw-traveler {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
@@ -1514,8 +783,7 @@
   gap: 14px;
 }
 .fw-checkin-form > label,
-.fw-checkin-fields > label,
-.fw-contact-plan > label {
+.fw-checkin-fields > label {
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -1533,7 +801,7 @@
   background: white;
   color: #233640;
   font:
-    400 13px/1.5 'DM Sans',
+    400 13px/1.5 'Public Sans',
     sans-serif;
   min-width: 0;
   width: 100%;
@@ -1541,18 +809,11 @@
 .fw-checkin-form textarea {
   resize: vertical;
 }
-.fw-contact-plan {
-  border-top: 1px solid var(--line);
-  margin-top: 22px;
-  padding-top: 17px;
-}
-.fw-contact-plan h3,
 .fw-followup-note h3 {
   font-size: 14px;
   font-weight: 600;
   margin: 0 0 14px;
 }
-.fw-contact-plan > p,
 .fw-checkin-privacy {
   font-size: 11px;
   line-height: 1.6;
@@ -1584,21 +845,9 @@
   background: #fff;
   color: #3f525d;
   font:
-    13px/1.8 'DM Sans',
+    13px/1.8 'Public Sans',
     sans-serif;
   resize: vertical;
-}
-.fw-share-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.fw-share-actions > a {
-  font-size: 12px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  margin-left: auto;
 }
 .fw-message-preview small {
   display: block;
@@ -1665,9 +914,7 @@
   font-size: 12px;
   margin: 8px 0;
 }
-.fw-due-text,
-.fw-status-help,
-.fw-draft-notice {
+.fw-status-help {
   padding: 11px;
   background: #fff5e4;
   border-left: 2px solid #af7e24;
@@ -1701,71 +948,6 @@
   background: none;
   border: 0;
   color: #71511e;
-  text-decoration: underline;
-}
-.fw-emergency-contact {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  border: 1px solid #dfd4cb;
-  border-left: 3px solid #94543e;
-  border-radius: 3px;
-  background: #fffaf6;
-  padding: 15px 20px;
-  margin: 20px 0;
-}
-.fw-emergency-contact > div {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.fw-emergency-contact strong {
-  font-size: 14px;
-}
-.fw-emergency-contact span,
-.fw-emergency-contact > a {
-  font-size: 12px;
-}
-.fw-emergency-contact .fw-emergency-call {
-  padding: 10px 15px;
-  border: 1px solid #94543e;
-  border-radius: 4px;
-  color: #834733;
-  font-weight: 600;
-  font-size: 14px;
-}
-.fw-consular-contacts {
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 15px 0;
-}
-.fw-consular-contacts > a {
-  font-weight: 600;
-}
-.fw-consular-contacts > p {
-  font-size: 12px;
-  color: var(--muted);
-  margin: 6px 0 14px;
-}
-.fw-consular-contacts > div {
-  border-left: 2px solid #a97c3f;
-  padding: 0 0 0 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.fw-consular-contacts > div > span,
-.fw-consular-contacts > div > small {
-  font-size: 11px;
-  color: var(--muted);
-}
-.fw-consular-contacts > div > a:first-of-type {
-  font-size: 18px;
-  font-weight: 600;
-}
-.fw-consular-contacts > div > a:last-child {
-  font-size: 11px;
   text-decoration: underline;
 }
 .fw-chile-guidance {
@@ -1806,9 +988,6 @@
   .fw-traveler {
     grid-template-columns: 1fr;
   }
-  .fw-main[data-screen='status'] > .fw-heading {
-    margin: 0 0 22px;
-  }
   .fw-checkin-form,
   .fw-message-preview {
     padding: 20px 17px;
@@ -1828,49 +1007,14 @@
     font-size: 11px !important;
     padding: 12px 5px;
   }
-  .fw-emergency-contact {
-    padding: 13px;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .fw-emergency-contact > div {
-    flex-basis: 100%;
-  }
-  .fw-emergency-contact .fw-emergency-call {
-    font-size: 13px;
-  }
   .fw-checkin-reminder {
     align-items: center;
   }
   .fw-checkin-reminder button {
     min-height: 44px;
   }
-  .fw-share-actions button {
-    min-height: 44px;
-  }
 }
 /* Short check-in flow and destination-specific travel preparation. */
-.fw-next-checkin {
-  border-top: 1px solid var(--line);
-  padding: 17px 0;
-}
-.fw-next-checkin label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  font-size: 13px;
-  font-weight: 500;
-}
-.fw-next-checkin select {
-  max-width: 190px;
-}
-.fw-next-checkin small {
-  display: block;
-  margin-top: 9px;
-  font-size: 11px;
-  color: var(--muted);
-}
 .fw-checkin-optional {
   margin-bottom: 20px;
   border-top: 1px solid var(--line);
@@ -1902,15 +1046,6 @@
 .fw-app button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-.fw-report-age {
-  font-size: 12px;
-  color: #64737c;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 7px;
-  margin: 9px 0 12px;
 }
 .fw-followup-note > button {
   padding: 0 0 15px;
@@ -1951,32 +1086,6 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.fw-emergency-lines {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 15px 0 12px;
-}
-.fw-emergency-lines > a {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 10px 15px;
-  background: white;
-  border: 1px solid #cdb7a9;
-  border-radius: 4px;
-  color: #814934;
-  min-height: 46px;
-  text-decoration: none;
-}
-.fw-emergency-lines strong {
-  font-size: 21px;
-  font-variant-numeric: tabular-nums;
-}
-.fw-emergency-lines span {
-  font-size: 12px;
-  color: #5e5147;
-}
 .fw-emergency-numbers > small {
   font-size: 11px;
   color: #71645d;
@@ -2004,9 +1113,6 @@
 }
 .fw-status-help .fw-emergency-numbers h2 {
   font-size: 14px;
-}
-.fw-status-help .fw-emergency-lines > a {
-  flex: 1;
 }
 .fw-trip-contacts {
   padding: 22px 24px;
@@ -2136,7 +1242,7 @@
   padding: 9px;
   background: #fff;
   font:
-    13px/1.5 'DM Sans',
+    13px/1.5 'Public Sans',
     sans-serif;
   color: var(--ink);
 }
@@ -2170,9 +1276,6 @@
   }
   .fw-contact-tools {
     margin-left: auto;
-  }
-  .fw-next-checkin select {
-    max-width: 175px;
   }
 }
 @media (max-width: 760px) {
@@ -2217,23 +1320,6 @@
     flex-wrap: wrap;
     gap: 9px;
   }
-  .fw-emergency-lines {
-    flex-direction: column;
-  }
-  .fw-emergency-lines > a {
-    width: 100%;
-  }
-  .fw-next-checkin label {
-    align-items: start;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .fw-next-checkin select {
-    max-width: none;
-  }
-  .fw-next-checkin {
-    padding: 15px 0;
-  }
   .fw-checkin-optional summary {
     padding: 3px 0;
   }
@@ -2243,22 +1329,4 @@
   .fw-checkin-privacy {
     font-size: 11px;
   }
-}
-.fw-consular-fallback {
-  border-left: 2px solid #a3b5ad;
-  padding-left: 14px;
-  margin: 12px 0 18px;
-  max-width: 560px;
-}
-.fw-consular-fallback > a {
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.fw-consular-fallback > p {
-  font-size: 12px !important;
-  line-height: 1.6;
-  color: var(--muted);
-  margin: 9px 0 0 !important;
 }

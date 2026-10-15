@@ -8,7 +8,6 @@ import {
   WhatsappLogoIcon,
 } from '@phosphor-icons/react';
 import { shareLink, type ShareChannel } from '../lib/share.ts';
-import '../styles/share.css';
 import { pick, type Lang } from '../lib/i18n.ts';
 
 type Props = {

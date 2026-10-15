@@ -13,7 +13,6 @@
 .fw-app,
 .fw-info-dialog,
 .fw-event-dialog,
-.fw-home,
 .fw-trip,
 .fw-main[data-screen='help'],
 .fw-main[data-screen='activity'],
@@ -27,18 +26,6 @@
 .fw-main[data-screen='help'] {
   --call: #b42318;
 }
-.fw-app .fw-emergency-trigger.fw-emergency-persistent {
-  border-color: #b42318;
-  background: #b42318;
-  color: #fff !important;
-  font-weight: 700;
-}
-@media (hover: hover) {
-  .fw-app .fw-emergency-trigger.fw-emergency-persistent:hover {
-    border-color: #93190f;
-    background: #93190f;
-  }
-}
 
 /* Focus: dark ring on light surfaces, white ring on the dark sidebar and top bar. */
 .fw-app :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
@@ -47,42 +34,22 @@
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
-.fw-app .fw-header :is(a, button, select):focus-visible {
-  outline-color: #fff;
-}
 .fw-app .fw-status-options label:focus-within {
   outline-color: var(--focus);
 }
 @media (max-width: 760px) {
   /* On phones the navigation is a white bar at the bottom. */
-  .fw-app .fw-header nav button:focus-visible {
-    outline-color: var(--focus);
-    outline-offset: -3px;
-  }
 }
 
 /* Navigation on phones: 12px labels in the readable grey. */
-@media (max-width: 760px) {
-  .fw-app .fw-header nav button {
-    font-size: 12px;
-    font-weight: 600;
-  }
-  .fw-app .fw-header nav button:not(.current) {
-    color: var(--text-muted);
-  }
-}
 
 /* Footer, disclaimer and source times: never below 12px. */
-.fw-app .fw-footer {
-  font-size: 12px;
-  color: var(--text-muted);
-}
 .fw-app .fw-disclaimer,
 .fw-app .fw-disclaimer p {
   font-size: 13px;
   color: var(--text-muted);
 }
-.fw-app :is(.fw-monitor-check > span, .fw-feed-foot) {
+.fw-app :is(.fw-monitor-check > span) {
   font-size: 12px;
 }
 .fw-app .fw-message-body p:last-child {
@@ -155,33 +122,11 @@
 }
 
 /* While the emergency screen is open, its button shows it is the current page. */
-.fw-app .fw-emergency-trigger.fw-emergency-persistent.current {
-  box-shadow:
-    inset 0 0 0 2px #b42318,
-    inset 0 0 0 4px #fff;
-}
 
 /* Footer link to the sources page: looks like the other footer links. */
-.fw-app .fw-footer .fw-footer-link {
-  display: inline;
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.fw-app .fw-source-access.current span {
-  color: #fff;
-  font-weight: 700;
-}
 
 /* Touch targets: every control at least 44px tall. */
-.fw-app :is(.fw-ext, .fw-text, .fw-link-button, .fw-map-embassy, .fw-map-foot > button, .fw-icon) {
+.fw-app :is(.fw-ext, .fw-text, .fw-link-button, .fw-map-foot > button, .fw-icon) {
   min-height: 44px;
 }
 .fw-app .fw-icon {
@@ -195,19 +140,7 @@
   height: 44px;
   line-height: 44px;
 }
-.fw-app .fw-response-consular > div a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
 .fw-main[data-screen='status'] :is(.fw-quick-messages button, .fw-message-reason label) {
-  min-height: 44px;
-}
-.fw-app .fw-header .fw-language button {
-  min-height: 44px;
-  font-size: 13px;
-}
-.fw-app .fw-header .fw-brand {
   min-height: 44px;
 }
 .fw-app
@@ -217,7 +150,6 @@
     .fw-kit-hazards button,
     .fw-trip-coordinates > summary,
     .fw-magnitude-legend summary,
-    .fw-response-consular > a,
     .fw-share-more button,
     .fw-share-channel
   ) {
@@ -266,17 +198,7 @@
 }
 
 /* No side stripes. Notes are plain text under a hairline; cards keep one even edge. */
-.fw-app
-  :is(
-    .fw-preparation-note,
-    .fw-embassy-note,
-    .fw-mission-notice,
-    .fw-safety-note,
-    .fw-draft-notice,
-    .fw-message-notice,
-    .fw-chile-guidance,
-    .fw-consular-fallback
-  ) {
+.fw-app :is(.fw-preparation-note, .fw-safety-note, .fw-message-notice, .fw-chile-guidance) {
   margin-top: 12px;
   padding: 10px 0 0;
   border: 0;
@@ -286,7 +208,7 @@
   box-shadow: none;
   color: #4f625c;
 }
-.fw-app :is(.fw-emergency-contact, .fw-consular-contacts > div, .fw-emergency-numbers) {
+.fw-app :is(.fw-emergency-numbers) {
   border-left: 0;
 }
 .fw-app .fw-main[data-screen='help'] .fw-emergency-numbers {
@@ -359,85 +281,19 @@
 /* Zoomed phones (150% and beyond, 300px or less): the top bar wraps instead of pushing the
    emergency button, profile or languages off the screen; the menu buttons share the width and the
    country search takes its own row so the name stays readable. */
-@media (max-width: 300px) {
-  .fw-app .fw-header {
-    flex-wrap: wrap;
-    row-gap: 6px;
-    height: auto;
-    padding-block: 5px;
-  }
-  .fw-app .fw-sidebar-foot {
-    flex-wrap: wrap;
-    row-gap: 6px;
-    min-width: 0;
-  }
-  .fw-app .fw-header nav button {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-  .fw-app .fw-context {
-    flex-wrap: wrap;
-  }
-  .fw-app .fw-context .fw-country {
-    flex: 1 1 100%;
-    flex-wrap: wrap;
-  }
-  .fw-app .fw-context .fw-country-search {
-    flex: 1 1 100%;
-  }
-}
 /* Very short screens (landscape phones, 400% zoom): the bars scroll with the page instead of
    covering half of it. */
 @media (max-width: 760px) and (max-height: 500px) {
-  .fw-app .fw-header {
-    position: static;
-  }
-  .fw-app .fw-header nav {
-    position: static;
-    box-shadow: none;
-  }
   .fw-app {
     scroll-padding-top: 0;
     scroll-padding-bottom: 0;
   }
   /* The menu gets its own rows below the emergency button instead of one row off the screen. */
-  .fw-app .fw-header nav {
-    order: 1;
-    flex: 1 1 100%;
-    flex-wrap: wrap;
-  }
-  .fw-app .fw-header nav button {
-    flex: 1 1 56px;
-  }
 }
 /* Short screens with the sidebar (landscape phones, small laptops): the sidebar scrolls, and on
    the shortest the emergency button comes right after the logo. */
-@media (min-width: 761px) {
-  .fw-app .fw-header {
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-}
-@media (min-width: 761px) and (max-height: 560px) {
-  .fw-app .fw-sidebar-foot {
-    display: contents;
-  }
-  .fw-app .fw-header .fw-brand {
-    order: -2;
-  }
-  .fw-app .fw-header .fw-emergency-persistent {
-    order: -1;
-    flex: none;
-    margin-top: 16px;
-  }
-}
 /* The country bar is as wide as its search and buttons; when the row is full, "Install" moves to
    the next line instead of covering "Save" (tablets and small laptops, 761–900px). */
-@media (min-width: 761px) {
-  .fw-app .fw-context .fw-country {
-    max-width: none;
-  }
-}
 /* High-contrast (forced colours) mode drops backgrounds and tints, which is how Faro marks the
    chosen hazard, the current screen and the pressed language: give them an outline instead. */
 @media (forced-colors: active) {
@@ -458,22 +314,6 @@
 }
 /* The setup card on the home: text and nationality form side by side only when both fit; on
    tablets and with the sidebar the form goes under the text instead of squeezing it. */
-@media (min-width: 761px) {
-  .fw-app .fw-home-setup {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 14px 28px;
-  }
-  .fw-app .fw-home-setup-text {
-    flex: 1 1 20rem;
-    min-width: 0;
-  }
-  .fw-app .fw-home-setup-form {
-    flex: 0 1 auto;
-    flex-wrap: wrap;
-  }
-}
 /* Local help: the main line first and full width, reading "Call 911" as on the home and
    emergency screens; the others share each row evenly, so no row ends in an empty column. */
 .fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones {
@@ -512,21 +352,7 @@
   font-size: 22px;
 }
 /* Saved countries: readable chips, never the country already on screen. */
-.fw-app .fw-saved small,
-.fw-app .fw-saved button {
-  font-size: 13px;
-}
-.fw-app .fw-saved button {
-  min-height: 32px;
-  padding: 4px 12px;
-  border-radius: 16px;
-}
 /* Phone menu: icons on one line whether the label takes one line or two. */
-@media (max-width: 760px) {
-  .fw-app .fw-header nav button {
-    justify-content: flex-start;
-  }
-}
 .fw-app .fw-kit-count {
   white-space: nowrap;
 }
@@ -540,62 +366,6 @@
   vertical-align: -2px;
 }
 /* Map legend: one entry per line part, each with a small copy of its map symbol. */
-.fw-app .fw-map-foot > .fw-map-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-}
-.fw-app .fw-map-legend > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.fw-app .fw-map-legend i {
-  flex: none;
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-}
-.fw-app .fw-map-legend .fw-legend-pin {
-  border: 2px solid #fff;
-  border-radius: 3px;
-  background: #28658a;
-  box-shadow: 0 0 0 1px #28658a55;
-}
-.fw-app .fw-map-legend .fw-legend-count {
-  border-radius: 50%;
-  background: #52616e;
-  box-shadow: 0 0 0 3px #dce1e7;
-}
-.fw-app .fw-map-legend .fw-legend-hazard {
-  width: 14px;
-  height: 14px;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: #486a60;
-  box-shadow: 0 1px 3px #0003;
-}
-.fw-app .fw-map-legend .fw-legend-plate {
-  width: 16px;
-  height: 0;
-  border-top: 2px solid #8a4fb8;
-}
-.fw-app .fw-map-legend .fw-legend-area {
-  width: 16px;
-  border: 1.5px dashed #9a6512;
-  background: #e0a33a1f;
-}
 /* On the narrowest phones the profile shortcut was squeezed to 27px; "My trip" in the menu
    opens the same screen. */
-@media (max-width: 340px) {
-  .fw-app .fw-header .fw-profile-button {
-    display: none;
-  }
-}
 /* The warned area under a warning's title, so several warnings of one kind can be told apart. */
-.fw-app .fw-official-text .fw-official-area {
-  display: block;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--board-muted, #4f625c);
-}

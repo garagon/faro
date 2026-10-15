@@ -1,0 +1,33 @@
+/*
+ * Defaults for everything inside the app frame: type, links, fields and focus. This layer sits
+ * below the legacy screen styles (see index.css), so older screens keep their own colours and
+ * spacing; design-system components set what they need in the `ds` layer above both.
+ */
+.f-root {
+  font-family: var(--f-font);
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-regular);
+  line-height: var(--f-leading-body);
+  color: var(--f-color-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.f-root :where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+}
+.f-root :where(a) {
+  color: var(--f-color-action);
+  text-underline-offset: 0.18em;
+}
+.f-root :where(:focus-visible) {
+  outline: 3px solid var(--f-color-focus);
+  outline-offset: 2px;
+}
+/* Headings and regions receive focus from the app when a screen changes: no ring for that. */
+.f-root :where([tabindex='-1']:focus) {
+  outline: none;
+}
+.f-root :where(svg) {
+  flex: none;
+}

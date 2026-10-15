@@ -12,12 +12,16 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator)
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing application root');
-import('./start.tsx')
-  .then(({ start }) => start(root))
-  .catch(() => {
-    // The loading screen stays, with its call button; it says the app did not load.
-    const status = document.querySelector('.fw-boot-status');
-    if (status)
-      status.textContent =
-        'No se pudo cargar Faro. Recarga la página. · Faro could not load. Reload the page. · Não foi possível carregar o Faro. Recarregue a página.';
-  });
+// Development only: the design-system specimen at /?muestra (not part of production builds).
+if (import.meta.env.DEV && new URLSearchParams(location.search).has('muestra'))
+  import('./ui/specimen/start.tsx').then(({ start }) => start(root));
+else
+  import('./start.tsx')
+    .then(({ start }) => start(root))
+    .catch(() => {
+      // The loading screen stays, with its call button; it says the app did not load.
+      const status = document.querySelector('.fw-boot-status');
+      if (status)
+        status.textContent =
+          'No se pudo cargar Faro. Recarga la página. · Faro could not load. Reload the page. · Não foi possível carregar o Faro. Recarregue a página.';
+    });

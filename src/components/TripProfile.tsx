@@ -16,7 +16,6 @@ import { planCoordinates, type HotelPlan } from '../lib/resources.ts';
 import { cardLines, downloadCardImage } from '../lib/travelCardImage.ts';
 import { readContacts } from '../lib/tripData.ts';
 import type { Geo } from './WebMap.tsx';
-import '../styles/trip.css';
 import { pick, type Lang } from '../lib/i18n.ts';
 
 type Props = {

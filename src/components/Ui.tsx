@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { ArrowUpRightIcon, PhoneIcon } from '@phosphor-icons/react';
-import '../styles/ui.css';
 
 /**
  * Shared building blocks so the same thing looks the same everywhere: every phone number is a

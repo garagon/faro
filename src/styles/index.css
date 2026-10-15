@@ -1,0 +1,56 @@
+/*
+ * Every application style, in three cascade layers. A later layer always wins over an earlier
+ * one, whatever the selectors, so new work never needs higher specificity or !important:
+ *
+ * 1. vendor: the map libraries' own styles.
+ * 2. ds-base: the design system's defaults (type, links, focus), below the older screens.
+ * 3. legacy: the screen styles written before the design system, in their historical order.
+ *    They are deleted screen by screen as each screen moves to the design system.
+ * 4. ds: the design system (src/styles/ds): tokens, components and the app frame.
+ *
+ * The loading screen (boot.css) is linked from index.html and stays outside the layers.
+ */
+@layer vendor, ds-base, legacy, ds;
+
+@import '@fontsource/public-sans/latin-400.css';
+@import '@fontsource/public-sans/latin-600.css';
+@import '@fontsource/public-sans/latin-700.css';
+
+@import 'leaflet/dist/leaflet.css' layer(vendor);
+@import 'leaflet.markercluster/dist/MarkerCluster.css' layer(vendor);
+@import 'leaflet.markercluster/dist/MarkerCluster.Default.css' layer(vendor);
+
+@import './ds/tokens.css' layer(ds-base);
+@import './ds/base.css' layer(ds-base);
+@import './base.css' layer(legacy);
+@import './install.css' layer(legacy);
+@import './ui.css' layer(legacy);
+@import './emergency.css' layer(legacy);
+@import './sources.css' layer(legacy);
+@import './quakeDetail.css' layer(legacy);
+@import './share.css' layer(legacy);
+@import './trip.css' layer(legacy);
+@import './kit.css' layer(legacy);
+@import './web.css' layer(legacy);
+@import './professional.css' layer(legacy);
+@import './workspace.css' layer(legacy);
+@import './liveActivity.css' layer(legacy);
+@import './travelSetup.css' layer(legacy);
+@import './countrySearch.css' layer(legacy);
+@import './dialogs.css' layer(legacy);
+@import './urgentFlows.css' layer(legacy);
+@import './checkIn.css' layer(legacy);
+@import './situation.css' layer(legacy);
+@import './help.css' layer(legacy);
+@import './home.css' layer(legacy);
+@import './layout.css' layer(legacy);
+@import './travelerSupport.css' layer(legacy);
+@import './guide.css' layer(legacy);
+@import './status.css' layer(legacy);
+@import './emergencyFlow.css' layer(legacy);
+@import './preparedness.css' layer(legacy);
+@import './board.css' layer(legacy);
+@import './system.css' layer(legacy);
+
+@import './ds/components.css' layer(ds);
+@import './ds/shell.css' layer(ds);

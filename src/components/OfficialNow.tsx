@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
-import { CaretDownIcon } from '@phosphor-icons/react';
-import { ExternalLink } from './Ui.tsx';
+import { FileTextIcon, WarningIcon } from '@phosphor-icons/react';
+import {
+  Actions,
+  Badge,
+  ExpandRow,
+  List,
+  ListRow,
+  Note,
+  OutLink,
+  Section,
+  StatusIcon,
+} from '../ui/index.ts';
 import { checkedLabel } from '../lib/time.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import {
@@ -9,6 +19,7 @@ import {
   nationalSignal,
   readableEvent,
   severityLabels,
+  type CapSeverity,
   type NationalWarning,
 } from '../lib/national.ts';
 import {
@@ -48,6 +59,15 @@ export type CivilFeed = {
   stale: boolean;
   checked: number | null;
   offline?: boolean;
+};
+
+/** The agency's severity on Faro's three official levels; the words always come from the agency. */
+const severityLevel: Record<CapSeverity, 1 | 2 | 3 | undefined> = {
+  Extreme: 3,
+  Severe: 2,
+  Moderate: 1,
+  Minor: 1,
+  Unknown: undefined,
 };
 
 /** DOM id of one row, from its source and identifier. */
@@ -141,7 +161,7 @@ export default function OfficialNow({
     const page = read.url && lang !== 'es' ? googlePageTranslation(read.url, 'es', lang) : '';
     return (
       <>
-        {tr && <strong className="fw-translated-title">{tr.title}</strong>}
+        {tr && <h3>{tr.title}</h3>}
         {shown.paragraphs.map((text) => (
           <p key={text} lang={tr ? langTag(lang) : 'es'}>
             {text}
@@ -155,7 +175,7 @@ export default function OfficialNow({
           </ul>
         )}
         {tr && (
-          <p className="fw-translate-note">
+          <p className="f-caption">
             {help(
               'Automatic translation made on this device. The Spanish original is the official text.',
               'Tradução automática feita neste dispositivo. O original em espanhol é o texto oficial.',
@@ -163,25 +183,25 @@ export default function OfficialNow({
           </p>
         )}
         {translateFailed === id && (
-          <p className="fw-translate-note" role="status">
+          <p className="f-caption" role="status">
             {help(
               'This device could not translate it. Use Google Translate instead.',
               'Este dispositivo não conseguiu traduzir. Use o Google Tradutor.',
             )}
           </p>
         )}
-        <div className="fw-official-actions">
-          {read.url && <ExternalLink href={read.url}>{read.label}</ExternalLink>}
+        <Actions>
+          {read.url && <OutLink href={read.url}>{read.label}</OutLink>}
           {lang !== 'es' &&
             (tr ? (
-              <button className="fw-link-button" onClick={() => showOriginal(id)}>
+              <button type="button" onClick={() => showOriginal(id)}>
                 {help('Show original', 'Mostrar original')}
               </button>
             ) : (
               <>
                 {here && (
                   <button
-                    className="fw-link-button"
+                    type="button"
                     disabled={translating === id}
                     onClick={() => void translateHere(id, copy)}
                   >
@@ -190,7 +210,7 @@ export default function OfficialNow({
                       : help('Translate here', 'Traduzir aqui')}
                   </button>
                 )}
-                <ExternalLink
+                <OutLink
                   href={googleTextTranslation(
                     [copy.title, ...copy.paragraphs, ...copy.items].join('\n\n'),
                     'es',
@@ -198,15 +218,15 @@ export default function OfficialNow({
                   )}
                 >
                   {help('Translate with Google', 'Traduzir com o Google')}
-                </ExternalLink>
+                </OutLink>
                 {page && (
-                  <ExternalLink href={page}>
+                  <OutLink href={page}>
                     {help('Full page in English', 'Página completa em português')}
-                  </ExternalLink>
+                  </OutLink>
                 )}
               </>
             ))}
-        </div>
+        </Actions>
       </>
     );
   };
@@ -310,183 +330,168 @@ export default function OfficialNow({
         : '';
   // English and Portuguese readers are told once per source, not on every line.
   const spanishNote = lang !== 'es' && (
-    <p className="fw-official-note">
+    <Note>
       {help(
         'Published in Spanish. Open a message to translate it.',
         'Publicado em espanhol. Abra uma mensagem para traduzi-la.',
       )}
-    </p>
+    </Note>
   );
 
   return (
-    <section className="fw-official" aria-labelledby="fw-official-title">
-      <header className="fw-block-head">
-        <h2 id="fw-official-title">
-          {t('Lo oficial ahora', 'Official now', 'Informação oficial agora')}
-        </h2>
-      </header>
-
+    <Section
+      id="fw-official"
+      title={t('Lo oficial ahora', 'Official now', 'Informação oficial agora')}
+    >
       {national && (
-        <div className="fw-official-group" aria-labelledby="fw-official-national">
-          <div className="fw-official-group-head">
-            <h3 id="fw-official-national">
+        <div className="f-stack" data-gap="sm">
+          <div className="f-section-head">
+            <h3 className="f-subhead" id="fw-official-national">
               {t(
                 `Avisos vigentes del ${national.agency}`,
                 `${national.agency} warnings in force`,
                 `Avisos em vigor: ${national.agency}`,
               )}
             </h3>
-            <span>{nationalState}</span>
+            <span className="f-section-aside">{nationalState}</span>
           </div>
           {warnings.length > 0 ? (
             <>
               {spanishNote}
-              <ul className="fw-official-list">
+              <List label={national.agency}>
                 {warnings.map((w) => {
                   const id = officialRowId('w', w.id);
-                  const steps = instructionLines(w.instruction);
+                  const level = severityLevel[w.severity];
                   return (
-                    <li key={id} id={id} data-kind="warning">
-                      <button
-                        aria-expanded={open.has(id)}
-                        aria-controls={`${id}-body`}
-                        onClick={() => onToggle(id)}
-                      >
-                        <span className="fw-official-dot" aria-hidden="true" />
-                        <span className="fw-official-text">
-                          <strong lang="es">{readableEvent(w.event)}</strong>
-                          {/* Several warnings of one kind differ by area: it shows in the row. */}
+                    <ExpandRow
+                      key={id}
+                      id={id}
+                      open={open.has(id)}
+                      onToggle={() => onToggle(id)}
+                      lead={
+                        <StatusIcon
+                          state="listed"
+                          level={level}
+                          icon={<WarningIcon size={20} weight="bold" />}
+                        />
+                      }
+                      title={<span lang="es">{readableEvent(w.event)}</span>}
+                      badge={<Badge level={level}>{severityLabels[w.severity][idx]}</Badge>}
+                      // Several warnings of one kind differ by area: it shows in the row.
+                      meta={
+                        <>
+                          {t('Hasta el', 'Until', 'Até')} {until(w.expires)}
                           {w.areas && (
-                            <span className="fw-official-area" lang="es">
-                              {w.areas.length > 90 ? `${w.areas.slice(0, 88).trimEnd()}…` : w.areas}
+                            <span lang="es">
+                              {' · '}
+                              {w.areas.length > 70 ? `${w.areas.slice(0, 68).trimEnd()}…` : w.areas}
                             </span>
                           )}
-                          <span className="fw-official-facts">
-                            <b>{severityLabels[w.severity][idx]}</b>
-                            <span>
-                              {t('Hasta el', 'Until', 'Até')} {until(w.expires)}
-                            </span>
-                          </span>
-                        </span>
-                        <CaretDownIcon className="fw-official-caret" size={16} aria-hidden="true" />
-                      </button>
-                      <div id={`${id}-body`} className="fw-official-body" hidden={!open.has(id)}>
-                        {body(
-                          id,
-                          {
-                            title: readableEvent(w.event),
-                            paragraphs: w.areas ? [`${w.areas}.`] : [],
-                            items: steps,
-                          },
-                          {
-                            url: w.url || weather?.url || '',
-                            label: t(
-                              'Leer el aviso completo',
-                              'Read the full warning',
-                              'Ler o aviso completo',
-                            ),
-                          },
-                        )}
-                        {/* The agency's steps are in Spanish; Faro's flood steps are not, and
-                            work without a connection. */}
-                        {lang !== 'es' && onFloodGuide && floodWarnings([w]).length > 0 && (
-                          <button type="button" className="fw-text" onClick={onFloodGuide}>
+                        </>
+                      }
+                    >
+                      {body(
+                        id,
+                        {
+                          title: readableEvent(w.event),
+                          paragraphs: w.areas ? [`${w.areas}.`] : [],
+                          items: instructionLines(w.instruction),
+                        },
+                        {
+                          url: w.url || weather?.url || '',
+                          label: t(
+                            'Leer el aviso completo',
+                            'Read the full warning',
+                            'Ler o aviso completo',
+                          ),
+                        },
+                      )}
+                      {/* The agency's steps are in Spanish; Faro's flood steps are not, and work
+                          without a connection. */}
+                      {lang !== 'es' && onFloodGuide && floodWarnings([w]).length > 0 && (
+                        <Actions>
+                          <button type="button" onClick={onFloodGuide}>
                             {t(
                               '',
                               'Faro’s flood steps in English',
                               'Passos do Faro para inundações',
                             )}
                           </button>
-                        )}
-                      </div>
-                    </li>
+                        </Actions>
+                      )}
+                    </ExpandRow>
                   );
                 })}
-              </ul>
+              </List>
             </>
           ) : (
-            nationalEmpty && <p className="fw-official-empty">{nationalEmpty}</p>
+            nationalEmpty && <Note>{nationalEmpty}</Note>
           )}
         </div>
       )}
 
       {civil && (
-        <div className="fw-official-group" aria-labelledby="fw-official-civil">
-          <div className="fw-official-group-head">
-            <h3 id="fw-official-civil">
+        <div className="f-stack" data-gap="sm">
+          <div className="f-section-head">
+            <h3 className="f-subhead" id="fw-official-civil">
               {t(
                 `Comunicados de ${civil.agency}`,
                 `${civil.agency} communiqués`,
                 `Comunicados: ${civil.agency}`,
               )}
             </h3>
-            <span>{civilState}</span>
+            <span className="f-section-aside">{civilState}</span>
           </div>
           {shownPosts.length > 0 ? (
             <>
               {spanishNote}
-              <ul className="fw-official-list">
+              <List label={civil.agency}>
                 {shownPosts.map((post) => {
                   const id = officialRowId('p', post.id);
                   const update = postUpdate(post);
                   return (
-                    <li key={id} id={id} data-kind="post">
-                      <button
-                        aria-expanded={open.has(id)}
-                        aria-controls={`${id}-body`}
-                        onClick={() => onToggle(id)}
-                      >
-                        <span className="fw-official-dot" aria-hidden="true" />
-                        <span className="fw-official-text">
-                          <strong lang="es">{postTitle(post.title)}</strong>
-                          <span className="fw-official-facts">
-                            <span>{at(post.published)}</span>
-                            <span>{ageLabel(post.published, now, lang)}</span>
-                          </span>
-                          {/* "Comunicado oficial #8" says nothing on its own: its opening line does. */}
-                          {post.kind === 'communique' && post.summary && !open.has(id) && (
-                            <span className="fw-official-snippet" lang="es">
-                              {post.summary}
-                            </span>
+                    <ExpandRow
+                      key={id}
+                      id={id}
+                      open={open.has(id)}
+                      onToggle={() => onToggle(id)}
+                      lead={<StatusIcon state="listed" icon={<FileTextIcon size={20} />} />}
+                      title={<span lang="es">{postTitle(post.title)}</span>}
+                      meta={`${at(post.published)} · ${ageLabel(post.published, now, lang)}`}
+                    >
+                      {body(
+                        id,
+                        {
+                          title: postTitle(post.title),
+                          paragraphs: post.summary ? [post.summary] : [],
+                          items: [],
+                        },
+                        {
+                          url: post.url,
+                          label: t('Leer completo', 'Read in full', 'Ler completo'),
+                        },
+                      )}
+                      {/* The site records any later save, not what changed: stated, not interpreted. */}
+                      {update && (
+                        <p className="f-caption">
+                          {t(
+                            `Última edición en su sitio: ${at(update)}.`,
+                            `Last edited on its site: ${at(update)}.`,
+                            `Última edição no site: ${at(update)}.`,
                           )}
-                        </span>
-                        <CaretDownIcon className="fw-official-caret" size={16} aria-hidden="true" />
-                      </button>
-                      <div id={`${id}-body`} className="fw-official-body" hidden={!open.has(id)}>
-                        {body(
-                          id,
-                          {
-                            title: postTitle(post.title),
-                            paragraphs: post.summary ? [post.summary] : [],
-                            items: [],
-                          },
-                          {
-                            url: post.url,
-                            label: t('Leer completo', 'Read in full', 'Ler completo'),
-                          },
-                        )}
-                        {/* The site records any later save, not what changed: stated, not interpreted. */}
-                        {update && (
-                          <p className="fw-official-edited">
-                            {t(
-                              `Última edición en su sitio: ${at(update)}.`,
-                              `Last edited on its site: ${at(update)}.`,
-                              `Última edição no site: ${at(update)}.`,
-                            )}
-                          </p>
-                        )}
-                      </div>
-                    </li>
+                        </p>
+                      )}
+                    </ExpandRow>
                   );
                 })}
-              </ul>
+              </List>
             </>
           ) : (
-            civilEmpty && <p className="fw-official-empty">{civilEmpty}</p>
+            civilEmpty && <Note>{civilEmpty}</Note>
           )}
-          <div className="fw-official-more">
+          <Actions>
             {posts.length > 3 && (
-              <button className="fw-link-button" onClick={() => setAllPosts(!showAll)}>
+              <button type="button" onClick={() => setAllPosts(!showAll)}>
                 {showAll
                   ? t('Mostrar menos', 'Show fewer', 'Mostrar menos')
                   : t(
@@ -496,36 +501,64 @@ export default function OfficialNow({
                     )}
               </button>
             )}
-            <ExternalLink href={SINAPROC_HOME}>sinaproc.gob.pa</ExternalLink>
-          </div>
+            <OutLink href={SINAPROC_HOME}>sinaproc.gob.pa</OutLink>
+          </Actions>
         </div>
       )}
 
       {!national && weather && (
-        <div className="fw-official-group">
-          <div className="fw-official-group-head">
-            <h3>
-              {t(
-                `Avisos de ${weather.name}`,
-                `${weather.name} warnings`,
-                `Avisos: ${weather.name}`,
-              )}
-            </h3>
-          </div>
-          <p className="fw-official-empty">
+        <div className="f-stack" data-gap="sm">
+          <h3 className="f-subhead">
+            {t(`Avisos de ${weather.name}`, `${weather.name} warnings`, `Avisos: ${weather.name}`)}
+          </h3>
+          <Note
+            more={
+              <OutLink href={weather.url}>
+                {t('Ver sus avisos', 'See its warnings', 'Ver seus avisos')}
+              </OutLink>
+            }
+          >
             {t(
               'No publica sus avisos en un formato que Faro pueda leer.',
               'It does not publish its warnings in a format Faro can read.',
               'Não publica seus avisos em um formato que o Faro consiga ler.',
-            )}{' '}
-            <ExternalLink href={weather.url}>
-              {t('Ver sus avisos', 'See its warnings', 'Ver seus avisos')}
-            </ExternalLink>
-          </p>
+            )}
+          </Note>
         </div>
       )}
 
-      <p className="fw-official-foot">
+      {services && services.length > 0 && (
+        <div className="f-stack" data-gap="sm">
+          <h3 className="f-subhead">
+            {t(
+              `Faro no tiene datos oficiales de ${new Intl.ListFormat(lang, { type: 'disjunction' }).format(services.map((s) => s.topic[idx]))}`,
+              `Faro has no official data on ${new Intl.ListFormat(lang, { type: 'disjunction' }).format(services.map((s) => s.topic[idx]))}`,
+              `O Faro não tem dados oficiais sobre ${new Intl.ListFormat(lang, { type: 'disjunction' }).format(services.map((s) => s.topic[idx]))}`,
+            )}
+          </h3>
+          <List>
+            {services.map((s) => (
+              <ListRow
+                key={s.topic[1]}
+                title={s.topic[idx].charAt(0).toUpperCase() + s.topic[idx].slice(1)}
+                meta={s.agencies.map((a, j) => (
+                  <span key={a.name}>
+                    {j > 0 && t(' o ', ' or ', ' ou ')}
+                    {a.url ? (
+                      <a href={a.url} target="_blank" rel="noreferrer">
+                        {a.name}
+                      </a>
+                    ) : (
+                      a.name
+                    )}
+                  </span>
+                ))}
+              />
+            ))}
+          </List>
+        </div>
+      )}
+      <Note>
         {civil
           ? t(
               'Las órdenes de evacuación y los albergues activos los informa SINAPROC; Faro no los verifica.',
@@ -537,33 +570,7 @@ export default function OfficialNow({
               'Evacuation orders come from local authorities.',
               'As ordens de evacuação são dadas pelas autoridades locais.',
             )}
-      </p>
-      {services && services.length > 0 && (
-        <div className="fw-official-services">
-          <p>
-            {t(
-              `Faro no tiene datos oficiales de ${new Intl.ListFormat(lang, { type: 'disjunction' }).format(services.map((s) => s.topic[idx]))}. Infórmate con:`,
-              `Faro has no official data on ${new Intl.ListFormat(lang, { type: 'disjunction' }).format(services.map((s) => s.topic[idx]))}. Check with:`,
-              `O Faro não tem dados oficiais sobre ${new Intl.ListFormat(lang, { type: 'disjunction' }).format(services.map((s) => s.topic[idx]))}. Consulte:`,
-            )}
-          </p>
-          <ul>
-            {services.map((s) => (
-              <li key={s.topic[1]}>
-                <span>{s.topic[idx].charAt(0).toUpperCase() + s.topic[idx].slice(1)}</span>
-                <span>
-                  {s.agencies.map((a, j) => (
-                    <span key={a.name}>
-                      {j > 0 && t(' o ', ' or ', ' ou ')}
-                      {a.url ? <ExternalLink href={a.url}>{a.name}</ExternalLink> : a.name}
-                    </span>
-                  ))}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </section>
+      </Note>
+    </Section>
   );
 }

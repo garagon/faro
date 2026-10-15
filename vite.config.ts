@@ -88,7 +88,8 @@ export default defineConfig({
       },
     },
   },
-  server: { host: '127.0.0.1' },
+  // Local deployment copies, videos and reports live in artifacts/ and must not reload the app.
+  server: { host: '127.0.0.1', watch: { ignored: ['**/artifacts/**'] } },
   preview: { host: '127.0.0.1' },
   plugins: [
     react(),

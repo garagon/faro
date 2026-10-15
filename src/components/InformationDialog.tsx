@@ -2,11 +2,11 @@ import { useRef } from 'react';
 import { magnitudeBand } from '../lib/magnitude.ts';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowUpRightIcon, MapPinIcon, XIcon } from '@phosphor-icons/react';
-import '../styles/quakeDetail.css';
 import { displayPlace, distanceKm, type Quake } from '../lib/domain.ts';
 import type { Geo } from './WebMap.tsx';
 import QuakeImpact from './QuakeImpact.tsx';
 import { langTag, pick, type Lang } from '../lib/i18n.ts';
+import { depthInFull, distance } from '../lib/units.ts';
 type Props = {
   open: boolean;
   selected: Quake | undefined;
@@ -139,7 +139,7 @@ export default function InformationDialog(p: Props) {
                   </div>
                   <div>
                     <dt>{t('Profundidad', 'Depth', 'Profundidade')}</dt>
-                    <dd>{q.depth} km</dd>
+                    <dd>{depthInFull(q.depth, lang)}</dd>
                   </div>
                   <div>
                     <dt>{t('Epicentro', 'Epicenter', 'Epicentro')}</dt>
@@ -150,7 +150,7 @@ export default function InformationDialog(p: Props) {
                   {p.geo && (
                     <div>
                       <dt>{t('Distancia a ti', 'Distance from you', 'Distância de você')}</dt>
-                      <dd>{Math.round(distanceKm([p.geo.lat, p.geo.lng], [q.lat, q.lng]))} km</dd>
+                      <dd>{distance(distanceKm([p.geo.lat, p.geo.lng], [q.lat, q.lng]), lang)}</dd>
                     </div>
                   )}
                 </dl>

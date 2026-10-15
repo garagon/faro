@@ -1,5 +1,11 @@
 import { useState, type ReactNode } from 'react';
-import { CaretRightIcon } from '@phosphor-icons/react';
+import {
+  DropIcon,
+  HurricaneIcon,
+  MountainsIcon,
+  PulseIcon,
+  WavesIcon,
+} from '@phosphor-icons/react';
 import OfficialNow, { type CivilFeed, type NationalFeed } from './OfficialNow.tsx';
 import { alertLevelLabels, alertLevelShort, alertTitle } from '../lib/alerts.ts';
 import { nationalSignal } from '../lib/national.ts';
@@ -9,6 +15,17 @@ import { atLabel, checkedLabel } from '../lib/time.ts';
 import { scrollMotion } from '../lib/motion.ts';
 import type { Destination, OfficialLink } from '../data/destinations/types.ts';
 import { langIndex, pick, type Lang, type Localized } from '../lib/i18n.ts';
+import {
+  Badge,
+  List,
+  ListRow,
+  Note,
+  ScopeNote,
+  ScreenHead,
+  Section,
+  StatusIcon,
+  type Signal,
+} from '../ui/index.ts';
 
 export type BriefingTarget = HazardKey;
 type Props = {
@@ -37,10 +54,13 @@ type Props = {
    */
   monitor: { state: 'live' | 'stale' | 'offline' | 'failed' | 'checking'; checked: number | null };
   now: number;
-  /** When the official data on screen was last checked, with access to the sources. */
-  updated: ReactNode;
+  /** Opens the Sources screen (how to read the data, when each source answered). */
+  onSources: () => void;
+  /** The call button (or the way to choose a country). */
+  call: ReactNode;
+  /** Tell people, what to do now, the embassy, and the natural tsunami warning. */
   actions: ReactNode;
-  setup?: ReactNode;
+  /** The map and, on wide screens, the latest earthquakes: beside the rest from 1200 px. */
   map: ReactNode;
   response?: ReactNode;
   hazards: HazardStatus[];
@@ -67,6 +87,13 @@ type Props = {
   onOpen: (target: BriefingTarget) => void;
 };
 
+const icons: Record<HazardKey, ReactNode> = {
+  earthquake: <PulseIcon size={20} weight="bold" />,
+  tsunami: <WavesIcon size={20} weight="bold" />,
+  cyclone: <HurricaneIcon size={20} weight="bold" />,
+  flood: <DropIcon size={20} weight="fill" />,
+  volcano: <MountainsIcon size={20} weight="bold" />,
+};
 const names: Record<HazardKey, Localized> = {
   earthquake: ['Sismos', 'Earthquakes', 'Terremotos'],
   tsunami: ['Tsunami', 'Tsunami', 'Tsunami'],
@@ -74,18 +101,17 @@ const names: Record<HazardKey, Localized> = {
   flood: ['Inundaciones', 'Floods', 'Inundações'],
   volcano: ['Volcanes', 'Volcanoes', 'Vulcões'],
 };
-// Signal colors: GDACS levels, a pending review in amber, nothing listed as an unlit ring.
-const levelColor: Record<string, string> = {
-  green: '#3f8a55',
-  orange: '#c66a1b',
-  red: '#b3343c',
-  review: '#b5802e',
-};
+// GDACS levels on Faro's official scale. Green is listed without a warning colour; a NOAA message
+// to review is level 1.
+const levelOf = (level: HazardStatus['level']): 1 | 2 | 3 | undefined =>
+  level === 'red' ? 3 : level === 'orange' ? 2 : level === 'review' ? 1 : undefined;
 
 /**
- * The home for one place, in order of need: an urgent official message if there is one,
- * emergency actions, one row per hazard beside the map, then what the authorities are saying. Each row states what its source lists; none of it is
- * a safety rating. Detail (lists, filters, bulletins) lives on its own page.
+ * The home for one place, in order of need: an urgent official message if there is one, the call,
+ * the actions, one row per hazard (warnings in force first), the map, then what the authorities
+ * are saying. When a warning of level 2 or more is in force, the hazard rows come before the
+ * actions. Each row states what its source lists; none of it is a safety rating. Detail (lists,
+ * filters, bulletins) lives on its own page.
  */
 export default function SituationBriefing(p: Props) {
   const t = (es: string, en: string, pt: string) => pick(p.lang, es, en, pt),
@@ -142,15 +168,11 @@ export default function SituationBriefing(p: Props) {
         detail:
           p.national?.stale && p.national.checked
             ? t(
-                `Vigente según el último dato (${checkedLabel(p.national.checked, p.now, p.lang)}). Toca para ver sus indicaciones.`,
-                `In force as of the last data (${checkedLabel(p.national.checked, p.now, p.lang)}). Tap for its instructions.`,
-                `Em vigor segundo o último dado (${checkedLabel(p.national.checked, p.now, p.lang)}). Toque para ver as orientações.`,
+                `vigente según el último dato (${checkedLabel(p.national.checked, p.now, p.lang)})`,
+                `in force as of the last data (${checkedLabel(p.national.checked, p.now, p.lang)})`,
+                `em vigor segundo o último dado (${checkedLabel(p.national.checked, p.now, p.lang)})`,
               )
-            : t(
-                'Aviso vigente. Toca para ver sus indicaciones.',
-                'Warning in force. Tap for its instructions.',
-                'Aviso em vigor. Toque para ver as orientações.',
-              ),
+            : '',
       }
     : p.floodNotice
       ? {
@@ -160,7 +182,7 @@ export default function SituationBriefing(p: Props) {
             `${p.floodNotice.agency} mentions rain or flooding`,
             `${p.floodNotice.agency} menciona chuvas ou inundações`,
           ),
-          detail: `«${p.floodNotice.title}», ${t('publicado', 'published', 'publicado')} ${ago(p.floodNotice.published)}.`,
+          detail: `«${p.floodNotice.title}», ${t('publicado', 'published', 'publicado')} ${ago(p.floodNotice.published)}`,
         }
       : null;
 
@@ -202,428 +224,371 @@ export default function SituationBriefing(p: Props) {
       : q.largest
         ? 'on'
         : 'off';
-  return (
-    <div className="fw-home">
-      <header className="fw-home-head">
-        <div>
-          <h1 id="fw-brief-title" tabIndex={-1}>
-            {p.countryName}
-          </h1>
-          <p className="fw-home-what">
-            {t(
-              'Datos oficiales y ayuda local para viajeros. No es un sistema de alerta temprana.',
-              'Official data and local help for travelers. Not an early warning system.',
-              'Dados oficiais e ajuda local para viajantes. Não é um sistema de alerta antecipado.',
-            )}
-          </p>
-        </div>
-        <p>{p.updated}</p>
-      </header>
-      {p.alert}
-      {p.actions}
-      {/* The disaster this place is living through comes before the hazard rows. */}
-      {p.response}
-
-      <section className="fw-home-now" aria-labelledby="fw-now-title">
-        <header className="fw-home-now-head">
-          <div>
-            <h2 id="fw-now-title">
-              {t(
-                `Qué está pasando en ${p.countryName}`,
-                `What is happening in ${p.countryName}`,
-                `O que está acontecendo: ${p.countryName}`,
-              )}
-            </h2>
-            <p>
-              {t(
-                'Faro consulta las fuentes oficiales automáticamente, solo mientras está abierto.',
-                'Faro checks the official sources automatically, only while it is open.',
-                'O Faro consulta as fontes oficiais automaticamente, só enquanto está aberto.',
-              )}
-            </p>
-          </div>
-          {/* The visible line ticks every second; screen readers hear only a change of state. */}
-          <p className="fw-visually-hidden" role="status">
-            {p.monitor.state === 'live'
-              ? t('Datos oficiales en vivo.', 'Official data live.', 'Dados oficiais ao vivo.')
-              : p.monitor.state === 'offline'
-                ? t(
-                    'Sin conexión: se muestran los últimos datos.',
-                    'Offline: showing the last data.',
-                    'Sem conexão: mostrando os últimos dados.',
-                  )
-                : p.monitor.state === 'stale'
-                  ? t(
-                      'Los sismos no se están actualizando.',
-                      'Earthquake data is not updating.',
-                      'Os terremotos não estão sendo atualizados.',
-                    )
-                  : p.monitor.state === 'failed'
-                    ? t(
-                        'La fuente de sismos no responde.',
-                        'The earthquake source is not responding.',
-                        'A fonte de terremotos não responde.',
-                      )
-                    : ''}
-          </p>
-          <p className="fw-monitor-state" data-state={p.monitor.state}>
-            <span className="fw-monitor-dot" aria-hidden="true" />
-            <strong>
-              {p.monitor.state === 'live'
-                ? t('En vivo', 'Live', 'Ao vivo')
-                : p.monitor.state === 'offline'
-                  ? t('Sin conexión', 'Offline', 'Sem conexão')
-                  : p.monitor.state === 'stale'
-                    ? t('Sin actualizar', 'Not updating', 'Sem atualização')
-                    : p.monitor.state === 'failed'
-                      ? t('Fuente sin respuesta', 'Source not responding', 'Fonte sem resposta')
-                      : t('Conectando…', 'Connecting…', 'Conectando…')}
-            </strong>
-            {p.monitor.checked && (
-              <span>
-                {p.monitor.state === 'live'
-                  ? t(
-                      `Actualizado ${ago(p.monitor.checked)}`,
-                      `Updated ${ago(p.monitor.checked)}`,
-                      `Atualizado ${ago(p.monitor.checked)}`,
-                    )
-                  : t(
-                      `Último dato ${checkedLabel(p.monitor.checked, p.now, p.lang)}`,
-                      `Last data ${checkedLabel(p.monitor.checked, p.now, p.lang)}`,
-                      `Último dado ${checkedLabel(p.monitor.checked, p.now, p.lang)}`,
-                    )}
-              </span>
-            )}
-          </p>
-        </header>
-        <div className="fw-home-now-grid">
-          <div className="fw-home-now-map">{p.map}</div>
-          <ul className="fw-home-now-list">
-            <li>
-              <button
-                className="fw-now-row"
-                data-signal={quakeSignal}
-                // Earthquakes are reported, not a warning level: a neutral dot, the magnitude in text.
-                data-hazard="earthquake"
-                onClick={() => p.onOpen('earthquake')}
-              >
-                <span className="fw-signal" aria-hidden="true" />
-                <span className="fw-now-text">
-                  <span className="fw-now-name">{names.earthquake[idx]}</span>
-                  {q.offline ? (
-                    <strong>
-                      {t('Sin datos: sin conexión', 'No data: offline', 'Sem dados: sem conexão')}
-                    </strong>
-                  ) : q.loading && q.failed ? (
-                    <strong>
-                      {t('La fuente no responde', 'Source not responding', 'Fonte sem resposta')}
-                    </strong>
-                  ) : q.loading ? (
-                    <strong>{t('Consultando…', 'Checking…', 'Consultando…')}</strong>
-                  ) : q.staleSince ? (
-                    <>
-                      <strong>
-                        {t(
-                          `Sin actualizar desde ${atLabel(q.staleSince, p.now, p.lang)}`,
-                          `Not updated since ${atLabel(q.staleSince, p.now, p.lang)}`,
-                          `Sem atualização desde ${atLabel(q.staleSince, p.now, p.lang)}`,
-                        )}
-                      </strong>
-                      <small>
-                        {q.latest
-                          ? t(
-                              `Último conocido: M${q.latest.mag?.toFixed(1) ?? '—'}, ${ago(q.latest.time)}. `,
-                              `Last known: M${q.latest.mag?.toFixed(1) ?? '—'}, ${ago(q.latest.time)}. `,
-                              `Último conhecido: M${q.latest.mag?.toFixed(1) ?? '—'}, ${ago(q.latest.time)}. `,
-                            )
-                          : q.quietSince
-                            ? t(
-                                `Registro más reciente ${ago(q.quietSince)}. `,
-                                `Most recent record ${ago(q.quietSince)}. `,
-                                `Registro mais recente ${ago(q.quietSince)}. `,
-                              )
-                            : ''}
-                        {q.failed
-                          ? t(
-                              `${q.provider} no responde.`,
-                              `${q.provider} is not responding.`,
-                              `${q.provider} não responde.`,
-                            )
-                          : q.provider}
-                      </small>
-                    </>
-                  ) : q.failed && !q.count ? (
-                    <strong>
-                      {t('La fuente no responde', 'Source not responding', 'Fonte sem resposta')}
-                    </strong>
-                  ) : q.latest ? (
-                    <>
-                      <strong>
-                        {t('Último', 'Latest', 'Último')}: M{q.latest.mag?.toFixed(1) ?? '—'},{' '}
-                        {ago(q.latest.time)}
-                      </strong>
-                      <small>
-                        {q.largest?.mag != null &&
+  type Row = { key: string; rank: number; node: ReactNode };
+  const rows: Row[] = [];
+  const quakeState: Signal =
+    quakeSignal === 'on'
+      ? 'listed'
+      : quakeSignal === 'off'
+        ? 'none'
+        : q.loading && !q.failed && !q.offline
+          ? 'pending'
+          : 'unknown';
+  rows.push({
+    key: 'earthquake',
+    rank: 3,
+    node: (
+      <ListRow
+        key="earthquake"
+        lead={<StatusIcon state={quakeState} icon={icons.earthquake} />}
+        title={names.earthquake[idx]}
+        meta={
+          q.offline
+            ? t('Sin datos: sin conexión', 'No data: offline', 'Sem dados: sem conexão')
+            : q.loading && q.failed
+              ? t('La fuente no responde', 'Source not responding', 'Fonte sem resposta')
+              : q.loading
+                ? t('Consultando…', 'Checking…', 'Consultando…')
+                : q.staleSince
+                  ? [
+                      t(
+                        `Sin actualizar desde ${atLabel(q.staleSince, p.now, p.lang)}`,
+                        `Not updated since ${atLabel(q.staleSince, p.now, p.lang)}`,
+                        `Sem atualização desde ${atLabel(q.staleSince, p.now, p.lang)}`,
+                      ),
+                      q.latest
+                        ? t(
+                            `último conocido M${q.latest.mag?.toFixed(1) ?? '—'}, ${ago(q.latest.time)}`,
+                            `last known M${q.latest.mag?.toFixed(1) ?? '—'}, ${ago(q.latest.time)}`,
+                            `último conhecido M${q.latest.mag?.toFixed(1) ?? '—'}, ${ago(q.latest.time)}`,
+                          )
+                        : '',
+                      q.failed
+                        ? t(
+                            `${q.provider} no responde`,
+                            `${q.provider} is not responding`,
+                            `${q.provider} não responde`,
+                          )
+                        : q.provider,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                  : q.failed && !q.count
+                    ? t('La fuente no responde', 'Source not responding', 'Fonte sem resposta')
+                    : q.latest
+                      ? `${t('Último', 'Latest', 'Último')} M${q.latest.mag?.toFixed(1) ?? '—'} ${ago(q.latest.time)} · ${q.count} ${t('en', 'in', 'em')} ${q.period} · ${q.provider}`
+                      : [
                           t(
-                            `Mayor en ${q.period}: M${q.largest.mag.toFixed(1)}. `,
-                            `Largest in ${q.period}: M${q.largest.mag.toFixed(1)}. `,
-                            `Maior em ${q.period}: M${q.largest.mag.toFixed(1)}. `,
-                          )}
-                        {q.count}{' '}
-                        {q.count === 1
-                          ? t('registrado', 'recorded', 'registrado')
-                          : t('registrados', 'recorded', 'registrados')}{' '}
-                        · {q.provider}
-                      </small>
-                    </>
-                  ) : (
-                    <>
-                      <strong>
-                        {t(
-                          `Ninguno en ${q.period}`,
-                          `None in ${q.period}`,
-                          `Nenhum em ${q.period}`,
-                        )}
-                      </strong>
-                      <small>
-                        {q.quietSince
-                          ? t(
-                              `${q.provider}: registro más reciente ${ago(q.quietSince)}. Otras fuentes pueden tener datos más nuevos.`,
-                              `${q.provider}: most recent record ${ago(q.quietSince)}. Other sources may have newer data.`,
-                              `${q.provider}: registro mais recente ${ago(q.quietSince)}. Outras fontes podem ter dados mais novos.`,
-                            )
-                          : q.provider}
-                      </small>
-                    </>
-                  )}
-                </span>
-                <CaretRightIcon className="fw-now-go" size={14} aria-hidden="true" />
-              </button>
-            </li>
-            {p.hazards.map((h) => {
-              const gap = h.key === 'flood' && !floodRow && h.state === 'none' ? floodGap : null;
-              // A national service's alerts in force (NWS) lead over an empty international list.
-              const lead = h.state === 'listed' ? undefined : p.leads?.[h.key];
-              return h.key === 'flood' && floodRow ? (
-                <li key={h.key}>
-                  <button
-                    className="fw-now-row"
-                    data-signal="on"
-                    style={{ '--signal': levelColor.review } as React.CSSProperties}
-                    onClick={() => reveal(floodRow.rowId)}
-                  >
-                    <span className="fw-signal" aria-hidden="true" />
-                    <span className="fw-now-text">
-                      <span className="fw-now-name">{names.flood[idx]}</span>
-                      <strong>{floodRow.status}</strong>
-                      <small>{floodRow.detail}</small>
-                    </span>
-                    <CaretRightIcon className="fw-now-go" size={14} aria-hidden="true" />
-                  </button>
-                </li>
-              ) : (
-                <li key={h.key}>
-                  <button
-                    className="fw-now-row"
-                    data-signal={
-                      h.state === 'listed' || lead
-                        ? 'on'
-                        : h.state === 'none' && !gap
-                          ? 'off'
-                          : 'unknown'
-                    }
-                    style={
-                      lead
-                        ? ({ '--signal': levelColor.review } as React.CSSProperties)
-                        : h.level
-                          ? ({ '--signal': levelColor[h.level] } as React.CSSProperties)
-                          : undefined
-                    }
-                    onClick={() => p.onOpen(h.key)}
-                  >
-                    <span className="fw-signal" aria-hidden="true" />
-                    <span className="fw-now-text">
-                      <span className="fw-now-name">{names[h.key][idx]}</span>
-                      {lead ? (
-                        <strong>{lead}</strong>
-                      ) : gap ? (
-                        <strong>{gap.status}</strong>
-                      ) : h.state === 'unknown' && h.unclosed ? (
-                        <strong>
-                          {t(
-                            'Mensaje de amenaza sin cierre: ábrelo',
-                            'Threat message not closed: open it',
-                            'Mensagem de ameaça sem encerramento: abra-a',
-                          )}
-                        </strong>
-                      ) : h.state === 'unknown' ? (
-                        // "Not confirmed" read as "no threat" or as "unconfirmed threat"; this says
-                        // what happened: the source could not be checked.
-                        <strong>
-                          {t(
-                            'No se pudo comprobar',
-                            'Could not be checked',
-                            'Não foi possível verificar',
-                          )}
-                        </strong>
-                      ) : h.state === 'none' ? (
-                        <strong>
-                          {h.key === 'tsunami'
+                            `Ninguno en ${q.period}`,
+                            `None in ${q.period}`,
+                            `Nenhum em ${q.period}`,
+                          ),
+                          q.quietSince
                             ? t(
-                                'Sin mensajes de amenaza de NOAA en 6 h',
-                                'No NOAA threat messages in 6 h',
-                                'Sem mensagens de ameaça da NOAA em 6 h',
+                                `${q.provider}: registro más reciente ${ago(q.quietSince)}`,
+                                `${q.provider}: most recent record ${ago(q.quietSince)}`,
+                                `${q.provider}: registro mais recente ${ago(q.quietSince)}`,
                               )
-                            : h.key === 'cyclone' && p.stormsInBasin
-                              ? t(
-                                  `Ninguno con alerta para ${p.countryName}`,
-                                  `None with an alert for ${p.countryName}`,
-                                  `${p.countryName}: nenhum com alerta`,
-                                )
-                              : t(
-                                  `Sin alertas internacionales para ${p.countryName}`,
-                                  `No international alerts for ${p.countryName}`,
-                                  `${p.countryName}: sem alertas internacionais`,
-                                )}
-                        </strong>
-                      ) : h.level === 'review' ? (
-                        <strong>
-                          {t(
-                            'Mensaje reciente de NOAA: ábrelo',
-                            'Recent NOAA message: open it',
-                            'Mensagem recente da NOAA: abra-a',
-                          )}
-                        </strong>
-                      ) : (
-                        <strong>
-                          {h.top
-                            ? alertTitle(h.top, (c) => regions.of(c), p.lang)
-                            : alertLevelLabels[h.level as 'green'][idx].split(' · ')[0]}
-                        </strong>
-                      )}
-                      <small>
-                        {[
-                          gap?.check,
-                          // Plain fact above; who said it goes here, with when.
-                          gap
-                            ? t(
-                                'GDACS: sin alertas internacionales',
-                                'GDACS: no international alerts',
-                                'GDACS: sem alertas internacionais',
-                              )
-                            : h.key === 'tsunami'
-                              ? 'NOAA/PTWC'
-                              : h.key === 'cyclone' && p.stormsInBasin
-                                ? // The "no alert" answer is GDACS's; NHC only counts the storms.
-                                  'GDACS'
-                                : h.state === 'listed' && h.level && h.level !== 'review'
-                                  ? alertLevelShort[h.level as 'green'][idx]
-                                  : 'GDACS',
-                          h.unclosed
-                            ? `${t('publicado', 'issued', 'publicado')} ${ago(h.unclosed)}`
-                            : '',
-                          h.key === 'cyclone' && p.stormsInBasin
-                            ? t(
-                                `${p.stormsInBasin} activos en la cuenca (NHC)`,
-                                `${p.stormsInBasin} active in the basin (NHC)`,
-                                `${p.stormsInBasin} ativos na bacia (NHC)`,
-                              )
-                            : p.notes?.[h.key],
-                          h.recent && h.state === 'none'
-                            ? t(
-                                `${h.recent} en 14 días`,
-                                `${h.recent} in 14 days`,
-                                `${h.recent} em 14 dias`,
-                              )
-                            : '',
-                          h.state === 'unknown'
-                            ? h.checked
-                              ? t(
-                                  `Último dato: ${checkedLabel(h.checked, p.now, p.lang)}`,
-                                  `Last data: ${checkedLabel(h.checked, p.now, p.lang)}`,
-                                  `Último dado: ${checkedLabel(h.checked, p.now, p.lang)}`,
-                                )
-                              : offline
-                                ? t('Sin conexión', 'Offline', 'Sem conexão')
-                                : t(
-                                    'Sin respuesta de la fuente',
-                                    'No answer from the source',
-                                    'Sem resposta da fonte',
-                                  )
-                            : h.checked
-                              ? // A listed item from an old answer says so: NOAA is polled every
-                                // minute, GDACS every five.
-                                offline ||
-                                p.now - h.checked > (h.key === 'tsunami' ? 3 : 15) * 60000
-                                ? t(
-                                    `Último dato: ${checkedLabel(h.checked, p.now, p.lang)}`,
-                                    `Last data: ${checkedLabel(h.checked, p.now, p.lang)}`,
-                                    `Último dado: ${checkedLabel(h.checked, p.now, p.lang)}`,
-                                  )
-                                : t(
-                                    `Consultado ${checkedLabel(h.checked, p.now, p.lang)}`,
-                                    `Checked ${checkedLabel(h.checked, p.now, p.lang)}`,
-                                    `Consultado ${checkedLabel(h.checked, p.now, p.lang)}`,
-                                  )
-                              : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </small>
-                      {/* No message is not an all-clear: the shaking itself is the warning. */}
-                      {h.key === 'tsunami' && h.state !== 'listed' && (
-                        <small className="fw-now-natural">
-                          {t(
-                            '¿Sentiste un sismo fuerte o largo en la costa? Ve a lo alto ya: no esperes una alerta.',
-                            'Felt strong or long shaking on the coast? Go to high ground now: do not wait for an alert.',
-                            'Sentiu um tremor forte ou longo na costa? Vá para um lugar alto já: não espere um alerta.',
-                          )}
-                        </small>
-                      )}
-                    </span>
-                    <CaretRightIcon className="fw-now-go" size={14} aria-hidden="true" />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        <p className="fw-home-note">
-          {t(
-            'Que una fuente no liste eventos no significa que no haya peligro. Sigue a las autoridades locales',
-            'A source listing no events does not mean there is no danger. Follow local authorities',
-            'Uma fonte não listar eventos não significa que não haja perigo. Siga as autoridades locais',
-          )}
-          {/* Without a named agency the sentence ends here, never on an empty colon. */}
-          {p.authority || p.weather ? ': ' : ''}
-          {p.authority && (
-            <a href={p.authority.url} target="_blank" rel="noreferrer">
-              {p.authority.name}
-            </a>
-          )}
-          {p.authority && p.weather && t(' y ', ' and ', ' e ')}
-          {p.weather && (
-            <a href={p.weather.url} target="_blank" rel="noreferrer">
-              {p.weather.name}
-            </a>
-          )}
-          .
-        </p>
-      </section>
-      {/* The optional nationality card comes after what is happening, never before it. */}
-      {p.setup}
-      <OfficialNow
-        lang={p.lang}
-        now={p.now}
-        national={p.national}
-        civil={p.civil}
-        // NWS areas are read separately (the NWS tab): never "no format Faro can read".
-        weather={p.national || p.nwsArea ? undefined : p.weather}
-        services={p.services}
-        open={open}
-        onToggle={toggle}
-        onFloodGuide={p.onFloodGuide}
+                            : q.provider,
+                        ].join(' · ')
+        }
+        onClick={() => p.onOpen('earthquake')}
       />
+    ),
+  });
+  for (const h of p.hazards) {
+    const gap = h.key === 'flood' && !floodRow && h.state === 'none' ? floodGap : null;
+    // A national service's alerts in force (NWS) lead over an empty international list.
+    const lead = h.state === 'listed' ? undefined : p.leads?.[h.key];
+    if (h.key === 'flood' && floodRow) {
+      rows.push({
+        key: h.key,
+        rank: p.floodAdvice ? 2 : 3,
+        node: (
+          <ListRow
+            key={h.key}
+            lead={
+              <StatusIcon state="listed" level={p.floodAdvice ? 1 : undefined} icon={icons.flood} />
+            }
+            title={names.flood[idx]}
+            badge={
+              p.floodAdvice ? <Badge level={1}>{t('Aviso', 'Warning', 'Aviso')}</Badge> : undefined
+            }
+            meta={[floodRow.status, floodRow.detail].filter(Boolean).join(' · ')}
+            onClick={() => reveal(floodRow.rowId)}
+          />
+        ),
+      });
+      continue;
+    }
+    // When each source answered: said only when it is not recent (the screen states freshness).
+    const old =
+      h.checked && (offline || p.now - h.checked > (h.key === 'tsunami' ? 3 : 15) * 60000)
+        ? t(
+            `último dato ${checkedLabel(h.checked, p.now, p.lang)}`,
+            `last data ${checkedLabel(h.checked, p.now, p.lang)}`,
+            `último dado ${checkedLabel(h.checked, p.now, p.lang)}`,
+          )
+        : '';
+    const level = lead || (h.state === 'unknown' && h.unclosed) ? 1 : levelOf(h.level);
+    const state: Signal =
+      lead || (h.state === 'unknown' && h.unclosed)
+        ? 'listed'
+        : gap
+          ? 'unknown'
+          : h.state === 'listed'
+            ? 'listed'
+            : h.state;
+    const source =
+      h.key === 'tsunami'
+        ? 'NOAA/PTWC'
+        : h.key === 'cyclone' && p.stormsInBasin
+          ? 'GDACS'
+          : 'GDACS';
+    const meta = lead
+      ? lead
+      : gap
+        ? [gap.status, gap.check].filter(Boolean).join(' · ')
+        : h.state === 'unknown' && h.unclosed
+          ? `${t('Mensaje de amenaza sin cierre: ábrelo', 'Threat message not closed: open it', 'Mensagem de ameaça sem encerramento: abra-a')} · ${t('publicado', 'issued', 'publicado')} ${ago(h.unclosed)}`
+          : h.state === 'pending'
+            ? `${t('Consultando…', 'Checking…', 'Consultando…')} · ${source}`
+            : h.state === 'unknown'
+              ? [
+                  t('No se pudo comprobar', 'Could not be checked', 'Não foi possível verificar'),
+                  h.checked
+                    ? t(
+                        `último dato ${checkedLabel(h.checked, p.now, p.lang)}`,
+                        `last data ${checkedLabel(h.checked, p.now, p.lang)}`,
+                        `último dado ${checkedLabel(h.checked, p.now, p.lang)}`,
+                      )
+                    : offline
+                      ? t('sin conexión', 'offline', 'sem conexão')
+                      : t(
+                          'sin respuesta de la fuente',
+                          'no answer from the source',
+                          'sem resposta da fonte',
+                        ),
+                ].join(' · ')
+              : h.state === 'none'
+                ? [
+                    h.key === 'tsunami'
+                      ? t(
+                          'Sin mensajes de amenaza de NOAA en 6 h',
+                          'No NOAA threat messages in 6 h',
+                          'Sem mensagens de ameaça da NOAA em 6 h',
+                        )
+                      : h.key === 'cyclone' && p.stormsInBasin
+                        ? t(
+                            `Ninguno con alerta para ${p.countryName} · ${p.stormsInBasin} activos en la cuenca (NHC)`,
+                            `None with an alert for ${p.countryName} · ${p.stormsInBasin} active in the basin (NHC)`,
+                            `Nenhum com alerta para ${p.countryName} · ${p.stormsInBasin} ativos na bacia (NHC)`,
+                          )
+                        : t(
+                            'Sin alertas internacionales · GDACS',
+                            'No international alerts · GDACS',
+                            'Sem alertas internacionais · GDACS',
+                          ),
+                    h.recent
+                      ? t(
+                          `${h.recent} en 14 días`,
+                          `${h.recent} in 14 days`,
+                          `${h.recent} em 14 dias`,
+                        )
+                      : '',
+                    p.notes?.[h.key],
+                    old,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                : h.level === 'review'
+                  ? t(
+                      'Mensaje reciente de NOAA: ábrelo',
+                      'Recent NOAA message: open it',
+                      'Mensagem recente da NOAA: abra-a',
+                    )
+                  : [
+                      h.top
+                        ? alertTitle(h.top, (c) => regions.of(c), p.lang)
+                        : alertLevelLabels[h.level as 'green'][idx].split(' · ')[0],
+                      p.notes?.[h.key],
+                      old,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ');
+    rows.push({
+      key: h.key,
+      rank: level === 3 ? 0 : level === 2 ? 1 : level === 1 ? 2 : 3,
+      node: (
+        <ListRow
+          key={h.key}
+          lead={<StatusIcon state={state} level={level} icon={icons[h.key]} />}
+          title={names[h.key][idx]}
+          badge={
+            h.state === 'listed' && h.level && h.level !== 'review' ? (
+              <Badge level={levelOf(h.level)}>{alertLevelShort[h.level as 'green'][idx]}</Badge>
+            ) : undefined
+          }
+          meta={meta}
+          onClick={() => p.onOpen(h.key)}
+        />
+      ),
+    });
+  }
+  // Warnings in force first, most severe first; the rest keep their usual order.
+  const ordered = rows.map((r, n) => ({ ...r, n })).sort((a, b) => a.rank - b.rank || a.n - b.n);
+  const inForce = rows.filter((r) => r.rank < 3).length;
+  const severe = rows.some((r) => r.rank < 2);
+
+  const freshness =
+    p.monitor.state === 'live' && p.monitor.checked
+      ? t(
+          `Comprobado ${ago(p.monitor.checked)}`,
+          `Checked ${ago(p.monitor.checked)}`,
+          `Verificado ${ago(p.monitor.checked)}`,
+        )
+      : p.monitor.state === 'checking'
+        ? t('Consultando…', 'Checking…', 'Consultando…')
+        : p.monitor.checked
+          ? t(
+              `Datos de ${checkedLabel(p.monitor.checked, p.now, p.lang)}`,
+              `Data from ${checkedLabel(p.monitor.checked, p.now, p.lang)}`,
+              `Dados de ${checkedLabel(p.monitor.checked, p.now, p.lang)}`,
+            )
+          : p.monitor.state === 'offline'
+            ? t('Sin conexión', 'Offline', 'Sem conexão')
+            : t('Fuente sin respuesta', 'Source not responding', 'Fonte sem resposta');
+
+  const happening = (
+    <Section
+      id="fw-now"
+      title={t('Qué está pasando', 'What is happening', 'O que está acontecendo')}
+      aside={
+        inForce
+          ? inForce === 1
+            ? t('1 aviso vigente', '1 warning in force', '1 aviso em vigor')
+            : t(
+                `${inForce} avisos vigentes`,
+                `${inForce} warnings in force`,
+                `${inForce} avisos em vigor`,
+              )
+          : undefined
+      }
+    >
+      {/* The visible freshness ticks; screen readers hear only a change of state. */}
+      <p className="f-visually-hidden" role="status">
+        {p.monitor.state === 'live'
+          ? t('Datos oficiales en vivo.', 'Official data live.', 'Dados oficiais ao vivo.')
+          : p.monitor.state === 'offline'
+            ? t(
+                'Sin conexión: se muestran los últimos datos.',
+                'Offline: showing the last data.',
+                'Sem conexão: mostrando os últimos dados.',
+              )
+            : p.monitor.state === 'stale'
+              ? t(
+                  'Los sismos no se están actualizando.',
+                  'Earthquake data is not updating.',
+                  'Os terremotos não estão sendo atualizados.',
+                )
+              : p.monitor.state === 'failed'
+                ? t(
+                    'La fuente de sismos no responde.',
+                    'The earthquake source is not responding.',
+                    'A fonte de terremotos não responde.',
+                  )
+                : ''}
+      </p>
+      <List label={t('Peligros', 'Hazards', 'Perigos')}>{ordered.map((r) => r.node)}</List>
+      <Note
+        more={
+          <button type="button" className="f-inline-link" onClick={p.onSources}>
+            {t('Cómo leer esto', 'How to read this', 'Como ler isto')}
+          </button>
+        }
+      >
+        {t(
+          'Faro no es un sistema de alerta temprana. Que una fuente no liste eventos no significa que no haya peligro. Sigue a las autoridades locales',
+          'Faro is not an early warning system. A source listing no events does not mean there is no danger. Follow local authorities',
+          'O Faro não é um sistema de alerta antecipado. Uma fonte não listar eventos não significa que não haja perigo. Siga as autoridades locais',
+        )}
+        {/* Without a named agency the sentence ends here, never on an empty colon. */}
+        {p.authority || p.weather ? ': ' : ''}
+        {p.authority && (
+          <a href={p.authority.url} target="_blank" rel="noreferrer">
+            {p.authority.name}
+          </a>
+        )}
+        {p.authority && p.weather && t(' y ', ' and ', ' e ')}
+        {p.weather && (
+          <a href={p.weather.url} target="_blank" rel="noreferrer">
+            {p.weather.name}
+          </a>
+        )}
+        .
+      </Note>
+    </Section>
+  );
+  const side = (
+    <div key="side" data-side="">
+      {p.map}
+    </div>
+  );
+  const main: ReactNode[] = [
+    <ScreenHead
+      key="head"
+      titleId="fw-brief-title"
+      title={t('Situación', 'Situation', 'Situação')}
+      aside={
+        <span
+          className="f-section-aside"
+          data-state={p.monitor.state === 'live' ? undefined : 'stale'}
+        >
+          {freshness}
+        </span>
+      }
+    />,
+    p.alert ? <div key="alert">{p.alert}</div> : null,
+    <div key="call">{p.call}</div>,
+    ...(severe
+      ? [<div key="now">{happening}</div>, <div key="actions">{p.actions}</div>]
+      : [<div key="actions">{p.actions}</div>, <div key="now">{happening}</div>]),
+    p.response ? (
+      <Section
+        key="response"
+        id="fw-response"
+        title={t('Respuesta oficial', 'Official response', 'Resposta oficial')}
+      >
+        <List>{p.response}</List>
+      </Section>
+    ) : null,
+    <OfficialNow
+      key="official"
+      lang={p.lang}
+      now={p.now}
+      national={p.national}
+      civil={p.civil}
+      // NWS areas are read separately (the NWS tab): never "no format Faro can read".
+      weather={p.national || p.nwsArea ? undefined : p.weather}
+      services={p.services}
+      open={open}
+      onToggle={toggle}
+      onFloodGuide={p.onFloodGuide}
+    />,
+    <ScopeNote key="scope">
+      {t(
+        'Faro consulta las fuentes oficiales solo mientras está abierto. No llama ni avisa por ti, y tus datos quedan en este navegador.',
+        'Faro checks the official sources only while it is open. It does not call or alert anyone for you, and your data stays in this browser.',
+        'O Faro consulta as fontes oficiais só enquanto está aberto. Não liga nem avisa ninguém por você, e seus dados ficam neste navegador.',
+      )}
+    </ScopeNote>,
+  ].filter(Boolean);
+  // On phones the map follows "What is happening"; on wide screens it spans the main column.
+  const nowAt = main.findIndex((n) => (n as { key?: string }).key === 'now');
+  const items = [...main.slice(0, nowAt + 1), side, ...main.slice(nowAt + 1)];
+  return (
+    <div className="f-dashboard" style={{ '--f-side-span': main.length } as React.CSSProperties}>
+      {items}
     </div>
   );
 }

@@ -89,10 +89,6 @@
   border-radius: 4px;
 }
 /* Inline external marks placed after link text elsewhere. */
-.fw-app .fw-ext-icon {
-  margin-left: 4px;
-  vertical-align: -2px;
-}
 
 /* Pagination: previous, page numbers, next. Phones show "Page 2 of 4" instead of numbers. */
 .fw-app .fw-pagination {

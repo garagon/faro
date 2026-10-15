@@ -26,14 +26,12 @@
 }
 .fw-app .fw-latest-magnitude,
 .fw-app .fw-mag,
-.fw-quake-magnitude,
 .fw-app .fw-update-mag {
   background: var(--mag-bg);
   color: var(--mag-ink);
   border-color: var(--mag-ink);
 }
-.fw-app .fw-latest-magnitude > strong,
-.fw-quake-magnitude > strong {
+.fw-app .fw-latest-magnitude > strong {
   color: var(--mag-ink);
 }
 .fw-app .fw-pin {
@@ -88,20 +86,6 @@
   max-width: 760px;
   line-height: 1.6;
 }
-.fw-header .fw-emergency-persistent {
-  background: #fff1e7;
-  color: #853d24;
-  border: 1px solid #e5bbaa;
-  min-height: 44px;
-  justify-content: center;
-  width: 100%;
-  margin: 0 0 14px;
-}
-.fw-message-steps {
-  margin: 0 0 12px;
-  color: #52675f;
-  font-size: 12px;
-}
 .fw-needs-presets {
   display: flex;
   flex-wrap: wrap;
@@ -126,39 +110,12 @@
   margin-top: 16px;
 }
 @media (max-width: 760px) {
-  .fw-header {
-    padding-inline: 12px;
-    gap: 8px;
-  }
-  .fw-header .fw-sidebar-foot {
-    gap: 6px;
-  }
-  .fw-header .fw-emergency-persistent {
-    width: auto;
-    margin: 0;
-    padding: 8px;
-    font-size: 12px;
-    gap: 5px;
-  }
-  .fw-header .fw-emergency-persistent svg {
-    width: 16px;
-  }
-  .fw-header .fw-brand {
-    font-size: 23px !important;
-    gap: 5px;
-  }
   .fw-help-request label {
     margin-top: 12px;
   }
 }
 
 /* With three language buttons, the wordmark fits only from about 414px; keep a margin. */
-@media (max-width: 419px) {
-  .fw-header .fw-brand {
-    font-size: 0 !important;
-    gap: 0;
-  }
-}
 
 .fw-app .fw-map-foot > span > i {
   background: #52616e;
@@ -170,21 +127,7 @@
   border: 1px solid #cedcd4;
   border-radius: 6px;
 }
-@media (max-width: 760px) {
-  .fw-header .fw-language button {
-    min-height: 40px;
-  }
-}
 /* Keep the emergency action usable when a narrow phone is zoomed in. */
 body {
   min-width: 0;
-}
-@media (max-width: 340px) {
-  .fw-header .fw-brand {
-    display: none;
-  }
-  .fw-header .fw-sidebar-foot {
-    width: 100%;
-    justify-content: space-between;
-  }
 }

@@ -22,7 +22,7 @@ export type SafetyScene =
 type Pt = [number, number];
 type Ctx = { t: (es: string, en: string, pt: string) => string; ref: (name: string) => string };
 
-const FONT = "'DM Sans', system-ui, sans-serif";
+const FONT = "'Public Sans', system-ui, sans-serif";
 const INK = '#1d3a35';
 const LINE = '#7d918a';
 const WATER = '#2b6c8c';
@@ -637,7 +637,7 @@ const drawings: Record<SafetyScene, (c: Ctx) => { label: string; body: ReactNode
         lines: [
           t(
             '63 km/h o más. Huracán: 119 km/h o más.',
-            '63 km/h or more. Hurricane: 119 km/h or more.',
+            '39 mph or more. Hurricane: 74 mph or more.',
             '63 km/h ou mais. Furacão: 119 km/h ou mais.',
           ),
           t('Quédate en tu refugio.', 'Stay in your shelter.', 'Fique no seu abrigo.'),
@@ -703,7 +703,7 @@ const drawings: Record<SafetyScene, (c: Ctx) => { label: string; body: ReactNode
     return {
       label: t(
         'Escala del agua. 15 centímetros de agua en movimiento pueden derribar a una persona y 30 centímetros pueden arrastrar un vehículo.',
-        'Water depth to scale. 15 centimeters of moving water can knock a person down and 30 centimeters can sweep a vehicle away.',
+        'Water depth to scale. Six inches of moving water can knock a person down and one foot can sweep a vehicle away.',
         'Profundidade da água em escala. 15 centímetros de água em movimento podem derrubar uma pessoa e 30 centímetros podem arrastar um veículo.',
       ),
       body: (
@@ -733,7 +733,14 @@ const drawings: Record<SafetyScene, (c: Ctx) => { label: string; body: ReactNode
           />
           {flow(16, 224, 214)}
           <Dimension x={196} y0={223} y1={236} />
-          <Label x={188} y={208} anchor="end" size={14} weight={700} lines={['15 cm']} />
+          <Label
+            x={188}
+            y={208}
+            anchor="end"
+            size={14}
+            weight={700}
+            lines={[t('15 cm', '6 in', '15 cm')]}
+          />
           <g transform="translate(14 0)">
             <g stroke={INK} strokeWidth={1.8} strokeLinejoin="round">
               <path
@@ -762,7 +769,7 @@ const drawings: Record<SafetyScene, (c: Ctx) => { label: string; body: ReactNode
           />
           {flow(300, 480, 212)}
           <Dimension x={268} y0={222} y1={236} />
-          <Label x={246} y={206} size={14} weight={700} lines={['30 cm']} />
+          <Label x={246} y={206} size={14} weight={700} lines={[t('30 cm', '1 ft', '30 cm')]} />
           <Label
             x={16}
             y={264}
@@ -770,7 +777,7 @@ const drawings: Record<SafetyScene, (c: Ctx) => { label: string; body: ReactNode
             lines={[
               t(
                 '15 cm de agua en movimiento',
-                '15 cm of moving water',
+                '6 inches of moving water',
                 '15 cm de água em movimento',
               ),
               t('pueden derribarte', 'can knock you down', 'podem derrubar você'),
@@ -781,7 +788,7 @@ const drawings: Record<SafetyScene, (c: Ctx) => { label: string; body: ReactNode
             y={264}
             weight={600}
             lines={[
-              t('30 cm pueden arrastrar', '30 cm can sweep', '30 cm podem arrastrar'),
+              t('30 cm pueden arrastrar', '1 foot can sweep', '30 cm podem arrastrar'),
               t('un vehículo', 'a vehicle away', 'um veículo'),
             ]}
           />

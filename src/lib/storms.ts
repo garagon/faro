@@ -95,8 +95,8 @@ export function advisoryUrl(s: Storm, lang: Lang) {
 export const graphicsUrl = (s: Storm) =>
   `https://www.nhc.noaa.gov/graphics_${s.bin.toLowerCase()}.shtml`;
 
-/** Maximum sustained wind in km/h, rounded to 5 as NHC advisories present it. */
-export const windKmh = (kt: number) => Math.round((kt * 1.852) / 5) * 5;
+/** Maximum sustained wind in km/h or mph, rounded to 5 as NHC advisories present it. */
+export { wind, windKmh, windMph } from './units.ts';
 
 export function position(s: Storm) {
   return `${Math.abs(s.lat).toFixed(1)}°${s.lat >= 0 ? 'N' : 'S'} ${Math.abs(s.lng).toFixed(1)}°${s.lng >= 0 ? 'E' : 'W'}`;

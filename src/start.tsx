@@ -1,14 +1,8 @@
 import { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles/base.css';
+import './styles/index.css';
 import App from './App.tsx';
 import ErrorBoundary from './components/ErrorBoundary.tsx';
-import './styles/emergencyFlow.css';
-import './styles/preparedness.css';
-// The situation screens' surface system, then shared roles (contrast, sizes, call red, focus);
-// system.css must stay the last stylesheet.
-import './styles/board.css';
-import './styles/system.css';
 
 /**
  * Tells the offline copy (src/sw.ts) that this version started on this device, so it may replace

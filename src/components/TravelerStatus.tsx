@@ -12,7 +12,6 @@ import { CheckCircleIcon, ArrowRightIcon, WarningCircleIcon } from '@phosphor-ic
 import ShareButtons from './ShareButtons.tsx';
 import { PhoneButton } from './Ui.tsx';
 import { emergencyFor } from '../lib/emergency.ts';
-import '../styles/status.css';
 import {
   checkInMessage,
   checkInTime,

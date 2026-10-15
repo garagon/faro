@@ -2,7 +2,7 @@
   position: relative;
   margin: 0 0 16px;
   min-width: 0;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Public Sans', sans-serif;
 }
 .fw-country-search > label {
   display: block;
@@ -44,7 +44,7 @@
   background: transparent;
   outline: none !important;
   font:
-    16px/1.4 'DM Sans',
+    16px/1.4 'Public Sans',
     sans-serif;
   color: #183c2e;
   box-shadow: none;
@@ -85,7 +85,7 @@
   padding: 10px 13px;
   text-align: left;
   font:
-    14px/1.5 'DM Sans',
+    14px/1.5 'Public Sans',
     sans-serif;
   color: #244334;
   cursor: pointer;
@@ -113,10 +113,4 @@
   margin: 7px 0 0;
   color: #9c4431 !important;
   font-size: 12px;
-}
-.fw-nationality .fw-country-search {
-  margin-top: 14px;
-}
-.fw-nationality .fw-country-search > label {
-  margin-bottom: 7px;
 }

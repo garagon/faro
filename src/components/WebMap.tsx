@@ -1,10 +1,7 @@
 import { magnitudeBand } from '../lib/magnitude.ts';
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { DropIcon, FlagIcon, HurricaneIcon, MountainsIcon } from '@phosphor-icons/react';
 import { directionsUrl, type Embassy } from '../lib/embassies.ts';
@@ -165,7 +162,7 @@ export default function WebMap({
         const [{ setWorkerUrl }, { default: workerUrl }] = await Promise.all([
           import('maplibre-gl'),
           import('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'),
-          import('maplibre-gl/dist/maplibre-gl.css'),
+          import('../styles/maplibre-gl.css'),
         ]);
         setWorkerUrl(workerUrl);
         await import('@maplibre/maplibre-gl-leaflet');

@@ -83,45 +83,6 @@
   display: block;
   margin: 0;
 }
-.fw-main[data-screen='help'] .fw-emergency-lines {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-  margin: 0;
-}
-.fw-main[data-screen='help'] .fw-emergency-lines > a {
-  display: grid;
-  grid-template-columns: auto auto;
-  align-items: center;
-  column-gap: 12px;
-  min-height: 64px;
-  padding: 8px 22px 8px 18px;
-  border: 1px solid #e3c3b8;
-  border-radius: 10px;
-  background: #fff;
-  color: var(--call);
-  text-decoration: none;
-}
-.fw-main[data-screen='help'] .fw-emergency-lines > a:hover {
-  background: #fdf5f2;
-  border-color: var(--call);
-}
-.fw-main[data-screen='help'] .fw-emergency-lines > a svg {
-  grid-row: 1 / span 2;
-}
-.fw-main[data-screen='help'] .fw-emergency-lines strong {
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.5px;
-}
-.fw-main[data-screen='help'] .fw-emergency-lines span {
-  font-size: 12.5px;
-  color: #6b4a40;
-}
 .fw-main[data-screen='help'] .fw-emergency-numbers > :is(small, .fw-emergency-scope) {
   grid-column: 1;
   margin: 8px 0 0;
@@ -455,19 +416,6 @@
   .fw-main[data-screen='help'] .fw-emergency-numbers {
     grid-template-columns: minmax(0, 1fr);
   }
-  .fw-main[data-screen='help'] .fw-emergency-lines {
-    grid-column: 1;
-    grid-row: auto;
-    justify-content: stretch;
-    margin: 12px 0 0;
-  }
-  .fw-main[data-screen='help'] .fw-emergency-lines {
-    flex-direction: row;
-  }
-  .fw-main[data-screen='help'] .fw-emergency-lines > a {
-    flex: 1 1 140px;
-    justify-content: start;
-  }
   .fw-main[data-screen='help'] :is(.fw-care, .fw-family-links, .fw-consular-directory) > header {
     flex-direction: column;
   }
@@ -517,7 +465,7 @@
   border-bottom: 1px solid var(--hair);
   border-radius: 0;
 }
-.fw-main[data-screen='help'] .fw-consular-card:not(.has-emergency) {
+.fw-main[data-screen='help'] .fw-consular-card {
   grid-template-columns: minmax(0, 1fr);
 }
 .fw-main[data-screen='help'] .fw-consular-card h3 {
@@ -532,52 +480,15 @@
   font-size: 14.5px;
   color: #2b4a44;
 }
-.fw-main[data-screen='help'] .fw-consular-phone {
-  font-size: 15px;
-  font-weight: 600;
-}
 .fw-main[data-screen='help'] .fw-consular-card p {
   font-size: 13.5px;
   color: #4d625b;
 }
-.fw-main[data-screen='help'] .fw-consular-emergency {
-  align-self: start;
-  gap: 4px;
-  padding: 0 0 0 24px;
-  border: 0;
-  border-left: 1px solid var(--hair);
-  border-radius: 0;
-  background: none;
-}
-.fw-main[data-screen='help'] .fw-consular-emergency strong {
-  font-size: 13px;
-  color: var(--ink-strong);
-}
-.fw-main[data-screen='help'] .fw-consular-emergency a {
-  display: inline-flex;
-  align-items: center;
-  font-size: 24px;
-  color: var(--call);
-  text-underline-offset: 4px;
-}
-.fw-main[data-screen='help'] .fw-consular-emergency p {
-  color: var(--quiet);
-}
-.fw-main[data-screen='help'] .fw-consular-card > :is(.fw-consular-actions, small) {
+.fw-main[data-screen='help'] .fw-consular-card > :is(small) {
   grid-column: 1 / -1;
-}
-.fw-main[data-screen='help'] .fw-consular-actions {
-  gap: 4px 22px;
-}
-.fw-main[data-screen='help'] .fw-consular-actions :is(a, button) {
-  gap: 5px;
-  font-size: 14px;
 }
 .fw-main[data-screen='help'] .fw-consular-card:last-child {
   border-bottom: 0;
-}
-.fw-main[data-screen='help'] .fw-consular-actions button {
-  padding: 0;
 }
 .fw-main[data-screen='help'] .fw-consular-card > small {
   font-size: 12.5px;
@@ -613,14 +524,6 @@
   font-size: 13.5px;
   color: #4d625b;
 }
-.fw-main[data-screen='help'] .fw-support-phones a {
-  font-size: 21px;
-  font-weight: 700;
-  color: var(--call);
-}
-.fw-main[data-screen='help'] .fw-support-advisory {
-  padding: 12px 0 16px;
-}
 .fw-main[data-screen='help'] .fw-support-topics summary {
   display: flex;
   align-items: center;
@@ -648,11 +551,6 @@
 @media (max-width: 760px) {
   .fw-main[data-screen='help'] .fw-consular-card {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .fw-main[data-screen='help'] .fw-consular-emergency {
-    padding: 12px 0 0;
-    border-left: 0;
-    border-top: 1px solid var(--hair);
   }
 }
 

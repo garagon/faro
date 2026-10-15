@@ -6,6 +6,7 @@ import { coastDistanceKm, decodeCoastline, type CoastLine } from '../lib/coast.t
 import { classifyBulletins, type TsunamiData, type BulletinState } from '../lib/tsunami.ts';
 import { nwsEventLabels, type NwsAlert } from '../lib/nws.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
+import { distance as formatDistance } from '../lib/units.ts';
 let coastCache: Promise<CoastLine[]> | null = null;
 export default function CoastalPanel({
   lang,
@@ -388,12 +389,12 @@ export default function CoastalPanel({
                 : near
                   ? t(
                       `Estás a unos ${Math.round(distance)} km de la costa (aproximado).`,
-                      `You are about ${Math.round(distance)} km from the coast (approximate).`,
+                      `You are about ${formatDistance(distance, lang)} from the coast (approximate).`,
                       `Você está a cerca de ${Math.round(distance)} km da costa (aproximado).`,
                     )
                   : t(
                       `Distancia aproximada a la costa: ${Math.round(distance)} km. Esto no indica si la zona es segura.`,
-                      `Approximate distance to the coast: ${Math.round(distance)} km. This does not say whether the area is safe.`,
+                      `Approximate distance to the coast: ${formatDistance(distance, lang)}. This does not say whether the area is safe.`,
                       `Distância aproximada até a costa: ${Math.round(distance)} km. Isso não indica se a área é segura.`,
                     )}
         </p>
@@ -516,7 +517,7 @@ export default function CoastalPanel({
       <small>
         {t(
           'Umbral orientativo de proximidad: 20 km; no delimita inundación. Cartografía generalizada, puede omitir islas y tener errores de varios km. No es un mapa de evacuación ni de inundación. La estimación se calcula en tu navegador.',
-          'The 20 km proximity threshold does not define inundation. Generalized mapping may omit islands and be inaccurate by several km. It is not an evacuation or inundation map. The estimate is calculated in your browser.',
+          `The ${formatDistance(20, lang)} proximity threshold does not define inundation. Generalized mapping may omit islands and be inaccurate by several miles. It is not an evacuation or inundation map. The estimate is calculated in your browser.`,
           'Limite orientativo de proximidade: 20 km; não delimita inundação. Cartografia generalizada, pode omitir ilhas e ter erros de vários km. Não é um mapa de evacuação nem de inundação. A estimativa é calculada no seu navegador.',
         )}
       </small>

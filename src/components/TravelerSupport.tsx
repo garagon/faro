@@ -1,7 +1,6 @@
 import { ExternalLink, LinkRow, PhoneButton, PhoneRow } from './Ui.tsx';
 import { supportFor } from '../data/travelerSupport.ts';
 import { reviewDate } from '../lib/links.ts';
-import '../styles/travelerSupport.css';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 
 type Props = { nationality: string; country: string; lang: Lang };

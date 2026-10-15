@@ -4,6 +4,7 @@ import { ArrowClockwiseIcon, ArrowUpRightIcon, MapPinIcon, XIcon } from '@phosph
 import { displayPlace, placeLang, type Quake } from '../lib/domain.ts';
 import { ageLabel, type FeedUpdate } from '../lib/feedUpdates.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
+import { distance } from '../lib/units.ts';
 type Props = {
   events: Quake[];
   updates: FeedUpdate[];
@@ -115,7 +116,7 @@ export default function LiveActivity(p: Props) {
               · {p.formatTime(latest.time)}
             </p>
             <span>
-              {latest.depth.toFixed(0)} km {t('de profundidad', 'deep', 'de profundidade')} ·{' '}
+              {distance(latest.depth, p.lang)} {t('de profundidad', 'deep', 'de profundidade')} ·{' '}
               {latest.reviewed
                 ? t('Revisado por la fuente', 'Reviewed by source', 'Revisado pela fonte')
                 : latest.source === 'EMSC'

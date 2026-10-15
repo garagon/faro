@@ -1,0 +1,797 @@
+/*
+ * Faro components. Every rule reads tokens (tokens.css); no colour, size or spacing literals.
+ * Selectors stay at one class plus an attribute at most: variants are data attributes, never
+ * per-screen overrides. Components have no outer margin; layouts own the gaps.
+ *
+ * Type roles. Nothing else is allowed:
+ *   screen title   28 / 700        section title  18 / 700
+ *   figure         18 / 700 (phone numbers, magnitudes in lists; tabular)
+ *   label          16 / 600 (row titles, buttons, chips, field labels)
+   exception      34 / 700 for the magnitude in an earthquake's detail only
+ *   body           16 / 400        caption        14 / 400, muted (descriptions, sources, notes)
+ *   legal          13 / 400        tab label      12 / 600
+ */
+
+/* On touch screens every field, old screens included, uses 16 px text: smaller makes iOS zoom. */
+@media (pointer: coarse) {
+  :where(input, select, textarea) {
+    font-size: max(16px, 1rem);
+  }
+}
+
+/* Pressed feedback on everything tappable: darker and slightly smaller, at once. */
+.f-pressable {
+  transition:
+    transform var(--f-press) var(--f-ease),
+    background-color var(--f-press) var(--f-ease);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.f-pressable:active {
+  transform: scale(0.985);
+}
+
+/*
+ * Buttons: one family. md is 44 px, lg 56 px. Variants: primary, secondary, ghost and call.
+ * A button is as wide as its label unless it is a block; the call button is a block as wide as
+ * a phone at most, so it is the same size on every screen and device.
+ */
+.f-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  gap: var(--f-space-2);
+  min-height: var(--f-control-md);
+  margin: 0;
+  padding: 0 var(--f-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--f-radius-sm);
+  background: var(--f-color-action);
+  box-shadow: none;
+  color: var(--f-color-on-action);
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-medium);
+  line-height: var(--f-leading-snug);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.f-button[data-size='lg'] {
+  min-height: var(--f-control-lg);
+  padding: 0 var(--f-space-5);
+  font-size: var(--f-text-lg);
+}
+.f-button[data-block] {
+  display: flex;
+  justify-self: stretch;
+  width: 100%;
+}
+.f-button[data-variant='secondary'] {
+  border-color: var(--f-color-border-strong);
+  background: var(--f-color-surface);
+  color: var(--f-color-text);
+}
+.f-button[data-variant='ghost'] {
+  padding-inline: 0;
+  background: transparent;
+  color: var(--f-color-action);
+}
+.f-button[data-variant='call'] {
+  display: flex;
+  justify-self: stretch;
+  width: 100%;
+  max-width: var(--f-call-width);
+  background: var(--f-color-call);
+}
+.f-button:disabled,
+.f-button[aria-disabled='true'] {
+  border-color: var(--f-color-border);
+  background: var(--f-color-surface-muted);
+  color: var(--f-color-text-muted);
+  cursor: not-allowed;
+  transform: none;
+}
+@media (hover: hover) {
+  .f-button:not(:disabled):hover {
+    background: var(--f-color-action-hover);
+  }
+  .f-button[data-variant='call']:hover {
+    background: var(--f-color-call-hover);
+  }
+  .f-button[data-variant='secondary']:not(:disabled):hover {
+    background: var(--f-color-surface-muted);
+  }
+  .f-button[data-variant='ghost']:not(:disabled):hover {
+    background: transparent;
+    text-decoration: underline;
+  }
+}
+.f-button:not(:disabled):active {
+  background: var(--f-color-action-hover);
+}
+.f-button[data-variant='call']:active {
+  background: var(--f-color-call-hover);
+}
+.f-button[data-variant='secondary']:not(:disabled):active {
+  background: var(--f-color-surface-muted);
+}
+.f-button[data-variant='ghost']:not(:disabled):active {
+  background: transparent;
+  opacity: 0.7;
+}
+.f-call {
+  display: grid;
+  gap: var(--f-space-2);
+}
+.f-call-note {
+  margin: 0;
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+}
+
+.f-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: var(--f-touch);
+  height: var(--f-touch);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--f-radius-sm);
+  background: transparent;
+  color: var(--f-color-text);
+  cursor: pointer;
+}
+.f-icon-button:active {
+  background: var(--f-color-surface-muted);
+}
+
+/* Lists: one container, fine dividers. Every row is a title and a caption, nothing more. */
+/* Separators start at the text edge, as in grouped lists; the focus ring stays inside the row. */
+.f-list {
+  --f-row-inset: var(--f-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: var(--f-hairline);
+  border-radius: var(--f-radius-md);
+  background: var(--f-color-surface);
+}
+.f-list:has(.f-row-lead:not(:empty)) {
+  --f-row-inset: calc(var(--f-space-4) + var(--f-lead) + var(--f-space-3));
+}
+.f-list > li {
+  position: relative;
+}
+.f-list > li + li::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto var(--f-row-inset);
+  border-top: var(--f-hairline);
+}
+.f-list > li:first-child > .f-row {
+  border-radius: var(--f-radius-md) var(--f-radius-md) 0 0;
+}
+.f-list > li:last-child > .f-row {
+  border-radius: 0 0 var(--f-radius-md) var(--f-radius-md);
+}
+.f-list > li:only-child > .f-row {
+  border-radius: var(--f-radius-md);
+}
+.f-row:focus-visible {
+  outline-offset: -3px;
+}
+.f-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--f-space-3);
+  width: 100%;
+  min-height: 56px;
+  margin: 0;
+  padding: var(--f-space-3) var(--f-space-4);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--f-color-text);
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-regular);
+  line-height: var(--f-leading-snug);
+  text-align: start;
+  text-decoration: none;
+}
+button.f-row,
+a.f-row {
+  cursor: pointer;
+}
+button.f-row:active,
+a.f-row:active {
+  background: var(--f-color-surface-muted);
+}
+@media (hover: hover) {
+  button.f-row:hover,
+  a.f-row:hover {
+    background: var(--f-color-surface-muted);
+  }
+}
+.f-row-lead {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: var(--f-lead);
+  color: var(--f-color-text-muted);
+}
+.f-row-lead:empty {
+  display: none;
+}
+.f-row:has(.f-row-lead:empty) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.f-row-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.f-row-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--f-space-1) var(--f-space-2);
+  font-weight: var(--f-weight-medium);
+}
+.f-row-title[data-figure] {
+  font-size: var(--f-text-lg);
+  font-weight: var(--f-weight-bold);
+  line-height: var(--f-leading-tight);
+  font-variant-numeric: tabular-nums;
+}
+.f-row-meta {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  text-wrap: pretty;
+}
+.f-row-trail {
+  display: flex;
+  align-items: center;
+  gap: var(--f-space-1);
+  color: var(--f-color-text-muted);
+}
+.f-row[data-tone='call'] .f-row-trail {
+  color: var(--f-color-call);
+}
+
+/* Icon circle at the start of a row. As a status icon, the official level tints it when the
+   source lists something; neutral when nothing is listed, faded without a usable answer,
+   pulsing while checking. Action rows use the neutral circle so every row shares one edge. */
+.f-status-icon {
+  display: grid;
+  place-items: center;
+  width: var(--f-lead);
+  height: var(--f-lead);
+  border-radius: var(--f-radius-full);
+  background: var(--f-color-surface-muted);
+  color: var(--f-color-text-subtle);
+}
+.f-status-icon[data-state='listed'] {
+  background: var(--f-neutral-100);
+  color: var(--f-color-text);
+}
+.f-status-icon[data-state='unknown'] {
+  color: var(--f-neutral-400);
+}
+.f-status-icon[data-state='pending'] {
+  animation: f-pulse 1.2s var(--f-ease) infinite alternate;
+}
+.f-status-icon[data-level='1'] {
+  background: var(--f-color-level-1-soft);
+  box-shadow: inset 0 0 0 1px var(--f-color-level-1);
+  color: var(--f-color-level-1-text);
+}
+.f-status-icon[data-level='2'] {
+  background: var(--f-color-level-2-soft);
+  box-shadow: inset 0 0 0 1px var(--f-color-level-2);
+  color: var(--f-color-level-2-text);
+}
+.f-status-icon[data-level='3'] {
+  background: var(--f-color-level-3-soft);
+  box-shadow: inset 0 0 0 1px var(--f-color-level-3);
+  color: var(--f-color-level-3-text);
+}
+
+/* The map frame. The map itself is the legacy WebMap until it moves to the design system. */
+.f-map-block {
+  display: grid;
+  gap: var(--f-space-2);
+}
+.f-map {
+  overflow: hidden;
+  height: 240px;
+  border: var(--f-hairline);
+  border-radius: var(--f-radius-md);
+  background: var(--f-neutral-100);
+}
+.f-map[data-size='tall'] {
+  height: 520px;
+}
+
+/* Expandable row: the caret turns; the body is prose, indented to the text edge. */
+.f-expand-caret {
+  transition: transform var(--f-move) var(--f-ease);
+}
+.f-row[aria-expanded='true'] .f-expand-caret {
+  transform: rotate(180deg);
+}
+.f-expand-body {
+  padding: 0 var(--f-space-4) var(--f-space-4) var(--f-row-inset);
+}
+.f-expand-body[hidden] {
+  display: none;
+}
+
+/* Prose inside a section or an opened row: text roles only, measured spacing. */
+.f-prose {
+  display: grid;
+  gap: var(--f-space-3);
+  max-width: var(--f-reading);
+}
+.f-prose > * {
+  margin: 0;
+}
+.f-prose :where(h3) {
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-medium);
+}
+.f-prose :where(ul) {
+  display: grid;
+  gap: var(--f-space-2);
+  padding-inline-start: var(--f-space-5);
+  list-style: disc;
+}
+.f-prose :where(dl) {
+  display: grid;
+  gap: var(--f-space-3);
+}
+.f-prose :where(dd) {
+  margin: 0;
+}
+.f-prose :where(dt) {
+  font-weight: var(--f-weight-medium);
+}
+.f-prose :where(small, .f-caption) {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+}
+
+/* A button that reads as a link inside a sentence. */
+.f-inline-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--f-color-action);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+/* A link to another site, with its arrow; and a row of small actions. */
+.f-out {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--f-space-1);
+  min-height: var(--f-touch);
+  color: var(--f-color-action);
+  font-weight: var(--f-weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.f-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--f-space-4);
+}
+.f-actions > button {
+  min-height: var(--f-touch);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--f-color-action);
+  font-weight: var(--f-weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+/* Level badge: the agency's level in its own words, coloured by the official scale. */
+.f-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 var(--f-space-2);
+  border-radius: var(--f-radius-full);
+  background: var(--f-color-surface-muted);
+  color: var(--f-color-text-subtle);
+  font-size: var(--f-text-sm);
+  font-weight: var(--f-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+}
+.f-badge[data-level='1'] {
+  background: var(--f-color-level-1-soft);
+  color: var(--f-color-level-1-text);
+  box-shadow: inset 0 0 0 1px var(--f-color-level-1);
+}
+.f-badge[data-level='2'] {
+  background: var(--f-color-level-2-soft);
+  color: var(--f-color-level-2-text);
+  box-shadow: inset 0 0 0 1px var(--f-color-level-2);
+}
+.f-badge[data-level='3'] {
+  background: var(--f-color-level-3-soft);
+  color: var(--f-color-level-3-text);
+  box-shadow: inset 0 0 0 1px var(--f-color-level-3);
+}
+
+/* Numbered steps: one short imperative per step, body text. */
+.f-steps {
+  display: grid;
+  gap: var(--f-space-4);
+  margin: 0;
+  padding: 0;
+  counter-reset: f-step;
+  list-style: none;
+}
+.f-steps > li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: var(--f-space-3);
+  align-items: baseline;
+  counter-increment: f-step;
+}
+.f-steps > li::before {
+  content: counter(f-step);
+  color: var(--f-color-text);
+  font-size: var(--f-text-lg);
+  font-weight: var(--f-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sections: a title and space, not a box. */
+.f-section {
+  display: grid;
+  gap: var(--f-space-3);
+  container-type: inline-size;
+}
+.f-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--f-space-1) var(--f-space-3);
+}
+.f-section-title {
+  margin: 0;
+  font-size: var(--f-text-lg);
+  font-weight: var(--f-weight-bold);
+  line-height: var(--f-leading-snug);
+}
+.f-subhead {
+  margin: 0;
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-medium);
+  line-height: var(--f-leading-snug);
+}
+.f-section-aside {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+}
+.f-section-aside[data-state='stale'] {
+  color: var(--f-color-level-1-text);
+}
+
+.f-screen-head {
+  display: grid;
+  gap: var(--f-space-1);
+}
+.f-screen-title {
+  margin: 0;
+  font-size: var(--f-text-2xl);
+  font-weight: var(--f-weight-bold);
+  line-height: var(--f-leading-tight);
+  letter-spacing: -0.01em;
+}
+.f-screen-lead {
+  margin: 0;
+  color: var(--f-color-text-muted);
+}
+.f-back {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--f-space-1);
+  min-height: var(--f-touch);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--f-color-action);
+  font-weight: var(--f-weight-medium);
+  cursor: pointer;
+}
+
+/* Safety notice: changes what you do. Label weight, next to the action, no box. */
+.f-safety {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--f-space-3);
+  align-items: start;
+  font-weight: var(--f-weight-medium);
+}
+.f-safety-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: calc(var(--f-text-md) * var(--f-leading-body));
+  color: var(--f-color-text);
+}
+
+/* Reading note: how to read a figure, one caption line, with a link to the explanation. */
+.f-note {
+  margin: 0;
+  display: flex;
+  gap: var(--f-space-2);
+  align-items: baseline;
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  line-height: var(--f-leading-snug);
+}
+.f-note svg {
+  position: relative;
+  top: 2px;
+}
+.f-note a {
+  white-space: nowrap;
+}
+
+/* Scope note: what Faro does not do and where data stays; once per screen, at the end. */
+.f-scope {
+  margin: 0;
+  padding-top: var(--f-space-4);
+  border-top: var(--f-hairline);
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+}
+
+/* Source stamp: issuer · issued time · age, as a caption. Stale or failing turns amber. */
+.f-stamp {
+  display: inline;
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  line-height: var(--f-leading-snug);
+}
+.f-stamp > * + * {
+  margin-inline-start: var(--f-space-1);
+}
+.f-stamp[data-state='stale'],
+.f-stamp[data-state='error'] {
+  color: var(--f-color-level-1-text);
+}
+.f-stamp[data-state='stale']::before,
+.f-stamp[data-state='error']::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-inline-end: var(--f-space-2);
+  border-radius: var(--f-radius-full);
+  background: var(--f-color-level-1);
+  vertical-align: 0.05em;
+}
+
+/* Status chip: offline or stale data, compact and fixed in the header. */
+.f-chip-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--f-space-1);
+  min-height: 28px;
+  padding: 0 var(--f-space-2);
+  border-radius: var(--f-radius-full);
+  background: var(--f-color-level-1-soft);
+  color: var(--f-color-level-1-text);
+  font-size: var(--f-text-sm);
+}
+
+/* Choice chips and segmented control. */
+.f-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--f-space-2);
+}
+.f-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--f-space-2);
+  min-height: 40px;
+  margin: 0;
+  padding: 0 var(--f-space-4);
+  border: 1px solid var(--f-color-border-strong);
+  border-radius: var(--f-radius-full);
+  background: var(--f-color-surface);
+  color: var(--f-color-text);
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-medium);
+  cursor: pointer;
+}
+.f-chip[aria-pressed='true'] {
+  border-color: var(--f-color-action);
+  background: var(--f-color-action-soft);
+  color: var(--f-color-action-hover);
+}
+.f-segmented {
+  display: inline-flex;
+  justify-self: start;
+  padding: 3px;
+  border-radius: var(--f-radius-sm);
+  background: var(--f-color-surface-muted);
+}
+.f-segmented button {
+  min-height: 38px;
+  margin: 0;
+  padding: 0 var(--f-space-4);
+  border: 0;
+  border-radius: calc(var(--f-radius-sm) - 2px);
+  background: transparent;
+  color: var(--f-color-text-muted);
+  font-weight: var(--f-weight-medium);
+  cursor: pointer;
+}
+/* Full width: equal segments, never an orphan on a second line; stacked below 360 px. */
+.f-segmented[data-block] {
+  display: flex;
+  justify-self: stretch;
+}
+.f-segmented[data-block] button {
+  flex: 1;
+  min-height: var(--f-control-md);
+  padding-inline: var(--f-space-2);
+}
+@container (max-width: 19.5rem) {
+  .f-segmented[data-block] {
+    flex-direction: column;
+  }
+}
+.f-segmented button[aria-pressed='true'] {
+  background: var(--f-color-surface);
+  box-shadow: var(--f-shadow-raised);
+  color: var(--f-color-text);
+}
+
+/* Fields: 16 px text so phones do not zoom. */
+.f-field {
+  display: grid;
+  gap: var(--f-space-1);
+}
+.f-field-label {
+  font-weight: var(--f-weight-medium);
+}
+.f-field-hint {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+}
+.f-input {
+  width: 100%;
+  min-height: var(--f-control-md);
+  margin: 0;
+  padding: 0 var(--f-space-3);
+  border: 1px solid var(--f-color-border-strong);
+  border-radius: var(--f-radius-sm);
+  background: var(--f-color-surface);
+  color: var(--f-color-text);
+  font-size: max(16px, var(--f-text-md));
+}
+
+/* Magnitude: a figure; colour only darkens with size. */
+.f-mag {
+  display: inline-grid;
+  justify-items: center;
+  min-width: var(--f-lead);
+  font-variant-numeric: tabular-nums;
+  color: var(--f-mag, var(--f-mag-1));
+  font-size: var(--f-text-lg);
+  font-weight: var(--f-weight-bold);
+  line-height: var(--f-leading-tight);
+}
+.f-mag[data-size='lg'] {
+  font-size: var(--f-text-3xl);
+}
+.f-mag small {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  font-weight: var(--f-weight-regular);
+}
+.f-mag[data-band='2'] {
+  --f-mag: var(--f-mag-2);
+}
+.f-mag[data-band='3'] {
+  --f-mag: var(--f-mag-3);
+}
+.f-mag[data-band='4'] {
+  --f-mag: var(--f-mag-4);
+}
+.f-mag[data-band='5'] {
+  --f-mag: var(--f-mag-5);
+}
+
+/* Placeholder while the first answer arrives: never a failure message. */
+/* Bridge for the legacy map component inside the frame; goes when WebMap is migrated.
+   Pins follow the one-hue magnitude scale; clusters are neutral ink. */
+.f-map > .fw-map-wrapper {
+  height: 100%;
+}
+.f-map .fw-pin {
+  color: var(--f-mag-1);
+}
+.f-map .fw-mag-band-4 {
+  color: var(--f-mag-2);
+}
+.f-map .fw-mag-band-5 {
+  color: var(--f-mag-3);
+}
+.f-map .fw-mag-band-6 {
+  color: var(--f-mag-4);
+}
+.f-map .fw-mag-band-7plus {
+  color: var(--f-mag-5);
+}
+.f-map .marker-cluster {
+  background: rgb(21 31 28 / 14%);
+}
+.f-map .marker-cluster div {
+  background: var(--f-neutral-700);
+  color: var(--f-white);
+  font-family: var(--f-font);
+  font-weight: var(--f-weight-bold);
+}
+.f-map .fw-map {
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.f-skeleton {
+  display: inline-block;
+  width: var(--f-skeleton-width, 8rem);
+  height: 0.9em;
+  border-radius: var(--f-radius-sm);
+  background: var(--f-color-surface-muted);
+  vertical-align: middle;
+  animation: f-pulse 1.2s var(--f-ease) infinite alternate;
+}
+
+@keyframes f-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .f-expand-caret,
+  .f-pressable,
+  .f-status-icon,
+  .f-skeleton {
+    transition: none;
+    animation: none;
+  }
+  .f-pressable:active {
+    transform: none;
+  }
+}

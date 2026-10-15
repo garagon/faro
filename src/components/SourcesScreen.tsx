@@ -1,7 +1,6 @@
 import { ExternalLink } from './Ui.tsx';
 import { checkedLabel } from '../lib/time.ts';
 import type { SourceState } from '../lib/sourceStatus.ts';
-import '../styles/sources.css';
 import { pick, type Lang } from '../lib/i18n.ts';
 
 export type SourceRow = {

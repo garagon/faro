@@ -1,0 +1,153 @@
+/* The specimen page's own frame (development only). The app never loads this file. */
+.spec {
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 var(--f-space-8) var(--f-space-12);
+  background: var(--f-neutral-50);
+}
+.spec-top {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 calc(-1 * var(--f-space-8));
+  padding: var(--f-space-4) var(--f-space-8);
+  border-bottom: var(--f-hairline);
+  background: var(--f-color-surface);
+}
+.spec-top h1 {
+  font-size: var(--f-text-lg);
+}
+.spec-kicker {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+}
+.spec-section {
+  display: grid;
+  gap: var(--f-space-4);
+  max-width: 1400px;
+  margin: var(--f-space-10) auto 0;
+}
+.spec-section > h2 {
+  font-size: var(--f-text-2xl);
+}
+.spec-lead {
+  max-width: 48rem;
+  color: var(--f-color-text-subtle);
+}
+.spec-devices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--f-space-8);
+}
+.spec-device-wrap {
+  display: grid;
+  gap: var(--f-space-2);
+  margin: 0;
+}
+.spec-device-wrap figcaption {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  text-align: center;
+}
+.spec-device {
+  box-sizing: content-box;
+  width: 390px;
+  height: 844px;
+  overflow: hidden;
+  border: 10px solid var(--f-neutral-900);
+  border-radius: 44px;
+  background: var(--f-color-page);
+  box-shadow: var(--f-shadow-overlay);
+}
+.spec-desktop-box {
+  overflow: hidden;
+  border-radius: var(--f-radius-md);
+  box-shadow: var(--f-shadow-overlay);
+}
+.spec-desktop {
+  width: 1440px;
+  height: 900px;
+  transform-origin: 0 0;
+}
+.spec-block {
+  display: grid;
+  align-content: start;
+  gap: var(--f-space-3);
+  padding: var(--f-space-5);
+  border-radius: var(--f-radius-md);
+  background: var(--f-color-surface);
+}
+.spec-block h3 {
+  font-size: var(--f-text-lg);
+}
+.spec-block-note {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+}
+.spec-block-body {
+  display: grid;
+  gap: var(--f-space-3);
+  justify-items: start;
+}
+.spec-block-body > .f-call,
+.spec-block-body > .f-phone-grid,
+.spec-block-body > .f-list,
+.spec-block-body > .f-warning,
+.spec-block-body > .f-field,
+.spec-block-body > .f-section {
+  justify-self: stretch;
+}
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+  gap: var(--f-space-4);
+}
+.spec-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--f-space-3);
+  width: 100%;
+}
+.spec-swatch {
+  display: grid;
+  gap: 2px;
+  font-size: var(--f-text-sm);
+}
+.spec-swatch span {
+  height: 48px;
+  margin-bottom: var(--f-space-1);
+  border: var(--f-hairline);
+  border-radius: var(--f-radius-sm);
+}
+.spec-swatch code {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-xs);
+}
+.spec-type {
+  display: grid;
+  gap: var(--f-space-3);
+}
+.spec-type small {
+  display: block;
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+}
+.spec-space {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--f-space-3);
+}
+.spec-space span {
+  height: 24px;
+  border-radius: 2px;
+  background: var(--f-color-action);
+}
+.spec-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--f-space-4);
+}

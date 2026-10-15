@@ -16,6 +16,12 @@ test('a "none" is shown only while recent and online; otherwise it is not confir
   assert.equal(confirmFresh(none, now - 600_000, now, true, 180_000).checked, now - 600_000);
 });
 
+test('a first answer still on its way is pending online and not confirmed offline', () => {
+  const pending: HazardStatus = { key: 'tsunami', state: 'pending', level: null, count: 0 };
+  assert.equal(confirmFresh(pending, undefined, now, true, 180_000).state, 'pending');
+  assert.equal(confirmFresh(pending, undefined, now, false, 180_000).state, 'unknown');
+});
+
 test('a listed message stays listed even when old or offline', () => {
   const s = confirmFresh(listed, now - 3_600_000, now, false, 180_000);
   assert.equal(s.state, 'listed');

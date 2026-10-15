@@ -1,5 +1,6 @@
 import { inBounds, type Bounds } from './domain.ts';
 import { pick, type Lang, type Localized } from './i18n.ts';
+import { distance } from './units.ts';
 
 export type AlertType = 'EQ' | 'TC' | 'FL' | 'VO' | 'DR' | 'WF';
 export type AlertLevel = 'green' | 'orange' | 'red';
@@ -163,17 +164,17 @@ export const alertLevelLabels: Record<AlertLevel, Localized> = {
 
 /**
  * GDACS writes earthquake severity as "Magnitude 7.7M, Depth:12.647km". Shown in the reader's
- * language with rounded depth; any other wording is shown exactly as published.
+ * language and units with rounded depth; any other wording is shown exactly as published.
  */
 export function readableSeverity(text: string, lang: Lang) {
   const m = text.match(/^Magnitude\s+([\d.]+)\s*M,\s*Depth:\s*([\d.]+)\s*km$/i);
   if (!m) return text;
-  const depth = Math.round(Number(m[2]));
+  const depth = distance(Number(m[2]), lang);
   return pick(
     lang,
-    `Magnitud ${m[1]}, profundidad ${depth} km`,
-    `Magnitude ${m[1]}, depth ${depth} km`,
-    `Magnitude ${m[1]}, profundidade ${depth} km`,
+    `Magnitud ${m[1]}, profundidad ${depth}`,
+    `Magnitude ${m[1]}, depth ${depth}`,
+    `Magnitude ${m[1]}, profundidade ${depth}`,
   );
 }
 
