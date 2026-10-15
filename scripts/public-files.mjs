@@ -49,6 +49,7 @@ export function isPublicFile(path) {
       'public/icons/icon-512.png',
       'public/icons/apple-touch-icon.png',
       'public/data/coastline.json',
+      'public/data/plates.json',
       'public/about.html',
       'public/privacy.html',
       'public/pages.css',

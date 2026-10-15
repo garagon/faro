@@ -68,7 +68,7 @@ flowchart LR
   Reader --> UI[React · map and list]
   UI --> Local[(Browser storage)]
   SW[Service worker · app files only] --> UI
-  OSM[OpenStreetMap] --> UI
+  OSM[OpenFreeMap · OpenStreetMap data] --> UI
   UI --> Manual[Manual sharing]
 ```
 

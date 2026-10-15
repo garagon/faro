@@ -2,7 +2,7 @@ import type { Bounds } from './domain.ts';
 import { langTag, type Lang } from './i18n.ts';
 
 /**
- * Faro does not store map tiles: Google's terms and OpenStreetMap's tile policy forbid it, and
+ * Faro does not store map tiles: Google's terms and the map providers' policies forbid it, and
  * so does AGENTS.md. For a map without signal, Faro opens the area in Google Maps, whose app
  * downloads it with its own offline-maps feature. The address carries only a rounded centre
  * (about 1 km) and a zoom, and opens only when the person taps it.

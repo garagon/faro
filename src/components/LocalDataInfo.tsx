@@ -63,9 +63,9 @@ export default function LocalDataInfo({ lang }: { lang: Lang }) {
             <dt>{t('Conexiones externas', 'External connections', 'Conexões externas')}</dt>
             <dd>
               {t(
-                'Los catálogos sísmicos necesitan internet, pero no reciben tus datos del viaje. El mapa se carga automáticamente al abrir su vista. OpenStreetMap recibe tu IP y el área que consultas.',
-                'Earthquake catalogs need internet but do not receive your trip data. The map loads automatically when its view opens. OpenStreetMap receives your IP and the area you view.',
-                'Os catálogos sísmicos precisam de internet, mas não recebem os dados da sua viagem. O mapa carrega automaticamente ao abrir a visualização dele. O OpenStreetMap recebe seu IP e a área que você consulta.',
+                'Los catálogos sísmicos necesitan internet, pero no reciben tus datos del viaje. El mapa se carga automáticamente al abrir su vista. OpenFreeMap recibe tu IP y el área que consultas.',
+                'Earthquake catalogs need internet but do not receive your trip data. The map loads automatically when its view opens. OpenFreeMap receives your IP and the area you view.',
+                'Os catálogos sísmicos precisam de internet, mas não recebem os dados da sua viagem. O mapa carrega automaticamente ao abrir a visualização dele. O OpenFreeMap recebe seu IP e a área que você consulta.',
               )}
             </dd>
           </div>

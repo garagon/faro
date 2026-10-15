@@ -575,6 +575,11 @@
   background: #486a60;
   box-shadow: 0 1px 3px #0003;
 }
+.fw-app .fw-map-legend .fw-legend-plate {
+  width: 16px;
+  height: 0;
+  border-top: 2px solid #8a4fb8;
+}
 .fw-app .fw-map-legend .fw-legend-area {
   width: 16px;
   border: 1.5px dashed #9a6512;

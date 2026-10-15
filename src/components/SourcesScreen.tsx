@@ -193,9 +193,9 @@ export default function SourcesScreen({ lang, now, countryName, rows }: Props) {
         </h2>
         <p>
           {t(
-            'La ubicación requiere tu permiso y no se guarda automáticamente. El mapa carga sus imágenes al abrirse: OpenStreetMap recibe tu IP y el área que miras. Tus datos del viaje se guardan solo en este navegador.',
-            'Location requires your permission and is not saved automatically. The map loads its images when shown: OpenStreetMap receives your IP and the area you view. Your trip data is stored only in this browser.',
-            'A localização requer sua permissão e não é salva automaticamente. O mapa carrega suas imagens ao ser exibido: o OpenStreetMap recebe seu IP e a área que você vê. Os dados da sua viagem ficam salvos só neste navegador.',
+            'La ubicación requiere tu permiso y no se guarda automáticamente. El mapa carga sus imágenes al abrirse: OpenFreeMap recibe tu IP y el área que miras. Tus datos del viaje se guardan solo en este navegador.',
+            'Location requires your permission and is not saved automatically. The map loads its images when shown: OpenFreeMap receives your IP and the area you view. Your trip data is stored only in this browser.',
+            'A localização requer sua permissão e não é salva automaticamente. O mapa carrega suas imagens ao ser exibido: o OpenFreeMap recebe seu IP e a área que você vê. Os dados da sua viagem ficam salvos só neste navegador.',
           )}
         </p>
       </section>
@@ -206,9 +206,9 @@ export default function SourcesScreen({ lang, now, countryName, rows }: Props) {
         </h2>
         <p>
           {t(
-            'Países: datos derivados de world-countries, bajo ODbL-1.0. Costa: Natural Earth, dominio público. Mapa base: © colaboradores de OpenStreetMap.',
-            'Countries: data derived from world-countries, under ODbL-1.0. Coastline: Natural Earth, public domain. Base map: © OpenStreetMap contributors.',
-            'Países: dados derivados de world-countries, sob ODbL-1.0. Costa: Natural Earth, domínio público. Mapa base: © colaboradores do OpenStreetMap.',
+            'Países: datos derivados de world-countries, bajo ODbL-1.0. Costa: Natural Earth, dominio público. Mapa base: OpenFreeMap © OpenMapTiles, datos de los colaboradores de OpenStreetMap. Límites de placas: PB2002 (Bird, 2003), versión de Hugo Ahlenius (Nordpil), bajo ODC-By 1.0.',
+            'Countries: data derived from world-countries, under ODbL-1.0. Coastline: Natural Earth, public domain. Base map: OpenFreeMap © OpenMapTiles, data from OpenStreetMap contributors. Plate boundaries: PB2002 (Bird, 2003), as converted by Hugo Ahlenius (Nordpil), under ODC-By 1.0.',
+            'Países: dados derivados de world-countries, sob ODbL-1.0. Costa: Natural Earth, domínio público. Mapa base: OpenFreeMap © OpenMapTiles, dados dos colaboradores do OpenStreetMap. Limites de placas: PB2002 (Bird, 2003), versão de Hugo Ahlenius (Nordpil), sob ODC-By 1.0.',
           )}
         </p>
         <p className="fw-sources-links">

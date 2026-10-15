@@ -6,7 +6,7 @@
 export type OfflineRoute = 'network' | 'navigate' | 'precache' | 'runtime';
 
 // Same-origin static data that is too large to preload; stored after its first use.
-export const RUNTIME_PATHS: readonly string[] = ['/data/coastline.json'];
+export const RUNTIME_PATHS: readonly string[] = ['/data/coastline.json', '/data/plates.json'];
 
 // Public files preloaded with the build output so the shell and guidance open without a signal.
 export const PUBLIC_SHELL: readonly string[] = [
@@ -46,6 +46,9 @@ export function offlineRoute(
 export function precacheList(files: readonly string[]): string[] {
   const built = files
     .filter((f) => /\.(js|css|woff2|png|svg|webp)$/.test(f) && f !== 'sw.js')
+    // MapLibre draws the base map, which needs a connection anyway: about 1.6 MB the offline copy
+    // does not need. Offline, the map says its imagery did not load and the lists still work.
+    .filter((f) => !/(^|\/)(leaflet-)?maplibre-gl/.test(f))
     .map((f) => `/${f.replace(/^\/+/, '')}`);
   return [...new Set([...PUBLIC_SHELL, ...built])].sort();
 }

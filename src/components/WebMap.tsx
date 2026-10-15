@@ -11,6 +11,28 @@ import { directionsUrl, type Embassy } from '../lib/embassies.ts';
 import { displayPlace, type Quake, type Bounds } from '../lib/domain.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 export type MapView = { lat: number; lng: number; zoom: number; key: number };
+// A light, low-contrast style, so earthquakes, warnings and areas stand out on it.
+const BASE_STYLE = 'https://tiles.openfreemap.org/styles/positron';
+const BASE_ATTRIBUTION =
+  '<a href="https://openfreemap.org" target="_blank" rel="noreferrer">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noreferrer">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>';
+type GlMap = import('maplibre-gl').Map;
+/** Map labels in the reader's language, then the Latin-script name, then the local name. */
+function labelIn(gl: GlMap, lang: Lang) {
+  for (const layer of gl.getStyle().layers ?? []) {
+    if (layer.type !== 'symbol') continue;
+    // Only place-name labels; road numbers and other fields stay as they are.
+    const field = gl.getLayoutProperty(layer.id, 'text-field');
+    if (!field || !JSON.stringify(field).includes('name')) continue;
+    gl.setLayoutProperty(layer.id, 'text-field', [
+      'coalesce',
+      ['get', `name:${lang}`],
+      ['get', 'name:latin'],
+      ['get', 'name'],
+    ]);
+  }
+}
+const PLATES_ATTRIBUTION =
+  '<a href="https://github.com/fraxen/tectonicplates" target="_blank" rel="noreferrer">PB2002 (Bird, 2003)</a>';
 export type Geo = { lat: number; lng: number; accuracy: number; at: number };
 /** A point published by a hazard source. Its position is the source's, not an affected area. */
 export type MapHazard = {
@@ -69,7 +91,8 @@ export default function WebMap({
     extras = useRef<L.LayerGroup | null>(null),
     hazardLayer = useRef<L.LayerGroup | null>(null),
     areaLayer = useRef<L.LayerGroup | null>(null),
-    callback = useRef({ onSelect, onBounds });
+    callback = useRef({ onSelect, onBounds }),
+    glMap = useRef<GlMap | null>(null);
   callback.current = { onSelect, onBounds };
   useEffect(() => {
     if (!el.current) return;
@@ -132,19 +155,73 @@ export default function WebMap({
   useEffect(() => {
     if (!map.current) return;
     setTileError(false);
-    const layer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      updateWhenIdle: true,
-      updateWhenZooming: false,
-      referrerPolicy: 'strict-origin-when-cross-origin',
-      attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    })
-      .on('tileerror', () => setTileError(true))
-      .addTo(map.current);
+    let layer: L.Layer | null = null;
+    let gone = false;
+    // The base map: OpenFreeMap vector tiles (OpenStreetMap data; free, no key, no request limit),
+    // drawn by MapLibre inside Leaflet. Loaded after the markers, so the first screen never waits
+    // for it; offline or blocked, the markers and the list still work and the map says so.
+    void (async () => {
+      try {
+        const [{ setWorkerUrl }, { default: workerUrl }] = await Promise.all([
+          import('maplibre-gl'),
+          import('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'),
+          import('maplibre-gl/dist/maplibre-gl.css'),
+        ]);
+        setWorkerUrl(workerUrl);
+        await import('@maplibre/maplibre-gl-leaflet');
+        if (gone || !map.current) return;
+        const base = L.maplibreGL({
+          style: BASE_STYLE,
+          attributionControl: { customAttribution: BASE_ATTRIBUTION },
+        });
+        base.addTo(map.current);
+        const gl = base.getMaplibreMap();
+        gl.on('error', () => setTileError(true));
+        gl.on('load', () => labelIn(gl, langRef.current));
+        glMap.current = gl;
+        layer = base;
+      } catch {
+        if (!gone) setTileError(true);
+      }
+    })();
     return () => {
-      layer.off();
-      layer.remove();
+      gone = true;
+      glMap.current = null;
+      layer?.remove();
+    };
+  }, []);
+  // Place names follow the reader's language when the map has them.
+  const langRef = useRef(lang);
+  langRef.current = lang;
+  useEffect(() => {
+    if (glMap.current?.isStyleLoaded()) labelIn(glMap.current, lang);
+  }, [lang]);
+  // Tectonic plate boundaries, as context for where earthquakes cluster. Drawn under the markers.
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    let layer: L.GeoJSON | null = null;
+    const controller = new AbortController();
+    if (!m.getPane('plates')) {
+      const pane = m.createPane('plates');
+      pane.style.zIndex = '350';
+      pane.style.pointerEvents = 'none';
+    }
+    fetch('/data/plates.json', { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : Promise.reject(Error('plates'))))
+      .then((data: GeoJSON.FeatureCollection) => {
+        layer = L.geoJSON(data, {
+          pane: 'plates',
+          interactive: false,
+          attribution: PLATES_ATTRIBUTION,
+          style: { color: '#8a4fb8', weight: 1.4, opacity: 0.6 },
+        }).addTo(m);
+      })
+      // Context only: without it the map, markers and list are unchanged.
+      .catch(() => {});
+    return () => {
+      controller.abort();
+      layer?.remove();
     };
   }, []);
   useEffect(() => {

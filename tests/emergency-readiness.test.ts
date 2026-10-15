@@ -69,11 +69,16 @@ test('offline storage never serves official data, maps or other sites from cache
   assert.equal(route(`${origin}/api/emsc`, 'navigate'), 'network');
   assert.equal(route('https://earthquake.usgs.gov/feed.geojson'), 'network');
   assert.equal(route('https://tile.openstreetmap.org/1/1/1.png'), 'network');
+  assert.equal(
+    route('https://tiles.openfreemap.org/planet/20261008_001001_pt/5/8/15.pbf'),
+    'network',
+  );
   assert.equal(route(`${origin}/assets/main-abc.js`, 'cors', 'POST'), 'network');
   assert.equal(route(`${origin}/`, 'navigate'), 'navigate');
   assert.equal(route(`${origin}/assets/main-abc.js`), 'precache');
   assert.equal(route(`${origin}/assets/main-abc.js?x=1`), 'network');
   assert.equal(route(`${origin}/data/coastline.json`), 'runtime');
+  assert.equal(route(`${origin}/data/plates.json`), 'runtime');
   assert.ok(!stored.has('/sw.js'));
   for (const file of PUBLIC_SHELL) assert.ok(stored.has(file));
 });
@@ -217,5 +222,27 @@ test('emergency numbers are re-reviewed at least every 90 days', async () => {
     if (!d.emergency) continue;
     const age = (Date.now() - Date.parse(d.emergency.reviewedAt)) / 86_400_000;
     assert.ok(age <= 90, `${d.code} emergency numbers reviewed ${Math.round(age)} days ago`);
+  }
+});
+
+test('the map library stays out of the offline copy; the plate lines are valid and small', async () => {
+  const stored = precacheList([
+    'assets/start-a.js',
+    'assets/maplibre-gl-b.js',
+    'assets/maplibre-gl-worker-c.js',
+    'assets/maplibre-gl-d.css',
+    'assets/leaflet-maplibre-gl-e.js',
+  ]);
+  assert.ok(stored.includes('/assets/start-a.js'));
+  assert.ok(!stored.some((f) => /maplibre/.test(f)));
+  const { readFile } = await import('node:fs/promises');
+  const raw = await readFile('public/data/plates.json', 'utf8');
+  assert.ok(raw.length < 150_000);
+  const plates = JSON.parse(raw);
+  assert.equal(plates.type, 'FeatureCollection');
+  assert.ok(plates.features.length > 200);
+  for (const f of plates.features) {
+    assert.equal(f.geometry.type, 'LineString');
+    for (const [x, y] of f.geometry.coordinates) assert.ok(Math.abs(x) <= 180 && Math.abs(y) <= 90);
   }
 });

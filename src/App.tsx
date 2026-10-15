@@ -1793,6 +1793,14 @@ export default function App() {
                           'Círculo: quantidade de terremotos',
                         )}
                       </span>
+                      <span>
+                        <i className="fw-legend-plate" aria-hidden="true" />
+                        {t(
+                          'Línea morada: límite entre placas tectónicas',
+                          'Purple line: tectonic plate boundary',
+                          'Linha roxa: limite entre placas tectônicas',
+                        )}
+                      </span>
                       {mapHazards.length > 0 && (
                         <span>
                           <i className="fw-legend-hazard" aria-hidden="true" />
@@ -2611,9 +2619,9 @@ export default function App() {
                     'Recomendações: SENAPRED, CDC, NOAA, Ready.gov e FCC',
                   )
                 : t(
-                    'Sismos: IGC-UP / EMSC / USGS · Tsunami y ciclones: NOAA · Avisos: servicios meteorológicos y GDACS · Mapa: OpenStreetMap',
-                    'Earthquakes: IGC-UP / EMSC / USGS · Tsunami and cyclones: NOAA · Warnings: weather services and GDACS · Map: OpenStreetMap',
-                    'Terremotos: IGC-UP / EMSC / USGS · Tsunami e ciclones: NOAA · Avisos: serviços meteorológicos e GDACS · Mapa: OpenStreetMap',
+                    'Sismos: IGC-UP / EMSC / USGS · Tsunami y ciclones: NOAA · Avisos: servicios meteorológicos y GDACS · Mapa: OpenFreeMap y OpenStreetMap',
+                    'Earthquakes: IGC-UP / EMSC / USGS · Tsunami and cyclones: NOAA · Warnings: weather services and GDACS · Map: OpenFreeMap and OpenStreetMap',
+                    'Terremotos: IGC-UP / EMSC / USGS · Tsunami e ciclones: NOAA · Avisos: serviços meteorológicos e GDACS · Mapa: OpenFreeMap e OpenStreetMap',
                   )}
           </span>
         </footer>

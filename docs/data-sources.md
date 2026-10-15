@@ -6,7 +6,8 @@
 | [IGC / Universidad de Panamá](https://sismosgeociencias.up.ac.pa/)                              | Same-origin adapter parses the public table                                        | Panama/regional records. Not a contracted API; markup can change. Event revision time is not supplied                  |
 | [NOAA/PTWC](https://www.tsunami.gov/?page=product_list)                                         | Same-origin adapter reads WEPA40, WEPA42, WECA41, WECA43 descriptors and bulletins | International Pacific/Caribbean products, not a complete local warning service. Original evaluation remains in English |
 | [Natural Earth](https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-coastline/) | Bundled generalized coastline, local distance calculation                          | Approximate mapping; not a hazard, inundation or evacuation map                                                        |
-| [OpenStreetMap](https://www.openstreetmap.org/copyright)                                        | Browser tile requests for the visible map                                          | Best-effort external service; attribution, origin Referer and caching required                                         |
+| [OpenFreeMap](https://openfreemap.org/) (OpenStreetMap data)                                    | Browser requests for the visible map's vector tiles, drawn by MapLibre             | Free public instance with no key or request limit and no SLA; attribution, origin Referer and caching required         |
+| [PB2002 plate boundaries](https://github.com/fraxen/tectonicplates)                             | Bundled simplified lines (`public/data/plates.json`), drawn under the markers      | Context only: where plates meet, not a hazard or fault map; ODC-By 1.0                                                 |
 
 ## Sources added on 2026-10-13
 
