@@ -474,14 +474,52 @@
     flex-wrap: wrap;
   }
 }
-/* Local help: the numbers as on the emergency screen, the main line first and full width, then
-   the others in even columns wide enough for an international number. */
+/* Local help: the main line first and full width, reading "Call 911" as on the home and
+   emergency screens; the others share each row evenly, so no row ends in an empty column. */
 .fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone:first-child {
-  grid-column: 1 / -1;
+.fw-main[data-screen='help'] .fw-emergency-numbers {
+  container-type: inline-size;
+}
+/* One per row on a phone, two side by side on medium cards, four on wide ones: rows stay even. */
+.fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+@container (min-width: 460px) {
+  .fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone {
+    flex-basis: calc(50% - 4px);
+  }
+}
+@container (min-width: 960px) {
+  .fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone {
+    flex-basis: calc(25% - 6px);
+  }
+}
+.fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone[data-tone='call'] {
+  flex-basis: 100%;
+  min-height: 64px;
+  padding: 10px 20px;
+}
+.fw-main[data-screen='help'] .fw-phone[data-tone='call'] > span {
+  display: flex;
+  flex-direction: column-reverse;
+}
+.fw-main[data-screen='help'] .fw-phone[data-tone='call'] strong {
+  font-size: 22px;
+}
+/* Saved countries: readable chips, never the country already on screen. */
+.fw-app .fw-saved small,
+.fw-app .fw-saved button {
+  font-size: 13px;
+}
+.fw-app .fw-saved button {
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 16px;
 }
 /* Phone menu: icons on one line whether the label takes one line or two. */
 @media (max-width: 760px) {

@@ -893,6 +893,9 @@ export default function App() {
       (live.generated > 0 && live.now - live.generated > 600000),
     dirty =
       Math.abs(bounds.west - pending.west) > 0.5 || Math.abs(bounds.north - pending.north) > 0.5;
+  const otherSaved = savedCountries.filter(
+    (c) => c !== country && (c === 'WORLD' || countries.some((x) => x.code === c)),
+  );
   const saveCountry = () => {
     const list = savedCountries.includes(country)
       ? savedCountries.filter((x) => x !== country)
@@ -1434,16 +1437,15 @@ export default function App() {
             </p>
           )}
         </div>
-        {screen !== 'guide' && screen !== 'status' && savedCountries.length > 0 && (
+        {/* One-tap switches to other saved countries; the one on screen is not repeated. */}
+        {screen !== 'guide' && screen !== 'status' && otherSaved.length > 0 && (
           <div className="fw-saved">
             <small>{t('Guardados', 'Saved', 'Salvos')}</small>
-            {savedCountries
-              .filter((c) => c === 'WORLD' || countries.some((x) => x.code === c))
-              .map((c) => (
-                <button key={c} onClick={() => changeCountry(c)}>
-                  {c === 'WORLD' ? t('Mundo', 'World', 'Mundo') : names.of(c)}
-                </button>
-              ))}
+            {otherSaved.map((c) => (
+              <button key={c} onClick={() => changeCountry(c)}>
+                {c === 'WORLD' ? t('Mundo', 'World', 'Mundo') : names.of(c)}
+              </button>
+            ))}
           </div>
         )}
         {/* A source that answers but whose newest record is more than a day old: said with its

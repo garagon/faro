@@ -34,7 +34,7 @@ export default function EmergencyNumbers({ country, lang }: { country: string; l
             <PhoneButton
               key={n.number}
               href={telHref(n.number)}
-              number={n.number}
+              number={i === 0 ? `${t('Llamar al', 'Call', 'Ligar para o')} ${n.number}` : n.number}
               label={n.label[langIndex(lang)]}
               tone={i === 0 ? 'call' : 'neutral'}
             />
