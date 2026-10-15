@@ -157,7 +157,11 @@ export default function EmbassyPanel({
           </p>
         </div>
         <button className="fw-text" onClick={onProfile}>
-          {t('Editar mi perfil', 'Edit my profile', 'Editar meu perfil')}
+          {t(
+            'Editar mis datos en Mi viaje',
+            'Edit my details in My trip',
+            'Editar meus dados em Minha viagem',
+          )}
         </button>
       </header>
       <div className="fw-consular-filters">
@@ -314,7 +318,9 @@ export default function EmbassyPanel({
               </li>
             )}
             {destinationConsularDirectories[country]?.map((d) => {
-              const [agency, what] = splitName(d.name);
+              const [agency, what] = splitName(
+                typeof d.name === 'string' ? d.name : d.name[langIndex(lang)],
+              );
               return (
                 <li key={d.url}>
                   <a href={d.url} target="_blank" rel="noreferrer">

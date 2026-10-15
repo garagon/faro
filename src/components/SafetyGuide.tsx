@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { ArrowUpRightIcon, DownloadSimpleIcon, ArrowRightIcon } from '@phosphor-icons/react';
 import type { Lang } from '../lib/resources.ts';
 import '../styles/guide.css';
-import { langIndex, pick, type Localized } from '../lib/i18n.ts';
+import { langIndex, langTag, pick, type Localized } from '../lib/i18n.ts';
 
 type Copy = Localized;
 // "During" uses the attributed ShakeOut graphic and "kit" its own checklist drawing.
@@ -196,9 +196,9 @@ const sections: Section[] = [
           'Evacue assim que puder se mover com segurança',
         ],
         body: [
-          'Ante señales naturales, ve a terreno alto o tierra adentro sin esperar una alerta. Si hay una orden oficial, sigue la evacuación indicada.',
-          'With natural warning signs, go to higher ground or inland without waiting for an alert. Follow any official evacuation order.',
-          'Diante de sinais naturais, vá para um terreno alto ou para o interior sem esperar um alerta. Se houver uma ordem oficial, siga a evacuação indicada.',
+          'En la playa o junto al mar, sal después de cualquier sismo, aunque sea leve. Ante señales naturales, ve a terreno alto o tierra adentro sin esperar una alerta; si no puedes llegar, sube lo más alto posible. Si hay una orden oficial, sigue la evacuación indicada.',
+          'On the beach or by the water, leave after any earthquake, even a weak one. With natural warning signs, go to higher ground or inland without waiting for an alert; if you cannot get there, go as high as possible. Follow any official evacuation order.',
+          'Na praia ou junto ao mar, saia depois de qualquer terremoto, mesmo fraco. Diante de sinais naturais, vá para um terreno alto ou para o interior sem esperar um alerta; se não conseguir chegar, suba o mais alto possível. Se houver uma ordem oficial, siga a evacuação indicada.',
         ],
       },
       {
@@ -208,9 +208,9 @@ const sections: Section[] = [
           'Espere a autorização para voltar',
         ],
         body: [
-          'No regreses hasta que lo autorice la autoridad local. La primera ola puede no ser la mayor.',
-          'Do not return until local officials allow it. The first wave may not be the largest.',
-          'Não volte até que a autoridade local autorize. A primeira onda pode não ser a maior.',
+          'No regreses hasta que lo autorice la autoridad local. La primera ola puede no ser la mayor y el peligro puede durar horas o días.',
+          'Do not return until local officials allow it. The first wave may not be the largest, and the danger can last hours or days.',
+          'Não volte até que a autoridade local autorize. A primeira onda pode não ser a maior, e o perigo pode durar horas ou dias.',
         ],
       },
     ],
@@ -852,6 +852,20 @@ function guideText(lang: Lang, country: string) {
     'FARO — EMERGENCY GUIDE\nGeneral information. Follow local instructions.',
     'FARO — GUIA DE EMERGÊNCIA\nInformação geral. Siga as instruções locais.',
   );
+  // A printed or offline copy needs the numbers to call and the day it was saved.
+  const saved = `${pick(lang, 'Guardada el', 'Saved on', 'Salva em')} ${new Intl.DateTimeFormat(langTag(lang), { dateStyle: 'long' }).format(Date.now())}.`;
+  const numbers = local?.emergency
+    ? [
+        `${pick(lang, 'Emergencias', 'Emergency numbers', 'Números de emergência')} · ${new Intl.DisplayNames([langTag(lang)], { type: 'region' }).of(country) ?? country}:`,
+        ...local.emergency.numbers.map((n) => `${n.number} — ${n.label[i]}`),
+        pick(
+          lang,
+          'Para llamar desde un teléfono en el país.',
+          'For calls from a phone in the country.',
+          'Para ligar de um telefone no país.',
+        ),
+      ].join('\n')
+    : '';
   const content = sections.map((section) => {
     if (section.id === 'kit') return kitText(lang, []);
     const lines = [
@@ -892,7 +906,7 @@ function guideText(lang: Lang, country: string) {
     content.push(
       `${pick(lang, 'Indicaciones locales', 'Local guidance', 'Orientações locais')}: ${local.civilProtection.name}\n${local.civilProtection.url}`,
     );
-  return [title, ...content].join('\n\n');
+  return [`${title}\n${saved}`, numbers, ...content].filter(Boolean).join('\n\n');
 }
 export default function SafetyGuide({
   lang,

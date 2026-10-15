@@ -32,9 +32,9 @@ export default function SetupCard({ lang, countryName, onSave, onMore, onDismiss
         </p>
         <button className="fw-text fw-home-setup-more" onClick={onMore}>
           {t(
-            'Completar perfil con nombre y contacto',
-            'Add name and contact to your profile',
-            'Completar perfil com nome e contato',
+            'Añadir nombre y contacto en Mi viaje',
+            'Add name and contact in My trip',
+            'Adicionar nome e contato em Minha viagem',
           )}
         </button>
       </div>

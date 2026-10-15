@@ -35,6 +35,7 @@ import {
   kitKey,
   kitPlanKey,
   kitSources,
+  itemDetail,
   kitText,
   parseKit,
   parseKitPlan,
@@ -370,15 +371,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
                       <Icon className="fw-kit-item-icon" size={22} aria-hidden="true" />
                       <span>
                         <strong>{item.title[i]}</strong>
-                        <small>
-                          {item.id === 'water'
-                            ? t(
-                                `${water.minimum} L para tu reserva. Adapta la cantidad al clima y a tus necesidades.`,
-                                `${water.minimum} L for your supplies. Adapt the amount to the climate and your needs.`,
-                                `${water.minimum} L para seus suprimentos. Ajuste a quantidade ao clima e às suas necessidades.`,
-                              )
-                            : item.detail[i]}
-                        </small>
+                        <small>{itemDetail(item, lang, plan)}</small>
                       </span>
                     </label>
                   );

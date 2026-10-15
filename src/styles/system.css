@@ -261,11 +261,6 @@
 .fw-app .fw-safety-index select {
   min-height: 44px;
 }
-.fw-app .fw-footer .fw-footer-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
 .fw-app .fw-safety-download button {
   min-height: 44px;
 }
@@ -460,4 +455,104 @@
   .fw-app :is(button, a) svg {
     color: inherit;
   }
+}
+/* The setup card on the home: text and nationality form side by side only when both fit; on
+   tablets and with the sidebar the form goes under the text instead of squeezing it. */
+@media (min-width: 761px) {
+  .fw-app .fw-home-setup {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px 28px;
+  }
+  .fw-app .fw-home-setup-text {
+    flex: 1 1 20rem;
+    min-width: 0;
+  }
+  .fw-app .fw-home-setup-form {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+  }
+}
+/* Local help: the numbers as on the emergency screen, the main line first and full width, then
+   the others in even columns wide enough for an international number. */
+.fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr));
+}
+.fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone:first-child {
+  grid-column: 1 / -1;
+}
+/* Phone menu: icons on one line whether the label takes one line or two. */
+@media (max-width: 760px) {
+  .fw-app .fw-header nav button {
+    justify-content: flex-start;
+  }
+}
+.fw-app .fw-kit-count {
+  white-space: nowrap;
+}
+/* A link inside a sentence stays part of the line: 44px boxes opened gaps mid-sentence. WCAG
+   exempts links in running text from the target size; standalone links keep it. */
+.fw-app :is(p, small, li) > .fw-ext {
+  display: inline;
+  min-height: 0;
+}
+.fw-app :is(p, small, li) > .fw-ext > svg {
+  vertical-align: -2px;
+}
+/* Map legend: one entry per line part, each with a small copy of its map symbol. */
+.fw-app .fw-map-foot > .fw-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.fw-app .fw-map-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.fw-app .fw-map-legend i {
+  flex: none;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+}
+.fw-app .fw-map-legend .fw-legend-pin {
+  border: 2px solid #fff;
+  border-radius: 3px;
+  background: #28658a;
+  box-shadow: 0 0 0 1px #28658a55;
+}
+.fw-app .fw-map-legend .fw-legend-count {
+  border-radius: 50%;
+  background: #52616e;
+  box-shadow: 0 0 0 3px #dce1e7;
+}
+.fw-app .fw-map-legend .fw-legend-hazard {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #486a60;
+  box-shadow: 0 1px 3px #0003;
+}
+.fw-app .fw-map-legend .fw-legend-area {
+  width: 16px;
+  border: 1.5px dashed #9a6512;
+  background: #e0a33a1f;
+}
+/* On the narrowest phones the profile shortcut was squeezed to 27px; "My trip" in the menu
+   opens the same screen. */
+@media (max-width: 340px) {
+  .fw-app .fw-header .fw-profile-button {
+    display: none;
+  }
+}
+/* The warned area under a warning's title, so several warnings of one kind can be told apart. */
+.fw-app .fw-official-text .fw-official-area {
+  display: block;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--board-muted, #4f625c);
 }

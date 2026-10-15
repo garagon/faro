@@ -4,6 +4,7 @@ import { ExternalLink } from './Ui.tsx';
 import { checkedLabel } from '../lib/time.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import {
+  floodWarnings,
   instructionLines,
   nationalSignal,
   readableEvent,
@@ -65,6 +66,8 @@ type Props = {
   /** Rows opened from elsewhere (the flood row), by DOM id. */
   open: Set<string>;
   onToggle: (rowId: string) => void;
+  /** Opens Faro's own flood steps, readable offline in the person's language. */
+  onFloodGuide?: () => void;
 };
 
 /**
@@ -80,6 +83,7 @@ export default function OfficialNow({
   services,
   open,
   onToggle,
+  onFloodGuide,
 }: Props) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
     idx = langIndex(lang);
@@ -351,6 +355,12 @@ export default function OfficialNow({
                         <span className="fw-official-dot" aria-hidden="true" />
                         <span className="fw-official-text">
                           <strong lang="es">{readableEvent(w.event)}</strong>
+                          {/* Several warnings of one kind differ by area: it shows in the row. */}
+                          {w.areas && (
+                            <span className="fw-official-area" lang="es">
+                              {w.areas.length > 90 ? `${w.areas.slice(0, 88).trimEnd()}…` : w.areas}
+                            </span>
+                          )}
                           <span className="fw-official-facts">
                             <b>{severityLabels[w.severity][idx]}</b>
                             <span>
@@ -376,6 +386,17 @@ export default function OfficialNow({
                               'Ler o aviso completo',
                             ),
                           },
+                        )}
+                        {/* The agency's steps are in Spanish; Faro's flood steps are not, and
+                            work without a connection. */}
+                        {lang !== 'es' && onFloodGuide && floodWarnings([w]).length > 0 && (
+                          <button type="button" className="fw-text" onClick={onFloodGuide}>
+                            {t(
+                              '',
+                              'Faro’s flood steps in English',
+                              'Passos do Faro para inundações',
+                            )}
+                          </button>
                         )}
                       </div>
                     </li>

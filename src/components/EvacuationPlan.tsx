@@ -90,10 +90,11 @@ export default function EvacuationPlan({ country, lang }: { country: string; lan
         </a>
       )}
       <small>
+        {/* The general steps come from Chile's SENAPRED and NOAA; Chile's maps are only shown there. */}
         {t(
-          'Orientación general: SENAPRED y NOAA. Los planos de Chile solo corresponden a Chile.',
-          'General guidance: SENAPRED and NOAA. Chilean maps apply only to Chile.',
-          'Orientação geral: SENAPRED e NOAA. Os mapas do Chile valem só para o Chile.',
+          'Orientación general: SENAPRED (Chile) y NOAA.',
+          'General guidance: SENAPRED (Chile) and NOAA.',
+          'Orientação geral: SENAPRED (Chile) e NOAA.',
         )}
       </small>
     </section>

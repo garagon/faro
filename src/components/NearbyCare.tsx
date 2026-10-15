@@ -77,7 +77,13 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
                   <a href={s.url} target="_blank" rel="noreferrer">
                     <span>
                       <strong>{agency}</strong>
-                      {what && <span>{what}</span>}
+                      {/* Official pages in Spanish: said for English and Portuguese readers. */}
+                      {what && (
+                        <span>
+                          {what}
+                          {t('', ' (in Spanish)', ' (em espanhol)')}
+                        </span>
+                      )}
                     </span>
                     <small>
                       {hostOf(s.url)}

@@ -324,6 +324,26 @@ export function planSummary(lang: Lang, plan: KitPlan) {
     `Para ${people} e ${plan.days} dias. Água: pelo menos ${minimum} L (SENAPRED, 2 L por pessoa por dia). O Ready.gov recomenda ${ready} L, para beber e para higiene.`,
   );
 }
+/** An item's line, with water and food sized to the person's plan when there is one. */
+export function itemDetail(item: KitItem, lang: Lang, plan?: KitPlan) {
+  if (plan && item.id === 'water') {
+    const { minimum } = waterLitres(plan);
+    return pick(
+      lang,
+      `${minimum} L para tu reserva. Adapta la cantidad al clima y a tus necesidades.`,
+      `${minimum} L for your supplies. Adapt the amount to the climate and your needs.`,
+      `${minimum} L para seus suprimentos. Ajuste a quantidade ao clima e às suas necessidades.`,
+    );
+  }
+  if (plan && item.id === 'food')
+    return pick(
+      lang,
+      `Para ${plan.days} días. Considera alergias y un abrelatas si hace falta.`,
+      `For ${plan.days} days. Consider allergies and a can opener if needed.`,
+      `Para ${plan.days} dias. Leve em conta alergias e um abridor de latas, se precisar.`,
+    );
+  return item.detail[langIndex(lang)];
+}
 export function kitText(lang: Lang, checked: string[], plan?: KitPlan) {
   const i = langIndex(lang);
   const shopping = plan ? shoppingList(checked, plan) : [];
@@ -336,9 +356,9 @@ export function kitText(lang: Lang, checked: string[], plan?: KitPlan) {
     ),
     pick(
       lang,
-      'Prepara reservas para 72 horas. Lleva una mochila que puedas cargar. No retrases una evacuación para buscarla.',
-      'Prepare supplies for 72 hours. Keep your carry bag manageable. Do not delay evacuation to collect it.',
-      'Prepare suprimentos para 72 horas. Tenha uma mochila que você consiga carregar. Não atrase uma evacuação para buscá-la.',
+      `Prepara reservas para ${plan?.days ?? 3} días. Lleva una mochila que puedas cargar. No retrases una evacuación para buscarla.`,
+      `Prepare supplies for ${plan?.days ?? 3} days. Keep your carry bag manageable. Do not delay evacuation to collect it.`,
+      `Prepare suprimentos para ${plan?.days ?? 3} dias. Tenha uma mochila que você consiga carregar. Não atrase uma evacuação para buscá-la.`,
     ),
     ...(plan ? [planSummary(lang, plan)] : []),
     ...(plan?.hazards.length
@@ -347,7 +367,8 @@ export function kitText(lang: Lang, checked: string[], plan?: KitPlan) {
           .map((h) => `${h.label[i]}: ${h.tip[i]}`)
       : []),
     ...kitItemsFor(plan).map(
-      (item) => `${checked.includes(item.id) ? '[x]' : '[ ]'} ${item.title[i]} — ${item.detail[i]}`,
+      (item) =>
+        `${checked.includes(item.id) ? '[x]' : '[ ]'} ${item.title[i]} — ${itemDetail(item, lang, plan)}`,
     ),
     ...(shopping.length
       ? [

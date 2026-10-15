@@ -34,11 +34,7 @@ export default {
     // Listed on the SINAPROC homepage as "WhatsApp 6998-4809", from any phone, 24 hours.
     whatsapp: {
       number: '+507 6998-4809',
-      label: [
-        'SINAPROC · WhatsApp, 24 horas',
-        'SINAPROC · WhatsApp, 24 hours',
-        'SINAPROC · WhatsApp, 24 horas',
-      ],
+      label: ['SINAPROC · WhatsApp 24 h', 'SINAPROC · WhatsApp 24 h', 'SINAPROC · WhatsApp 24 h'],
       source: 'https://www.sinaproc.gob.pa/',
     },
     note: [

@@ -120,9 +120,12 @@ export default function TravelerStatus({
         : null,
   });
   const [dirty, setDirty] = useState(false),
-    [confirmClear, setConfirmClear] = useState(false);
+    [confirmClear, setConfirmClear] = useState(false),
+    // Only the message language changed since the review: said as such, not as "your changes".
+    [languageOnly, setLanguageOnly] = useState(false);
   const change = () => {
     setDirty(true);
+    setLanguageOnly(false);
     setFeedback('');
   };
   const quickFields = (): QuickFields => ({ status, context, connection, note, needs, companions });
@@ -164,6 +167,7 @@ export default function TravelerStatus({
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     if (!status) return;
+    setLanguageOnly(false);
     const at = Date.now();
     const row = { ...makeRecord(at), id: newId() };
     const result = prepareCheckIn(row, history);
@@ -687,6 +691,7 @@ export default function TravelerStatus({
                 onChange={(e) => {
                   setMessageLanguage(e.target.value as Lang);
                   change();
+                  setLanguageOnly(true);
                 }}
               >
                 <option value="es">Español</option>
@@ -709,23 +714,29 @@ export default function TravelerStatus({
               {((prepared && (changed || expired)) || notSaved) && (
                 <div className="fw-message-notice" role="status">
                   <p>
-                    {changed
+                    {changed && languageOnly
                       ? t(
-                          'La vista previa incluye tus cambios. Confirma el mensaje antes de compartir.',
-                          'The preview includes your changes. Confirm the message before sharing.',
-                          'A prévia inclui suas alterações. Confirme a mensagem antes de compartilhar.',
+                          'Cambiaste el idioma del mensaje. Revísalo de nuevo antes de compartir.',
+                          'You changed the message language. Review it again before sharing.',
+                          'Você mudou o idioma da mensagem. Revise de novo antes de compartilhar.',
                         )
-                      : expired
+                      : changed
                         ? t(
-                            'Revisa cómo estás antes de volver a compartir este mensaje.',
-                            'Review how you are before sharing this message again.',
-                            'Revise como você está antes de compartilhar esta mensagem de novo.',
+                            'La vista previa incluye tus cambios. Confirma el mensaje antes de compartir.',
+                            'The preview includes your changes. Confirm the message before sharing.',
+                            'A prévia inclui suas alterações. Confirme a mensagem antes de compartilhar.',
                           )
-                        : t(
-                            'No se pudo guardar. Puedes compartirlo ahora; se perderá al cerrar o recargar Faro.',
-                            'Could not save. You can share it now; it will be lost if you close or reload Faro.',
-                            'Não foi possível salvar. Você pode compartilhá-la agora; ela será perdida se você fechar ou recarregar o Faro.',
-                          )}
+                        : expired
+                          ? t(
+                              'Revisa cómo estás antes de volver a compartir este mensaje.',
+                              'Review how you are before sharing this message again.',
+                              'Revise como você está antes de compartilhar esta mensagem de novo.',
+                            )
+                          : t(
+                              'No se pudo guardar. Puedes compartirlo ahora; se perderá al cerrar o recargar Faro.',
+                              'Could not save. You can share it now; it will be lost if you close or reload Faro.',
+                              'Não foi possível salvar. Você pode compartilhá-la agora; ela será perdida se você fechar ou recarregar o Faro.',
+                            )}
                   </p>
                   {(changed || expired) && (
                     <button onClick={review}>
@@ -752,12 +763,23 @@ export default function TravelerStatus({
                   <p key={index}>{paragraph}</p>
                 ))}
               </div>
+              {/* On a phone the form's review button is far above; this one is next to sharing. */}
+              {!prepared && status && (
+                <button
+                  type="button"
+                  className="fw-primary fw-review-here"
+                  onClick={() => form.current?.requestSubmit()}
+                >
+                  {t('Revisar mensaje', 'Review message', 'Revisar mensagem')}
+                  <ArrowRightIcon size={17} />
+                </button>
+              )}
               {!prepared && (
                 <p className="fw-draft-hint">
                   {t(
-                    'Pulsa «Revisar mensaje» antes de compartir.',
-                    'Select “Review message” before sharing.',
-                    'Use o botão “Revisar mensagem” antes de compartilhar.',
+                    'Revisa el mensaje antes de compartir.',
+                    'Review the message before sharing.',
+                    'Revise a mensagem antes de compartilhar.',
                   )}
                 </p>
               )}

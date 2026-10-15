@@ -57,13 +57,23 @@ test('help text is cleared when moving from a help message to a non-help one', (
 });
 
 test('ready text follows the message language, edited text does not', () => {
-  const es = applyQuickMessage(empty, preset('signal'), null, 'es');
-  assert.equal(
-    translateQuickMessage(es, preset('signal'), 'es', 'en').note,
-    'I may be slow to reply.',
-  );
+  const es = applyQuickMessage(empty, preset('safe'), null, 'es');
+  assert.equal(translateQuickMessage(es, preset('safe'), 'es', 'en').note, "I'm not injured.");
   const edited = { ...es, note: 'Escribo desde el hotel.' };
-  assert.equal(translateQuickMessage(edited, preset('signal'), 'es', 'en').note, edited.note);
+  assert.equal(translateQuickMessage(edited, preset('safe'), 'es', 'en').note, edited.note);
+});
+
+test('a reason set by one ready message does not stay with the next one', () => {
+  const evacuating = applyQuickMessage(empty, preset('evacuating'), null, 'en');
+  assert.equal(evacuating.context, 'evacuation');
+  const medical = applyQuickMessage(evacuating, preset('medical'), preset('evacuating'), 'en');
+  assert.equal(medical.context, '');
+  // A reason the person chose is theirs and stays.
+  const chosen = { ...evacuating, context: 'earthquake' as const };
+  assert.equal(
+    applyQuickMessage(chosen, preset('medical'), preset('evacuating'), 'en').context,
+    'earthquake',
+  );
 });
 
 test('every ready message produces a complete message in both languages', () => {

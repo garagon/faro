@@ -2,7 +2,8 @@ import type { Localized } from './destinations/types.ts';
 
 export type FamilyLink = {
   id: string;
-  name: string;
+  /** "Agency · service", in each language. */
+  name: Localized;
   description: Localized;
   url: Localized;
   reviewedAt: string;
@@ -14,7 +15,11 @@ export type FamilyLink = {
 export const familyLinks: readonly FamilyLink[] = [
   {
     id: 'icrc-rfl',
-    name: 'CICR · Restablecimiento del Contacto entre Familiares',
+    name: [
+      'CICR · Restablecimiento del Contacto entre Familiares',
+      'ICRC · Restoring Family Links',
+      'CICV · Restabelecimento de Laços Familiares',
+    ],
     description: [
       'Servicio gratuito del CICR y las Sociedades Nacionales para quienes perdieron contacto con familiares por un conflicto o desastre.',
       'Free ICRC service, with National Societies, for people who lost contact with family in a conflict or disaster.',
@@ -31,7 +36,11 @@ export const familyLinks: readonly FamilyLink[] = [
   },
   {
     id: 'ifrc-directory',
-    name: 'IFRC · Directorio de Sociedades Nacionales',
+    name: [
+      'IFRC · Directorio de Sociedades Nacionales',
+      'IFRC · National Societies directory',
+      'IFRC · Diretório das Sociedades Nacionais',
+    ],
     description: [
       'Contacto y sitio web de la Cruz Roja o la Media Luna Roja de cada país. No confirma servicios disponibles.',
       'Contact details and website of the Red Cross or Red Crescent in each country. It does not confirm available services.',
@@ -46,7 +55,11 @@ export const familyLinks: readonly FamilyLink[] = [
   },
   {
     id: 'redcross-us',
-    name: 'American Red Cross · Contact and locate loved ones',
+    name: [
+      'Cruz Roja Americana · Contactar y localizar a seres queridos',
+      'American Red Cross · Contact and locate loved ones',
+      'Cruz Vermelha Americana · Contatar e localizar entes queridos',
+    ],
     description: [
       'Ayuda para localizar a seres queridos tras un desastre en EE. UU. y sus territorios, según sus criterios.',
       'Help locating loved ones after a disaster in the U.S. and its territories, subject to its criteria.',

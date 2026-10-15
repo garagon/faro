@@ -111,15 +111,21 @@ export default function DestinationInfo({ country, lang }: { country: string; la
             <dd>
               {country === 'PA'
                 ? t(
-                    'IGC de la Universidad de Panamá, con USGS y EMSC como alternativas. La red nacional puede publicar más eventos.',
-                    'IGC at the University of Panama, with USGS and EMSC as alternatives. The national network may report more events.',
-                    'IGC da Universidade do Panamá, com USGS e EMSC como alternativas. A rede nacional pode publicar mais eventos.',
+                    'EMSC mientras el IGC de la Universidad de Panamá no publique registros nuevos; IGC y USGS como alternativas. La red nacional puede publicar más eventos.',
+                    'EMSC while the University of Panama IGC is not publishing new records; IGC and USGS as alternatives. The national network may report more events.',
+                    'EMSC enquanto o IGC da Universidade do Panamá não publicar registros novos; IGC e USGS como alternativas. A rede nacional pode publicar mais eventos.',
                   )
-                : t(
-                    'USGS, con EMSC como alternativa. La red nacional puede publicar más eventos.',
-                    'USGS, with EMSC as an alternative. The national network may report more events.',
-                    'USGS, com EMSC como alternativa. A rede nacional pode publicar mais eventos.',
-                  )}
+                : country === 'US'
+                  ? t(
+                      'USGS, con EMSC como alternativa.',
+                      'USGS, with EMSC as an alternative.',
+                      'USGS, com EMSC como alternativa.',
+                    )
+                  : t(
+                      'EMSC, con USGS como alternativa. La red nacional puede publicar más eventos.',
+                      'EMSC, with USGS as an alternative. The national network may report more events.',
+                      'EMSC, com USGS como alternativa. A rede nacional pode publicar mais eventos.',
+                    )}
             </dd>
           </div>
           <div>

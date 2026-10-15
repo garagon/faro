@@ -74,7 +74,7 @@ test('the card lists only filled details and leaves health out unless chosen', (
   assert.match(card, /Seguro de viaje: Seguro Demo, póliza AB-123, asistencia \+1 555 0100\./);
   assert.match(card, /Alojamiento: Hotel Demo, Calle Ficticia 1, del 10 oct al 20 oct\./);
   assert.match(card, /Punto de encuentro: Plaza de enfrente\./);
-  assert.match(card, /Emergencias en Panamá: 911\./);
+  assert.match(card, /Emergencias en Panamá: 911 \(desde un teléfono en Panamá\)\./);
   assert.doesNotMatch(card, /penicilina|O\+/);
   assert.doesNotMatch(card, /Teléfono/);
   const shared = filled();
@@ -90,7 +90,10 @@ test('an empty card has only its title and the local number', () => {
     info: emptyEmergencyInfo(),
     plan: null,
   });
-  assert.equal(card, 'Emergency card\nTraveling in Panama.\nEmergency number in Panama: 911.');
+  assert.equal(
+    card,
+    'Emergency card\nTraveling in Panama.\nEmergency number in Panama: 911 (from a phone in Panama).',
+  );
 });
 
 test('share links put the text in the parameter each app reads and encode it', () => {

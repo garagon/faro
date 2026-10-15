@@ -67,12 +67,17 @@
   display: block;
 }
 
-/* Emergency numbers: the only colored element on the screen. */
+/* Emergency numbers: the only colored element on the screen. One column at every width: the
+   heading and its line, then the numbers. A second column for the numbers took all the room it
+   wanted and squeezed the text to one word per line on tablets and desktops. */
 .fw-main[data-screen='help'] .fw-emergency-numbers {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 4px 32px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 4px;
+}
+.fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones {
+  margin: 12px 0 4px;
 }
 .fw-main[data-screen='help'] .fw-emergency-numbers header {
   display: block;
@@ -213,8 +218,9 @@
   color: var(--quiet);
 }
 .fw-main[data-screen='help'] .fw-care-search:disabled {
-  border-style: dashed;
-  background: #fff;
+  /* Solid and greyed: a dashed edge read as a placeholder, not as "choose an area first". */
+  border-color: #d5ddd9;
+  background: #f6f8f7;
   color: #8a9893;
   opacity: 1;
   cursor: not-allowed;

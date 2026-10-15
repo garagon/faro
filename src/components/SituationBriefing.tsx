@@ -57,6 +57,12 @@ type Props = {
   notes?: Partial<Record<HazardKey, string>>;
   authority?: OfficialLink;
   weather?: OfficialLink;
+  /** Opens Faro's flood steps (from a Spanish-only flood warning, for EN/PT readers). */
+  onFloodGuide?: () => void;
+  /** A U.S. area, where Faro reads NWS alerts directly. */
+  nwsArea?: boolean;
+  /** Leads a hazard row when a national service has alerts in force (NWS flood or tropical). */
+  leads?: Partial<Record<HazardKey, string>>;
   services?: Destination['services'];
   onOpen: (target: BriefingTarget) => void;
 };
@@ -215,7 +221,6 @@ export default function SituationBriefing(p: Props) {
       </header>
       {p.alert}
       {p.actions}
-      {p.setup}
       {/* The disaster this place is living through comes before the hazard rows. */}
       {p.response}
 
@@ -249,9 +254,9 @@ export default function SituationBriefing(p: Props) {
                   )
                 : p.monitor.state === 'stale'
                   ? t(
-                      'Las fuentes no se están actualizando.',
-                      'The sources are not updating.',
-                      'As fontes não estão sendo atualizadas.',
+                      'Los sismos no se están actualizando.',
+                      'Earthquake data is not updating.',
+                      'Os terremotos não estão sendo atualizados.',
                     )
                   : p.monitor.state === 'failed'
                     ? t(
@@ -364,7 +369,11 @@ export default function SituationBriefing(p: Props) {
                             `Largest in ${q.period}: M${q.largest.mag.toFixed(1)}. `,
                             `Maior em ${q.period}: M${q.largest.mag.toFixed(1)}. `,
                           )}
-                        {q.count} {t('registrados', 'recorded', 'registrados')} · {q.provider}
+                        {q.count}{' '}
+                        {q.count === 1
+                          ? t('registrado', 'recorded', 'registrado')
+                          : t('registrados', 'recorded', 'registrados')}{' '}
+                        · {q.provider}
                       </small>
                     </>
                   ) : (
@@ -393,6 +402,8 @@ export default function SituationBriefing(p: Props) {
             </li>
             {p.hazards.map((h) => {
               const gap = h.key === 'flood' && !floodRow && h.state === 'none' ? floodGap : null;
+              // A national service's alerts in force (NWS) lead over an empty international list.
+              const lead = h.state === 'listed' ? undefined : p.leads?.[h.key];
               return h.key === 'flood' && floodRow ? (
                 <li key={h.key}>
                   <button
@@ -415,19 +426,27 @@ export default function SituationBriefing(p: Props) {
                   <button
                     className="fw-now-row"
                     data-signal={
-                      h.state === 'listed' ? 'on' : h.state === 'none' && !gap ? 'off' : 'unknown'
+                      h.state === 'listed' || lead
+                        ? 'on'
+                        : h.state === 'none' && !gap
+                          ? 'off'
+                          : 'unknown'
                     }
                     style={
-                      h.level
-                        ? ({ '--signal': levelColor[h.level] } as React.CSSProperties)
-                        : undefined
+                      lead
+                        ? ({ '--signal': levelColor.review } as React.CSSProperties)
+                        : h.level
+                          ? ({ '--signal': levelColor[h.level] } as React.CSSProperties)
+                          : undefined
                     }
                     onClick={() => p.onOpen(h.key)}
                   >
                     <span className="fw-signal" aria-hidden="true" />
                     <span className="fw-now-text">
                       <span className="fw-now-name">{names[h.key][idx]}</span>
-                      {gap ? (
+                      {lead ? (
+                        <strong>{lead}</strong>
+                      ) : gap ? (
                         <strong>{gap.status}</strong>
                       ) : h.state === 'unknown' && h.unclosed ? (
                         <strong>
@@ -438,7 +457,15 @@ export default function SituationBriefing(p: Props) {
                           )}
                         </strong>
                       ) : h.state === 'unknown' ? (
-                        <strong>{t('Sin confirmar', 'Not confirmed', 'Não confirmado')}</strong>
+                        // "Not confirmed" read as "no threat" or as "unconfirmed threat"; this says
+                        // what happened: the source could not be checked.
+                        <strong>
+                          {t(
+                            'No se pudo comprobar',
+                            'Could not be checked',
+                            'Não foi possível verificar',
+                          )}
+                        </strong>
                       ) : h.state === 'none' ? (
                         <strong>
                           {h.key === 'tsunami'
@@ -487,7 +514,8 @@ export default function SituationBriefing(p: Props) {
                             : h.key === 'tsunami'
                               ? 'NOAA/PTWC'
                               : h.key === 'cyclone' && p.stormsInBasin
-                                ? ''
+                                ? // The "no alert" answer is GDACS's; NHC only counts the storms.
+                                  'GDACS'
                                 : h.state === 'listed' && h.level && h.level !== 'review'
                                   ? alertLevelShort[h.level as 'green'][idx]
                                   : 'GDACS',
@@ -562,10 +590,12 @@ export default function SituationBriefing(p: Props) {
         </div>
         <p className="fw-home-note">
           {t(
-            'Que una fuente no liste eventos no significa que no haya peligro. Sigue a las autoridades locales:',
-            'A source listing no events does not mean there is no danger. Follow local authorities:',
-            'Uma fonte não listar eventos não significa que não haja perigo. Siga as autoridades locais:',
-          )}{' '}
+            'Que una fuente no liste eventos no significa que no haya peligro. Sigue a las autoridades locales',
+            'A source listing no events does not mean there is no danger. Follow local authorities',
+            'Uma fonte não listar eventos não significa que não haja perigo. Siga as autoridades locais',
+          )}
+          {/* Without a named agency the sentence ends here, never on an empty colon. */}
+          {p.authority || p.weather ? ': ' : ''}
           {p.authority && (
             <a href={p.authority.url} target="_blank" rel="noreferrer">
               {p.authority.name}
@@ -580,15 +610,19 @@ export default function SituationBriefing(p: Props) {
           .
         </p>
       </section>
+      {/* The optional nationality card comes after what is happening, never before it. */}
+      {p.setup}
       <OfficialNow
         lang={p.lang}
         now={p.now}
         national={p.national}
         civil={p.civil}
-        weather={p.national ? undefined : p.weather}
+        // NWS areas are read separately (the NWS tab): never "no format Faro can read".
+        weather={p.national || p.nwsArea ? undefined : p.weather}
         services={p.services}
         open={open}
         onToggle={toggle}
+        onFloodGuide={p.onFloodGuide}
       />
     </div>
   );

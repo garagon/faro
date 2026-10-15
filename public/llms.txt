@@ -3,7 +3,7 @@
 > Faro is a free, open-source emergency information and travel preparedness web application created by Oktsec: earthquakes, tsunami, tropical cyclones, floods and volcanoes from official sources, plus local help. Available in English, Spanish and Brazilian Portuguese.
 
 ## Product and provenance
-- [About Faro, sources and limitations](/about.html): Crawlable bilingual product facts and frequently asked questions.
+- [About Faro, sources and limitations](/about.html): Crawlable product facts in Spanish, English and Portuguese and frequently asked questions.
 - [Oktsec](https://oktsec.com): Creator.
 - [Source code](https://github.com/garagon/faro): Apache-2.0 application code; third-party materials retain their terms.
 

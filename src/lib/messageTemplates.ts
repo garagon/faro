@@ -62,12 +62,8 @@ export const quickMessages: readonly QuickMessage[] = [
     id: 'signal',
     label: ['Estoy bien, con poca señal', "I'm OK, poor signal", 'Estou bem, com pouco sinal'],
     status: 'ok',
+    // The connection line already says replies may be slow; a note would repeat it.
     connection: 'limited',
-    note: [
-      'Puede que tarde en responder.',
-      'I may be slow to reply.',
-      'Posso demorar para responder.',
-    ],
   },
   {
     id: 'evacuating',
@@ -119,7 +115,10 @@ export function applyQuickMessage(
   const result: QuickFields = {
     ...current,
     status: next.status,
-    context: next.context ?? current.context,
+    // A reason the previous preset set goes with it; one the person chose stays.
+    context:
+      next.context ??
+      (previous?.context && current.context === previous.context ? '' : current.context),
   };
   for (const field of TEXT_FIELDS) {
     const value = current[field].trim();

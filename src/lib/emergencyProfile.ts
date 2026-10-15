@@ -259,9 +259,10 @@ export function fichaText(
   if (local && place)
     lines.push(
       t(
-        `Emergencias en ${place}: ${local.number}.`,
-        `Emergency number in ${place}: ${local.number}.`,
-        `Número de emergência · ${place}: ${local.number}.`,
+        // Someone abroad who dials it reaches their own emergency service: said in the line.
+        `Emergencias en ${place}: ${local.number} (desde un teléfono en ${place}).`,
+        `Emergency number in ${place}: ${local.number} (from a phone in ${place}).`,
+        `Número de emergência · ${place}: ${local.number} (de um telefone no país).`,
       ),
     );
   return lines.join('\n');

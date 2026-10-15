@@ -147,6 +147,12 @@ import type { EmergencyKind } from './data/firstMinutes.ts';
 // and its site was in maintenance on 14 October. IGC stays one tap away. Set back to 'IGC' once
 // its table updates again (docs/release-readiness.md).
 const PANAMA_CATALOG: CatalogId = 'EMSC';
+// USGS is the national authority for the United States and its territories. Elsewhere it lists
+// few small earthquakes, so a quiet USGS list read as "none in 24 h" during the Costa Rica and
+// Guatemala activity that EMSC did list: EMSC opens there.
+const US_AREAS = new Set(['US', 'PR', 'VI', 'GU', 'AS', 'MP']);
+const defaultCatalog = (country: string): CatalogId =>
+  country === 'PA' ? PANAMA_CATALOG : US_AREAS.has(country) ? 'USGS' : 'EMSC';
 // GDACS changes slowly; every five minutes keeps requests low.
 async function readAlerts(signal: AbortSignal) {
   const response = await fetch('/api/alerts', { signal, cache: 'no-cache' });
@@ -172,8 +178,19 @@ function setupCardDismissed() {
     return false;
   }
 }
-type Screen =
-  'activity' | 'detail' | 'emergency' | 'sources' | 'help' | 'hotel' | 'kit' | 'guide' | 'status';
+const SCREENS = [
+  'activity',
+  'detail',
+  'emergency',
+  'sources',
+  'help',
+  'hotel',
+  'kit',
+  'guide',
+  'status',
+] as const;
+type Screen = (typeof SCREENS)[number];
+const isScreen = (value: unknown): value is Screen => SCREENS.includes(value as Screen);
 const providerNames: Record<CatalogId, string> = {
   IGC: 'IGC · UP',
   EMSC: 'EMSC',
@@ -206,12 +223,12 @@ export default function App() {
   const [lang, setLang] = useState<Lang>(() => readSiteLanguage(profile?.language));
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
     idx = langIndex(lang);
-  const [catalog, setCatalog] = useState<CatalogId>(
-      profile && profile.destination !== 'PA' ? 'USGS' : PANAMA_CATALOG,
-    ),
+  const [catalog, setCatalog] = useState<CatalogId>(defaultCatalog(profile?.destination ?? 'PA')),
     [timeZone, setTimeZone] = useState<'local' | 'utc'>('local'),
     [showEmbassies, setShowEmbassies] = useState(false),
     [nationality, setNationality] = useState(profile?.nationality ?? '');
+  // Set once the person picks a catalog; until then each place opens on its default.
+  const catalogChosen = useRef(false);
   // Only the selected catalog polls; the other keeps its last snapshot.
   const usgs = useLiveFeed(catalog === 'USGS'),
     igc = useIGC(catalog === 'IGC'),
@@ -323,6 +340,33 @@ export default function App() {
   // A new screen starts at the top. After the first render, focus moves to its heading so
   // keyboard and screen-reader users know the screen changed (Emergency focuses its call button
   // and the detail page its tab instead).
+  // Each screen is a browser history entry, so the phone's Back button returns to the previous
+  // screen instead of leaving Faro (people often arrive from a link in a chat).
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+  const fromHistory = useRef(false);
+  useEffect(() => {
+    history.replaceState({ ...(history.state ?? {}), faroScreen: screenRef.current }, '');
+    const back = (e: PopStateEvent) => {
+      const target = (e.state as { faroScreen?: unknown } | null)?.faroScreen;
+      const next = isScreen(target) ? target : 'activity';
+      if (next === screenRef.current) return;
+      fromHistory.current = true;
+      // An open earthquake sheet belongs to the screen being left.
+      setDetail(null);
+      setScreen(next);
+    };
+    window.addEventListener('popstate', back);
+    return () => window.removeEventListener('popstate', back);
+  }, []);
+  useEffect(() => {
+    if (fromHistory.current) {
+      fromHistory.current = false;
+      return;
+    }
+    if ((history.state as { faroScreen?: unknown } | null)?.faroScreen === screen) return;
+    history.pushState({ faroScreen: screen }, '');
+  }, [screen]);
   const firstScreen = useRef(true);
   useEffect(() => {
     appRef.current?.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -457,9 +501,10 @@ export default function App() {
   const changeCountry = (code: string) => {
     const region = regionFor(code);
     setCountry(code);
-    // EMSC and USGS are worldwide; a person who chose one keeps it. IGC only covers Panama.
+    // A catalog the person chose stays (EMSC and USGS are worldwide); otherwise the new place's
+    // default. IGC only covers Panama.
     setCatalog((c) =>
-      code === 'PA' ? (c === 'USGS' ? PANAMA_CATALOG : c) : c === 'IGC' ? 'USGS' : c,
+      catalogChosen.current && !(c === 'IGC' && code !== 'PA') ? c : defaultCatalog(code),
     );
     // Browsing another country must not discard a separately enabled location fix.
     firstFix.current = false;
@@ -508,6 +553,30 @@ export default function App() {
       ...(profile?.phone ? { phone: profile.phone } : {}),
       ...(profile?.email ? { email: profile.email } : {}),
     });
+  // A nationality chosen on the emergency or local help screen is kept like the one from the home
+  // card, without moving the country being viewed or changing the rest of the profile.
+  const rememberNationality = (code: string) => {
+    setNationality(code);
+    setShowEmbassies(!!code);
+    if (!code) return;
+    try {
+      setProfile(
+        storePreferences(
+          {
+            version: 1,
+            language: lang,
+            destination: countryCodes.includes(country) ? country : 'PA',
+            ...profile,
+            nationality: code,
+            savedAt: Date.now(),
+          },
+          countryCodes,
+        ),
+      );
+    } catch {
+      setProfileFeedback('storage');
+    }
+  };
   const dismissSetupCard = () => {
     setSetupDismissed(true);
     try {
@@ -794,6 +863,7 @@ export default function App() {
     (c) => c !== catalog && (c !== 'IGC' || country === 'PA'),
   );
   const switchCatalog = (c: CatalogId) => {
+    catalogChosen.current = true;
     setCatalog(c);
     setDetail(null);
     setPage(1);
@@ -808,10 +878,13 @@ export default function App() {
   const selected = live.events.find((q) => q.id === detail),
     visiblePoint = plan?.country === country ? point : null;
   // The area to save for offline use: the stay when known, otherwise what the map last showed.
+  // Then where the person is, if they shared it: a country-wide map has no useful centre.
   const offlineArea = (stay: [number, number] | null) =>
     stay
       ? { view: { lat: stay[0], lng: stay[1], zoom: 13 }, around: 'stay' as const }
-      : { view: boundsView(pending), around: 'map' as const };
+      : geo
+        ? { view: { lat: geo.lat, lng: geo.lng, zoom: 13 }, around: 'here' as const }
+        : { view: boundsView(pending), around: 'map' as const };
   const regionResources = resources.filter((r) => r.country === country || r.country === '*');
   const stale =
       live.failed ||
@@ -1168,7 +1241,7 @@ export default function App() {
           {/* On phones only the icon shows, so the name comes from the label. */}
           <button
             className="fw-profile-button"
-            aria-label={`${t('Mi perfil', 'My profile', 'Meu perfil')}: ${
+            aria-label={`${t('Mis datos', 'My details', 'Meus dados')}: ${
               profile
                 ? names.of(profile.destination)
                 : t('Sin configurar', 'Not set up', 'Não configurado')
@@ -1177,7 +1250,7 @@ export default function App() {
           >
             <UserCircleIcon size={22} />
             <span>
-              {t('Mi perfil', 'My profile', 'Meu perfil')}
+              {t('Mis datos', 'My details', 'Meus dados')}
               <small>
                 {profile
                   ? names.of(profile.destination)
@@ -1327,8 +1400,8 @@ export default function App() {
               />
               <span>
                 {savedCountries.includes(country)
-                  ? t('Guardado', 'Saved', 'Salvo')
-                  : t('Guardar', 'Save', 'Salvar')}
+                  ? t('País guardado', 'Country saved', 'País salvo')
+                  : t('Guardar país', 'Save country', 'Salvar país')}
               </span>
             </button>
           </div>
@@ -1498,7 +1571,13 @@ export default function App() {
                 count: quakeSummary.count,
                 largest: quakeSummary.largest,
                 latest: latestEvent,
-                period: periodLabel,
+                // After "Search this area" the row counts the map area, not the country: said.
+                period:
+                  scope === 'area'
+                    ? `${periodLabel} ${t('en el área del mapa', 'in the map area', 'na área do mapa')}`
+                    : scope === 'nearby'
+                      ? `${periodLabel} ${t(`a ${radius} km`, `within ${radius} km`, `a ${radius} km`)}`
+                      : periodLabel,
                 provider,
                 // Never answered: "checking" while online, "no data" offline, never "none".
                 loading: !live.fetched,
@@ -1533,6 +1612,27 @@ export default function App() {
               }
               hazards={hazardStates}
               notes={hazardNotes}
+              nwsArea={inNws}
+              onFloodGuide={() => {
+                setGuideTopic('flood-during');
+                go('guide');
+              }}
+              leads={{
+                flood: nwsCount('flood')
+                  ? t(
+                      `NWS: ${nwsCount('flood')} avisos de inundación en vigor`,
+                      `NWS: ${nwsCount('flood')} flood alerts in force`,
+                      `NWS: ${nwsCount('flood')} avisos de inundação em vigor`,
+                    )
+                  : undefined,
+                cyclone: nwsCount('tropical')
+                  ? t(
+                      `NWS: ${nwsCount('tropical')} avisos tropicales en vigor`,
+                      `NWS: ${nwsCount('tropical')} tropical alerts in force`,
+                      `NWS: ${nwsCount('tropical')} avisos tropicais em vigor`,
+                    )
+                  : undefined,
+              }}
               national={
                 inNational
                   ? {
@@ -1575,8 +1675,9 @@ export default function App() {
                     }
                   : undefined
               }
-              authority={destinationFor(country)?.civilProtection}
-              weather={destinationFor(country)?.weatherAgency}
+              // U.S. territories follow the U.S. agencies, as their emergency numbers do.
+              authority={destinationFor(US_AREAS.has(country) ? 'US' : country)?.civilProtection}
+              weather={destinationFor(US_AREAS.has(country) ? 'US' : country)?.weatherAgency}
               services={destinationFor(country)?.services}
               now={live.now}
               updated={
@@ -1590,10 +1691,12 @@ export default function App() {
                             'Sem conexão: ainda não há dados oficiais',
                           )
                         : live.failed
-                          ? t(
-                              'Las fuentes oficiales no responden',
-                              'Official sources are not responding',
-                              'As fontes oficiais não respondem',
+                          ? // Only the earthquake catalog is behind this line: it is named, so the
+                            // other sources that did answer are not reported as down.
+                            t(
+                              `La fuente de sismos (${provider}) no responde`,
+                              `The earthquake source (${provider}) is not responding`,
+                              `A fonte de terremotos (${provider}) não responde`,
                             )
                           : t(
                               'Consultando fuentes oficiales…',
@@ -1602,9 +1705,9 @@ export default function App() {
                             )
                       : stale
                         ? t(
-                            `Sin actualizar desde ${atLabel(live.fetched, live.now, lang)}`,
-                            `Not updated since ${atLabel(live.fetched, live.now, lang)}`,
-                            `Sem atualização desde ${atLabel(live.fetched, live.now, lang)}`,
+                            `Sismos (${provider}): sin actualizar desde ${atLabel(live.fetched, live.now, lang)}`,
+                            `Earthquakes (${provider}): not updated since ${atLabel(live.fetched, live.now, lang)}`,
+                            `Terremotos (${provider}): sem atualização desde ${atLabel(live.fetched, live.now, lang)}`,
                           )
                         : t(
                             `Datos oficiales consultados a ${atLabel(live.fetched, live.now, lang)}`,
@@ -1674,42 +1777,49 @@ export default function App() {
                     onBounds={setPending}
                   />
                   <div className="fw-map-foot" id="fw-map-foot" tabIndex={-1}>
-                    <span>
-                      <i />
-                      {t('Marcador: magnitud', 'Pin: magnitude', 'Marcador: magnitude')}{' '}
-                      <b>
+                    {/* Each entry with a small copy of what it describes on the map. */}
+                    <span className="fw-map-legend">
+                      <span>
+                        <i className="fw-legend-pin" aria-hidden="true" />
+                        {t('Marcador: magnitud', 'Pin: magnitude', 'Marcador: magnitude')}
+                      </span>
+                      <span>
+                        <i className="fw-legend-count" aria-hidden="true" />
                         {t(
                           'Círculo: cantidad de sismos',
                           'Circle: earthquake count',
                           'Círculo: quantidade de terremotos',
                         )}
-                      </b>
+                      </span>
                       {mapHazards.length > 0 && (
-                        <b>
+                        <span>
+                          <i className="fw-legend-hazard" aria-hidden="true" />
                           {t(
                             'Ícono redondo: alerta GDACS',
                             'Round icon: GDACS alert',
                             'Ícone redondo: alerta do GDACS',
                           )}
-                        </b>
+                        </span>
                       )}
                       {warningAreas.length > 0 && (
-                        <b>
+                        <span>
+                          <i className="fw-legend-area" aria-hidden="true" />
                           {t(
                             `Área sombreada: bajo aviso de ${national.data!.agency}`,
                             `Shaded area: ${national.data!.agency} warning area`,
                             `Área sombreada: sob aviso (${national.data!.agency})`,
                           )}
-                        </b>
+                        </span>
                       )}
                       {visiblePoint && (
-                        <b className="fw-personal-legend">
+                        <span className="fw-personal-legend">
+                          <FlagIcon size={14} aria-hidden="true" />
                           {t(
                             'Bandera: punto personal no verificado',
                             'Flag: unverified personal point',
                             'Bandeira: ponto pessoal não verificado',
                           )}
-                        </b>
+                        </span>
                       )}
                     </span>
                     {availableEmbassy && (
@@ -1757,11 +1867,15 @@ export default function App() {
                     ? 'quakes'
                     : key === 'tsunami'
                       ? 'tsunami'
-                      : key === 'cyclone' && inNhcRegion
-                        ? 'storms'
-                        : key === 'cyclone' && inNws
-                          ? 'nws'
-                          : 'alerts',
+                      : key === 'cyclone' && nwsCount('tropical')
+                        ? 'nws'
+                        : key === 'cyclone' && inNhcRegion
+                          ? 'storms'
+                          : key === 'cyclone' && inNws
+                            ? 'nws'
+                            : key === 'flood' && inNws
+                              ? 'nws'
+                              : 'alerts',
                 )
               }
             />
@@ -1982,10 +2096,14 @@ export default function App() {
                         <div className="fw-events-title">
                           <div>
                             <h2 id="fw-events-title" tabIndex={-1}>
-                              {results.length}{' '}
-                              {results.length === 1
-                                ? t('sismo', 'earthquake', 'terremoto')
-                                : t('sismos', 'earthquakes', 'terremotos')}
+                              {/* No count before the catalog has answered: "0" would read as none. */}
+                              {!live.fetched
+                                ? t('Sismos', 'Earthquakes', 'Terremotos')
+                                : `${results.length} ${
+                                    results.length === 1
+                                      ? t('sismo', 'earthquake', 'terremoto')
+                                      : t('sismos', 'earthquakes', 'terremotos')
+                                  }`}
                             </h2>
                             {listPage.pages > 1 && (
                               <p>
@@ -2188,11 +2306,9 @@ export default function App() {
                       {
                         id: 'storms',
                         label: t('Ciclones', 'Cyclones', 'Ciclones'),
-                        // A count only from a current NHC answer; "0" would read as "no storms".
-                        count:
-                          storms.data && !storms.failed && live.online
-                            ? activeStorms.length
-                            : undefined,
+                        // No count: storms active in the basin read as storms affecting the place,
+                        // and the row may say none has an alert here. The tab explains both.
+                        count: undefined,
                         content: (
                           <StormsPanel
                             lang={lang}
@@ -2274,10 +2390,7 @@ export default function App() {
             provider={provider}
             now={live.now}
             onCountry={changeCountry}
-            onNationality={(code) => {
-              setNationality(code);
-              setShowEmbassies(true);
-            }}
+            onNationality={rememberNationality}
             kind={emergencyKind}
             onKind={setEmergencyKind}
             start={emergencyStart}
@@ -2309,10 +2422,7 @@ export default function App() {
               lang={lang}
               country={country}
               nationality={nationality}
-              onNationalityChange={(value) => {
-                setNationality(value);
-                setShowEmbassies(!!value);
-              }}
+              onNationalityChange={rememberNationality}
               onMap={(e: Embassy) => {
                 setNationality(e.nation);
                 setShowEmbassies(true);

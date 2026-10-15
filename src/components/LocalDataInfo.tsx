@@ -1,7 +1,26 @@
+import { useState } from 'react';
 import { LockSimpleIcon } from '@phosphor-icons/react';
 import { pick, type Lang } from '../lib/i18n.ts';
+
+/**
+ * Removes everything Faro keeps in this browser (every `faro-` key: profile, health, stay,
+ * contacts, messages, go bag, saved countries, language and the public data copies), then
+ * reloads so no screen keeps a copy in memory. The offline application copy has no personal data.
+ */
+function forgetEverything() {
+  const keys: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith('faro-')) keys.push(key);
+  }
+  for (const key of keys) localStorage.removeItem(key);
+  return keys.every((key) => localStorage.getItem(key) === null);
+}
+
 export default function LocalDataInfo({ lang }: { lang: Lang }) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const [confirm, setConfirm] = useState(false),
+    [failed, setFailed] = useState(false);
   return (
     <details className="fw-local-data">
       <summary>
@@ -61,6 +80,54 @@ export default function LocalDataInfo({ lang }: { lang: Lang }) {
             </dd>
           </div>
         </dl>
+        {/* One place to delete everything; each section can still delete its own part. */}
+        {!confirm ? (
+          <button type="button" className="fw-text" onClick={() => setConfirm(true)}>
+            {t(
+              'Borrar todo lo que Faro guardó en este navegador',
+              'Delete everything Faro saved in this browser',
+              'Apagar tudo o que o Faro salvou neste navegador',
+            )}
+          </button>
+        ) : (
+          <p
+            className="fw-local-data-confirm"
+            role="group"
+            aria-label={t('Confirmar', 'Confirm', 'Confirmar')}
+          >
+            {t(
+              '¿Borrar perfil, salud, alojamiento, contactos, mensajes, mochila y países guardados? No se puede deshacer.',
+              'Delete profile, health, stay, contacts, messages, go bag and saved countries? This cannot be undone.',
+              'Apagar perfil, saúde, hospedagem, contatos, mensagens, mochila e países salvos? Não é possível desfazer.',
+            )}{' '}
+            <button
+              type="button"
+              className="fw-text"
+              onClick={() => {
+                try {
+                  if (forgetEverything()) location.reload();
+                  else setFailed(true);
+                } catch {
+                  setFailed(true);
+                }
+              }}
+            >
+              {t('Sí, borrar todo', 'Yes, delete everything', 'Sim, apagar tudo')}
+            </button>{' '}
+            <button type="button" className="fw-text" onClick={() => setConfirm(false)}>
+              {t('Cancelar', 'Cancel', 'Cancelar')}
+            </button>
+          </p>
+        )}
+        {failed && (
+          <p role="alert">
+            {t(
+              'El navegador no permitió borrar todo. Borra los datos del sitio desde la configuración del navegador.',
+              'The browser did not allow deleting everything. Clear site data from the browser settings.',
+              'O navegador não permitiu apagar tudo. Apague os dados do site nas configurações do navegador.',
+            )}
+          </p>
+        )}
         <p>
           <a href="/privacy.html">
             {t(

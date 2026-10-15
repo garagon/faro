@@ -8,7 +8,7 @@ type Props = {
   /** The area to open: the saved stay when there is one, otherwise what Faro's map shows. */
   view: { lat: number; lng: number; zoom: number };
   /** Says which area opens, so the person knows before tapping. */
-  around: 'stay' | 'map';
+  around: 'stay' | 'here' | 'map';
 };
 
 /**
@@ -39,11 +39,17 @@ export default function OfflineMap({ lang, view, around }: Props) {
                 'Open the area around your stay in Google Maps',
                 'Abrir a área da sua hospedagem no Google Maps',
               )
-            : t(
-                'Abrir la zona del mapa en Google Maps',
-                'Open the map area in Google Maps',
-                'Abrir a área do mapa no Google Maps',
-              )}
+            : around === 'here'
+              ? t(
+                  'Abrir la zona donde estás en Google Maps',
+                  'Open the area where you are in Google Maps',
+                  'Abrir a área onde você está no Google Maps',
+                )
+              : t(
+                  'Abrir la zona del mapa en Google Maps',
+                  'Open the map area in Google Maps',
+                  'Abrir a área do mapa no Google Maps',
+                )}
         </ExternalLink>
         <ol>
           <li>

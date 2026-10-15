@@ -125,7 +125,13 @@ export function alertSubject(
       /^(earthquake|flood|drought|forest fires?|tropical cyclone|eruption)\s+(in\s+)?/i,
       '',
     ) || e.name;
-  if (e.type === 'TC' || e.type === 'VO' || e.countries.length === 0) return proper;
+  // GDACS writes storms as "SIMON-26"; NHC and the cyclone tab say "Simon".
+  if (e.type === 'TC')
+    return proper
+      .replace(/-\d{2}$/, '')
+      .toLowerCase()
+      .replace(/\b\p{L}/gu, (c) => c.toUpperCase());
+  if (e.type === 'VO' || e.countries.length === 0) return proper;
   const names = e.countries.map((c) => regionName(c) ?? c);
   if (names.length <= 3) return names.join(', ');
   const more = names.length - 3;
@@ -223,19 +229,20 @@ export const alertLevelShort: Record<AlertLevel, Localized> = {
 
 /** What each GDACS level means, in plain words (GDACS: need for international assistance). */
 export const alertLevelMeaning: Record<AlertLevel, Localized> = {
+  // Never "low impact": GDACS rates the need for international help, not the danger on the ground.
   green: [
-    'Impacto estimado: bajo (alerta verde). No se espera que necesite ayuda internacional.',
-    'Estimated impact: low (green alert). International assistance is not expected to be needed.',
-    'Impacto estimado: baixo (alerta verde). Não se espera que precise de ajuda internacional.',
+    'Alerta verde de GDACS: no se espera que necesite ayuda internacional. No dice nada del peligro local.',
+    'GDACS green alert: international assistance is not expected to be needed. It says nothing about local danger.',
+    'Alerta verde do GDACS: não se espera que precise de ajuda internacional. Não diz nada sobre o perigo local.',
   ],
   orange: [
-    'Impacto estimado: medio (alerta naranja). Podría requerir ayuda internacional.',
-    'Estimated impact: medium (orange alert). It may need international assistance.',
-    'Impacto estimado: médio (alerta laranja). Pode precisar de ajuda internacional.',
+    'Alerta naranja de GDACS: podría requerir ayuda internacional.',
+    'GDACS orange alert: it may need international assistance.',
+    'Alerta laranja do GDACS: pode precisar de ajuda internacional.',
   ],
   red: [
-    'Impacto estimado: alto (alerta roja). Probablemente requiera ayuda internacional.',
-    'Estimated impact: high (red alert). It likely needs international assistance.',
-    'Impacto estimado: alto (alerta vermelho). Provavelmente precisará de ajuda internacional.',
+    'Alerta roja de GDACS: probablemente requiera ayuda internacional.',
+    'GDACS red alert: it likely needs international assistance.',
+    'Alerta vermelha do GDACS: provavelmente precisará de ajuda internacional.',
   ],
 };

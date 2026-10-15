@@ -91,19 +91,7 @@ export default function EmergencyScreen(p: Props) {
   // From "What to do now" it starts on the first steps, scrolled into view.
   useEffect(() => {
     if (p.start === 'steps' && country) {
-      const steps = root.current?.querySelector<HTMLElement>('#fw-first-minutes-title');
-      steps?.focus({ preventScroll: true });
-      // Scroll only the app, below its top bar; scrollIntoView would also move the window and
-      // hide the bar with the emergency button.
-      const app = root.current?.closest<HTMLElement>('.fw-app');
-      if (steps && app)
-        app.scrollTo({
-          top:
-            steps.getBoundingClientRect().top -
-            app.getBoundingClientRect().top +
-            app.scrollTop -
-            (parseFloat(getComputedStyle(app).scrollPaddingTop) || 0),
-        });
+      reveal('#fw-first-minutes-title', 'auto');
       return;
     }
     root.current
@@ -126,6 +114,26 @@ export default function EmergencyScreen(p: Props) {
         ?.focus(),
     );
   }, [choosing, country]);
+
+  /**
+   * Scrolls only the app to a heading, below its top bar, and focuses it. scrollIntoView would
+   * also move the window and hide the bar with the emergency button.
+   */
+  function reveal(selector: string, behavior: ScrollBehavior = scrollMotion()) {
+    const target = root.current?.querySelector<HTMLElement>(selector);
+    const app = root.current?.closest<HTMLElement>('.fw-app');
+    if (!target) return;
+    target.focus({ preventScroll: true });
+    if (app)
+      app.scrollTo({
+        top:
+          target.getBoundingClientRect().top -
+          app.getBoundingClientRect().top +
+          app.scrollTop -
+          (parseFloat(getComputedStyle(app).scrollPaddingTop) || 0),
+        behavior,
+      });
+  }
 
   const act = (action: FirstMinutesAction) => {
     if (action === 'tsunami') p.onActivity('tsunami');
@@ -256,18 +264,9 @@ export default function EmergencyScreen(p: Props) {
           </p>
           <div className="fw-emergency-jumps">
             {/* On a phone the embassy is below the first steps: one tap brings it up. */}
-            {(!p.nationality || missions.length > 0 || support) && (
-              <button
-                className="fw-text"
-                onClick={() => {
-                  const embassy = root.current?.querySelector<HTMLElement>('#fw-emergency-embassy');
-                  embassy?.scrollIntoView({ block: 'start', behavior: scrollMotion() });
-                  embassy?.focus({ preventScroll: true });
-                }}
-              >
-                {t('Ir a tu embajada', 'Go to your embassy', 'Ir para sua embaixada')}
-              </button>
-            )}
+            <button className="fw-text" onClick={() => reveal('#fw-emergency-embassy')}>
+              {t('Ir a tu embajada', 'Go to your embassy', 'Ir para sua embaixada')}
+            </button>
             <button className="fw-text" onClick={() => setEditing(true)}>
               {t(
                 '¿Estás en otro país? Cámbialo',
@@ -350,6 +349,28 @@ export default function EmergencyScreen(p: Props) {
             value=""
             onChange={(code) => code && p.onNationality(code)}
           />
+        </section>
+      )}
+      {/* A nationality without a verified phone here: said plainly, never a silent gap. */}
+      {!choosing && p.nationality && !missions.length && !support && (
+        <section className="fw-emergency-consular" aria-labelledby="fw-emergency-embassy">
+          <h2 id="fw-emergency-embassy" tabIndex={-1}>
+            {t(
+              `Tu embajada (${names.of(p.nationality)})`,
+              `Your embassy (${names.of(p.nationality)})`,
+              `Sua embaixada (${names.of(p.nationality)})`,
+            )}
+          </h2>
+          <p className="fw-emergency-note">
+            {t(
+              `Faro no tiene un teléfono verificado de la embajada de ${names.of(p.nationality)} en ${names.of(country)}. En Ayuda local están su dirección y su sitio oficial, si los tenemos. Para un peligro inmediato, llama primero al número local.`,
+              `Faro has no verified phone for the embassy of ${names.of(p.nationality)} in ${names.of(country)}. Local help shows its address and official website, if we have them. For immediate danger, call the local number first.`,
+              `O Faro não tem um telefone verificado da embaixada do seu país (${names.of(p.nationality)}) neste país. Em Ajuda local estão o endereço e o site oficial, se os tivermos. Em caso de perigo imediato, ligue primeiro para o número local.`,
+            )}
+          </p>
+          <button className="fw-secondary" onClick={p.onHelp}>
+            {t('Ver en Ayuda local', 'See in Local help', 'Ver em Ajuda local')}
+          </button>
         </section>
       )}
       {!choosing && (missions.length > 0 || support) && (
@@ -473,6 +494,14 @@ export default function EmergencyScreen(p: Props) {
                     ` · dados sem atualização desde ${atLabel(p.latestStaleSince, p.now, p.lang)}`,
                   )
                 : ''}
+            </small>
+            {/* Right after a felt quake this card still shows an older one: said plainly. */}
+            <small>
+              {t(
+                '¿Acabas de sentir un sismo? Puede tardar varios minutos en aparecer.',
+                'Just felt one? It can take several minutes to appear.',
+                'Acabou de sentir um tremor? Pode levar vários minutos para aparecer.',
+              )}
             </small>
           </span>
           <CaretRightIcon size={16} aria-hidden="true" />

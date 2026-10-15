@@ -51,9 +51,11 @@ export const activeResponses: ActiveResponse[] = [
     ],
     occurredAt: '2026-10-09T17:56:00Z',
     occurredSource: 'USGS',
-    // Checked 2026-10-14: USGS us6000u18k M7.7 mww, reviewed; IGC table M7.2, REVISADO.
+    // Checked 2026-10-14: USGS us6000u18k M7.7 mww, reviewed; SINAPROC communiqués #9 and #11
+    // say 7.5; IGC table M7.2, REVISADO.
     magnitudes: [
       { value: '7.7', source: ['USGS', 'USGS', 'USGS'] },
+      { value: '7.5', source: ['SINAPROC', 'SINAPROC', 'SINAPROC'] },
       { value: '7.2', source: ['IGC de Panamá', "Panama's IGC", 'IGC do Panamá'] },
     ],
     when: [
@@ -62,35 +64,35 @@ export const activeResponses: ActiveResponse[] = [
       'sexta-feira, 9 de outubro, 12:56 (horário do Panamá)',
     ],
     highlight: [
-      'Balance de SINAPROC del 12 oct (datos hasta las 11:30): 14 albergues activos con 598 personas. Había comunidades incomunicadas en Los Santos y Herrera.',
-      'SINAPROC update of Oct 12 (data up to 11:30): 14 shelters open with 598 people. Communities in Los Santos and Herrera were cut off.',
-      'Balanço do SINAPROC de 12 de out. (dados até as 11:30): 14 abrigos ativos com 598 pessoas. Havia comunidades isoladas em Los Santos e Herrera.',
+      'Balance de SINAPROC del 13 oct (datos hasta las 19:00): más de 33 albergues con más de 2841 personas. Había 11 comunidades incomunicadas en Herrera.',
+      'SINAPROC update of Oct 13 (data up to 7:00 p.m.): more than 33 shelters with more than 2,841 people. 11 communities in Herrera were cut off.',
+      'Balanço do SINAPROC de 13 de out. (dados até as 19:00): mais de 33 abrigos com mais de 2.841 pessoas. Havia 11 comunidades isoladas em Herrera.',
     ],
     summary: [
       'Resumen de publicaciones oficiales: SINAPROC, Departamento de Estado de EE. UU., USGS y Copernicus.',
       'Summary of official publications: SINAPROC, U.S. Department of State, USGS and Copernicus.',
       'Resumo de publicações oficiais: SINAPROC, Departamento de Estado dos EUA, USGS e Copernicus.',
     ],
-    // Re-reviewed on 2026-10-14: SINAPROC #8 is still the latest statement. At most 14 days
-    // after each review; figures older than that must not stay on screen.
+    // Re-reviewed on 2026-10-14 against SINAPROC communiqué #11 (data up to 13 Oct, 19:00). At
+    // most 14 days after each review; figures older than that must not stay on screen.
     reviewedAt: '2026-10-14',
     showUntil: '2026-10-28',
     facts: [
       {
         label: ['Balance de SINAPROC', 'SINAPROC update', 'Balanço do SINAPROC'],
         text: [
-          'Comunicado #8 del 12 de octubre, con datos hasta las 11:30: 14 albergues activos con 598 personas y 1744 familias evaluadas. No se reportan personas desaparecidas. Las cifras son preliminares.',
-          'Statement #8 of October 12, with data up to 11:30: 14 shelters open with 598 people and 1744 families assessed. No missing people reported. Figures are preliminary.',
-          'Comunicado #8 de 12 de outubro, com dados até as 11:30: 14 abrigos ativos com 598 pessoas e 1744 famílias avaliadas. Não há relatos de pessoas desaparecidas. Os números são preliminares.',
+          'Comunicado #11 del 13 de octubre, con datos hasta las 19:00: más de 33 albergues temporales con más de 2841 personas; más de 3667 familias evaluadas (11 527 personas); unas 3390 viviendas afectadas, 727 de ellas pérdida total en Herrera y Los Santos. Las cifras son preliminares.',
+          'Statement #11 of October 13, with data up to 7:00 p.m.: more than 33 temporary shelters with more than 2,841 people; more than 3,667 families assessed (11,527 people); about 3,390 homes affected, 727 of them total losses in Herrera and Los Santos. Figures are preliminary.',
+          'Comunicado #11 de 13 de outubro, com dados até as 19:00: mais de 33 abrigos temporários com mais de 2.841 pessoas; mais de 3.667 famílias avaliadas (11.527 pessoas); cerca de 3.390 moradias afetadas, 727 delas com perda total em Herrera e Los Santos. Os números são preliminares.',
         ],
         source: 'SINAPROC',
       },
       {
         label: ['Zonas afectadas', 'Affected areas', 'Áreas afetadas'],
         text: [
-          'Daños reportados en Veraguas, Coclé, Los Santos, Herrera, Chiriquí, Panamá Oeste, Colón y Darién. Hay comunidades incomunicadas en Los Santos y Herrera por daños en puentes, carreteras y deslizamientos.',
-          'Damage reported in Veraguas, Coclé, Los Santos, Herrera, Chiriquí, Panamá Oeste, Colón and Darién. Communities in Los Santos and Herrera are cut off by damaged bridges, roads and landslides.',
-          'Danos relatados em Veraguas, Coclé, Los Santos, Herrera, Chiriquí, Panamá Oeste, Colón e Darién. Há comunidades isoladas em Los Santos e Herrera por danos em pontes, estradas e deslizamentos.',
+          'Según el comunicado #8 (12 oct), hubo daños en Veraguas, Coclé, Los Santos, Herrera, Chiriquí, Panamá Oeste, Colón y Darién, y comunidades incomunicadas en Los Santos y Herrera por daños en puentes, carreteras y deslizamientos.',
+          'According to statement #8 (Oct 12), there was damage in Veraguas, Coclé, Los Santos, Herrera, Chiriquí, Panamá Oeste, Colón and Darién, and communities in Los Santos and Herrera were cut off by damaged bridges, roads and landslides.',
+          'Segundo o comunicado #8 (12 de out.), houve danos em Veraguas, Coclé, Los Santos, Herrera, Chiriquí, Panamá Oeste, Colón e Darién, e comunidades isoladas em Los Santos e Herrera por danos em pontes, estradas e deslizamentos.',
         ],
         source: 'SINAPROC',
       },
@@ -145,11 +147,11 @@ export const activeResponses: ActiveResponse[] = [
     links: [
       {
         name: [
-          'SINAPROC: comunicado oficial #8',
-          'SINAPROC: official statement #8',
-          'SINAPROC: comunicado oficial #8',
+          'SINAPROC: comunicado oficial #11',
+          'SINAPROC: official statement #11',
+          'SINAPROC: comunicado oficial #11',
         ],
-        url: 'https://www.sinaproc.gob.pa/comunicado-oficial-8/',
+        url: 'https://www.sinaproc.gob.pa/comunicado-oficial-11/',
       },
       {
         name: [

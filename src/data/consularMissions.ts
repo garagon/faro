@@ -419,11 +419,15 @@ export function missionDirections(mission: Mission, mode: 'walking' | 'driving')
 // Complete official source directories complement the individually transcribed entries.
 export const destinationConsularDirectories: Record<
   string,
-  { name: string; url: string; note?: Localized }[]
+  { name: string | Localized; url: string; note?: Localized }[]
 > = {
   PA: [
     {
-      name: 'Unión Europea · embajadas y consulados honorarios',
+      name: [
+        'Unión Europea · embajadas y consulados honorarios',
+        'European Union · embassies and honorary consulates',
+        'União Europeia · embaixadas e consulados honorários',
+      ],
       url: euProtection,
       note: [
         'Incluye enlace al listado de octubre de 2024. No confirma atención actual.',

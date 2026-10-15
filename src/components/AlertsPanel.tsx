@@ -132,9 +132,15 @@ export default function AlertsPanel(p: Props) {
       {greenQuakes.length > 0 && (
         <p className="fw-feed-aside">
           {t(
-            `Además, ${greenQuakes.length} sismos con impacto estimado bajo (alerta verde). Están en la lista de sismos.`,
-            `Also ${greenQuakes.length} earthquakes with low estimated impact (green alert). They are in the earthquake list.`,
-            `Além disso, ${greenQuakes.length} terremotos com impacto estimado baixo (alerta verde). Estão na lista de terremotos.`,
+            greenQuakes.length === 1
+              ? 'Además, 1 sismo con alerta verde de GDACS (no se espera ayuda internacional). Está en la lista de sismos.'
+              : `Además, ${greenQuakes.length} sismos con alerta verde de GDACS (no se espera ayuda internacional). Están en la lista de sismos.`,
+            greenQuakes.length === 1
+              ? 'Also 1 earthquake with a GDACS green alert (no international assistance expected). It is in the earthquake list.'
+              : `Also ${greenQuakes.length} earthquakes with a GDACS green alert (no international assistance expected). They are in the earthquake list.`,
+            greenQuakes.length === 1
+              ? 'Além disso, 1 terremoto com alerta verde do GDACS (não se espera ajuda internacional). Está na lista de terremotos.'
+              : `Além disso, ${greenQuakes.length} terremotos com alerta verde do GDACS (não se espera ajuda internacional). Estão na lista de terremotos.`,
           )}
         </p>
       )}

@@ -34,7 +34,7 @@ export default function FamilyLinks({ country, lang, onStatus }: Props) {
       </header>
       <ul className="fw-link-rows">
         {familyLinksFor(country).map((l) => {
-          const [agency, service] = splitName(l.name);
+          const [agency, service] = splitName(l.name[idx]);
           return (
             <li key={l.id}>
               <a href={l.url[idx]} target="_blank" rel="noreferrer">

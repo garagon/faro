@@ -77,7 +77,7 @@ test('alert subjects keep proper names and localize, then shorten, affected coun
   assert.equal(alertSubject(alert(), name), 'Panamá');
   assert.equal(
     alertSubject(alert({ type: 'TC', name: 'Tropical Cyclone SIMON-26', countries: ['MX'] }), name),
-    'SIMON-26',
+    'Simon',
   );
   assert.equal(alertSubject(alert({ type: 'VO', name: 'Eruption Kanlaon' }), name), 'Kanlaon');
   assert.equal(
