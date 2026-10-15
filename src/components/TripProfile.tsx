@@ -167,7 +167,7 @@ export default function TripProfile(p: Props) {
   async function saveImage() {
     setImageNote('');
     try {
-      const lines = cardLines(draft.destination, p.lang, readContacts(), p.plan, p.profile);
+      const lines = cardLines(draft.destination, p.lang, readContacts(), p.plan, p.profile, card);
       await downloadCardImage(draft.destination, p.lang, lines);
       setImageNote(
         t(

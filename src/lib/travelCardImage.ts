@@ -12,18 +12,37 @@ export function cardLines(
   contacts: TravelContact[],
   plan: HotelPlan | null,
   profile: Preferences | null,
+  /**
+   * The text card (fichaText). When given, the image carries the same facts — nationality,
+   * emergency contact, health if chosen, insurance, stay and dates — instead of a shorter list.
+   */
+  ficha?: string,
 ): CardLine[] {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const localPlan = plan?.country === country ? plan : null;
   const emergency = emergencyFor(country);
+  const main = emergency?.numbers[0]?.number;
+  const fromFicha: CardLine[] = (ficha ?? '')
+    .split('\n')
+    .slice(1)
+    .map((line) => line.trim())
+    // The numbers are listed below with their labels.
+    .filter((line) => line && !(main && line.includes(`: ${main}`)))
+    .map((line) => {
+      const at = line.indexOf(': ');
+      return at > 0 && at < 48
+        ? { label: line.slice(0, at), value: line.slice(at + 2) }
+        : { label: '', value: line };
+    });
   return [
-    ...(profile?.name
+    ...fromFicha,
+    ...(!ficha && profile?.name
       ? [{ label: t('Viajero', 'Traveler', 'Viajante'), value: profile.name }]
       : []),
-    ...(profile?.phone
+    ...(!ficha && profile?.phone
       ? [{ label: t('Mi teléfono', 'My phone', 'Meu telefone'), value: profile.phone }]
       : []),
-    ...(profile?.email
+    ...(!ficha && profile?.email
       ? [{ label: t('Mi correo', 'My email', 'Meu e-mail'), value: profile.email }]
       : []),
     ...(emergency?.numbers.map((n) => ({
@@ -51,10 +70,10 @@ export function cardLines(
             ),
           },
         ]),
-    ...(localPlan?.name
+    ...(!ficha && localPlan?.name
       ? [{ label: t('Alojamiento', 'Accommodation', 'Hospedagem'), value: localPlan.name }]
       : []),
-    ...(localPlan?.meeting
+    ...(!ficha && localPlan?.meeting
       ? [
           {
             label: t(
