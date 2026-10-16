@@ -1669,14 +1669,6 @@ export default function App() {
                     onEmergency={() => openEmergency('call')}
                     onSteps={() => openEmergency('steps')}
                     onStatus={() => setScreen('status')}
-                    onEmbassy={() => setScreen('help')}
-                    nationalityName={
-                      profile?.nationality || nationality
-                        ? names.of(profile?.nationality || nationality)
-                        : undefined
-                    }
-                    // The tsunami banner gives the coast instruction once, above the call.
-                    coastNotice={!tsunamiAlert}
                   />
                 }
                 map={

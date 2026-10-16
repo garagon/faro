@@ -1,7 +1,7 @@
-import { CrossIcon, FlagIcon, MessageSquareTextIcon, PhoneIcon } from 'lucide-react';
+import { CrossIcon, MessageSquareTextIcon, PhoneIcon } from 'lucide-react';
 import { emergencyFor } from '../lib/emergency.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
-import { CallButton, List, ListRow, RowIcon, SafetyNotice } from '../ui/index.ts';
+import { ActionTile, ActionTiles, CallButton, List, ListRow } from '../ui/index.ts';
 
 type Props = {
   lang: Lang;
@@ -10,15 +10,6 @@ type Props = {
   /** "What to do now": the emergency screen opened on its first steps. */
   onSteps: () => void;
   onStatus: () => void;
-  /** The person's embassy, in Local help; the nationality is asked there once. */
-  onEmbassy: () => void;
-  /** The saved nationality, as a country name, when there is one. */
-  nationalityName?: string;
-  /**
-   * The natural tsunami warning under the actions. Off while a tsunami message is on screen:
-   * its banner gives the same instruction above the call.
-   */
-  coastNotice?: boolean;
 };
 
 /** The call: the country's main number, or the way to choose a country when there is none. */
@@ -39,7 +30,7 @@ export function HomeCall(p: Pick<Props, 'lang' | 'country' | 'onEmergency'>) {
   ) : (
     <List>
       <ListRow
-        lead={<RowIcon icon={<PhoneIcon className="size-4" />} />}
+        lead={<PhoneIcon className="size-5 text-muted-foreground" aria-hidden="true" />}
         title={t('Teléfonos de emergencia', 'Emergency numbers', 'Telefones de emergência')}
         // "Choose a country" only when none is chosen; a chosen country without verified numbers
         // says so, like Emergencia and Ayuda.
@@ -62,53 +53,21 @@ export function HomeCall(p: Pick<Props, 'lang' | 'country' | 'onEmergency'>) {
   );
 }
 
-/** Tell family, know what to do, the embassy, and the natural tsunami warning. */
+/**
+ * The two things to do after calling, as large tiles: know what to do, and tell people. The
+ * embassy is on Emergencia and in Ayuda; it is not an emergency action.
+ */
 export default function HomeActions(p: Props) {
   const t = (es: string, en: string, pt: string) => pick(p.lang, es, en, pt);
   return (
-    <div className="f-stack grid gap-4">
-      <List label={t('Acciones', 'Actions', 'Ações')}>
-        <ListRow
-          lead={<RowIcon icon={<MessageSquareTextIcon className="size-4" />} />}
-          // The same name as the Avisar tab ("Check in" in English).
-          title={t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
-          meta={t(
-            'Prepara un mensaje y envíalo tú',
-            'Prepare a message, send it yourself',
-            'Prepare uma mensagem e envie',
-          )}
-          onClick={p.onStatus}
-        />
-        <ListRow
-          lead={<RowIcon icon={<CrossIcon className="size-4" />} />}
-          title={t('Qué hacer ahora', 'What to do now', 'O que fazer agora')}
-          meta={t(
-            'Primeros pasos y otros números',
-            'First steps and other numbers',
-            'Primeiros passos e outros números',
-          )}
-          onClick={p.onSteps}
-        />
-        <ListRow
-          lead={<RowIcon icon={<FlagIcon className="size-4" />} />}
-          title={t('Tu embajada', 'Your embassy', 'Sua embaixada')}
-          meta={
-            p.nationalityName ??
-            t('Elige tu nacionalidad', 'Choose your nationality', 'Escolha sua nacionalidade')
-          }
-          onClick={p.onEmbassy}
-        />
-      </List>
-      {/* The natural warning, before any official message: the loading screen says it too. */}
-      {p.coastNotice !== false && (
-        <SafetyNotice>
-          {t(
-            'En la costa, si sentiste un sismo fuerte o largo: ve a pie a un lugar alto ya. No esperes una alerta.',
-            'On the coast, if you felt strong or long shaking: go on foot to high ground now. Do not wait for an alert.',
-            'Na costa, se você sentiu um tremor forte ou longo: vá a pé para um lugar alto já. Não espere um alerta.',
-          )}
-        </SafetyNotice>
-      )}
-    </div>
+    <ActionTiles label={t('Acciones', 'Actions', 'Ações')}>
+      <ActionTile icon={<CrossIcon aria-hidden="true" />} onClick={p.onSteps}>
+        {t('Qué hacer ahora', 'What to do now', 'O que fazer agora')}
+      </ActionTile>
+      {/* The same name as the Avisar tab ("Check in" in English). */}
+      <ActionTile icon={<MessageSquareTextIcon aria-hidden="true" />} onClick={p.onStatus}>
+        {t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
+      </ActionTile>
+    </ActionTiles>
   );
 }

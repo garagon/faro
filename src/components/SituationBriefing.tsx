@@ -6,13 +6,9 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
-import { ActivityIcon, DropletIcon, MountainIcon, WavesIcon, WindIcon } from 'lucide-react';
-import OfficialNow, {
-  NationalWarningRow,
-  officialRowId,
-  type CivilFeed,
-  type NationalFeed,
-} from './OfficialNow.tsx';
+import { WavesIcon } from 'lucide-react';
+import { Button as UiButton } from '@/components/ui/button';
+import OfficialNow, { officialRowId, type CivilFeed, type NationalFeed } from './OfficialNow.tsx';
 import { alertLevelLabels, alertLevelShort, alertTitle } from '../lib/alerts.ts';
 import {
   nationalSignal,
@@ -22,6 +18,7 @@ import {
   type CapSeverity,
 } from '../lib/national.ts';
 import { leadingWarnings, type HazardKey, type HazardStatus } from '../lib/hazards.ts';
+import type { NationalWarning } from '../lib/national.ts';
 import { readablePlace } from '../lib/tsunami.ts';
 import type { Quake } from '../lib/domain.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
@@ -31,16 +28,18 @@ import { scrollMotion } from '../lib/motion.ts';
 import type { Destination, OfficialLink } from '../data/destinations/types.ts';
 import { langIndex, pick, type Lang, type Localized } from '../lib/i18n.ts';
 import {
+  AlertCard,
+  AlertCardButton,
   Badge,
-  Button,
+  Board,
+  BoardRow,
+  Disclosure,
   List,
-  ListRow,
   Note,
   ScopeNote,
-  ScreenHead,
   Section,
-  SourceStamp,
-  StatusIcon,
+  StatusHead,
+  type BoardTone,
   type Signal,
 } from '../ui/index.ts';
 
@@ -126,13 +125,6 @@ type Props = {
   onOpen: (target: BriefingTarget) => void;
 };
 
-const icons: Record<HazardKey, ReactNode> = {
-  earthquake: <ActivityIcon className="size-4" />,
-  tsunami: <WavesIcon className="size-4" />,
-  cyclone: <WindIcon className="size-4" />,
-  flood: <DropletIcon className="size-4" />,
-  volcano: <MountainIcon className="size-4" />,
-};
 const names: Record<HazardKey, Localized> = {
   earthquake: ['Sismos', 'Earthquakes', 'Terremotos'],
   tsunami: ['Tsunami', 'Tsunami', 'Tsunami'],
@@ -140,6 +132,8 @@ const names: Record<HazardKey, Localized> = {
   flood: ['Inundaciones', 'Floods', 'Inundações'],
   volcano: ['Volcanes', 'Volcanoes', 'Vulcões'],
 };
+// The dot of a board row: an official level, else the state of the source's answer.
+const toneOf = (state: Signal, level?: 1 | 2 | 3): BoardTone => level ?? state;
 // GDACS levels on Faro's official scale. Green is listed without a warning colour or a badge.
 const levelOf = (level: HazardStatus['level']): 2 | 3 | undefined =>
   level === 'red' ? 3 : level === 'orange' ? 2 : undefined;
@@ -160,7 +154,10 @@ export default function SituationBriefing(p: Props) {
   const [open, setOpen] = useState<Set<string>>(() => new Set());
   // The order shown while a finger or pointer is down on the rows or the actions, and when the
   // rows last moved: a new order waits for the finger to lift, never more than a moment.
-  const [held, setHeld] = useState<{ keys: string; severe: boolean } | null>(null);
+  const [held, setHeld] = useState<{ keys: string } | null>(null);
+  // "More official information" is closed on a quiet day; a warning in force opens it, and so
+  // does a row that reveals one of its messages.
+  const [moreOpen, setMoreOpen] = useState(false);
   const movedAt = useRef(-Infinity),
     lastOrder = useRef('');
   // A tap that lands just after the rows moved was aimed at the row that was there before: it is
@@ -178,6 +175,7 @@ export default function SituationBriefing(p: Props) {
     });
   // Opens one message in "Official now" and brings it into view with focus on it.
   const reveal = (rowId: string) => {
+    setMoreOpen(true);
     setOpen((prev) => new Set(prev).add(rowId));
     setTimeout(() => {
       const row = document.getElementById(rowId);
@@ -260,10 +258,75 @@ export default function SituationBriefing(p: Props) {
         }
       : null;
 
-  type Row = { key: string; rank: number; node: ReactNode };
-  const rows: Row[] = [];
+  type Item = {
+    key: string;
+    rank: number;
+    level?: 1 | 2 | 3;
+    tone: BoardTone;
+    name: ReactNode;
+    status: ReactNode;
+    badge?: ReactNode;
+    open: () => void;
+    /** A warning in force: the card above the call, in the agency's words. */
+    card?: {
+      kicker: ReactNode;
+      pill?: ReactNode;
+      title: ReactNode;
+      lines?: ReactNode;
+      actions?: ReactNode;
+    };
+  };
+  const items: Item[] = [];
+  const until = (n: number) =>
+    new Intl.DateTimeFormat(p.lang, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(n);
+  // A national warning as a card: who issued it and its level as published, its own name, until
+  // when and where, and what to do: Faro's flood steps for a flood warning, and the full text.
+  const warningCard = (w: NationalWarning, rowId: string, flood: boolean): Item['card'] => ({
+    kicker: t(
+      `Aviso del ${p.national!.agency}`,
+      `${p.national!.agency} warning (in Spanish)`,
+      `Aviso do ${p.national!.agency} (em espanhol)`,
+    ),
+    pill: severityLabels[w.severity][idx],
+    title: <span lang="es">{readableEvent(w.event)}</span>,
+    lines: (
+      <>
+        <p>
+          {t(
+            `Vigente hasta el ${until(w.expires)}`,
+            `In force until ${until(w.expires)}`,
+            `Em vigor até ${until(w.expires)}`,
+          )}
+          {nationalOld && ` · ${nationalOld}`}
+        </p>
+        {w.areas && (
+          <p className="line-clamp-2 opacity-90" lang="es">
+            {w.areas}
+          </p>
+        )}
+      </>
+    ),
+    actions: (
+      <>
+        {flood && p.onFloodGuide && (
+          <AlertCardButton onClick={p.onFloodGuide}>
+            {t('Qué hacer', 'What to do', 'O que fazer')}
+          </AlertCardButton>
+        )}
+        <AlertCardButton onClick={() => reveal(rowId)}>
+          {t('Leer el aviso', 'Read the warning', 'Ler o aviso')}
+        </AlertCardButton>
+      </>
+    ),
+  });
 
-  // Old data is never shown as the current picture: no counts, no "none", a "not confirmed" dot.
+  // Old data is never shown as the current picture: no counts, no "none", a hollow dot.
   const quakeSignal =
     q.offline || q.loading || q.staleSince || (q.failed && !q.count)
       ? 'unknown'
@@ -281,63 +344,63 @@ export default function SituationBriefing(p: Props) {
   const latestQuake = q.latest
     ? `${t('Último', 'Latest', 'Último')} M${q.latest.mag?.toFixed(1) ?? '—'} ${ago(q.latest.time)}`
     : '';
-  rows.push({
+  items.push({
     key: 'earthquake',
     rank: 3,
-    node: (
-      <ListRow
-        key="earthquake"
-        lead={<StatusIcon state={quakeState} icon={icons.earthquake} />}
-        title={names.earthquake[idx]}
-        meta={
-          q.offline
-            ? fromSource(q.provider, {})
-            : q.loading
-              ? fromSource(q.provider, { pending: !q.failed, failed: q.failed })
-              : q.staleSince
-                ? // The last known earthquake, with the time of the data it comes from.
-                  [latestQuake, fromSource(q.provider, { checked: q.staleSince, failed: q.failed })]
-                    .filter(Boolean)
-                    .join(' · ')
-                : q.failed && !q.count
-                  ? fromSource(q.provider, { failed: true })
-                  : q.latest
-                    ? `${latestQuake} · ${q.count} ${t('en', 'in', 'em')} ${q.period}`
-                    : [
-                        t(`Ninguno en ${q.period}`, `None in ${q.period}`, `Nenhum em ${q.period}`),
-                        q.quietSince
-                          ? t(
-                              `${q.provider}: registro más reciente ${ago(q.quietSince)}`,
-                              `${q.provider}: most recent record ${ago(q.quietSince)}`,
-                              `${q.provider}: registro mais recente ${ago(q.quietSince)}`,
-                            )
-                          : q.provider,
-                      ].join(' · ')
-        }
-        onClick={opens(() => p.onOpen('earthquake'))}
-      />
-    ),
+    tone: quakeState,
+    name: names.earthquake[idx],
+    status: q.offline
+      ? fromSource(q.provider, {})
+      : q.loading
+        ? fromSource(q.provider, { pending: !q.failed, failed: q.failed })
+        : q.staleSince
+          ? // The last known earthquake, with the time of the data it comes from.
+            [latestQuake, fromSource(q.provider, { checked: q.staleSince, failed: q.failed })]
+              .filter(Boolean)
+              .join(' · ')
+          : q.failed && !q.count
+            ? fromSource(q.provider, { failed: true })
+            : q.latest
+              ? `${latestQuake} · ${q.count} ${t('en', 'in', 'em')} ${q.period}`
+              : [
+                  t(`Ninguno en ${q.period}`, `None in ${q.period}`, `Nenhum em ${q.period}`),
+                  q.quietSince
+                    ? t(
+                        `${q.provider}: registro más reciente ${ago(q.quietSince)}`,
+                        `${q.provider}: most recent record ${ago(q.quietSince)}`,
+                        `${q.provider}: registro mais recente ${ago(q.quietSince)}`,
+                      )
+                    : q.provider,
+                ].join(' · '),
+    open: opens(() => p.onOpen('earthquake')),
   });
 
-  // Every national warning in force at level 2 or 3 has its own row, in the agency's words; the
-  // first that mentions flooding is the flood row, at any level.
+  // Every national warning in force at level 2 or 3 has its own line and card, in the agency's
+  // words; the first that mentions flooding is the flood line, at any level.
   const leading = p.national?.warnings ? leadingWarnings(p.national.warnings) : [];
   for (const w of leading) {
     const id = officialRowId('w', w.id);
     if (id === p.floodAdvice?.rowId) continue;
-    rows.push({
+    const level = severityLevel[w.severity];
+    items.push({
       key: id,
-      rank: rankOf(severityLevel[w.severity]),
-      node: (
-        <NationalWarningRow
-          key={id}
-          warning={w}
-          agency={p.national!.agency}
-          lang={p.lang}
-          extra={nationalOld}
-          onOpen={opens(() => reveal(id))}
-        />
-      ),
+      rank: rankOf(level),
+      level,
+      tone: toneOf('listed', level),
+      name: <span lang="es">{readableEvent(w.event)}</span>,
+      badge: <Badge level={level}>{severityLabels[w.severity][idx]}</Badge>,
+      status: [
+        t(
+          `Aviso del ${p.national!.agency}`,
+          `${p.national!.agency} warning, in Spanish`,
+          `Aviso do ${p.national!.agency}, em espanhol`,
+        ),
+        nationalOld,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      open: opens(() => reveal(id)),
+      card: level ? warningCard(w, id, false) : undefined,
     });
   }
 
@@ -345,82 +408,96 @@ export default function SituationBriefing(p: Props) {
     if (h.key === 'flood' && p.floodAdvice) {
       const advice = p.floodAdvice;
       const level = (advice.severity && severityLevel[advice.severity]) ?? 1;
-      rows.push({
+      const warning = p.national?.warnings?.find((w) => officialRowId('w', w.id) === advice.rowId);
+      items.push({
         key: h.key,
         rank: rankOf(level),
-        node: (
-          <ListRow
-            key={h.key}
-            lead={<StatusIcon state="listed" level={level} icon={icons.flood} />}
-            title={names.flood[idx]}
-            badge={
-              <Badge level={level}>
-                {advice.severity
-                  ? severityLabels[advice.severity][idx]
-                  : t('Aviso', 'Warning', 'Aviso')}
-              </Badge>
-            }
-            // The agency's own name for the warning, as in "Official now", marked when it is
-            // not in the reader's language.
-            meta={
-              <>
-                {advice.event ? (
-                  <>
-                    {advice.agency} · {quoted(readableEvent(advice.event), 'es')}
-                  </>
-                ) : (
-                  t(
-                    `${advice.agency} advierte posibles inundaciones`,
-                    `${advice.agency} warns of possible flooding`,
-                    `${advice.agency} alerta para possíveis inundações`,
-                  )
-                )}
-                {nationalOld && ` · ${nationalOld}`}
-              </>
-            }
-            onClick={opens(() => reveal(advice.rowId))}
-          />
+        level,
+        tone: level,
+        name: names.flood[idx],
+        badge: (
+          <Badge level={level}>
+            {advice.severity
+              ? severityLabels[advice.severity][idx]
+              : t('Aviso', 'Warning', 'Aviso')}
+          </Badge>
         ),
+        // The agency's own name for the warning, marked when not in the reader's language.
+        status: (
+          <>
+            {advice.event ? (
+              <>
+                {advice.agency} · {quoted(readableEvent(advice.event), 'es')}
+              </>
+            ) : (
+              t(
+                `${advice.agency} advierte posibles inundaciones`,
+                `${advice.agency} warns of possible flooding`,
+                `${advice.agency} alerta para possíveis inundações`,
+              )
+            )}
+            {nationalOld && ` · ${nationalOld}`}
+          </>
+        ),
+        open: opens(() => reveal(advice.rowId)),
+        card: warning
+          ? warningCard(warning, advice.rowId, true)
+          : {
+              kicker: t(
+                `Aviso del ${advice.agency}`,
+                `${advice.agency} warning`,
+                `Aviso do ${advice.agency}`,
+              ),
+              pill: advice.severity ? severityLabels[advice.severity][idx] : undefined,
+              title: advice.event ? (
+                <span lang="es">{readableEvent(advice.event)}</span>
+              ) : (
+                t('Posibles inundaciones', 'Possible flooding', 'Possíveis inundações')
+              ),
+              actions: (
+                <AlertCardButton onClick={() => reveal(advice.rowId)}>
+                  {t('Leer el aviso', 'Read the warning', 'Ler o aviso')}
+                </AlertCardButton>
+              ),
+            },
       });
       continue;
     }
     if (h.key === 'flood' && p.floodNotice) {
-      // A post has no expiry: the row says how many mention rain and when the newest was
-      // published, never "in force". Its headline is in "Official now", where the row opens it.
+      // A post has no expiry: the line says how many mention rain and when the newest was
+      // published, never "in force". Its headline is in "Official now", where the line opens it.
       const notice = p.floodNotice;
-      rows.push({
+      items.push({
         key: h.key,
         rank: 3,
-        node: (
-          <ListRow
-            key={h.key}
-            lead={<StatusIcon state="listed" icon={icons.flood} />}
-            title={names.flood[idx]}
-            meta={`${
-              notice.count === 1
-                ? t(
-                    `${notice.agency}: 1 comunicado`,
-                    `${notice.agency}: 1 post`,
-                    `${notice.agency}: 1 comunicado`,
-                  )
-                : t(
-                    `${notice.agency}: ${notice.count} comunicados`,
-                    `${notice.agency}: ${notice.count} posts`,
-                    `${notice.agency}: ${notice.count} comunicados`,
-                  )
-            } · ${ago(notice.published)}`}
-            onClick={opens(() => reveal(notice.rowId))}
-          />
-        ),
+        tone: 'listed',
+        name: names.flood[idx],
+        status: `${
+          notice.count === 1
+            ? t(
+                `${notice.agency}: 1 comunicado`,
+                `${notice.agency}: 1 post`,
+                `${notice.agency}: 1 comunicado`,
+              )
+            : t(
+                `${notice.agency}: ${notice.count} comunicados`,
+                `${notice.agency}: ${notice.count} posts`,
+                `${notice.agency}: ${notice.count} comunicados`,
+              )
+        } · ${ago(notice.published)}`,
+        open: opens(() => reveal(notice.rowId)),
       });
       continue;
     }
+    // A volcano line only when GDACS lists or listed something, or cannot be read: on a quiet
+    // day it is one line of nothing. The Alertas page always has it.
+    if (h.key === 'volcano' && h.state === 'none' && !h.recent) continue;
     const gap = h.key === 'flood' && h.state === 'none' ? floodGap : null;
     // A national service's alerts in force (NWS) lead over an empty international list.
     const lead = h.state === 'listed' ? undefined : p.leads?.[h.key];
-    // The source behind the row's state (GDACS for cyclones, floods and volcanoes).
+    // The source behind the line's state (GDACS for cyclones, floods and volcanoes).
     const source = h.key === 'tsunami' ? 'NOAA/PTWC' : 'GDACS';
-    // Offline is said by the strip; a failing source is named in its row.
+    // Offline is said by the strip; a failing source is named in its line.
     const failing = !offline && !!h.failedAt;
     // The open NOAA message: the same words, level and badge as the banner and the Tsunami tab.
     const notice = h.key === 'tsunami' ? h.notice : undefined;
@@ -432,7 +509,7 @@ export default function SituationBriefing(p: Props) {
           ? levelOf(h.level)
           : undefined;
     const state: Signal = notice || lead ? 'listed' : gap ? 'unknown' : h.state;
-    // While loading, every source the row will read is named: the NHC and national services
+    // While loading, every source the line will read is named: the NHC and national services
     // answer for cyclones and floods along with GDACS.
     const loadingFrom = new Intl.ListFormat(p.lang, { type: 'conjunction' }).format(
       h.key === 'tsunami'
@@ -447,7 +524,7 @@ export default function SituationBriefing(p: Props) {
     // Listed data from a source that is failing or offline is the last data, with its time.
     const old =
       failing || offline ? fromSource(source, { checked: h.checked, failed: failing }) : '';
-    const meta: ReactNode =
+    const status: ReactNode =
       notice && h.bulletin ? (
         <>
           NOAA · {quoted(readablePlace(h.bulletin.place), 'en')} · {ago(h.bulletin.issued)}
@@ -498,44 +575,64 @@ export default function SituationBriefing(p: Props) {
           .filter(Boolean)
           .join(' · ')
       );
-    rows.push({
+    // The tsunami message's card is the banner (p.alert); GDACS orange and red, and a national
+    // service's alerts in force, get a card here.
+    const card: Item['card'] | undefined = notice
+      ? undefined
+      : lead
+        ? {
+            kicker: h.key === 'flood' || h.key === 'cyclone' ? 'NWS' : source,
+            pill: t('En vigor', 'In force', 'Em vigor'),
+            title: lead,
+            actions: (
+              <AlertCardButton onClick={() => p.onOpen(h.key)}>
+                {t('Ver los avisos', 'See the alerts', 'Ver os avisos')}
+              </AlertCardButton>
+            ),
+          }
+        : level
+          ? {
+              kicker: `GDACS · ${names[h.key][idx]}`,
+              pill: alertLevelLabels[h.level as 'orange'][idx].split(' · ')[0],
+              title: h.top ? alertTitle(h.top, (c) => regions.of(c), p.lang) : names[h.key][idx],
+              lines: old ? <p>{old}</p> : undefined,
+              actions: (
+                <AlertCardButton onClick={() => p.onOpen(h.key)}>
+                  {t('Ver el detalle', 'See the detail', 'Ver o detalhe')}
+                </AlertCardButton>
+              ),
+            }
+          : undefined;
+    items.push({
       key: h.key,
       rank: rankOf(level),
-      node: (
-        <ListRow
-          key={h.key}
-          lead={<StatusIcon state={state} level={level} icon={icons[h.key]} />}
-          title={names[h.key][idx]}
-          badge={
-            notice ? (
-              <Badge level={notice.level}>{notice.label[idx]}</Badge>
-            ) : lead ? (
-              <Badge level={1}>{t('En vigor', 'In force', 'Em vigor')}</Badge>
-            ) : level ? (
-              <Badge level={level}>{alertLevelShort[h.level as 'orange'][idx]}</Badge>
-            ) : undefined
-          }
-          meta={meta}
-          onClick={opens(() => p.onOpen(h.key))}
-        />
-      ),
+      level,
+      tone: toneOf(state, level),
+      name: names[h.key][idx],
+      badge: notice ? (
+        <Badge level={notice.level}>{notice.label[idx]}</Badge>
+      ) : lead ? (
+        <Badge level={1}>{t('En vigor', 'In force', 'Em vigor')}</Badge>
+      ) : level ? (
+        <Badge level={level}>{alertLevelLabels[h.level as 'orange'][idx].split(' · ')[0]}</Badge>
+      ) : undefined,
+      status,
+      open: opens(() => p.onOpen(h.key)),
+      card,
     });
   }
-  // Rows with an official level first, most severe first; the rest keep their usual order. Every
-  // leading row carries a badge, and the head counts exactly those.
-  const sorted = rows.map((r, n) => ({ ...r, n })).sort((a, b) => a.rank - b.rank || a.n - b.n);
-  const withLevel = rows.filter((r) => r.rank < 3).length;
-  const severeNow = rows.some((r) => r.rank < 2);
-  // Under a finger the rows keep their place; the new order applies as soon as it lifts.
+  // Lines with an official level first, most severe first; the rest keep their usual order.
+  const sorted = items.map((r, n) => ({ ...r, n })).sort((a, b) => a.rank - b.rank || a.n - b.n);
+  const withLevel = items.filter((r) => r.rank < 3).length;
+  // Under a finger the lines keep their place; the new order applies as soon as it lifts.
   const heldRows = held?.keys.split(' ');
   const ordered =
     heldRows && heldRows.length === sorted.length && sorted.every((r) => heldRows.includes(r.key))
       ? heldRows.map((key) => sorted.find((r) => r.key === key)!)
       : sorted;
-  const severe = held ? held.severe : severeNow;
-  const order = `${ordered.map((r) => r.key).join(' ')}|${severe}`;
+  const order = ordered.map((r) => r.key).join(' ');
   const hold = () => {
-    if (!held) setHeld({ keys: ordered.map((r) => r.key).join(' '), severe });
+    if (!held) setHeld({ keys: order });
   };
   useLayoutEffect(() => {
     if (lastOrder.current && lastOrder.current !== order) movedAt.current = performance.now();
@@ -565,7 +662,27 @@ export default function SituationBriefing(p: Props) {
     };
   }, [held]);
 
-  // The sources behind the rows, named once under the list instead of in every row.
+  // The warnings in force as cards: the tsunami message first (its banner), then the rest by
+  // level. The first is told in full; the others are one line each, opened with a tap.
+  const carded = sorted.filter((i) => i.card);
+  const cards: ReactNode[] = [
+    ...(p.alert ? [<div key="tsunami">{p.alert}</div>] : []),
+    ...carded.map((i, n) => (
+      <AlertCard
+        key={i.key}
+        level={i.level!}
+        {...i.card!}
+        compact={!!p.alert || n > 0}
+        onClick={i.open}
+      />
+    )),
+  ];
+  const hasCards = cards.length > 0;
+  useEffect(() => {
+    if (hasCards) setMoreOpen(true);
+  }, [hasCards]);
+
+  // The sources behind the lines, named once under the board instead of in every line.
   const sources = new Intl.ListFormat(p.lang, { type: 'conjunction' }).format(
     [
       q.provider,
@@ -576,25 +693,91 @@ export default function SituationBriefing(p: Props) {
       p.national?.agency ?? '',
     ].filter(Boolean),
   );
-  // The head says once when Faro checked, or sums up the sources that do not answer, with one
-  // way to ask them again. Offline, the strip above says it; checking is never in amber.
+  // Whether anything received earlier is on screen, so "the last data" is only said when it is.
+  const anyData =
+    !!p.monitor.checked ||
+    p.hazards.some((h) => h.checked) ||
+    !!p.national?.checked ||
+    !!p.civil?.checked;
   const failingSources = offline ? [] : p.sources.filter((s) => s.failed);
   const summary = t(
     `${failingSources.length} de ${p.sources.length} fuentes sin respuesta`,
     `${failingSources.length} of ${p.sources.length} sources not responding`,
     `${failingSources.length} de ${p.sources.length} fontes sem resposta`,
   );
-  const head = offline ? undefined : failingSources.length ? (
-    <>
-      <SourceStamp state="error">{summary}</SourceStamp>{' '}
-      <Button variant="ghost" onClick={p.onRetry}>
+  // The answer in one sentence. It never says more than the sources do: with a source that
+  // cannot be read, only the ones that answer are vouched for; offline, the device is.
+  const watched = items.filter((i) => i.key !== 'earthquake');
+  const pendingAny = watched.some((i) => i.tone === 'pending');
+  const unknownAny = watched.some((i) => i.tone === 'unknown');
+  const unknownAll = watched.length > 0 && watched.every((i) => i.tone === 'unknown');
+  const title = withLevel
+    ? withLevel === 1
+      ? t('1 aviso vigente', '1 warning in force', '1 aviso em vigor')
+      : t(
+          `${withLevel} avisos vigentes`,
+          `${withLevel} warnings in force`,
+          `${withLevel} avisos em vigor`,
+        )
+    : offline
+      ? t('Sin conexión', 'Offline', 'Sem conexão')
+      : pendingAny && !unknownAny
+        ? t('Consultando las fuentes…', 'Checking the sources…', 'Consultando as fontes…')
+        : unknownAll
+          ? t(
+              'Sin respuesta de las fuentes',
+              'No answer from the sources',
+              'Sem resposta das fontes',
+            )
+          : unknownAny
+            ? t(
+                'Sin avisos en las fuentes que responden',
+                'No warnings from the sources that answer',
+                'Sem avisos nas fontes que respondem',
+              )
+            : t('Sin avisos vigentes', 'No warnings in force', 'Sem avisos em vigor');
+  // The latest earthquake, under the answer, when the catalogue is current.
+  const quakeLine =
+    q.latest && !q.loading && !q.offline
+      ? `${t('Último sismo', 'Latest earthquake', 'Último terremoto')} M${q.latest.mag?.toFixed(1) ?? '—'} · ${ago(q.latest.time)}${
+          q.staleSince
+            ? ` · ${lastData(q.staleSince)}`
+            : q.count
+              ? ` · ${q.count} ${t('en', 'in', 'em')} ${q.period}`
+              : ''
+        }`
+      : '';
+  // When Faro checked, or which sources do not answer, with one way to ask them again.
+  const sourcesLine = offline ? (
+    <span>
+      {t('Sin conexión', 'Offline', 'Sem conexão')}
+      {anyData && p.monitor.checked
+        ? ` · ${lastData(p.monitor.checked)}`
+        : ` · ${t('sin datos todavía', 'no data yet', 'ainda sem dados')}`}
+    </span>
+  ) : failingSources.length ? (
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-amber-800">
+      <span>
+        <span
+          className="me-1.5 inline-block size-2 rounded-full bg-amber-500 align-[0.05em]"
+          aria-hidden="true"
+        />
+        {summary}
+      </span>
+      <UiButton
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="-my-2 h-8 px-2 text-amber-900 underline underline-offset-4"
+        onClick={p.onRetry}
+      >
         {t('Reintentar', 'Retry', 'Tentar de novo')}
-      </Button>
-    </>
+      </UiButton>
+    </span>
   ) : p.monitor.state === 'checking' || !p.monitor.checked ? (
-    <SourceStamp>{t('Consultando…', 'Checking…', 'Consultando…')}</SourceStamp>
+    <span>{t('Consultando fuentes…', 'Checking sources…', 'Consultando fontes…')}</span>
   ) : (
-    <SourceStamp>
+    <span>
       {capitalize(
         sourceLine({
           checked: p.monitor.checked,
@@ -604,27 +787,11 @@ export default function SituationBriefing(p: Props) {
           lang: p.lang,
         }).text,
       )}
-    </SourceStamp>
+    </span>
   );
-  // Whether anything received earlier is on screen, so "the last data" is only said when it is.
-  const anyData =
-    !!p.monitor.checked ||
-    p.hazards.some((h) => h.checked) ||
-    !!p.national?.checked ||
-    !!p.civil?.checked;
 
-  const happening = (
-    <Section
-      id="fw-now"
-      title={t('Qué está pasando', 'What is happening', 'O que está acontecendo')}
-      aside={
-        withLevel
-          ? withLevel === 1
-            ? t('1 aviso', '1 alert', '1 aviso')
-            : t(`${withLevel} avisos`, `${withLevel} alerts`, `${withLevel} avisos`)
-          : undefined
-      }
-    >
+  const board = (
+    <Section id="fw-now" title={t('Vigilancia', 'Monitoring', 'Vigilância')}>
       {/* The visible state ticks; screen readers hear only a change of state. */}
       <p className="sr-only" role="status">
         {offline
@@ -651,7 +818,34 @@ export default function SituationBriefing(p: Props) {
                   )
                 : ''}
       </p>
-      <List label={t('Peligros', 'Hazards', 'Perigos')}>{ordered.map((r) => r.node)}</List>
+      <Board label={t('Peligros', 'Hazards', 'Perigos')}>
+        {ordered.map((i) => (
+          <BoardRow
+            key={i.key}
+            tone={i.tone}
+            name={i.name}
+            status={i.status}
+            badge={i.badge}
+            onClick={i.open}
+          />
+        ))}
+      </Board>
+      {/* The natural tsunami warning, in one line, while no NOAA message carries it above. */}
+      {!p.alert && (
+        <p className="flex gap-3 text-base leading-snug">
+          <WavesIcon
+            className="size-5 shrink-0 translate-y-0.5 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <span>
+            {t(
+              'En la costa, si sentiste un sismo fuerte o largo: ve a pie a un lugar alto ya. No esperes una alerta.',
+              'On the coast, if you felt strong or long shaking: go on foot to high ground now. Do not wait for an alert.',
+              'Na costa, se você sentiu um tremor forte ou longo: vá a pé para um lugar alto já. Não espere um alerta.',
+            )}
+          </span>
+        </p>
+      )}
       <Note
         more={
           <button
@@ -692,55 +886,61 @@ export default function SituationBriefing(p: Props) {
     </div>
   );
   const main: ReactNode[] = [
-    <ScreenHead
-      key="head"
-      titleId="fw-brief-title"
-      title={t('Situación', 'Situation', 'Situação')}
-      aside={head}
-    />,
-    p.alert ? <div key="alert">{p.alert}</div> : null,
+    <div key="head" className="grid gap-4">
+      <StatusHead
+        titleId="fw-brief-title"
+        place={p.countryName}
+        title={title}
+        lines={
+          <>
+            {quakeLine && <p>{quakeLine}</p>}
+            {sourcesLine}
+          </>
+        }
+      />
+      {hasCards && <div className="grid gap-2">{cards}</div>}
+    </div>,
     <div key="call">{p.call}</div>,
-    ...(severe
-      ? [
-          <div key="now" onPointerDown={hold}>
-            {happening}
-          </div>,
-          <div key="actions" onPointerDown={hold}>
-            {p.actions}
-          </div>,
-        ]
-      : [
-          <div key="actions" onPointerDown={hold}>
-            {p.actions}
-          </div>,
-          <div key="now" onPointerDown={hold}>
-            {happening}
-          </div>,
-        ]),
-    p.response ? (
-      <Section
-        key="response"
-        id="fw-response"
-        title={t('Respuesta oficial', 'Official response', 'Resposta oficial')}
-      >
-        <List>{p.response}</List>
-      </Section>
-    ) : null,
-    <OfficialNow
-      key="official"
-      lang={p.lang}
-      now={p.now}
-      online={!offline}
-      national={p.national}
-      civil={p.civil}
-      // NWS areas are read separately (the NWS tab): never "no format Faro can read". With a
-      // national feed, the agency's site is where to look when it cannot be read.
-      weather={p.nwsArea ? undefined : p.weather}
-      services={p.services}
-      open={open}
-      onToggle={toggle}
-      onFloodGuide={p.onFloodGuide}
-    />,
+    <div key="actions">{p.actions}</div>,
+    <div key="now" onPointerDown={hold}>
+      {board}
+    </div>,
+    <Disclosure
+      key="more"
+      title={t('Más información oficial', 'More official information', 'Mais informações oficiais')}
+      meta={t(
+        'Comunicados, avisos y respuesta oficial',
+        'Posts, warnings and the official response',
+        'Comunicados, avisos e resposta oficial',
+      )}
+      open={moreOpen}
+      onToggle={setMoreOpen}
+    >
+      <div className="grid gap-8">
+        {p.response && (
+          <Section
+            id="fw-response"
+            title={t('Respuesta oficial', 'Official response', 'Resposta oficial')}
+          >
+            <List>{p.response}</List>
+          </Section>
+        )}
+        <OfficialNow
+          lang={p.lang}
+          now={p.now}
+          online={!offline}
+          national={p.national}
+          civil={p.civil}
+          // NWS areas are read separately (the NWS tab): never "no format Faro can read". With a
+          // national feed, the agency's site is where to look when it cannot be read.
+          weather={p.nwsArea ? undefined : p.weather}
+          services={p.services}
+          open={open}
+          onToggle={toggle}
+          onFloodGuide={p.onFloodGuide}
+        />
+      </div>
+    </Disclosure>,
     <ScopeNote key="scope">
       {t(
         'Faro consulta las fuentes oficiales solo mientras está abierto. No llama ni avisa por ti, y tus datos quedan en este navegador.',
@@ -748,18 +948,16 @@ export default function SituationBriefing(p: Props) {
         'O Faro consulta as fontes oficiais só enquanto está aberto. Não liga nem avisa ninguém por você, e seus dados ficam neste navegador.',
       )}
     </ScopeNote>,
-  ].filter(Boolean);
-  // On phones the map follows "What is happening" and the actions, whichever comes last, so the
-  // actions never fall below it on a bad day; on wide screens it spans the main column.
-  const keyAt = (key: string) => main.findIndex((n) => (n as { key?: string }).key === key);
-  const after = Math.max(keyAt('now'), keyAt('actions'));
-  const items = [...main.slice(0, after + 1), side, ...main.slice(after + 1)];
+  ];
+  // On phones the map follows the board; on wide screens it spans the main column.
+  const after = main.findIndex((n) => (n as { key?: string }).key === 'now');
+  const items2 = [...main.slice(0, after + 1), side, ...main.slice(after + 1)];
   return (
     <div
       className="f-dashboard grid max-w-2xl grid-cols-[minmax(0,1fr)] items-start gap-8 @min-[1200px]/app:max-w-none @min-[1200px]/app:grid-cols-[minmax(0,42rem)_minmax(20rem,1fr)] @min-[1200px]/app:*:col-start-1 @min-[1200px]/app:[&>[data-side]]:sticky @min-[1200px]/app:[&>[data-side]]:top-8 @min-[1200px]/app:[&>[data-side]]:col-start-2 @min-[1200px]/app:[&>[data-side]]:row-[1/span_var(--f-side-span,6)]"
       style={{ '--f-side-span': main.length } as React.CSSProperties}
     >
-      {items}
+      {items2}
     </div>
   );
 }
