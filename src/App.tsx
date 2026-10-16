@@ -1083,7 +1083,8 @@ export default function App() {
             },
             {
               failed: national.failed,
-              partial: nationalHere?.partial,
+              // Reading only the most recent messages is said on Situación, not marked partial.
+              partial: nationalHere?.partial && !nationalHere.recent,
               stale: nationalHere?.stale,
               maxAge: OFFICIAL_MAX_AGE,
             },
@@ -1591,6 +1592,7 @@ export default function App() {
                         failed: national.failed,
                         failedAt: national.failedAt,
                         partial: national.data?.country === country && national.data.partial,
+                        recent: national.data?.country === country ? national.data.recent : null,
                         checked: national.data?.country === country ? national.data.fetched : null,
                         // The adapter's previous copy during an outage never reads as "no warnings".
                         stale:
@@ -2599,6 +2601,7 @@ export default function App() {
               }}
               onStatus={() => go('status')}
               onHelp={() => go('help', '#fw-help-care')}
+              onEmbassy={() => go('help', '#fw-help-embassy')}
               onTrip={() => go('hotel')}
               onQuake={(q) => setDetail(q.id)}
               onActivity={(section) => {
@@ -2662,7 +2665,27 @@ export default function App() {
                   />
                 </List>
               </Section>
-              <OfflineMap lang={lang} detail {...offlineArea(visiblePoint)} />
+              {/* The offline map has one home, Viaje; Ayuda points there. */}
+              <Section
+                id="fw-help-offline"
+                title={t('Mapa sin conexión', 'Offline map', 'Mapa off-line')}
+              >
+                <List>
+                  <ListRow
+                    title={t(
+                      'Guardar la zona para usarla sin señal',
+                      'Save the area to use without signal',
+                      'Salvar a área para usar sem sinal',
+                    )}
+                    meta={t(
+                      'En Viaje, con Google Maps',
+                      'In Trip, with Google Maps',
+                      'Em Viagem, com o Google Maps',
+                    )}
+                    onClick={() => go('hotel', '#fw-offline-map')}
+                  />
+                </List>
+              </Section>
               <DestinationInfo
                 country={country}
                 lang={lang}

@@ -52,6 +52,8 @@ export type NationalFeed = {
   /** When the last failed attempt was made. */
   failedAt?: number | null;
   partial: boolean;
+  /** Only the adapter's limit was reached: how many recent messages were read. */
+  recent?: number | null;
   checked: number | null;
   stale: boolean;
 };
@@ -328,20 +330,27 @@ export default function OfficialNow({
   const nationalEmpty =
     signal === 'off'
       ? t('No hay avisos vigentes.', 'No warnings in force.', 'Não há avisos em vigor.')
-      : signal === 'unconfirmed'
-        ? t(
-            'No se pudo confirmar si hay avisos vigentes.',
-            'Could not confirm whether warnings are in force.',
-            'Não foi possível confirmar se há avisos em vigor.',
+      : signal === 'recent' && national?.recent
+        ? // What was checked, exactly: the most recent messages. Older ones were not read.
+          t(
+            `Ningún aviso vigente entre los ${national.recent} mensajes más recientes del ${national.agency}.`,
+            `No warnings in force among ${national.agency}'s ${national.recent} most recent messages.`,
+            `Nenhum aviso em vigor entre as ${national.recent} mensagens mais recentes do ${national.agency}.`,
           )
-        : signal === 'failed' || signal === 'offline'
-          ? // The state is beside the heading; this says what it means and where to look.
-            t(
-              'Faro no puede saber si hay avisos vigentes: consulta su sitio oficial.',
-              'Faro cannot tell whether warnings are in force: check its official site.',
-              'O Faro não consegue saber se há avisos em vigor: consulte o site oficial.',
+        : signal === 'unconfirmed'
+          ? t(
+              'No se pudo confirmar si hay avisos vigentes.',
+              'Could not confirm whether warnings are in force.',
+              'Não foi possível confirmar se há avisos em vigor.',
             )
-          : '';
+          : signal === 'failed' || signal === 'offline'
+            ? // The state is beside the heading; this says what it means and where to look.
+              t(
+                'Faro no puede saber si hay avisos vigentes: consulta su sitio oficial.',
+                'Faro cannot tell whether warnings are in force: check its official site.',
+                'O Faro não consegue saber se há avisos em vigor: consulte o site oficial.',
+              )
+            : '';
   const civilLine = civil ? feedLine(civil, online && !civil.offline, now, lang) : null;
   // A quiet week still says when the agency last published, so silence is not read as news.
   const last = civil?.posts && posts.length === 0 ? lastPost(civil.posts, now) : null;
@@ -467,7 +476,7 @@ export default function OfficialNow({
             nationalEmpty && (
               <Note
                 more={
-                  (signal === 'failed' || signal === 'offline') &&
+                  (signal === 'failed' || signal === 'offline' || signal === 'recent') &&
                   weather && (
                     <OutLink href={weather.url}>
                       {new URL(weather.url).hostname.replace(/^www\./, '')}

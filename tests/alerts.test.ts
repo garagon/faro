@@ -273,6 +273,12 @@ test('national warnings must match the requested country and only those in force
     ['urn:2', 'urn:1'],
   );
   assert.throws(() => parseNational({ ...data, country: 'CR' }, 'PA', now));
+  // Only the limit reached, every message read answered: the count read is kept. A message that
+  // failed makes the answer simply incomplete.
+  const limited = { country: 'PA', agency: 'IMHPA', warnings: [], partial: true, age: 0 };
+  assert.equal(parseNational({ ...limited, read: 20, missed: 0 }, 'PA', now).recent, 20);
+  assert.equal(parseNational({ ...limited, read: 20, missed: 1 }, 'PA', now).recent, null);
+  assert.equal(parseNational({ ...limited }, 'PA', now).recent, null);
   // The adapter's previous copy during an outage: an empty list is not "no warnings".
   assert.equal(data.stale, false);
   const kept = parseNational(

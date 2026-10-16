@@ -26,6 +26,11 @@ export type NationalSnapshot = {
   agency: string;
   warnings: NationalWarning[];
   partial: boolean;
+  /**
+   * When the only gap is the adapter's limit (every message it read answered), how many of the
+   * most recent messages were read; otherwise null.
+   */
+  recent?: number | null;
   fetched: number;
   /** The adapter could not refresh and served its previous copy. */
   stale: boolean;
@@ -98,16 +103,27 @@ function validPolygons(value: unknown): [number, number][][] {
  * What the national-warnings row may say. "No warnings" only comes from a complete, recent
  * answer; partial, failed, old or offline answers with no warnings are "not confirmed".
  */
-export type NationalSignal = 'checking' | 'offline' | 'failed' | 'unconfirmed' | 'on' | 'off';
+export type NationalSignal =
+  | 'checking'
+  | 'offline'
+  | 'failed'
+  | 'unconfirmed'
+  /** None in force among the most recent messages read; older ones were not read. */
+  | 'recent'
+  | 'on'
+  | 'off';
 export function nationalSignal(n: {
   warnings: readonly unknown[] | null;
   failed: boolean;
   partial: boolean;
+  recent?: number | null;
   stale: boolean;
 }): NationalSignal {
   if (!n.warnings) return n.failed ? 'failed' : n.stale ? 'offline' : 'checking';
   if (n.warnings.length) return 'on';
-  return n.partial || n.stale || n.failed ? 'unconfirmed' : 'off';
+  if (n.stale || n.failed) return 'unconfirmed';
+  if (n.partial) return n.recent ? 'recent' : 'unconfirmed';
+  return 'off';
 }
 
 const FLOOD_WORDS =
@@ -141,6 +157,7 @@ export function parseNational(value: unknown, country: string, received = Date.n
     agency: d.agency,
     warnings,
     partial: d.partial === true,
+    recent: d.partial === true && d.missed === 0 && finite(d.read) && d.read > 0 ? d.read : null,
     fetched: received - age,
     stale: d.stale === true,
   } satisfies NationalSnapshot;

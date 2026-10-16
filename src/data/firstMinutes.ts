@@ -92,12 +92,40 @@ export const hazardSteps: Record<EmergencyKind, readonly FirstMinutesStep[]> = {
       ],
       source: femaEarthquake,
     },
+    // The coast step, in four short lines (it was one paragraph of ten): every instruction kept.
     {
       id: 'coast',
       text: [
-        'Si estás en la playa o junto al mar, ve a pie a un lugar alto o tierra adentro apenas pare el sismo, aunque haya sido leve. En el resto de la costa, hazlo si fue fuerte o largo. No esperes una alerta. Si no puedes llegar, sube lo más alto posible o aléjate del mar todo lo que puedas. Puede haber olas durante horas o días: no vuelvas hasta que la autoridad diga que es seguro.',
-        'If you are on the beach or by the water, go on foot to high ground or inland as soon as the shaking stops, even if it was weak. Elsewhere on the coast, do so if it was strong or long. Do not wait for an alert. If you cannot get there, go as high as possible or as far from the sea as you can. Waves can continue for hours or days: do not return until officials say it is safe.',
-        'Se você estiver na praia ou junto ao mar, vá a pé para um lugar alto ou para longe da costa assim que o tremor parar, mesmo que tenha sido fraco. No resto da costa, faça isso se foi forte ou longo. Não espere um alerta. Se não conseguir chegar, suba o mais alto possível ou afaste‑se do mar o máximo que puder. Pode haver ondas durante horas ou dias: não volte até que as autoridades digam que é seguro.',
+        'En la playa o junto al mar: apenas pare, ve a pie a un lugar alto o tierra adentro, aunque haya sido leve.',
+        'On the beach or by the water: as soon as it stops, go on foot to high ground or inland, even if it was weak.',
+        'Na praia ou junto ao mar: assim que parar, vá a pé para um lugar alto ou para longe da costa, mesmo que tenha sido fraco.',
+      ],
+      source: nwsTsunami,
+    },
+    {
+      id: 'coast-strong',
+      text: [
+        'En el resto de la costa, hazlo si fue fuerte o largo. No esperes una alerta.',
+        'Elsewhere on the coast, do so if it was strong or long. Do not wait for an alert.',
+        'No resto da costa, faça isso se foi forte ou longo. Não espere um alerta.',
+      ],
+      source: nwsTsunami,
+    },
+    {
+      id: 'coast-cannot',
+      text: [
+        'Si no puedes llegar, sube lo más alto posible o aléjate del mar todo lo que puedas.',
+        'If you cannot get there, go as high as possible or as far from the sea as you can.',
+        'Se não conseguir chegar, suba o mais alto possível ou afaste‑se do mar o máximo que puder.',
+      ],
+      source: nwsTsunami,
+    },
+    {
+      id: 'coast-wait',
+      text: [
+        'Puede haber olas durante horas o días: no vuelvas hasta que la autoridad diga que es seguro.',
+        'Waves can continue for hours or days: do not return until officials say it is safe.',
+        'Pode haver ondas durante horas ou dias: não volte até que as autoridades digam que é seguro.',
       ],
       action: 'tsunami',
       source: nwsTsunami,

@@ -3,6 +3,7 @@ import {
   BookOpenTextIcon,
   ChatCircleTextIcon,
   FirstAidKitIcon,
+  FlagIcon,
   MapPinIcon,
   WhatsappLogoIcon,
   WavesIcon,
@@ -87,6 +88,8 @@ type Props = {
   onGuide: (kind: EmergencyKind) => void;
   onStatus: () => void;
   onHelp: () => void;
+  /** Ayuda, at the embassy section. */
+  onEmbassy: () => void;
   onTrip: () => void;
   onActivity: (section?: 'tsunami') => void;
   /** Opens one earthquake's sheet. */
@@ -182,9 +185,9 @@ export default function EmergencyScreen(p: Props) {
   const actionLabel: Record<FirstMinutesAction, string> = {
     call: t('Ir a los números', 'Go to numbers', 'Ir aos números'),
     tsunami: t(
-      'Boletines de tsunami (ya en lo alto)',
-      'Tsunami bulletins (once on high ground)',
-      'Boletins de tsunami (já em lugar alto)',
+      'Boletines de tsunami (cuando estés a salvo)',
+      'Tsunami bulletins (once you are safe)',
+      'Boletins de tsunami (quando estiver em segurança)',
     ),
     status: t('Avisar cómo estoy', 'Check in', 'Avisar como estou'),
   };
@@ -198,7 +201,8 @@ export default function EmergencyScreen(p: Props) {
     text: (
       <>
         {s.text[idx]}
-        {s.action && (s.action !== 'call' || local) && (
+        {/* The numbers are the first thing on this screen: no "go to the numbers" link here. */}
+        {s.action && s.action !== 'call' && (
           <>
             {' '}
             <button type="button" className="f-inline-link" onClick={() => act(s.action!)}>
@@ -406,16 +410,24 @@ export default function EmergencyScreen(p: Props) {
               : t('Tu embajada', 'Your embassy', 'Sua embaixada')}
           </h2>
           {!p.nationality ? (
-            <CountrySearch
-              label={t(
-                '¿De qué país eres? Para mostrarte tu embajada',
-                'Where are you from? To show your embassy',
-                'De que país você é? Para mostrar sua embaixada',
-              )}
-              lang={p.lang}
-              value=""
-              onChange={(code) => code && p.onNationality(code)}
-            />
+            // No search field on the screen used in a hurry: the nationality is chosen in Ayuda,
+            // next to the embassy directory, and kept for the next visit.
+            <List>
+              <ListRow
+                lead={<RowIcon icon={<FlagIcon size={20} />} />}
+                title={t(
+                  'Elige tu nacionalidad',
+                  'Choose your nationality',
+                  'Escolha sua nacionalidade',
+                )}
+                meta={t(
+                  'En Ayuda, para ver tu embajada',
+                  'In Help, to see your embassy',
+                  'Em Ajuda, para ver sua embaixada',
+                )}
+                onClick={p.onEmbassy}
+              />
+            </List>
           ) : missions.length > 0 || support ? (
             <>
               <List>
@@ -470,7 +482,7 @@ export default function EmergencyScreen(p: Props) {
                   `O Faro não tem um telefone verificado da embaixada do seu país (${names.of(p.nationality)}) neste país. Em Ajuda estão o endereço e o site oficial, se os tivermos. Em caso de perigo imediato, ligue primeiro para o número local.`,
                 )}
               </p>
-              <Button variant="secondary" onClick={p.onHelp}>
+              <Button variant="secondary" onClick={p.onEmbassy}>
                 {t('Ver en Ayuda', 'See in Help', 'Ver em Ajuda')}
               </Button>
             </>

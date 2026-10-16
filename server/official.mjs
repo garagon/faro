@@ -539,12 +539,17 @@ async function nationalWarnings(code) {
       seen.add(key);
       return true;
     });
+  const missed = results.filter((r) => r.status === 'rejected').length;
   return {
     country: code,
     agency: feed.agency,
     warnings,
     // Messages left unread (failed or beyond the limit) mean the list may be incomplete.
-    partial: results.some((r) => r.status === 'rejected') || all.length > links.length,
+    partial: missed > 0 || all.length > links.length,
+    // How many of the most recent messages were read, and how many of those failed: with none
+    // failed, the app can say exactly what it checked ("the 20 most recent").
+    read: links.length,
+    missed,
   };
 }
 // Panama's civil protection agency publishes communiqués, prevention notices and incident

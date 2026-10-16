@@ -41,6 +41,10 @@ test('national warnings say "none" only from a complete, recent answer', () => {
   const base = { warnings: [], failed: false, partial: false, stale: false };
   assert.equal(nationalSignal(base), 'off');
   assert.equal(nationalSignal({ ...base, partial: true }), 'unconfirmed');
+  // Only the adapter's limit was reached and every message read answered: said exactly.
+  assert.equal(nationalSignal({ ...base, partial: true, recent: 20 }), 'recent');
+  assert.equal(nationalSignal({ ...base, partial: true, recent: 20, stale: true }), 'unconfirmed');
+  assert.equal(nationalSignal({ ...base, partial: true, recent: 20, failed: true }), 'unconfirmed');
   assert.equal(nationalSignal({ ...base, stale: true }), 'unconfirmed');
   assert.equal(nationalSignal({ ...base, failed: true }), 'unconfirmed');
   assert.equal(nationalSignal({ ...base, warnings: null }), 'checking');

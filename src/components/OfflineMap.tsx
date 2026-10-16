@@ -19,11 +19,6 @@ type Props = {
   view: { lat: number; lng: number; zoom: number };
   /** Says which area opens, so the person knows before tapping. */
   around: 'stay' | 'here' | 'map';
-  /**
-   * The steps and limits shown open, where the screen is about local help (Ayuda). Elsewhere
-   * (Viaje) the same block is compact: the steps and limits fold under one row.
-   */
-  detail?: boolean;
 };
 
 /**
@@ -31,7 +26,7 @@ type Props = {
  * stores tiles; it opens the area and gives the app's steps, with their limits, as Google
  * documents them.
  */
-export default function OfflineMap({ lang, view, around, detail = false }: Props) {
+export default function OfflineMap({ lang, view, around }: Props) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const url = googleMapsArea(view);
   if (!url) return null;
@@ -113,21 +108,17 @@ export default function OfflineMap({ lang, view, around, detail = false }: Props
           'O Google recebe a área; o Faro não guarda mapas.',
         )}
       </Note>
-      {detail ? (
-        howTo
-      ) : (
-        // Viaje starts every row with an icon, so this one shares the same text edge.
-        <Disclosure
-          lead={<RowIcon icon={<ListNumbersIcon size={20} />} />}
-          title={t(
-            'Cómo guardarla y sus límites',
-            'How to save it and its limits',
-            'Como salvá-la e seus limites',
-          )}
-        >
-          {howTo}
-        </Disclosure>
-      )}
+      {/* Viaje (its one home) starts every row with an icon: this one shares the text edge. */}
+      <Disclosure
+        lead={<RowIcon icon={<ListNumbersIcon size={20} />} />}
+        title={t(
+          'Cómo guardarla y sus límites',
+          'How to save it and its limits',
+          'Como salvá-la e seus limites',
+        )}
+      >
+        {howTo}
+      </Disclosure>
     </Section>
   );
 }
