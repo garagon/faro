@@ -1,0 +1,104 @@
+/*
+ * Sheet: the detail of one record over the screen. From the bottom on phones, centred from
+ * 600 px. It renders in a portal outside the app frame, so its breakpoint is the window's.
+ * Head: an optional figure, the title (section title role) and one caption line; the body
+ * scrolls; the actions stay at the foot.
+ */
+.f-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--f-z-overlay);
+  background: color-mix(in srgb, var(--f-neutral-900) 45%, transparent);
+}
+.f-sheet {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: var(--f-z-overlay);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - var(--f-space-4));
+  border-radius: var(--f-radius-md) var(--f-radius-md) 0 0;
+  background: var(--f-color-surface);
+  box-shadow: var(--f-shadow-overlay);
+  color: var(--f-color-text);
+}
+.f-sheet:focus {
+  outline: none;
+}
+@media (min-width: 600px) {
+  .f-sheet {
+    inset: 50% auto auto 50%;
+    width: min(36rem, calc(100vw - 2 * var(--f-space-8)));
+    max-height: calc(100dvh - 2 * var(--f-space-8));
+    border-radius: var(--f-radius-md);
+    transform: translate(-50%, -50%);
+  }
+}
+.f-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: var(--f-space-4);
+  padding: var(--f-space-4) var(--f-space-2) var(--f-space-4) var(--f-space-5);
+  border-bottom: var(--f-hairline);
+}
+.f-sheet-close {
+  align-self: start;
+}
+.f-sheet-lead {
+  display: grid;
+  place-items: center;
+  padding-inline-end: var(--f-space-4);
+  border-inline-end: var(--f-hairline);
+}
+.f-sheet-heading {
+  flex: 1;
+  display: grid;
+  gap: var(--f-space-1);
+  min-width: 0;
+}
+.f-sheet-title {
+  margin: 0;
+  font-size: var(--f-text-lg);
+  font-weight: var(--f-weight-bold);
+  line-height: var(--f-leading-snug);
+  overflow-wrap: anywhere;
+}
+.f-sheet-meta {
+  margin: 0;
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  line-height: var(--f-leading-snug);
+}
+.f-sheet-body {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--f-space-5);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--f-space-5);
+}
+.f-sheet-body > * {
+  margin: 0;
+}
+.f-sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--f-space-3);
+  padding: var(--f-space-4) var(--f-space-5) max(var(--f-space-4), env(safe-area-inset-bottom));
+  border-top: var(--f-hairline);
+}
+.f-sheet-actions > * {
+  flex: 1 0 auto;
+}
+@media (max-width: 22.5em) {
+  .f-sheet-head {
+    padding-inline-start: var(--f-space-4);
+  }
+  .f-sheet-body {
+    padding: var(--f-space-4);
+  }
+  .f-sheet-actions {
+    padding-inline: var(--f-space-4);
+  }
+}

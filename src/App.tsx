@@ -2,7 +2,6 @@ import InstallFaro from './components/InstallFaro.tsx';
 import NearbyCare from './components/NearbyCare.tsx';
 import EvacuationPlan from './components/EvacuationPlan.tsx';
 import MagnitudeLegend from './components/MagnitudeLegend.tsx';
-import { magnitudeBand } from './lib/magnitude.ts';
 import CountryScreen from './components/CountryScreen.tsx';
 import DestinationInfo from './components/DestinationInfo.tsx';
 import { WORLD, countryCodes, regionFor, regionScope } from './lib/regions.ts';
@@ -21,8 +20,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import InformationDialog from './components/InformationDialog.tsx';
 import {
   ArrowUpRightIcon,
-  CaretRightIcon,
-  MapPinIcon,
   CrosshairIcon,
   BookOpenTextIcon,
   UsersThreeIcon,
@@ -41,6 +38,7 @@ import {
   displayPlace,
   distanceKm,
   filterEvents,
+  placeLang,
   type CatalogId,
   type Quake,
   type Bounds,
@@ -85,6 +83,7 @@ import {
   parseAlerts,
 } from './lib/alerts.ts';
 import { atLabel } from './lib/time.ts';
+import { ageLabel } from './lib/feedUpdates.ts';
 import { confirmFresh, earthquakeSummary, gdacsStatus, tsunamiStatus } from './lib/hazards.ts';
 import SituationBriefing from './components/SituationBriefing.tsx';
 import { destinationFor } from './data/destinations/index.ts';
@@ -117,17 +116,24 @@ import ResponsePanel from './components/ResponsePanel.tsx';
 import HomeActions, { HomeCall } from './components/HomeActions.tsx';
 import HomeTabs from './components/HomeTabs.tsx';
 import {
+  Actions,
   AppFrame,
   BackLink,
+  Badge,
+  Button,
   Header,
   List,
   ListRow,
   Magnitude,
   MapFrame,
   Note,
+  ScopeNote,
   ScreenHead,
   Section,
+  Segmented,
+  SelectField,
   Sidebar,
+  SourceStamp,
   StatusBar,
   TabBar,
   type Tab,
@@ -185,6 +191,15 @@ const providerNames: Record<CatalogId, string> = {
   EMSC: 'EMSC',
   USGS: 'USGS',
 };
+// "em" + the country's article in Portuguese, for the earthquake page title.
+const PT_IN: Record<string, string> = Object.fromEntries(
+  Object.entries({
+    no: ['PA', 'MX', 'PE', 'EC', 'CL', 'BR', 'PY', 'UY', 'CA', 'JP'],
+    na: ['AR', 'CO', 'CR', 'GT', 'NI', 'VE', 'BO', 'DO', 'JM'],
+    nos: ['US'],
+    em: ['HN', 'SV', 'CU', 'PR', 'PT'],
+  }).flatMap(([prep, codes]) => codes.map((code) => [code, prep])),
+);
 function readPlan() {
   try {
     const p = JSON.parse(localStorage.getItem('faro-hotel-v1') || 'null');
@@ -1066,7 +1081,11 @@ export default function App() {
                   t(
                     `Sismos en ${countryName}`,
                     `Earthquakes in ${countryName}`,
-                    `Terremotos · ${countryName}`,
+                    // Portuguese contracts "em" with the country's article ("no Panamá", "na
+                    // Colômbia"); a country not listed keeps the neutral form.
+                    PT_IN[country]
+                      ? `Terremotos ${PT_IN[country]} ${countryName}`
+                      : `Terremotos · ${countryName}`,
                   ),
                   t(
                     'Cada sismo como lo publica la fuente elegida, con filtros y por páginas.',
@@ -1074,8 +1093,9 @@ export default function App() {
                     'Cada terremoto como a fonte escolhida o publica, com filtros e por páginas.',
                   ),
                 ],
+    // The same word as its menu entry.
     sources: [
-      t('Fuentes y actualización', 'Sources & updates', 'Fontes e atualizações'),
+      t('Fuentes', 'Sources', 'Fontes'),
       t(
         'De dónde viene cada dato, cuándo se consultó por última vez y qué cubre.',
         'Where each piece of data comes from, when it was last checked and what it covers.',
@@ -1307,58 +1327,6 @@ export default function App() {
               </button>
             </div>
           )}
-          {/* A source that answers but whose newest record is more than a day old: said with its
-            date, with the other catalogs one tap away. Never read as "no earthquakes". */}
-          {screen === 'detail' && homeTab === 'quakes' && !stale && quietSince && live.online && (
-            <div className="fw-warning" role="status">
-              {t(
-                `El registro más reciente de ${provider} es del ${stamp(quietSince)}. Otras fuentes pueden tener datos más nuevos:`,
-                `${provider}'s most recent record is from ${stamp(quietSince)}. Other sources may have newer data:`,
-                `O registro mais recente de ${provider} é de ${stamp(quietSince)}. Outras fontes podem ter dados mais novos:`,
-              )}{' '}
-              <span className="fw-source-fallback">
-                {alternatives.map((c) => (
-                  <button key={c} onClick={() => switchCatalog(c)}>
-                    {providerNames[c]}
-                  </button>
-                ))}
-              </span>
-            </div>
-          )}
-          {/* Offline is already explained by the banner above; this box is for a failing source. */}
-          {screen === 'detail' && homeTab === 'quakes' && stale && live.online && (
-            <div className="fw-warning" role="status">
-              {t(
-                'No hay una actualización reciente. Estos registros pueden estar desactualizados.',
-                'No recent update. These records may be out of date.',
-                'Não há uma atualização recente. Estes registros podem estar desatualizados.',
-              )}{' '}
-              {live.fetched
-                ? `${t('Última consulta correcta', 'Last successful check', 'Última consulta bem-sucedida')}: ${stamp(live.fetched)}`
-                : t(
-                    'Todavía no se recibieron datos.',
-                    'No data received yet.',
-                    'Ainda não foram recebidos dados.',
-                  )}
-              <button onClick={() => void live.refresh()}>
-                {t('Reintentar', 'Retry', 'Tentar de novo')}
-              </button>
-              {live.online && (
-                <span className="fw-source-fallback">
-                  {t(
-                    'Mientras tanto, consulta otra fuente:',
-                    'Meanwhile, check another source:',
-                    'Enquanto isso, consulte outra fonte:',
-                  )}
-                  {alternatives.map((c) => (
-                    <button key={c} onClick={() => switchCatalog(c)}>
-                      {providerNames[c]}
-                    </button>
-                  ))}
-                </span>
-              )}
-            </div>
-          )}
           {screen !== 'status' && checkInDue(checkIns[0], live.now) && (
             <div className="fw-checkin-reminder" role="status">
               <span>
@@ -1379,6 +1347,10 @@ export default function App() {
                 <BackLink onClick={() => setScreen('activity')}>
                   {t('Situación', 'Situation', 'Situação')}
                 </BackLink>
+              )}
+              {/* Sources opens from several screens: back returns to the one it came from. */}
+              {screen === 'sources' && (
+                <BackLink onClick={() => history.back()}>{t('Volver', 'Back', 'Voltar')}</BackLink>
               )}
               <ScreenHead title={headings[screen][0]} lead={headings[screen][1]} />
             </div>
@@ -1533,7 +1505,7 @@ export default function App() {
                 weather={destinationFor(US_AREAS.has(country) ? 'US' : country)?.weatherAgency}
                 services={destinationFor(country)?.services}
                 now={live.now}
-                onSources={() => setScreen('sources')}
+                onSources={() => go('sources', '#fw-sources-read')}
                 call={
                   <HomeCall
                     lang={lang}
@@ -1723,7 +1695,7 @@ export default function App() {
             </>
           )}
           {screen === 'detail' && (
-            <div className="fw-detail">
+            <div className="f-column">
               <HomeTabs
                 label={t('Detalle por fuente', 'Detail by source', 'Detalhe por fonte')}
                 active={homeTab}
@@ -1734,31 +1706,52 @@ export default function App() {
                     label: t('Sismos', 'Earthquakes', 'Terremotos'),
                     // No answer yet (or a failing source): no count, never a "0".
                     // No count from old data: "0" would read as "no earthquakes".
-                    count: (live.checked || live.fetched) && !stale ? results.length : undefined,
+                    // Nor from a quiet catalogue: its newest record is over a day old.
+                    count:
+                      (live.checked || live.fetched) && !stale && !(quietSince && !results.length)
+                        ? results.length
+                        : undefined,
                     content: (
-                      <div className="fw-quakes" id="sismos">
-                        <div className="fw-query-controls">
-                          <details className="fw-query-filters">
-                            <summary>
-                              <strong>{t('Filtros', 'Filters', 'Filtros')}</strong>
-                              <span>
-                                {catalog} ·{' '}
-                                {hours === 168 ? t('7 días', '7 days', '7 dias') : `${hours} h`} ·{' '}
-                                {minMag
-                                  ? `${t('Magnitud', 'Magnitude', 'Magnitude')} ≥ ${minMag}`
-                                  : t(
-                                      'Todas las magnitudes',
-                                      'All magnitudes',
-                                      'Todas as magnitudes',
-                                    )}
-                                {maxDepth < 800 ? ` · ≤ ${distance(maxDepth, lang)}` : ''}
-                                {scope === 'nearby' ? ` · ${distance(radius, lang)}` : ''}
-                              </span>
-                            </summary>{' '}
-                            <div className="fw-toolbar fw-catalog-toolbar">
-                              <label>
-                                {t('Fuente', 'Source', 'Fonte')}
-                                <select
+                      <div className="f-stack" data-gap="lg" id="sismos">
+                        <LiveActivity
+                          events={results}
+                          updates={live.updates.filter((u) =>
+                            results.some((e) => e.id === u.event.id),
+                          )}
+                          provider={provider}
+                          catalog={catalog}
+                          lang={lang}
+                          now={live.now}
+                          checked={live.checked}
+                          busy={live.busy}
+                          online={live.online}
+                          stale={stale}
+                          onRefresh={() => void live.refresh()}
+                          onDetails={(q) => setDetail(q.id)}
+                          onMap={showEpicentre}
+                          onHistory={() => go('sources', '#fw-sources-updates')}
+                          filters={{
+                            summary: [
+                              catalog,
+                              hours === 168 ? t('7 días', '7 days', '7 dias') : `${hours}\u00a0h`,
+                              minMag
+                                ? `${t('Magnitud', 'Magnitude', 'Magnitude')} ≥\u00a0${minMag}`
+                                : t(
+                                    'Todas las magnitudes',
+                                    'All magnitudes',
+                                    'Todas as magnitudes',
+                                  ),
+                              maxDepth < 800 ? `≤\u00a0${distance(maxDepth, lang)}` : '',
+                              scope === 'nearby' ? distance(radius, lang) : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')
+                              .replace(/(\d) (km|mi)\b/g, '$1\u00a0$2'),
+                            content: (
+                              <>
+                                <SelectField
+                                  id="fw-filter-catalog"
+                                  label={t('Fuente', 'Source', 'Fonte')}
                                   value={catalog}
                                   onChange={(e) => switchCatalog(e.target.value as CatalogId)}
                                 >
@@ -1771,11 +1764,10 @@ export default function App() {
                                   <option value="USGS">
                                     USGS · {t('Mundo', 'Worldwide', 'Mundo')}
                                   </option>
-                                </select>
-                              </label>
-                              <label>
-                                {t('Período', 'Period', 'Período')}
-                                <select
+                                </SelectField>
+                                <SelectField
+                                  id="fw-filter-period"
+                                  label={t('Período', 'Period', 'Período')}
                                   value={hours}
                                   onChange={(e) => {
                                     setHours(+e.target.value);
@@ -1787,268 +1779,318 @@ export default function App() {
                                     {t('24 horas', '24 hours', '24 horas')}
                                   </option>
                                   <option value={168}>{t('7 días', '7 days', '7 dias')}</option>
-                                </select>
-                              </label>
-                              <label>
-                                {t('Magnitud', 'Magnitude', 'Magnitude')}
-                                <select value={minMag} onChange={(e) => setMinMag(+e.target.value)}>
+                                </SelectField>
+                                <SelectField
+                                  id="fw-filter-magnitude"
+                                  label={t('Magnitud', 'Magnitude', 'Magnitude')}
+                                  value={minMag}
+                                  onChange={(e) => setMinMag(+e.target.value)}
+                                >
                                   <option value={0}>{t('Todas', 'All', 'Todas')}</option>
                                   {[2.5, 4, 5, 6].map((m) => (
                                     <option key={m} value={m}>
                                       ≥ {m}
                                     </option>
                                   ))}
-                                </select>
-                              </label>
-                              <details className="fw-filter-extra">
-                                <summary>
-                                  {t('Más filtros', 'More filters', 'Mais filtros')}
-                                </summary>
-                                <div>
-                                  <label>
-                                    {t('Zona horaria', 'Time zone', 'Fuso horário')}
-                                    <select
-                                      value={timeZone}
-                                      onChange={(e) =>
-                                        setTimeZone(e.target.value as 'local' | 'utc')
-                                      }
-                                    >
-                                      <option value="local">
-                                        {t('Local', 'Local', 'Local')} ·{' '}
-                                        {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                                </SelectField>
+                                <SelectField
+                                  id="fw-filter-zone"
+                                  label={t('Zona horaria', 'Time zone', 'Fuso horário')}
+                                  value={timeZone}
+                                  onChange={(e) => setTimeZone(e.target.value as 'local' | 'utc')}
+                                >
+                                  <option value="local">
+                                    {/* The offset, never an identifier like America/Panama. */}
+                                    {(() => {
+                                      const offset =
+                                        new Intl.DateTimeFormat(lang, {
+                                          timeZoneName: 'shortOffset',
+                                        })
+                                          .formatToParts(live.now)
+                                          .find((part) => part.type === 'timeZoneName')?.value ??
+                                        '';
+                                      return t(
+                                        `Hora local (${offset})`,
+                                        `Local time (${offset})`,
+                                        `Hora local (${offset})`,
+                                      );
+                                    })()}
+                                  </option>
+                                  <option value="utc">UTC</option>
+                                </SelectField>
+                                <SelectField
+                                  id="fw-filter-depth"
+                                  label={t('Profundidad', 'Depth', 'Profundidade')}
+                                  value={maxDepth}
+                                  onChange={(e) => setMaxDepth(+e.target.value)}
+                                >
+                                  <option value={800}>{t('Todas', 'All', 'Todas')}</option>
+                                  <option value={70}>≤ {distance(70, lang)}</option>
+                                  <option value={30}>≤ {distance(30, lang)}</option>
+                                </SelectField>
+                                {geo && (
+                                  <SelectField
+                                    id="fw-filter-area"
+                                    label={t('Área', 'Area', 'Área')}
+                                    value={scope === 'nearby' ? radius : 0}
+                                    onChange={(e) => {
+                                      setScope(+e.target.value ? 'nearby' : 'area');
+                                      if (+e.target.value) setRadius(+e.target.value);
+                                    }}
+                                  >
+                                    <option value={0}>
+                                      {t('Área seleccionada', 'Selected area', 'Área selecionada')}
+                                    </option>
+                                    {[50, 100, 300, 500].map((k) => (
+                                      <option key={k} value={k}>
+                                        {distance(k, lang)} ·{' '}
+                                        {t('cerca de mí', 'near me', 'perto de mim')}
                                       </option>
-                                      <option value="utc">UTC</option>
-                                    </select>
-                                  </label>
-                                  <label>
-                                    {t('Profundidad', 'Depth', 'Profundidade')}
-                                    <select
-                                      value={maxDepth}
-                                      onChange={(e) => setMaxDepth(+e.target.value)}
-                                    >
-                                      <option value={800}>{t('Todas', 'All', 'Todas')}</option>
-                                      <option value={70}>≤ {distance(70, lang)}</option>
-                                      <option value={30}>≤ {distance(30, lang)}</option>
-                                    </select>
-                                  </label>
-                                  {geo && (
-                                    <label>
-                                      {t('Área', 'Area', 'Área')}
-                                      <select
-                                        value={scope === 'nearby' ? radius : 0}
-                                        onChange={(e) => {
-                                          setScope(+e.target.value ? 'nearby' : 'area');
-                                          if (+e.target.value) setRadius(+e.target.value);
-                                        }}
-                                      >
-                                        <option value={0}>
-                                          {t(
-                                            'Área seleccionada',
-                                            'Selected area',
-                                            'Área selecionada',
-                                          )}
-                                        </option>
-                                        {[50, 100, 300, 500].map((k) => (
-                                          <option key={k} value={k}>
-                                            {distance(k, lang)} ·{' '}
-                                            {t('cerca de mí', 'near me', 'perto de mim')}
-                                          </option>
-                                        ))}
-                                      </select>
-                                    </label>
-                                  )}
-                                </div>
-                              </details>
-                            </div>
-                            <div className="fw-filter-location">
-                              <button
-                                className="fw-secondary"
-                                onClick={locate}
-                                disabled={geoState === 'pending'}
-                              >
-                                <CrosshairIcon size={18} />
-                                {geoState === 'pending'
-                                  ? t(
-                                      'Buscando ubicación…',
-                                      'Finding location…',
-                                      'Buscando localização…',
-                                    )
-                                  : t(
-                                      'Sismos cerca de mí',
-                                      'Earthquakes near me',
-                                      'Terremotos perto de mim',
-                                    )}
-                              </button>
-                              <button className="fw-text" onClick={() => setScreen('sources')}>
-                                {t(
-                                  'Fuentes y cobertura',
-                                  'Sources & coverage',
-                                  'Fontes e cobertura',
+                                    ))}
+                                  </SelectField>
                                 )}
-                              </button>
-                              <small>
-                                {t(
-                                  'La ubicación es opcional y requiere tu permiso.',
-                                  'Location is optional and requires your permission.',
-                                  'A localização é opcional e precisa da sua permissão.',
-                                )}
-                              </small>
-                            </div>
-                          </details>
-                        </div>
-                        <LiveActivity
-                          events={results}
-                          updates={live.updates.filter((u) =>
-                            results.some((e) => e.id === u.event.id),
-                          )}
-                          provider={provider}
-                          catalog={catalog}
-                          lang={lang}
-                          now={live.now}
-                          next={live.next}
-                          checked={live.checked}
-                          fetched={live.fetched}
-                          busy={live.busy}
-                          online={live.online}
-                          stale={stale}
-                          period={periodLabel}
-                          formatTime={(n) =>
-                            `${shortTime(n)} ${timeZone === 'utc' ? 'UTC' : new Intl.DateTimeFormat(lang, { timeZoneName: 'short' }).formatToParts(n).find((p) => p.type === 'timeZoneName')?.value || ''}`
-                          }
-                          onRefresh={() => void live.refresh()}
-                          onDetails={(q) => setDetail(q.id)}
-                          onMap={showEpicentre}
-                        />
-                        <div className="fw-quake-meta">
-                          <p className="fw-area-scope" role="status">
-                            {scope === 'country' && hasBorders(country)
-                              ? t(
-                                  `${countryName} y hasta 100 km mar adentro. Límites aproximados.`,
-                                  `${countryName} and up to ${distance(100, lang)} offshore. Approximate boundaries.`,
-                                  `${countryName} e até 100 km mar adentro. Limites aproximados.`,
-                                )
-                              : scope === 'nearby'
-                                ? t(
-                                    `Sismos a menos de ${radius} km de tu ubicación.`,
-                                    `Earthquakes within ${distance(radius, lang)} of your location.`,
-                                    `Terremotos a menos de ${radius} km da sua localização.`,
-                                  )
-                                : scope === 'area'
-                                  ? t(
-                                      'Área del mapa: incluye todos los países visibles.',
-                                      'Map area: includes all visible countries.',
-                                      'Área do mapa: inclui todos os países visíveis.',
-                                    )
-                                  : regionScope(country, lang)}
-                          </p>
-                          <MagnitudeLegend lang={lang} />
-                        </div>
-                        <section
-                          className="fw-events"
-                          aria-label={t(
-                            'Lista de sismos',
-                            'Earthquake list',
-                            'Lista de terremotos',
-                          )}
-                        >
-                          <div className="fw-events-title">
-                            <div>
-                              <h2 id="fw-events-title" tabIndex={-1}>
-                                {/* No count before the catalog has answered: "0" would read as none. */}
-                                {!live.fetched
-                                  ? t('Sismos', 'Earthquakes', 'Terremotos')
-                                  : `${results.length} ${
-                                      results.length === 1
-                                        ? t('sismo', 'earthquake', 'terremoto')
-                                        : t('sismos', 'earthquakes', 'terremotos')
-                                    }`}
-                              </h2>
-                              {listPage.pages > 1 && (
-                                <p>
+                                <Button
+                                  variant="secondary"
+                                  icon={<CrosshairIcon size={18} aria-hidden="true" />}
+                                  onClick={locate}
+                                  disabled={geoState === 'pending'}
+                                >
+                                  {geoState === 'pending'
+                                    ? t(
+                                        'Buscando ubicación…',
+                                        'Finding location…',
+                                        'Buscando localização…',
+                                      )
+                                    : t(
+                                        'Sismos cerca de mí',
+                                        'Earthquakes near me',
+                                        'Terremotos perto de mim',
+                                      )}
+                                </Button>
+                                <p className="f-caption">
                                   {t(
-                                    `Mostrando ${listPage.start + 1}–${listPage.end}`,
-                                    `Showing ${listPage.start + 1}–${listPage.end}`,
-                                    `Mostrando ${listPage.start + 1}–${listPage.end}`,
+                                    'La ubicación es opcional y requiere tu permiso.',
+                                    'Location is optional and requires your permission.',
+                                    'A localização é opcional e precisa da sua permissão.',
                                   )}
                                 </p>
-                              )}
+                                <Actions>
+                                  <button type="button" onClick={() => go('sources')}>
+                                    {t(
+                                      'Fuentes y cobertura',
+                                      'Sources & coverage',
+                                      'Fontes e cobertura',
+                                    )}
+                                  </button>
+                                </Actions>
+                              </>
+                            ),
+                          }}
+                        >
+                          {/* A source that answers but whose newest record is more than a day
+                            old: said with its date, with the other catalogs one tap away. Never
+                            read as "no earthquakes". */}
+                          {!stale && quietSince && live.online && (
+                            <div className="f-stack" data-gap="sm" role="status">
+                              <SourceStamp state="stale">
+                                {t(
+                                  `El registro más reciente de ${provider} es del ${stamp(quietSince)}. Otras fuentes pueden tener datos más nuevos:`,
+                                  `${provider}'s most recent record is from ${stamp(quietSince)}. Other sources may have newer data:`,
+                                  `O registro mais recente de ${provider} é de ${stamp(quietSince)}. Outras fontes podem ter dados mais novos:`,
+                                )}
+                              </SourceStamp>
+                              <Actions>
+                                {alternatives.map((c) => (
+                                  <button key={c} type="button" onClick={() => switchCatalog(c)}>
+                                    {providerNames[c]}
+                                  </button>
+                                ))}
+                              </Actions>
                             </div>
-                            <select
-                              aria-label={t('Ordenar eventos', 'Sort events', 'Ordenar eventos')}
-                              value={order}
-                              onChange={(e) => setOrder(e.target.value)}
-                            >
-                              <option value="time">
-                                {t('Más recientes', 'Most recent', 'Mais recentes')}
-                              </option>
-                              <option value="magnitude">
-                                {t('Mayor magnitud', 'Largest magnitude', 'Maior magnitude')}
-                              </option>
-                              {geo && (
-                                <option value="distance">
-                                  {t('Más cercanos', 'Nearest', 'Mais próximos')}
-                                </option>
-                              )}
-                            </select>
+                          )}
+                          {/* Offline is already said by the bar above; this is for a failing
+                            source. */}
+                          {stale && live.online && (
+                            <div className="f-stack" data-gap="sm" role="status">
+                              <SourceStamp state="stale">
+                                {t(
+                                  'No hay una actualización reciente. Estos registros pueden estar desactualizados.',
+                                  'No recent update. These records may be out of date.',
+                                  'Não há uma atualização recente. Estes registros podem estar desatualizados.',
+                                )}{' '}
+                                {live.fetched
+                                  ? `${t('Última consulta correcta', 'Last successful check', 'Última consulta bem-sucedida')}: ${stamp(live.fetched)}.`
+                                  : t(
+                                      'Todavía no se recibieron datos.',
+                                      'No data received yet.',
+                                      'Ainda não foram recebidos dados.',
+                                    )}{' '}
+                                {t(
+                                  'Mientras tanto, consulta otra fuente:',
+                                  'Meanwhile, check another source:',
+                                  'Enquanto isso, consulte outra fonte:',
+                                )}
+                              </SourceStamp>
+                              <Actions>
+                                {alternatives.map((c) => (
+                                  <button key={c} type="button" onClick={() => switchCatalog(c)}>
+                                    {providerNames[c]}
+                                  </button>
+                                ))}
+                                <button type="button" onClick={() => void live.refresh()}>
+                                  {t('Reintentar', 'Retry', 'Tentar de novo')}
+                                </button>
+                              </Actions>
+                            </div>
+                          )}
+                        </LiveActivity>
+                        <section
+                          className="f-section"
+                          id="fw-events"
+                          aria-labelledby="fw-events-title"
+                        >
+                          <div className="f-section-head">
+                            <h2 className="f-section-title" id="fw-events-title" tabIndex={-1}>
+                              {/* No count before the catalog has answered: "0" would read as none. */}
+                              {!live.fetched || (quietSince && !results.length)
+                                ? t('Sismos', 'Earthquakes', 'Terremotos')
+                                : `${results.length}\u00a0${
+                                    results.length === 1
+                                      ? t('sismo', 'earthquake', 'terremoto')
+                                      : t('sismos', 'earthquakes', 'terremotos')
+                                  }`}
+                            </h2>
+                            {listPage.pages > 1 && (
+                              <span className="f-section-aside">
+                                {t(
+                                  `Mostrando\u00a0${listPage.start + 1}–${listPage.end}`,
+                                  `Showing\u00a0${listPage.start + 1}–${listPage.end}`,
+                                  `Mostrando\u00a0${listPage.start + 1}–${listPage.end}`,
+                                )}
+                              </span>
+                            )}
                           </div>
-                          <div className="fw-event-list">
-                            {results.slice(listPage.start, listPage.end).map((q) => (
-                              <button
-                                key={q.id}
-                                className={`fw-event ${newIds.has(q.id) ? 'is-new' : ''}`}
-                                onClick={() => setDetail(q.id)}
-                              >
-                                <strong className={`fw-mag fw-mag-band-${magnitudeBand(q.mag)}`}>
-                                  {q.mag?.toFixed(1) ?? '—'}
-                                  <small className="fw-visually-hidden">
-                                    {t('Magnitud', 'Magnitude', 'Magnitude')}
-                                  </small>
-                                </strong>
-                                <span>
-                                  <b>
-                                    {displayPlace(q.place)}
-                                    {newIds.has(q.id) && (
-                                      <em className="fw-event-new">
+                          <Segmented
+                            block
+                            label={t('Ordenar eventos', 'Sort events', 'Ordenar eventos')}
+                            value={order}
+                            onChange={setOrder}
+                            options={[
+                              {
+                                value: 'time',
+                                label: t('Más recientes', 'Most recent', 'Mais recentes'),
+                              },
+                              {
+                                value: 'magnitude',
+                                label: t('Mayor magnitud', 'Largest magnitude', 'Maior magnitude'),
+                              },
+                              ...(geo
+                                ? [
+                                    {
+                                      value: 'distance',
+                                      label: t('Más cercanos', 'Nearest', 'Mais próximos'),
+                                    },
+                                  ]
+                                : []),
+                            ]}
+                          />
+                          <div role="status">
+                            <Note>
+                              {scope === 'country' && hasBorders(country)
+                                ? t(
+                                    `${countryName} y hasta 100 km mar adentro. Límites aproximados.`,
+                                    `${countryName} and up to ${distance(100, lang)} offshore. Approximate boundaries.`,
+                                    `${countryName} e até 100 km mar adentro. Limites aproximados.`,
+                                  )
+                                : scope === 'nearby'
+                                  ? t(
+                                      `Sismos a menos de ${radius} km de tu ubicación.`,
+                                      `Earthquakes within ${distance(radius, lang)} of your location.`,
+                                      `Terremotos a menos de ${radius} km da sua localização.`,
+                                    )
+                                  : scope === 'area'
+                                    ? t(
+                                        'Área del mapa: incluye todos los países visibles.',
+                                        'Map area: includes all visible countries.',
+                                        'Área do mapa: inclui todos os países visíveis.',
+                                      )
+                                    : regionScope(country, lang)}
+                            </Note>
+                          </div>
+                          {results.length > 0 ? (
+                            <List
+                              label={t('Lista de sismos', 'Earthquake list', 'Lista de terremotos')}
+                            >
+                              {results.slice(listPage.start, listPage.end).map((q) => (
+                                <ListRow
+                                  key={q.id}
+                                  lead={
+                                    <>
+                                      <Magnitude value={q.mag} />
+                                      <span className="f-visually-hidden">
+                                        {t('Magnitud', 'Magnitude', 'Magnitude')}
+                                      </span>
+                                    </>
+                                  }
+                                  title={<span lang={placeLang(q)}>{displayPlace(q.place)}</span>}
+                                  badge={
+                                    newIds.has(q.id) ? (
+                                      <Badge>
                                         {t(
                                           'Recibido recientemente',
                                           'Recently received',
                                           'Recebido recentemente',
                                         )}
-                                      </em>
-                                    )}
-                                  </b>
-                                  <small>
-                                    {shortTime(q.time)} {timeZone === 'utc' ? 'UTC' : ''} ·{' '}
-                                    {q.source || 'USGS'} · {distance(q.depth, lang)}{' '}
-                                    {t('prof.', 'deep', 'de prof.')}
-                                    {geo
-                                      ? ` · ${distance(distanceKm([geo.lat, geo.lng], [q.lat, q.lng]), lang)} ${t('de ti', 'away', 'de você')}`
-                                      : ''}
-                                  </small>
-                                </span>
-                                <CaretRightIcon size={18} aria-hidden="true" />
-                              </button>
-                            ))}
-                            {!results.length && (
-                              <div className="fw-empty">
-                                <MapPinIcon size={32} />
-                                <h3>
-                                  {!live.online
-                                    ? t('Sin conexión', 'Offline', 'Sem conexão')
-                                    : live.busy
-                                      ? `${t('Consultando', 'Checking', 'Consultando')} ${provider}…`
-                                      : live.failed
-                                        ? t(
-                                            'No pudimos consultar la fuente',
-                                            'Could not reach the source',
-                                            'Não conseguimos consultar a fonte',
-                                          )
-                                        : t(
-                                            'Sin registros en esta consulta',
-                                            'No records in this query',
-                                            'Sem registros nesta consulta',
-                                          )}
-                                </h3>
+                                      </Badge>
+                                    ) : undefined
+                                  }
+                                  // When it happened, how deep, and how far when the location is on.
+                                  // Local time reads as "10 min ago"; UTC as the published clock.
+                                  meta={
+                                    <>
+                                      <time
+                                        dateTime={new Date(q.time).toISOString()}
+                                        title={shortTime(q.time)}
+                                      >
+                                        {timeZone === 'utc'
+                                          ? `${shortTime(q.time)} UTC`
+                                          : ageLabel(q.time, live.now, lang).replace(
+                                              /(\d) /g,
+                                              '$1\u00a0',
+                                            )}
+                                      </time>
+                                      {' · '}
+                                      {distance(q.depth, lang).replace(' ', '\u00a0')}{' '}
+                                      {t('de prof.', 'deep', 'de prof.')}
+                                      {geo
+                                        ? ` · ${distance(distanceKm([geo.lat, geo.lng], [q.lat, q.lng]), lang).replace(' ', '\u00a0')} ${t('de ti', 'away', 'de você')}`
+                                        : ''}
+                                    </>
+                                  }
+                                  onClick={() => setDetail(q.id)}
+                                />
+                              ))}
+                            </List>
+                          ) : (
+                            <div className="f-stack" data-gap="sm">
+                              <h3 className="f-subhead">
+                                {!live.online
+                                  ? t('Sin conexión', 'Offline', 'Sem conexão')
+                                  : live.busy
+                                    ? `${t('Consultando', 'Checking', 'Consultando')} ${provider}…`
+                                    : live.failed
+                                      ? t(
+                                          'No pudimos consultar la fuente',
+                                          'Could not reach the source',
+                                          'Não conseguimos consultar a fonte',
+                                        )
+                                      : t(
+                                          'Sin registros en esta consulta',
+                                          'No records in this query',
+                                          'Sem registros nesta consulta',
+                                        )}
+                              </h3>
+                              <div className="f-prose">
                                 <p>
                                   {!live.online
                                     ? t(
@@ -2074,21 +2116,17 @@ export default function App() {
                                             'Amplie o período ou a área. A ausência de registros não significa ausência de perigo.',
                                           )}
                                 </p>
-                                {(live.failed || stale || quietSince) && live.online && (
-                                  <div className="fw-empty-fallback">
-                                    {alternatives.map((c) => (
-                                      <button
-                                        key={c}
-                                        className="fw-primary"
-                                        onClick={() => switchCatalog(c)}
-                                      >
-                                        {t('Ver', 'Use', 'Usar')} {providerNames[c]}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
+                              </div>
+                              <Actions>
+                                {(live.failed || stale || quietSince) &&
+                                  live.online &&
+                                  alternatives.map((c) => (
+                                    <button key={c} type="button" onClick={() => switchCatalog(c)}>
+                                      {t('Ver', 'Use', 'Usar')} {providerNames[c]}
+                                    </button>
+                                  ))}
                                 <button
-                                  className="fw-secondary"
+                                  type="button"
                                   onClick={() => {
                                     setHours(24);
                                     setMinMag(0);
@@ -2100,42 +2138,48 @@ export default function App() {
                                 >
                                   {t('Restablecer filtros', 'Reset filters', 'Redefinir filtros')}
                                 </button>
-                              </div>
+                              </Actions>
+                            </div>
+                          )}
+                          <Pagination
+                            lang={lang}
+                            label={t(
+                              'Páginas de sismos',
+                              'Earthquake pages',
+                              'Páginas de terremotos',
                             )}
-                            <Pagination
-                              lang={lang}
-                              label={t(
-                                'Páginas de sismos',
-                                'Earthquake pages',
-                                'Páginas de terremotos',
-                              )}
-                              current={listPage.current}
-                              pages={listPage.pages}
-                              onPage={(n) => {
-                                setPage(n);
-                                // The new page starts at the top of the list, with focus there.
-                                const title = document.getElementById('fw-events-title');
-                                title?.focus({ preventScroll: true });
-                                title
-                                  ?.closest('.fw-events')
-                                  ?.scrollIntoView({ block: 'start', behavior: scrollMotion() });
-                              }}
-                            />
-                          </div>
+                            current={listPage.current}
+                            pages={listPage.pages}
+                            onPage={(n) => {
+                              setPage(n);
+                              // The new page starts at the top of the list, with focus there.
+                              document
+                                .getElementById('fw-events-title')
+                                ?.focus({ preventScroll: true });
+                              document
+                                .getElementById('fw-events')
+                                ?.scrollIntoView({ block: 'start', behavior: scrollMotion() });
+                            }}
+                          />
                         </section>
-                        <div className="fw-disclaimer">
-                          <InfoIcon size={18} />
-                          <p>
-                            {t(
-                              'Faro muestra sismos que ya ocurrieron y fueron publicados. No es un sistema de alerta temprana y no identifica réplicas.',
-                              'Faro shows earthquakes that already happened and were published. It is not an early warning system and does not identify aftershocks.',
-                              'O Faro mostra terremotos que já aconteceram e foram publicados. Não é um sistema de alerta antecipado e não identifica réplicas.',
-                            )}
-                          </p>
-                          <button onClick={() => setScreen('sources')}>
+                        <MagnitudeLegend
+                          lang={lang}
+                          onExplain={() => go('sources', '#fw-sources-read')}
+                        />
+                        <ScopeNote>
+                          {t(
+                            'Faro muestra sismos que ya ocurrieron y fueron publicados. No es un sistema de alerta temprana y no identifica réplicas.',
+                            'Faro shows earthquakes that already happened and were published. It is not an early warning system and does not identify aftershocks.',
+                            'O Faro mostra terremotos que já aconteceram e foram publicados. Não é um sistema de alerta antecipado e não identifica réplicas.',
+                          )}{' '}
+                          <button
+                            type="button"
+                            className="f-inline-link"
+                            onClick={() => go('sources')}
+                          >
                             {t('Fuentes y cobertura', 'Sources & coverage', 'Fontes e cobertura')}
                           </button>
-                        </div>
+                        </ScopeNote>
                       </div>
                     ),
                   },
@@ -2191,6 +2235,7 @@ export default function App() {
                               country={country}
                               data={nws.data}
                               failed={nws.failed}
+                              now={live.now}
                             />
                           ),
                         },
@@ -2198,11 +2243,8 @@ export default function App() {
                     : []),
                   {
                     id: 'alerts',
-                    label: t(
-                      'Alertas internacionales',
-                      'International alerts',
-                      'Alertas internacionais',
-                    ),
+                    // Short in the tab so every tab fits on a phone; the screen title says it in full.
+                    label: t('Alertas', 'Alerts', 'Alertas'),
                     content: (
                       <AlertsPanel
                         lang={lang}
@@ -2221,7 +2263,24 @@ export default function App() {
             </div>
           )}
           {screen === 'sources' && (
-            <SourcesScreen lang={lang} now={live.now} countryName={countryName} rows={sourceRows} />
+            <SourcesScreen
+              lang={lang}
+              now={live.now}
+              countryName={countryName}
+              rows={sourceRows}
+              // The polling countdown and the changes received belong here, not on the list.
+              next={
+                live.online && !live.busy && live.checked > 0
+                  ? { id: catalog, at: live.next }
+                  : undefined
+              }
+              updates={{
+                items: live.updates.filter((u) => results.some((e) => e.id === u.event.id)),
+                provider,
+                fetched: live.fetched,
+                onDetails: (q) => setDetail(q.id),
+              }}
+            />
           )}
           {screen === 'country' && (
             <CountryScreen

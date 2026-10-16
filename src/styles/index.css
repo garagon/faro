@@ -54,3 +54,7 @@
 
 @import './ds/components.css' layer(ds);
 @import './ds/shell.css' layer(ds);
+@import './ds/sheet.css' layer(ds);
+@import './ds/facts.css' layer(ds);
+@import './ds/pager.css' layer(ds);
+@import './ds/scrollCue.css' layer(ds);

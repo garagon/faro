@@ -1,12 +1,19 @@
-import { useRef } from 'react';
-import { magnitudeBand } from '../lib/magnitude.ts';
-import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowUpRightIcon, MapPinIcon, XIcon } from '@phosphor-icons/react';
-import { displayPlace, distanceKm, type Quake } from '../lib/domain.ts';
+import { ArrowUpRightIcon, MapPinIcon } from '@phosphor-icons/react';
+import { displayPlace, distanceKm, placeLang, type Quake } from '../lib/domain.ts';
 import type { Geo } from './WebMap.tsx';
 import QuakeImpact from './QuakeImpact.tsx';
 import { langTag, pick, type Lang } from '../lib/i18n.ts';
 import { depthInFull, distance } from '../lib/units.ts';
+import {
+  Disclosure,
+  Button,
+  Facts,
+  LinkButton,
+  Magnitude,
+  Note,
+  OutLink,
+  Sheet,
+} from '../ui/index.ts';
 type Props = {
   open: boolean;
   selected: Quake | undefined;
@@ -19,8 +26,12 @@ type Props = {
   onMap: (q: Quake) => void;
   onTsunami: () => void;
 };
+
+/**
+ * One earthquake as its catalogue published it: magnitude, place, time, depth and epicentre,
+ * then what the agency itself publishes about impact. Nothing here is a risk rating.
+ */
 export default function InformationDialog(p: Props) {
-  const opener = useRef<HTMLElement | null>(null);
   const { selected: q, lang } = p,
     t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const stamp = (n: number, utc = false) =>
@@ -54,196 +65,173 @@ export default function InformationDialog(p: Props) {
             `há ${Math.round(min / 1440)} dias`,
           );
   };
+  const close = t('Cerrar', 'Close', 'Fechar');
+  if (!q)
+    return (
+      <Sheet
+        open={p.open}
+        onClose={p.onClose}
+        lang={langTag(lang)}
+        closeLabel={close}
+        title={t('Detalle del sismo', 'Earthquake details', 'Detalhes do terremoto')}
+        description={t(
+          'Datos publicados por el catálogo oficial.',
+          'Data published by the official catalog.',
+          'Dados publicados pelo catálogo oficial.',
+        )}
+      >
+        <p>
+          {t(
+            'Este evento ya no está en el catálogo actual.',
+            'This event is no longer in the current catalog.',
+            'Este evento não está mais no catálogo atual.',
+          )}
+        </p>
+      </Sheet>
+    );
+  const magType = q.magType && q.magType.toUpperCase() !== 'M' ? q.magType : '';
   return (
-    <Dialog.Root
+    <Sheet
       open={p.open}
-      onOpenChange={(open) => {
-        if (!open) p.onClose();
-      }}
+      onClose={p.onClose}
+      lang={langTag(lang)}
+      closeLabel={close}
+      lead={
+        <Magnitude
+          value={q.mag}
+          size="lg"
+          label={`${t('magnitud', 'magnitude', 'magnitude')}${magType ? ` ${magType}` : ''}`}
+        />
+      }
+      title={<span lang={placeLang(q)}>{displayPlace(q.place)}</span>}
+      description={
+        <>
+          {/* Who calculated it, when EMSC credits another agency, is under the facts. */}
+          {ago(q.time)} · {q.source || 'USGS'} ·{' '}
+          {q.reviewed
+            ? t('revisado', 'reviewed', 'revisado')
+            : q.source === 'EMSC'
+              ? t(
+                  'la fuente no indica si fue revisado',
+                  'the source does not say whether it was reviewed',
+                  'a fonte não indica se foi revisado',
+                )
+              : t('preliminar', 'preliminary', 'preliminar')}
+        </>
+      }
+      actions={
+        <>
+          <Button icon={<MapPinIcon size={18} aria-hidden="true" />} onClick={() => p.onMap(q)}>
+            {t('Ver en el mapa', 'Show on map', 'Ver no mapa')}
+          </Button>
+          {q.url && (
+            <LinkButton variant="secondary" href={q.url} external>
+              {t('Reporte oficial', 'Official report', 'Relatório oficial')}
+              <ArrowUpRightIcon size={16} aria-hidden="true" />
+            </LinkButton>
+          )}
+        </>
+      }
     >
-      <Dialog.Portal>
-        <Dialog.Overlay className="fw-modal-overlay" />
-        <Dialog.Content
-          className="fw-modal fw-info-dialog fw-event-dialog"
-          lang={langTag(lang)}
-          // Remember what opened the dialog (a list row or a map pin) and return focus there.
-          onOpenAutoFocus={() => {
-            opener.current =
-              document.activeElement instanceof HTMLElement ? document.activeElement : null;
-          }}
-          onCloseAutoFocus={(event) => {
-            if (opener.current?.isConnected) {
-              event.preventDefault();
-              opener.current.focus({ preventScroll: true });
-            }
-          }}
-        >
-          {q ? (
-            <header className="fw-qd-head">
-              <p className={`fw-qd-mag fw-mag-band-${magnitudeBand(q.mag)}`}>
-                <strong>{q.mag?.toFixed(1) ?? '—'}</strong>
-                <span>
-                  {t('magnitud', 'magnitude', 'magnitude')}
-                  {q.magType && q.magType.toUpperCase() !== 'M' ? ` ${q.magType}` : ''}
-                </span>
-              </p>
-              <div>
-                <Dialog.Title>{displayPlace(q.place)}</Dialog.Title>
-                <Dialog.Description>
-                  {ago(q.time)} · {q.source || 'USGS'}
-                  {q.authority ? `, ${q.authority}` : ''} ·{' '}
-                  {q.reviewed
-                    ? t('revisado', 'reviewed', 'revisado')
-                    : q.source === 'EMSC'
-                      ? t('revisión no informada', 'review not reported', 'revisão não informada')
-                      : t('preliminar', 'preliminary', 'preliminar')}
-                </Dialog.Description>
-              </div>
-              <Dialog.Close className="fw-dialog-close" aria-label={t('Cerrar', 'Close', 'Fechar')}>
-                <XIcon size={21} />
-              </Dialog.Close>
-            </header>
-          ) : (
-            <header className="fw-dialog-header">
-              <div>
-                <Dialog.Title>
-                  {t('Detalle del sismo', 'Earthquake details', 'Detalhes do terremoto')}
-                </Dialog.Title>
-                <Dialog.Description>
-                  {t(
-                    'Datos publicados por el catálogo oficial.',
-                    'Data published by the official catalog.',
-                    'Dados publicados pelo catálogo oficial.',
-                  )}
-                </Dialog.Description>
-              </div>
-              <Dialog.Close className="fw-dialog-close" aria-label={t('Cerrar', 'Close', 'Fechar')}>
-                <XIcon size={21} />
-              </Dialog.Close>
-            </header>
-          )}
-          <div className="fw-dialog-body">
-            {q ? (
+      <Facts
+        items={[
+          {
+            id: 'time',
+            term: t('Hora', 'Time', 'Horário'),
+            value: (
               <>
-                <dl className="fw-qd-facts">
-                  <div>
-                    <dt>{t('Hora', 'Time', 'Horário')}</dt>
-                    <dd>
-                      <time dateTime={new Date(q.time).toISOString()}>{local(q.time)}</time>{' '}
-                      <span>{zoneName(q.time)}</span>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{t('Hora UTC', 'UTC time', 'Horário UTC')}</dt>
-                    <dd>{stamp(q.time, true)}</dd>
-                  </div>
-                  <div>
-                    <dt>{t('Profundidad', 'Depth', 'Profundidade')}</dt>
-                    <dd>{depthInFull(q.depth, lang)}</dd>
-                  </div>
-                  <div>
-                    <dt>{t('Epicentro', 'Epicenter', 'Epicentro')}</dt>
-                    <dd>
-                      {q.lat.toFixed(4)}, {q.lng.toFixed(4)}
-                    </dd>
-                  </div>
-                  {p.geo && (
-                    <div>
-                      <dt>{t('Distancia a ti', 'Distance from you', 'Distância de você')}</dt>
-                      <dd>{distance(distanceKm([p.geo.lat, p.geo.lng], [q.lat, q.lng]), lang)}</dd>
-                    </div>
-                  )}
-                </dl>
-                <p className="fw-qd-note">
-                  {t(
-                    'La magnitud y la distancia no determinan el riesgo en tu ubicación. El catálogo no indica si el sismo es una réplica.',
-                    'Magnitude and distance do not determine risk at your location. The catalog does not say whether the earthquake is an aftershock.',
-                    'A magnitude e a distância não determinam o risco na sua localização. O catálogo não indica se o terremoto é uma réplica.',
-                  )}
-                </p>
-                <QuakeImpact q={q} lang={lang} onTsunami={p.onTsunami} />
-                <details className="fw-qd-more">
-                  <summary>
-                    {t('Más datos del registro', 'More record details', 'Mais dados do registro')}
-                  </summary>
-                  <dl className="fw-qd-facts">
-                    <div>
-                      <dt>{t('Última revisión', 'Last revision', 'Última revisão')}</dt>
-                      <dd>
-                        {q.updated
-                          ? stamp(q.updated)
-                          : t(
-                              'La fuente no indica esta fecha',
-                              'Not provided by the source',
-                              'A fonte não indica esta data',
-                            )}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>{t('Tipo de magnitud', 'Magnitude type', 'Tipo de magnitude')}</dt>
-                      <dd>
-                        {q.magType && q.magType.toUpperCase() !== 'M'
-                          ? q.magType
-                          : t(
-                              'No especificado por la fuente',
-                              'Not specified by the source',
-                              'Não especificado pela fonte',
-                            )}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>ID</dt>
-                      <dd className="fw-record-id">{q.id}</dd>
-                    </div>
-                  </dl>
-                  <p>
-                    {t(
-                      'La magnitud expresa el tamaño del sismo. La intensidad describe cuánto se sintió en un lugar y puede variar entre localidades.',
-                      'Magnitude describes the size of an earthquake. Intensity describes shaking at a location and can vary from place to place.',
-                      'A magnitude expressa o tamanho do terremoto. A intensidade descreve quanto ele foi sentido em um lugar e pode variar entre localidades.',
-                    )}{' '}
-                    <a
-                      href="https://www.usgs.gov/programs/earthquake-hazards/earthquake-magnitude-energy-release-and-shaking-intensity"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {t(
-                        'Magnitud e intensidad, USGS',
-                        'Magnitude and intensity, USGS',
-                        'Magnitude e intensidade, USGS',
-                      )}
-                    </a>
-                  </p>
-                </details>
+                <time dateTime={new Date(q.time).toISOString()}>{local(q.time)}</time>{' '}
+                {zoneName(q.time)}
               </>
-            ) : (
-              <p>
-                {t(
-                  'Este evento ya no está en el catálogo actual.',
-                  'This event is no longer in the current catalog.',
-                  'Este evento não está mais no catálogo atual.',
-                )}
-              </p>
+            ),
+          },
+          { id: 'utc', term: t('Hora UTC', 'UTC time', 'Horário UTC'), value: stamp(q.time, true) },
+          {
+            id: 'depth',
+            term: t('Profundidad', 'Depth', 'Profundidade'),
+            value: depthInFull(q.depth, lang),
+          },
+          {
+            id: 'epicentre',
+            term: t('Epicentro', 'Epicenter', 'Epicentro'),
+            value: `${q.lat.toFixed(4)}, ${q.lng.toFixed(4)}`,
+          },
+          ...(p.geo
+            ? [
+                {
+                  id: 'distance',
+                  term: t('Distancia a ti', 'Distance from you', 'Distância de você'),
+                  value: distance(distanceKm([p.geo.lat, p.geo.lng], [q.lat, q.lng]), lang),
+                },
+              ]
+            : []),
+        ]}
+      />
+      <Note>
+        {t(
+          'La magnitud y la distancia no determinan el riesgo en tu ubicación. El catálogo no indica si el sismo es una réplica.',
+          'Magnitude and distance do not determine risk at your location. The catalog does not say whether the earthquake is an aftershock.',
+          'A magnitude e a distância não determinam o risco na sua localização. O catálogo não indica se o terremoto é uma réplica.',
+        )}
+      </Note>
+      <QuakeImpact q={q} lang={lang} onTsunami={p.onTsunami} />
+      <MoreDetails q={q} lang={lang} stamp={stamp} />
+    </Sheet>
+  );
+}
+
+/** The rest of the record, opened in place; closed again each time the sheet opens. */
+function MoreDetails({ q, lang, stamp }: { q: Quake; lang: Lang; stamp: (n: number) => string }) {
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const magType = q.magType && q.magType.toUpperCase() !== 'M' ? q.magType : '';
+  return (
+    <Disclosure
+      title={t('Más datos del registro', 'More record details', 'Mais dados do registro')}
+    >
+      <Facts
+        items={[
+          {
+            id: 'updated',
+            term: t('Última revisión', 'Last revision', 'Última revisão'),
+            value: q.updated
+              ? stamp(q.updated)
+              : t(
+                  'La fuente no indica esta fecha',
+                  'Not provided by the source',
+                  'A fonte não indica esta data',
+                ),
+          },
+          {
+            id: 'type',
+            term: t('Tipo de magnitud', 'Magnitude type', 'Tipo de magnitude'),
+            value:
+              magType ||
+              t(
+                'No especificado por la fuente',
+                'Not specified by the source',
+                'Não especificado pela fonte',
+              ),
+          },
+          { id: 'id', term: 'ID', value: q.id },
+        ]}
+      />
+      <Note
+        more={
+          <OutLink href="https://www.usgs.gov/programs/earthquake-hazards/earthquake-magnitude-energy-release-and-shaking-intensity">
+            {t(
+              'Magnitud e intensidad, USGS',
+              'Magnitude and intensity, USGS',
+              'Magnitude e intensidade, USGS',
             )}
-          </div>
-          {q && (
-            <footer className="fw-dialog-actions">
-              <>
-                <button className="fw-primary" onClick={() => p.onMap(q)}>
-                  <MapPinIcon size={18} aria-hidden="true" />
-                  {t('Ver en el mapa', 'Show on map', 'Ver no mapa')}
-                </button>
-                {q.url && (
-                  <a className="fw-secondary" href={q.url} target="_blank" rel="noreferrer">
-                    {t('Reporte oficial', 'Official report', 'Relatório oficial')}
-                    <ArrowUpRightIcon size={16} aria-hidden="true" />
-                  </a>
-                )}
-              </>
-            </footer>
-          )}
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          </OutLink>
+        }
+      >
+        {t(
+          'La magnitud expresa el tamaño del sismo. La intensidad describe cuánto se sintió en un lugar y puede variar entre localidades.',
+          'Magnitude describes the size of an earthquake. Intensity describes shaking at a location and can vary from place to place.',
+          'A magnitude expressa o tamanho do terremoto. A intensidade descreve quanto ele foi sentido em um lugar e pode variar entre localidades.',
+        )}
+      </Note>
+    </Disclosure>
   );
 }

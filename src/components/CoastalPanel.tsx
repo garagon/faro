@@ -1,13 +1,43 @@
 import { destinationFor } from '../data/destinations/index.ts';
 import { useEffect, useState } from 'react';
-import { WavesIcon, ArrowUpRightIcon, ArrowClockwiseIcon } from '@phosphor-icons/react';
+import { ArrowClockwiseIcon, CrosshairIcon, WavesIcon } from '@phosphor-icons/react';
 import type { Geo } from './WebMap.tsx';
 import { coastDistanceKm, decodeCoastline, type CoastLine } from '../lib/coast.ts';
 import { classifyBulletins, type TsunamiData, type BulletinState } from '../lib/tsunami.ts';
 import { nwsEventLabels, type NwsAlert } from '../lib/nws.ts';
+import { ageLabel } from '../lib/feedUpdates.ts';
+import { checkedLabel } from '../lib/time.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 import { distance as formatDistance } from '../lib/units.ts';
+import {
+  Actions,
+  Badge,
+  Button,
+  ExpandRow,
+  IconButton,
+  List,
+  ListRow,
+  Note,
+  OutLink,
+  SafetyNotice,
+  ScopeNote,
+  SourceStamp,
+  StatusIcon,
+  Steps,
+  type Signal,
+} from '../ui/index.ts';
+// Numbers stay with their units at a line break ("hace 2 h", "13 oct").
+const nb = (text: string) => text.replace(/(\d) (?=\S)/g, '$1\u00a0');
+
 let coastCache: Promise<CoastLine[]> | null = null;
+
+/** A PTWC message, as published. The evaluation is NOAA's own text, in English. */
+const paragraphs = (text: string) =>
+  text
+    .split(/\n\s*\n/)
+    .map((part) => part.replace(/\s*\n\s*/g, ' ').trim())
+    .filter(Boolean);
+
 export default function CoastalPanel({
   lang,
   geo,
@@ -41,7 +71,9 @@ export default function CoastalPanel({
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const [distance, setDistance] = useState<number | null>(null),
     [coastError, setCoastError] = useState(false),
-    [coastLoaded, setCoastLoaded] = useState(false);
+    [coastLoaded, setCoastLoaded] = useState(false),
+    // Rows the person opened or closed; messages to review start open, the archive closed.
+    [toggled, setToggled] = useState<Set<string>>(() => new Set());
   useEffect(() => {
     let stop = false;
     setDistance(null);
@@ -72,15 +104,20 @@ export default function CoastalPanel({
       stop = true;
     };
   }, [geo?.lat, geo?.lng]);
+  const toggle = (id: string) =>
+    setToggled((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   // Only tsunami products belong here; other NWS alerts are on the situation screen.
   const nwsTsunami = nws?.data?.filter((a) => a.kind === 'tsunami') ?? null;
   const authority = destinationFor(country)?.civilProtection;
-  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const date = (n: number) =>
-    new Intl.DateTimeFormat(lang, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(n);
+  // One date grammar: the time today, the date and time otherwise; how long ago beside it.
+  const at = (n: number) => checkedLabel(n, now, lang);
+  const issued = (n: number) =>
+    nb(`${t('emitido', 'issued', 'emitido')} ${at(n)} · ${ageLabel(n, now, lang)}`);
   const near = geo && distance !== null && distance <= 20 + geo.accuracy / 1000;
   const rows = data ? classifyBulletins(data, now, error) : [];
   const current = rows.filter((r) => r.needsReview);
@@ -110,18 +147,28 @@ export default function CoastalPanel({
   };
   const renderBulletin = (row: (typeof rows)[number]) => {
     const { bulletin: b, state } = row;
+    const id = `fw-bulletin-${b.product}-${b.eventId}-${b.issued}`.replace(/[^\w-]/g, '_');
+    const open = row.needsReview !== toggled.has(id);
     return (
-      <article
-        className="fw-bulletin"
-        data-state={state}
-        key={`${b.product}:${b.eventId}:${b.issued}`}
+      <ExpandRow
+        key={id}
+        id={id}
+        open={open}
+        onToggle={() => toggle(id)}
+        lead={
+          <StatusIcon
+            state={row.needsReview || row.unresolved ? 'listed' : 'none'}
+            level={row.needsReview || row.unresolved ? 1 : undefined}
+            icon={<WavesIcon size={20} weight="bold" />}
+          />
+        }
+        title={<span lang="en">{b.place}</span>}
+        badge={
+          <Badge level={row.needsReview || row.unresolved ? 1 : undefined}>{labels[state]}</Badge>
+        }
+        // Every bulletin here is PTWC's: the issuer is in the status line above.
+        meta={issued(b.issued)}
       >
-        <div className="fw-bulletin-state">{labels[state]}</div>
-        <h3>{b.place}</h3>
-        <p className="fw-bulletin-meta">
-          {t('Emitido', 'Issued', 'Emitido')}:{' '}
-          <time dateTime={new Date(b.issued).toISOString()}>{date(b.issued)}</time> · {zone}
-        </p>
         <p>
           {b.product} ·{' '}
           {b.basin === 'Pacific'
@@ -132,7 +179,7 @@ export default function CoastalPanel({
         {row.replacedAt && (
           <p>
             {t('Actualización posterior', 'Later update', 'Atualização posterior')}:{' '}
-            {date(row.replacedAt)}
+            {at(row.replacedAt)}
           </p>
         )}
         {state === 'ended' || state === 'cancelled' ? (
@@ -153,46 +200,47 @@ export default function CoastalPanel({
           </p>
         ) : null}
         {!row.recent && (
-          <small>
+          <p className="f-caption">
             {t(
               'Archivo: fuera de la ventana de 6 horas. La antigüedad no equivale a cancelación.',
               'Archive: outside the 6-hour display window. Age does not mean cancellation.',
               'Arquivo: fora da janela de 6 horas. Ser antigo não equivale a ter sido cancelado.',
             )}
-          </small>
+          </p>
         )}
-        <div className="fw-bulletin-links">
-          <a href={b.url} target="_blank" rel="noreferrer">
-            {t('Leer comunicado', 'Read statement', 'Ler comunicado')}{' '}
-            <ArrowUpRightIcon size={14} />
-          </a>
-          <a href="https://www.tsunami.gov/" target="_blank" rel="noreferrer">
+        <h3>
+          {t(
+            'Evaluación original (inglés)',
+            'Original evaluation (English)',
+            'Avaliação original (em inglês)',
+          )}
+        </h3>
+        {b.evaluation ? (
+          paragraphs(b.evaluation).map((text, i) => (
+            <p key={i} lang="en">
+              {text}
+            </p>
+          ))
+        ) : (
+          <p>
+            {t(
+              'Sin evaluación legible. Abre el comunicado oficial.',
+              'No readable evaluation. Open the official statement.',
+              'Sem avaliação legível. Abra o comunicado oficial.',
+            )}
+          </p>
+        )}
+        <Actions>
+          <OutLink href={b.url}>{t('Leer comunicado', 'Read statement', 'Ler comunicado')}</OutLink>
+          <OutLink href="https://www.tsunami.gov/">
             {t(
               'Consultar última actualización',
               'Check latest update',
               'Consultar última atualização',
             )}
-            <ArrowUpRightIcon size={13} aria-hidden="true" />
-          </a>
-        </div>
-        <details>
-          <summary>
-            {t(
-              'Evaluación original (inglés)',
-              'Original evaluation (English)',
-              'Avaliação original (em inglês)',
-            )}
-          </summary>
-          <pre>
-            {b.evaluation ||
-              t(
-                'Sin evaluación legible. Abre el comunicado oficial.',
-                'No readable evaluation. Open the official statement.',
-                'Sem avaliação legível. Abra o comunicado oficial.',
-              )}
-          </pre>
-        </details>
-      </article>
+          </OutLink>
+        </Actions>
+      </ExpandRow>
     );
   };
   // One line that answers "is there a tsunami message?", from what was received and how.
@@ -253,15 +301,15 @@ export default function CoastalPanel({
     none:
       closing?.state === 'cancelled'
         ? t(
-            `NOAA canceló el mensaje de amenaza (${date(closing.bulletin.issued)})`,
-            `NOAA cancelled the threat message (${date(closing.bulletin.issued)})`,
-            `A NOAA cancelou a mensagem de ameaça (${date(closing.bulletin.issued)})`,
+            `NOAA canceló el mensaje de amenaza (${at(closing.bulletin.issued)})`,
+            `NOAA cancelled the threat message (${at(closing.bulletin.issued)})`,
+            `A NOAA cancelou a mensagem de ameaça (${at(closing.bulletin.issued)})`,
           )
         : closing
           ? t(
-              `NOAA dio por terminada la amenaza (${date(closing.bulletin.issued)})`,
-              `NOAA says the threat has ended (${date(closing.bulletin.issued)})`,
-              `A NOAA deu a ameaça por encerrada (${date(closing.bulletin.issued)})`,
+              `NOAA dio por terminada la amenaza (${at(closing.bulletin.issued)})`,
+              `NOAA says the threat has ended (${at(closing.bulletin.issued)})`,
+              `A NOAA deu a ameaça por encerrada (${at(closing.bulletin.issued)})`,
             )
           : t(
               'Sin mensajes de amenaza en las últimas 6 horas',
@@ -269,41 +317,66 @@ export default function CoastalPanel({
               'Sem mensagens de ameaça nas últimas 6 horas',
             ),
   }[statusState];
+  // Never a calm signal from an answer that cannot confirm it.
+  const signal: Signal =
+    statusState === 'none'
+      ? 'none'
+      : statusState === 'review' || statusState === 'unresolved'
+        ? 'listed'
+        : statusState === 'checking' && busy
+          ? 'pending'
+          : 'unknown';
+  const stampState =
+    statusState === 'failed'
+      ? 'error'
+      : statusState === 'old' || statusState === 'partial'
+        ? 'stale'
+        : undefined;
   return (
-    <section
-      className={`fw-coast ${near ? 'near-coast' : ''}`}
-      aria-label={t('Información de tsunami', 'Tsunami information', 'Informação sobre tsunami')}
-    >
-      <div className="fw-coast-title">
-        <WavesIcon size={25} />
-        <div>
-          <h2>{t('Información de tsunami', 'Tsunami information', 'Informação sobre tsunami')}</h2>
-          <small>
-            {t(
-              'NOAA/PTWC · consulta automática cada 60 s',
-              'NOAA/PTWC · automatic checks every 60 s',
-              'NOAA/PTWC · consulta automática a cada 60 s',
-            )}
-          </small>
-        </div>
-        <button
-          className="fw-icon"
-          disabled={busy}
-          onClick={onRefresh}
-          aria-label={t(
-            'Actualizar boletines de tsunami',
-            'Refresh tsunami bulletins',
-            'Atualizar boletins de tsunami',
-          )}
-        >
-          <ArrowClockwiseIcon size={19} />
-        </button>
-      </div>
+    <div className="f-stack" data-gap="lg">
       {/* The answer first: what NOAA's products say now, when they were checked, and the limits. */}
-      <div className="fw-tsunami-status" role="status" data-state={statusState}>
-        <strong>{statusHeadline}</strong>
-        <p>
-          {data && `${t('Consultado', 'Checked', 'Consultado')} ${date(data.fetched)}. `}
+      <div className="f-stack" data-gap="sm">
+        <div role="status">
+          <List
+            label={t('Información de tsunami', 'Tsunami information', 'Informação sobre tsunami')}
+          >
+            <ListRow
+              lead={
+                <StatusIcon
+                  state={signal}
+                  level={signal === 'listed' ? 1 : undefined}
+                  icon={<WavesIcon size={20} weight="bold" />}
+                />
+              }
+              title={statusHeadline}
+              meta={
+                <SourceStamp issuer="NOAA/PTWC" state={stampState}>
+                  <span>
+                    {data
+                      ? `${t('consultado', 'checked', 'consultado')} ${at(data.fetched)}`
+                      : busy
+                        ? t('Conectando con NOAA…', 'Connecting to NOAA…', 'Conectando com a NOAA…')
+                        : t('Sin datos recibidos', 'No data received', 'Nenhum dado recebido')}
+                  </span>
+                </SourceStamp>
+              }
+              trail={
+                <IconButton
+                  label={t(
+                    'Actualizar boletines de tsunami',
+                    'Refresh tsunami bulletins',
+                    'Atualizar boletins de tsunami',
+                  )}
+                  disabled={busy}
+                  onClick={onRefresh}
+                >
+                  <ArrowClockwiseIcon size={20} aria-hidden="true" />
+                </IconButton>
+              }
+            />
+          </List>
+        </div>
+        <Note>
           {t(
             'Estos productos internacionales no confirman el estado de una alerta en tu ubicación: confírmalo con la autoridad local.',
             'These international products do not confirm alert status at your location: check with local authorities.',
@@ -311,216 +384,239 @@ export default function CoastalPanel({
           )}
           {statusState === 'none' &&
             ` ${t('Esto no confirma ausencia de peligro.', 'This does not confirm absence of danger.', 'Isso não confirma ausência de perigo.')}`}
-        </p>
+        </Note>
       </div>
       {current.length > 0 && (
-        <section className="fw-bulletin-current">
-          <h3>
+        <section className="f-section" aria-labelledby="fw-tsunami-current">
+          <h2 className="f-section-title" id="fw-tsunami-current">
             {t(
               'Mensajes recientes: verificar actualización',
               'Recent messages: check for updates',
               'Mensagens recentes: verificar atualização',
             )}
-          </h3>
-          {current.map(renderBulletin)}
+          </h2>
+          <List>{current.map(renderBulletin)}</List>
         </section>
       )}
-      <div className={`fw-coast-now ${near ? 'is-near' : ''}`}>
-        <strong>
+      <section className="f-stack" aria-label={t('En la costa', 'On the coast', 'Na costa')}>
+        <SafetyNotice>
           {t(
             'Si estás en la costa y sientes un sismo fuerte o largo, ves que el mar se retira o sube de golpe, u oyes un rugido:',
             'If you are on the coast and feel strong or long shaking, see the sea suddenly pull back or rise, or hear a roar:',
             'Se você está na costa e sente um terremoto forte ou longo, vê o mar recuar ou subir de repente, ou ouve um rugido:',
           )}
-        </strong>
-        <ol>
-          <li>
-            {t(
-              'Protégete mientras tiembla.',
-              'Protect yourself while it shakes.',
-              'Proteja-se enquanto treme.',
-            )}
-          </li>
-          <li>
-            {t(
-              'Cuando pare, ve a pie a un lugar alto o tierra adentro.',
-              'When it stops, go on foot to high ground or inland.',
-              'Quando parar, vá a pé para um lugar alto ou para o interior.',
-            )}
-          </li>
-          <li>
-            {t(
-              'Sigue las señales de evacuación. No esperes una alerta oficial.',
-              'Follow evacuation signs. Do not wait for an official alert.',
-              'Siga as placas de evacuação. Não espere um alerta oficial.',
-            )}
-          </li>
-        </ol>
-        <a href="https://www.weather.gov/safety/tsunami-during" target="_blank" rel="noreferrer">
-          {t('Fuente: NOAA', 'Source: NOAA', 'Fonte: NOAA')}
-        </a>
-      </div>
-      <div className="fw-coast-where">
-        <p className="fw-coast-location">
-          {!geo
-            ? t(
-                'Con tu ubicación, Faro calcula la distancia aproximada a la costa. No indica si la zona es segura.',
-                'With your location, Faro estimates the distance to the coast. It does not say whether the area is safe.',
-                'Com sua localização, o Faro calcula a distância aproximada até a costa. Não indica se a área é segura.',
-              )
-            : coastError
+        </SafetyNotice>
+        <Steps
+          items={[
+            {
+              id: 'protect',
+              text: t(
+                'Protégete mientras tiembla.',
+                'Protect yourself while it shakes.',
+                'Proteja-se enquanto treme.',
+              ),
+            },
+            {
+              id: 'go',
+              text: t(
+                'Cuando pare, ve a pie a un lugar alto o tierra adentro.',
+                'When it stops, go on foot to high ground or inland.',
+                'Quando parar, vá a pé para um lugar alto ou para o interior.',
+              ),
+            },
+            {
+              id: 'signs',
+              text: t(
+                'Sigue las señales de evacuación. No esperes una alerta oficial.',
+                'Follow evacuation signs. Do not wait for an official alert.',
+                'Siga as placas de evacuação. Não espere um alerta oficial.',
+              ),
+            },
+          ]}
+        />
+        <Actions>
+          <OutLink href="https://www.weather.gov/safety/tsunami-during">
+            {t('Fuente: NOAA', 'Source: NOAA', 'Fonte: NOAA')}
+          </OutLink>
+        </Actions>
+      </section>
+      <div className="f-stack" data-gap="sm">
+        <div className="f-prose">
+          <p>
+            {!geo
               ? t(
-                  'No se pudo consultar la cartografía costera.',
-                  'Coastal mapping could not be loaded.',
-                  'Não foi possível carregar a cartografia costeira.',
+                  'Con tu ubicación, Faro calcula la distancia aproximada a la costa. No indica si la zona es segura.',
+                  'With your location, Faro estimates the distance to the coast. It does not say whether the area is safe.',
+                  'Com sua localização, o Faro calcula a distância aproximada até a costa. Não indica se a área é segura.',
                 )
-              : distance === null
-                ? coastLoaded
-                  ? t(
-                      'Sin estimación costera disponible para este punto.',
-                      'No coastal estimate available for this point.',
-                      'Sem estimativa costeira disponível para este ponto.',
-                    )
-                  : t(
-                      'Consultando cartografía costera…',
-                      'Checking coastal mapping…',
-                      'Consultando a cartografia costeira…',
-                    )
-                : near
-                  ? t(
-                      `Estás a unos ${Math.round(distance)} km de la costa (aproximado).`,
-                      `You are about ${formatDistance(distance, lang)} from the coast (approximate).`,
-                      `Você está a cerca de ${Math.round(distance)} km da costa (aproximado).`,
-                    )
-                  : t(
-                      `Distancia aproximada a la costa: ${Math.round(distance)} km. Esto no indica si la zona es segura.`,
-                      `Approximate distance to the coast: ${formatDistance(distance, lang)}. This does not say whether the area is safe.`,
-                      `Distância aproximada até a costa: ${Math.round(distance)} km. Isso não indica se a área é segura.`,
-                    )}
-        </p>
+              : coastError
+                ? t(
+                    'No se pudo consultar la cartografía costera.',
+                    'Coastal mapping could not be loaded.',
+                    'Não foi possível carregar a cartografia costeira.',
+                  )
+                : distance === null
+                  ? coastLoaded
+                    ? t(
+                        'Sin estimación costera disponible para este punto.',
+                        'No coastal estimate available for this point.',
+                        'Sem estimativa costeira disponível para este ponto.',
+                      )
+                    : t(
+                        'Consultando cartografía costera…',
+                        'Checking coastal mapping…',
+                        'Consultando a cartografia costeira…',
+                      )
+                  : near
+                    ? t(
+                        `Estás a unos ${Math.round(distance)} km de la costa (aproximado).`,
+                        `You are about ${formatDistance(distance, lang)} from the coast (approximate).`,
+                        `Você está a cerca de ${Math.round(distance)} km da costa (aproximado).`,
+                      )
+                    : t(
+                        `Distancia aproximada a la costa: ${Math.round(distance)} km. Esto no indica si la zona es segura.`,
+                        `Approximate distance to the coast: ${formatDistance(distance, lang)}. This does not say whether the area is safe.`,
+                        `Distância aproximada até a costa: ${Math.round(distance)} km. Isso não indica se a área é segura.`,
+                      )}
+          </p>
+        </div>
         {!geo && (
-          <button className="fw-secondary" onClick={onLocate} disabled={locating}>
+          <Button
+            variant="secondary"
+            icon={<CrosshairIcon size={18} aria-hidden="true" />}
+            onClick={onLocate}
+            disabled={locating}
+          >
             {locating
               ? t('Buscando ubicación…', 'Finding location…', 'Buscando localização…')
               : t('Usar mi ubicación', 'Use my location', 'Usar minha localização')}
-          </button>
+          </Button>
         )}
       </div>
       {nws && (
-        <section className="fw-nws" aria-labelledby="fw-nws-title">
-          <h3 id="fw-nws-title">
+        <section className="f-section" aria-labelledby="fw-nws-title">
+          <h2 className="f-section-title" id="fw-nws-title">
             {t(
               'Avisos de tsunami del NWS · EE. UU. y territorios',
               'NWS tsunami alerts · U.S. and territories',
               'Avisos de tsunami do NWS · EUA e territórios',
             )}
-          </h3>
+          </h2>
           {nws.failed && (
-            <p className="fw-warning" role="status">
-              {t(
-                'No se pudo consultar el NWS. No podemos confirmar si hay avisos.',
-                'The NWS could not be reached. We cannot confirm whether alerts exist.',
-                'Não foi possível consultar o NWS. Não podemos confirmar se há avisos.',
-              )}
-            </p>
+            <div role="status">
+              <SourceStamp issuer="NWS" state="error">
+                <span>
+                  {t(
+                    'No se pudo consultar el NWS. No podemos confirmar si hay avisos.',
+                    'The NWS could not be reached. We cannot confirm whether alerts exist.',
+                    'Não foi possível consultar o NWS. Não podemos confirmar se há avisos.',
+                  )}
+                </span>
+              </SourceStamp>
+            </div>
           )}
           {!nwsTsunami && !nws.failed && (
-            <p>{t('Consultando NWS…', 'Checking NWS…', 'Consultando o NWS…')}</p>
+            <div className="f-prose">
+              <p>{t('Consultando NWS…', 'Checking NWS…', 'Consultando o NWS…')}</p>
+            </div>
           )}
           {nwsTsunami && nwsTsunami.length === 0 && !nws.failed && (
-            <p>
-              {t(
-                'El NWS no tiene avisos de tsunami activos. Esto no confirma ausencia de peligro.',
-                'The NWS has no active tsunami alerts. This does not confirm there is no danger.',
-                'O NWS não tem avisos de tsunami ativos. Isso não confirma ausência de perigo.',
-              )}
-            </p>
-          )}
-          {nwsTsunami?.map((a) => (
-            <article className="fw-bulletin" data-state="unconfirmed" key={a.id}>
-              <div className="fw-bulletin-state">{nwsEventLabels[a.event][langIndex(lang)]}</div>
-              {a.headline && <h3>{a.headline}</h3>}
-              <p>{a.area}</p>
-              <p className="fw-bulletin-meta">
-                {t('Emitido', 'Issued', 'Emitido')}: {date(a.sent)}
-                {a.expires && ` · ${t('Hasta', 'Until', 'Até')}: ${date(a.expires)}`} · {zone}
+            <div className="f-prose">
+              <p>
+                {t(
+                  'El NWS no tiene avisos de tsunami activos. Esto no confirma ausencia de peligro.',
+                  'The NWS has no active tsunami alerts. This does not confirm there is no danger.',
+                  'O NWS não tem avisos de tsunami ativos. Isso não confirma ausência de perigo.',
+                )}
               </p>
-              <div className="fw-bulletin-links">
-                <a href="https://www.tsunami.gov/" target="_blank" rel="noreferrer">
-                  {t(
-                    'Consultar última actualización',
-                    'Check latest update',
-                    'Consultar última atualização',
-                  )}
-                  <ArrowUpRightIcon size={13} aria-hidden="true" />
-                </a>
-              </div>
-            </article>
-          ))}
-          <small>
+            </div>
+          )}
+          {nwsTsunami && nwsTsunami.length > 0 && (
+            <List label="NWS">
+              {nwsTsunami.map((a) => {
+                const id = `fw-nws-tsunami-${a.id}`.replace(/[^\w-]/g, '_');
+                return (
+                  <ExpandRow
+                    key={id}
+                    id={id}
+                    open={!toggled.has(id)}
+                    onToggle={() => toggle(id)}
+                    lead={
+                      // An alert in force; its name says which (warning, advisory, watch).
+                      <StatusIcon
+                        state="listed"
+                        level={1}
+                        icon={<WavesIcon size={20} weight="bold" />}
+                      />
+                    }
+                    title={nwsEventLabels[a.event][langIndex(lang)]}
+                    meta={`NWS · ${issued(a.sent)}${a.expires ? ` · ${t('hasta', 'until', 'até')} ${at(a.expires)}` : ''}`}
+                  >
+                    {a.headline && <p lang="en">{a.headline}</p>}
+                    <p lang="en">{a.area}</p>
+                    <Actions>
+                      <OutLink href="https://www.tsunami.gov/">
+                        {t(
+                          'Consultar última actualización',
+                          'Check latest update',
+                          'Consultar última atualização',
+                        )}
+                      </OutLink>
+                    </Actions>
+                  </ExpandRow>
+                );
+              })}
+            </List>
+          )}
+          <Note>
             {t(
               'Fuente: NOAA/National Weather Service. Cubre solo EE. UU., sus territorios y aguas. Revisa las zonas indicadas en cada aviso.',
               'Source: NOAA/National Weather Service. Covers only the U.S., its territories and waters. Check the areas listed in each alert.',
               'Fonte: NOAA/National Weather Service. Cobre só os EUA, seus territórios e águas. Confira as áreas indicadas em cada aviso.',
             )}
-          </small>
+          </Note>
         </section>
       )}
       {data && (
-        <details className="fw-bulletin-archive">
-          <summary>
-            {t(
-              'Archivo de comunicados NOAA',
-              'NOAA statement archive',
-              'Arquivo de comunicados da NOAA',
-            )}{' '}
-            <span>({archived.length})</span>
-          </summary>
-          <p>
+        <section className="f-section" aria-labelledby="fw-tsunami-archive">
+          <div className="f-section-head">
+            <h2 className="f-section-title" id="fw-tsunami-archive">
+              {t(
+                'Archivo de comunicados NOAA',
+                'NOAA statement archive',
+                'Arquivo de comunicados da NOAA',
+              )}
+            </h2>
+            <span className="f-section-aside">{archived.length}</span>
+          </div>
+          <Note>
             {t(
               'Último comunicado recibido de cada producto. Incluye información y cierres de eventos anteriores; no es una lista de alertas activas ni un historial completo.',
               'Latest statement received for each product. Includes information and closures for past events; this is not a list of active alerts or a complete history.',
               'Último comunicado recebido de cada produto. Inclui informações e encerramentos de eventos anteriores; não é uma lista de alertas ativos nem um histórico completo.',
             )}
-          </p>
-          {archived.map(renderBulletin)}
-        </details>
+          </Note>
+          {archived.length > 0 && <List>{archived.map(renderBulletin)}</List>}
+        </section>
       )}
-      <div className="fw-coast-foot">
-        <span>
-          {data
-            ? `${t('Fuente consultada', 'Source checked', 'Fonte consultada')}: ${date(data.fetched)}`
-            : busy
-              ? t('Conectando con NOAA…', 'Connecting to NOAA…', 'Conectando com a NOAA…')
-              : t('Sin datos recibidos', 'No data received', 'Nenhum dado recebido')}
-        </span>
-        {authority && (
-          <a href={authority.url} target="_blank" rel="noreferrer">
-            {authority.name}
-          </a>
-        )}
-        <a href="https://www.tsunami.gov/" target="_blank" rel="noreferrer">
-          NOAA
-        </a>
-        <a
-          href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-coastline/"
-          target="_blank"
-          rel="noreferrer"
-        >
+      <Actions>
+        {authority && <OutLink href={authority.url}>{authority.name}</OutLink>}
+        <OutLink href="https://www.tsunami.gov/">NOAA</OutLink>
+        <OutLink href="https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-coastline/">
           {t(
             'Cartografía aproximada: Natural Earth',
             'Approximate mapping: Natural Earth',
             'Cartografia aproximada: Natural Earth',
           )}
-        </a>
-      </div>
-      <small>
+        </OutLink>
+      </Actions>
+      <ScopeNote>
         {t(
           'Umbral orientativo de proximidad: 20 km; no delimita inundación. Cartografía generalizada, puede omitir islas y tener errores de varios km. No es un mapa de evacuación ni de inundación. La estimación se calcula en tu navegador.',
           `The ${formatDistance(20, lang)} proximity threshold does not define inundation. Generalized mapping may omit islands and be inaccurate by several miles. It is not an evacuation or inundation map. The estimate is calculated in your browser.`,
           'Limite orientativo de proximidade: 20 km; não delimita inundação. Cartografia generalizada, pode omitir ilhas e ter erros de vários km. Não é um mapa de evacuação nem de inundação. A estimativa é calculada no seu navegador.',
         )}
-      </small>
-    </section>
+      </ScopeNote>
+    </div>
   );
 }
