@@ -36,11 +36,21 @@ export function HomeCall(p: Pick<Props, 'lang' | 'country' | 'onEmergency'>) {
       <ListRow
         lead={<RowIcon icon={<PhoneIcon size={20} />} />}
         title={t('Teléfonos de emergencia', 'Emergency numbers', 'Telefones de emergência')}
-        meta={t(
-          'Elige el país donde estás',
-          'Choose the country you are in',
-          'Escolha o país onde você está',
-        )}
+        // "Choose a country" only when none is chosen; a chosen country without verified numbers
+        // says so, like Emergencia and Ayuda.
+        meta={
+          p.country === 'WORLD'
+            ? t(
+                'Elige el país donde estás',
+                'Choose the country you are in',
+                'Escolha o país onde você está',
+              )
+            : t(
+                'Sin números verificados aquí: pregunta en tu alojamiento',
+                'No verified numbers here: ask where you are staying',
+                'Sem números verificados aqui: pergunte na hospedagem',
+              )
+        }
         onClick={p.onEmergency}
       />
     </List>

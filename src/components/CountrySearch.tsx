@@ -37,9 +37,13 @@ export default function CountrySearch({
     'Select a country from the results.',
     'Selecione um país nos resultados.',
   );
+  // Typing does not change the value: the previous country stays until another is chosen, the
+  // field is left empty, or Escape restores it. While the text is being edited it does not count
+  // as a choice.
+  const committed = query === null ? selected : undefined;
   useEffect(() => {
-    input.current?.setCustomValidity((required || !!query) && !selected ? error : '');
-  }, [required, query, selected, error]);
+    input.current?.setCustomValidity((required || !!query) && !committed ? error : '');
+  }, [required, query, committed, error]);
   useEffect(() => {
     if (open)
       document.getElementById(`${id}-option-${active}`)?.scrollIntoView({ block: 'nearest' });
@@ -100,14 +104,15 @@ export default function CountrySearch({
       }}
       onChange={(e) => {
         setQuery(e.target.value);
-        onChange('');
         setOpen(true);
         setActive(0);
         setInvalid(false);
       }}
       onBlur={() => {
         setOpen(false);
-        if (selected) setQuery(null);
+        // Leaving the field empty clears the country; leaving a partial name keeps the old one.
+        if (query !== null && !query.trim() && value) onChange('');
+        if (selected || !query?.trim()) setQuery(null);
       }}
       onInvalid={() => {
         setInvalid(true);
@@ -128,7 +133,7 @@ export default function CountrySearch({
           e.preventDefault();
           e.stopPropagation();
           setOpen(false);
-          if (selected) setQuery(null);
+          setQuery(null);
         }
       }}
     />

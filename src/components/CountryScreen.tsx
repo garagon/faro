@@ -73,6 +73,17 @@ export default function CountryScreen(p: Props) {
           enterKeyHint="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          // Enter (or Search on a phone keyboard): one match is chosen; several, the first gets focus.
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter' || e.nativeEvent.isComposing || !results.length) return;
+            e.preventDefault();
+            if (results.length === 1) p.onChoose(results[0].code);
+            else
+              e.currentTarget
+                .closest('.f-stack')
+                ?.querySelector<HTMLElement>('.f-list .f-row')
+                ?.focus();
+          }}
         />
         {query.trim() &&
           (results.length ? (

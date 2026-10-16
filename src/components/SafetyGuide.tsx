@@ -934,11 +934,14 @@ export default function SafetyGuide({
   onStatus,
   onKit,
   topic = 'during',
+  onTopic,
 }: {
   lang: Lang;
   country: string;
   /** The topic to open first, e.g. the hazard chosen on the emergency screen. */
   topic?: string;
+  /** Remembers the topic being read, so the guide reopens there (Back, the Guía tab). */
+  onTopic?: (id: string) => void;
   onHotel: () => void;
   onStatus: () => void;
   /** The go bag has its own section; the guide links there. */
@@ -957,7 +960,11 @@ export default function SafetyGuide({
     setDownloaded(true);
   };
   // The go bag opens its own screen; every other topic opens here.
-  const choose = (id: string) => (id === 'kit' ? onKit() : setActive(id));
+  const choose = (id: string) => {
+    if (id === 'kit') return onKit();
+    setActive(id);
+    onTopic?.(id);
+  };
   const scene = scenes[active];
   // The evacuation plan repeats the civil protection link, so it is listed once.
   const plan = active === 'hotel' || active === 'coast';

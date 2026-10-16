@@ -1,7 +1,7 @@
 import { ArrowUpRightIcon, CrosshairIcon, FirstAidKitIcon, PillIcon } from '@phosphor-icons/react';
 import { careSearchUrl } from '../lib/nearbyCare.ts';
 import { hostOf, splitName } from '../lib/links.ts';
-import { useSearchArea } from './AreaPicker.tsx';
+import { areaStatus, useSearchArea } from './AreaPicker.tsx';
 import { careAreas } from '../data/careAreas.ts';
 import { healthDirectories } from '../data/healthDirectories.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
@@ -26,7 +26,7 @@ const outIcon = <ArrowUpRightIcon size={16} aria-hidden="true" />;
 export default function NearbyCare({ lang, country }: { lang: Lang; country: string }) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const search = useSearchArea(country, lang);
-  const { place, gps, status, area, countryName } = search;
+  const { place, gps, status, area } = search;
   const areas = careAreas[country] ?? [];
   // A common area shows as chosen while the box still holds exactly its name.
   const chosenArea = !gps && areas.includes(place.trim()) ? place.trim() : '';
@@ -85,27 +85,7 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
           : t('Usar mi ubicación', 'Use my location', 'Usar minha localização')}
       </Button>
       <div role="status">
-        <Note>
-          {status === 'failed'
-            ? t(
-                'No se obtuvo tu ubicación. Escribe una ciudad o dirección.',
-                'Location unavailable. Enter a city or address.',
-                'Não foi possível obter sua localização. Digite uma cidade ou endereço.',
-              )
-            : gps
-              ? t(
-                  `Búsqueda alrededor de ${gps}. Tu ubicación puede estar en otro país que el seleccionado.`,
-                  `Search around ${gps}. Your location may be in a different country from the selected one.`,
-                  `Busca ao redor de ${gps}. Sua localização pode estar em um país diferente do selecionado.`,
-                )
-              : area
-                ? t(`Se buscará en ${area}.`, `Searching in ${area}.`, `Área da busca: ${area}.`)
-                : t(
-                    `Buscar en ${countryName || 'el lugar que escribas'}.`,
-                    `Search in ${countryName || 'the place you enter'}.`,
-                    `Área da busca: ${countryName || 'o lugar que você digitar'}.`,
-                  )}
-        </Note>
+        <Note>{areaStatus(search, lang)}</Note>
       </div>
       <List label={t('Buscar en Google Maps', 'Search Google Maps', 'Buscar no Google Maps')}>
         {(['pharmacy', 'hospital'] as const).map((kind) => {

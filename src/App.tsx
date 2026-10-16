@@ -350,6 +350,7 @@ export default function App() {
   const fromHistory = useRef(false);
   const restoring = useRef(false);
   const scrollMemory = useRef<Partial<Record<Screen, number>>>({});
+  const lastTab = useRef<Screen>('activity');
   useEffect(() => {
     const app = appRef.current;
     if (!app) return;
@@ -545,6 +546,8 @@ export default function App() {
   const changeCountry = (code: string) => {
     const region = regionFor(code);
     setCountry(code);
+    // Every screen now shows another country: going back starts each one at the top.
+    scrollMemory.current = {};
     // A catalog the person chose stays (EMSC and USGS are worldwide); otherwise the new place's
     // default. IGC only covers Panama.
     setCatalog((c) =>
@@ -1205,8 +1208,16 @@ export default function App() {
     { id: 'guide', label: t('Guía', 'Guide', 'Guia'), Icon: BookOpenTextIcon },
   ];
   // The detail pages belong to Situación; the country screen to wherever it was opened from.
+  if (nav.some((n) => n.id === screen)) lastTab.current = screen;
+  else if (screen === 'detail') lastTab.current = 'activity';
   const currentTab: Screen | null =
-    screen === 'detail' ? 'activity' : nav.some((n) => n.id === screen) ? screen : null;
+    screen === 'detail'
+      ? 'activity'
+      : screen === 'country'
+        ? lastTab.current
+        : nav.some((n) => n.id === screen)
+          ? screen
+          : null;
   const shellText = {
     home: t('Faro, inicio', 'Faro, home', 'Faro, início'),
     place: t(
@@ -2459,6 +2470,7 @@ export default function App() {
               lang={lang}
               country={country}
               topic={guideTopic}
+              onTopic={setGuideTopic}
               onHotel={() => setScreen('hotel')}
               onStatus={() => setScreen('status')}
               onKit={() => setScreen('kit')}

@@ -35,7 +35,7 @@ import {
 import { careAreas } from '../data/careAreas.ts';
 import { careSearchUrl, type PlaceKind } from '../lib/nearbyCare.ts';
 import { writeLocal, removeLocal } from '../lib/browserStorage.ts';
-import { useSearchArea, type SearchArea } from './AreaPicker.tsx';
+import { areaStatus, useSearchArea, type SearchArea } from './AreaPicker.tsx';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 import {
   Actions,
@@ -550,7 +550,7 @@ function KitShopping({
  */
 function AreaChoice({ state, lang }: { state: SearchArea; lang: Lang }) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
-  const { place, gps, status, area, country, countryName } = state;
+  const { place, gps, status, country } = state;
   const common = careAreas[country] ?? [];
   return (
     <div className="f-stack">
@@ -598,27 +598,7 @@ function AreaChoice({ state, lang }: { state: SearchArea; lang: Lang }) {
         </SelectField>
       )}
       <div role="status">
-        <Note>
-          {status === 'failed'
-            ? t(
-                'No se obtuvo tu ubicación. Escribe una ciudad o dirección.',
-                'Location unavailable. Enter a city or address.',
-                'Não foi possível obter sua localização. Digite uma cidade ou endereço.',
-              )
-            : gps
-              ? t(
-                  `Búsqueda alrededor de ${gps}. Tu ubicación puede estar en otro país que el seleccionado.`,
-                  `Search around ${gps}. Your location may be in a different country from the selected one.`,
-                  `Busca ao redor de ${gps}. Sua localização pode estar em um país diferente do selecionado.`,
-                )
-              : area
-                ? t(`Se buscará en ${area}.`, `Searching in ${area}.`, `Área da busca: ${area}.`)
-                : t(
-                    `Buscar en ${countryName || 'el lugar que escribas'}.`,
-                    `Search in ${countryName || 'the place you enter'}.`,
-                    `Área da busca: ${countryName || 'o lugar que você digitar'}.`,
-                  )}
-        </Note>
+        <Note>{areaStatus(state, lang)}</Note>
       </div>
     </div>
   );

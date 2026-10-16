@@ -71,10 +71,14 @@
   font-weight: var(--f-weight-medium);
   cursor: pointer;
 }
+/* The country says whose numbers these are: a long name takes a second line before it is cut. */
 .f-place span {
+  display: -webkit-box;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.15;
+  text-align: start;
 }
 .f-place:active,
 .f-lang:active {

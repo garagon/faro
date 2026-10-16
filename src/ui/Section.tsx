@@ -16,7 +16,8 @@ export function Section({
 }) {
   const headingId = id ? `${id}-title` : undefined;
   return (
-    <section className="f-section" aria-labelledby={title ? headingId : undefined}>
+    // The id makes the section a target for links that open a screen at one of its parts.
+    <section id={id} className="f-section" aria-labelledby={title ? headingId : undefined}>
       {title && (
         <div className="f-section-head">
           <h2 className="f-section-title" id={headingId}>

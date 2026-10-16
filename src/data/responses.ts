@@ -81,9 +81,9 @@ export const activeResponses: ActiveResponse[] = [
       {
         label: ['Balance de SINAPROC', 'SINAPROC update', 'Balanço do SINAPROC'],
         text: [
-          'Comunicado #11 del 13 de octubre, con datos hasta las 19:00: más de 33 albergues temporales con más de 2841 personas; más de 3667 familias evaluadas (11 527 personas); unas 3390 viviendas afectadas, 727 de ellas pérdida total en Herrera y Los Santos. Las cifras son preliminares.',
-          'Statement #11 of October 13, with data up to 7:00 p.m.: more than 33 temporary shelters with more than 2,841 people; more than 3,667 families assessed (11,527 people); about 3,390 homes affected, 727 of them total losses in Herrera and Los Santos. Figures are preliminary.',
-          'Comunicado #11 de 13 de outubro, com dados até as 19:00: mais de 33 abrigos temporários com mais de 2.841 pessoas; mais de 3.667 famílias avaliadas (11.527 pessoas); cerca de 3.390 moradias afetadas, 727 delas com perda total em Herrera e Los Santos. Os números são preliminares.',
+          'Mismo comunicado #11 (13 oct, datos hasta las 19:00), además de los albergues: más de 3667 familias evaluadas (11 527 personas); unas 3390 viviendas afectadas, 727 de ellas pérdida total en Herrera y Los Santos. Las cifras son preliminares.',
+          'Same statement #11 (Oct 13, data up to 7:00 p.m.), besides the shelters: more than 3,667 families assessed (11,527 people); about 3,390 homes affected, 727 of them total losses in Herrera and Los Santos. Figures are preliminary.',
+          'Mesmo comunicado #11 (13 de out., dados até as 19:00), além dos abrigos: mais de 3.667 famílias avaliadas (11.527 pessoas); cerca de 3.390 moradias afetadas, 727 delas com perda total em Herrera e Los Santos. Os números são preliminares.',
         ],
         source: 'SINAPROC',
       },

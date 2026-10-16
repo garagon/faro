@@ -10,6 +10,8 @@ const excludedDirectories = new Set([
   'artifacts',
   'test-results',
   'playwright-report',
+  // Local coding-agent state and worktrees: never part of the published source.
+  '.claude',
 ]);
 const rootFiles = new Set([
   'README.md',

@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { CrosshairIcon } from '@phosphor-icons/react';
 import { careCoordinates } from '../lib/nearbyCare.ts';
-import { careAreas } from '../data/careAreas.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
 
-type Status = 'idle' | 'pending' | 'ready' | 'failed';
+type Status = 'idle' | 'pending' | 'ready' | 'denied' | 'failed';
 export type SearchArea = ReturnType<typeof useSearchArea>;
 
 /**
@@ -49,10 +47,10 @@ export function useSearchArea(country: string, lang: Lang) {
         setGps(value || '');
         setStatus(value ? 'ready' : 'failed');
       },
-      () => {
+      (error) => {
         if (request !== requestId.current) return;
         setGps('');
-        setStatus('failed');
+        setStatus(error.code === error.PERMISSION_DENIED ? 'denied' : 'failed');
       },
       { timeout: 15000, maximumAge: 0, enableHighAccuracy: false },
     );
@@ -60,76 +58,46 @@ export function useSearchArea(country: string, lang: Lang) {
   return { place, gps, status, area, country, countryName, setPlace, locate };
 }
 
-export function AreaFields({ state, lang }: { state: SearchArea; lang: Lang }) {
+/**
+ * What the search buttons will use, said once under the area fields. When the location fails,
+ * the sentence still says which area the buttons search, if there is one.
+ */
+export function areaStatus(state: SearchArea, lang: Lang) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
-  const { place, gps, status, area, country, countryName } = state;
-  return (
-    <>
-      <div className="fw-care-location">
-        <label>
-          {t(
-            'Ciudad, barrio o dirección',
-            'City, neighborhood or address',
-            'Cidade, bairro ou endereço',
-          )}
-          <input
-            maxLength={160}
-            value={place}
-            placeholder={t(
-              'Ej.: El Cangrejo, Ciudad de Panamá',
-              'E.g. El Cangrejo, Panama City',
-              'Ex.: El Cangrejo, Cidade do Panamá',
-            )}
-            onChange={(e) => state.setPlace(e.target.value)}
-          />
-        </label>
-        <button className="fw-secondary" onClick={state.locate} disabled={status === 'pending'}>
-          <CrosshairIcon size={19} aria-hidden="true" />
-          {status === 'pending'
-            ? t('Buscando ubicación…', 'Finding location…', 'Buscando localização…')
-            : t('Usar mi ubicación', 'Use my location', 'Usar minha localização')}
-        </button>
-      </div>
-      {!!careAreas[country]?.length && (
-        <div
-          className="fw-care-areas"
-          role="group"
-          aria-label={t('Zonas frecuentes', 'Common areas', 'Áreas frequentes')}
-        >
-          <span>{t('Zonas frecuentes', 'Common areas', 'Áreas frequentes')}</span>
-          {careAreas[country]!.map((name) => (
-            <button
-              key={name}
-              type="button"
-              aria-pressed={!gps && place.trim() === name}
-              onClick={() => state.setPlace(name)}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
-      )}
-      <p className="fw-area-status" role="status">
-        {status === 'failed'
-          ? t(
-              'No se obtuvo tu ubicación. Escribe una ciudad o dirección.',
-              'Location unavailable. Enter a city or address.',
-              'Não foi possível obter sua localização. Digite uma cidade ou endereço.',
-            )
-          : gps
-            ? t(
-                `Búsqueda alrededor de ${gps}. Tu ubicación puede estar en otro país que el seleccionado.`,
-                `Search around ${gps}. Your location may be in a different country from the selected one.`,
-                `Busca ao redor de ${gps}. Sua localização pode estar em um país diferente do selecionado.`,
-              )
-            : area
-              ? t(`Se buscará en ${area}.`, `Searching in ${area}.`, `Área da busca: ${area}.`)
-              : t(
-                  `Buscar en ${countryName || 'el lugar que escribas'}.`,
-                  `Search in ${countryName || 'the place you enter'}.`,
-                  `Área da busca: ${countryName || 'o lugar que você digitar'}.`,
-                )}
-      </p>
-    </>
+  const { gps, status, area, countryName } = state;
+  if (status === 'denied' || status === 'failed') {
+    const why =
+      status === 'denied'
+        ? t(
+            'No diste permiso de ubicación.',
+            'Location permission was not given.',
+            'Você não deu permissão de localização.',
+          )
+        : t(
+            'No se obtuvo tu ubicación.',
+            'Location unavailable.',
+            'Não foi possível obter sua localização.',
+          );
+    return `${why} ${
+      area
+        ? t(`Se buscará en ${area}.`, `Searching in ${area}.`, `Área da busca: ${area}.`)
+        : t(
+            'Escribe una ciudad o dirección.',
+            'Enter a city or address.',
+            'Digite uma cidade ou endereço.',
+          )
+    }`;
+  }
+  if (gps)
+    return t(
+      `Búsqueda alrededor de ${gps}. Tu ubicación puede estar en otro país que el seleccionado.`,
+      `Search around ${gps}. Your location may be in a different country from the selected one.`,
+      `Busca ao redor de ${gps}. Sua localização pode estar em um país diferente do selecionado.`,
+    );
+  if (area) return t(`Se buscará en ${area}.`, `Searching in ${area}.`, `Área da busca: ${area}.`);
+  return t(
+    `Buscar en ${countryName || 'el lugar que escribas'}.`,
+    `Search in ${countryName || 'the place you enter'}.`,
+    `Área da busca: ${countryName || 'o lugar que você digitar'}.`,
   );
 }
