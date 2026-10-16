@@ -447,17 +447,7 @@
   }
 }
 
-/* Layout primitives */
-.f-stack {
-  display: grid;
-  gap: var(--f-gap, var(--f-space-4));
-}
-.f-stack[data-gap='sm'] {
-  --f-gap: var(--f-space-2);
-}
-.f-stack[data-gap='lg'] {
-  --f-gap: var(--f-space-8);
-}
+/* Layout primitives (.f-stack and .f-column are in helpers.css) */
 /* Main column and a side column for what is live, side by side when there is room. */
 .f-split {
   display: grid;
@@ -517,23 +507,6 @@
     grid-column: 2;
     grid-row: 1 / span var(--f-side-span, 6);
   }
-}
-
-/* A single reading column: screens without a side column never stretch on wide screens. */
-.f-column {
-  display: grid;
-  gap: var(--f-space-8);
-  width: 100%;
-  max-width: var(--f-reading);
-  margin-inline: 0;
-}
-.f-visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 /* With reduced motion the frame's hover and press colours change at once. */

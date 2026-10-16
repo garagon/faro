@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+
+const edge =
+  'pointer-events-none absolute top-0 bottom-px grid w-12 items-center text-muted-foreground';
 
 /**
  * A strip that scrolls sideways when it does not fit (tabs on a phone) says so: a fade with a
- * caret at each edge that hides more. The first child is the scrolling element.
+ * chevron at each edge that hides more. The first child is the scrolling element.
  */
 export function ScrollCue({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -29,16 +32,24 @@ export function ScrollCue({ children }: { children: ReactNode }) {
     };
   }, []);
   return (
-    <div className="f-scroll-cue" ref={ref}>
+    <div className="relative min-w-0" ref={ref}>
       {children}
       {edges.start && (
-        <span className="f-scroll-edge" data-side="start" aria-hidden="true">
-          <CaretLeftIcon size={16} weight="bold" />
+        <span
+          className={`${edge} start-0 justify-items-start bg-linear-to-l from-transparent to-background to-65%`}
+          data-side="start"
+          aria-hidden="true"
+        >
+          <ChevronLeftIcon className="size-4" />
         </span>
       )}
       {edges.end && (
-        <span className="f-scroll-edge" data-side="end" aria-hidden="true">
-          <CaretRightIcon size={16} weight="bold" />
+        <span
+          className={`${edge} end-0 justify-items-end bg-linear-to-r from-transparent to-background to-65%`}
+          data-side="end"
+          aria-hidden="true"
+        >
+          <ChevronRightIcon className="size-4" />
         </span>
       )}
     </div>

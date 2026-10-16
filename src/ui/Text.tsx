@@ -1,8 +1,9 @@
 import type { HTMLAttributes, ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 /**
- * A paragraph in one of the two reading roles: text (16/400, ink) or caption (14/400, muted).
- * It sets its own colour, size and margin, so nothing around it changes how it reads.
+ * A paragraph in one of the two reading roles: text (UI body, text-sm) or caption (text-sm,
+ * muted). It sets its own colour and size, so nothing around it changes how it reads.
  */
 export function Text({
   caption,
@@ -16,7 +17,11 @@ export function Text({
 } & HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={`f-text ${className ?? ''}`}
+      className={cn(
+        'text-sm leading-relaxed text-pretty text-foreground',
+        caption && 'leading-normal text-muted-foreground',
+        className,
+      )}
       data-role={caption ? 'caption' : undefined}
       {...rest}
     >

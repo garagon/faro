@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
+import { Progress as UiProgress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 /**
- * The exact text that will be sent, on one surface and with its line breaks: what the person
+ * The exact text that will be sent, on one muted card and with its line breaks: what the person
  * reads here is what the app they choose receives. Without text, a muted line says what will
  * appear. `live` announces changes politely, for a preview that follows a form.
  */
@@ -16,7 +18,10 @@ export function MessagePreview({
 }) {
   return (
     <div
-      className="f-message"
+      className={cn(
+        'rounded-xl border bg-muted/50 p-4 text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]',
+        !text && 'text-muted-foreground',
+      )}
       data-empty={!text || undefined}
       aria-live={live ? 'polite' : undefined}
     >
@@ -40,11 +45,16 @@ export function Progress({
 }) {
   const done = max > 0 && value >= max;
   return (
-    <div className="f-progress">
-      <span className="f-progress-text" role="status" data-done={done || undefined}>
+    <div className="grid gap-2">
+      <span
+        className="flex items-center gap-2 text-sm leading-snug font-medium"
+        role="status"
+        data-done={done || undefined}
+      >
         {children}
       </span>
-      <progress className="f-progress-bar" value={value} max={max} aria-label={label} />
+      {/* shadcn Progress reads a percentage; its label and value reach assistive technology. */}
+      <UiProgress value={max > 0 ? Math.min(100, (value / max) * 100) : 0} aria-label={label} />
     </div>
   );
 }
