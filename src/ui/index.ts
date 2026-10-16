@@ -31,6 +31,19 @@ export { Note, SafetyNotice, ScopeNote, StatusChip } from './Notice.tsx';
 export { BackLink, ScreenHead, Section } from './Section.tsx';
 export { Text } from './Text.tsx';
 export {
+  ActionTile,
+  ActionTiles,
+  AlertCard,
+  AlertCardButton,
+  Board,
+  BoardRow,
+  HazardPicker,
+  NumberTile,
+  NumberTiles,
+  StatusHead,
+  type BoardTone,
+} from './Status.tsx';
+export {
   AppFrame,
   Content,
   Header,
