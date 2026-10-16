@@ -116,10 +116,23 @@
   --f-pin-shadow-box: 0 2px 6px rgb(0 0 0 / 20%);
 
   /* Map: the ground before tiles load, and the two points that are not data (an embassy, the
-     person's own meeting point). Neither may look like a warning level. */
+     person's own meeting point). Neither may look like a warning level. The plate boundaries
+     are context in a muted purple; the person's location is blue, as on any phone map. */
   --f-map-ground: #dce6e2;
   --f-map-embassy: #295e88;
   --f-map-personal: #6c568c;
+  --f-map-plates: #8a4fb8;
+  --f-map-you: #226b9c;
+  --f-map-you-area: #367aaa;
+  --f-map-halo: rgb(21 31 28 / 14%);
+  --f-map-hint: rgb(21 31 28 / 72%);
+  /* The map's height on a phone (the card grows with its legend), and the tall side map. */
+  --f-map-height: 240px;
+  --f-map-tall: 520px;
+  /* Legend keys: a small swatch per kind of mark, and the stroke of lines and outlines. */
+  --f-map-key: 1rem;
+  --f-map-key-radius: 4px;
+  --f-map-line: 2px;
 
   /* Sizes */
   --f-touch: 44px;

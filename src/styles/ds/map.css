@@ -1,16 +1,38 @@
 /*
- * The map (WebMap): the Leaflet canvas, its controls and the pins. Pins read the same scales as
- * the lists: magnitude in the one-hue ramp, official levels in their colours, anything else in
- * neutral ink. A colour on the map never means more than the same colour in a list.
+ * The map (MapFrame and WebMap): one card with the Leaflet canvas, its controls and the pins on
+ * top, and under them the legend and the credits. Pins read the same scales as the lists:
+ * magnitude in the one-hue ramp, official levels in their colours, anything else in neutral ink.
+ * A colour on the map never means more than the same colour in a list.
  */
+.f-map-block {
+  display: grid;
+  gap: var(--f-space-2);
+}
+/* The card. A compact card grows with its legend; a tall one shares its height with it. */
+.f-map {
+  overflow: hidden;
+  border: var(--f-hairline);
+  border-radius: var(--f-radius-md);
+  background: var(--f-color-surface);
+}
+.f-map[data-size='tall'] {
+  height: var(--f-map-tall);
+}
 .f-map-frame {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+}
+.f-map-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: var(--f-map-height);
 }
 /* Its own stacking context, so the map's panes never cover the header or the tabs. */
 .f-map-canvas {
+  position: absolute;
+  inset: 0;
   z-index: 0;
-  height: 100%;
   background: var(--f-map-ground);
   font-family: var(--f-font);
 }
@@ -19,21 +41,135 @@
   height: var(--f-touch);
   line-height: var(--f-touch);
 }
-.f-map-canvas .leaflet-control-attribution {
-  font-size: var(--f-text-xs);
+
+/* Over the map: how to move it on a touch screen, an action, and tiles that did not load. */
+.f-map-hint {
+  position: absolute;
+  top: var(--f-space-3);
+  right: var(--f-space-3);
+  z-index: 1;
+  margin: 0;
+  padding: var(--f-space-1) var(--f-space-3);
+  border-radius: var(--f-radius-full);
+  background: var(--f-map-hint);
+  color: var(--f-white);
+  font-size: var(--f-text-sm);
+  white-space: nowrap;
+  pointer-events: none;
 }
-/* Tiles that did not load: said over the map, in the colour of data that is not current. */
-.f-map-error {
+.f-map-overlay {
   position: absolute;
   right: var(--f-space-3);
-  bottom: var(--f-space-8);
+  bottom: var(--f-space-3);
   left: var(--f-space-3);
-  z-index: 500;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: var(--f-space-2);
+  pointer-events: none;
+}
+.f-map-overlay > * {
+  justify-self: center;
+  box-shadow: var(--f-shadow-overlay);
+  pointer-events: auto;
+}
+/* In the colour of data that is not current. */
+.f-map-error {
+  margin: 0;
   padding: var(--f-space-2) var(--f-space-3);
   border-radius: var(--f-radius-sm);
   background: var(--f-color-level-1-soft);
   color: var(--f-color-level-1-text);
   font-size: var(--f-text-sm);
+}
+
+/* Legend and credits: under the map, inside the card. */
+.f-map-legend {
+  display: grid;
+  gap: var(--f-space-2);
+  padding: var(--f-space-3) var(--f-space-4);
+  border-top: var(--f-hairline);
+}
+.f-map-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--f-space-1) var(--f-space-4);
+  margin: 0;
+  padding: 0;
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  line-height: var(--f-leading-snug);
+  list-style: none;
+}
+.f-map-key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--f-space-2);
+}
+.f-map-swatch {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--f-map-key);
+  height: var(--f-map-key);
+  border-radius: var(--f-map-key-radius);
+  color: var(--f-white);
+}
+.f-map-swatch[data-kind='quake'] {
+  background: var(--f-mag-2);
+}
+.f-map-swatch[data-kind='cluster'],
+.f-map-swatch[data-kind='hazard'] {
+  border-radius: var(--f-radius-full);
+  background: var(--f-neutral-700);
+}
+.f-map-swatch[data-kind='plates'] {
+  height: 0;
+  border-top: var(--f-map-line) solid var(--f-map-plates);
+  border-radius: 0;
+}
+.f-map-swatch[data-kind='area'] {
+  border: var(--f-map-line) solid var(--f-neutral-600);
+  background: var(--f-neutral-100);
+}
+.f-map-swatch[data-level='1'] {
+  border-color: var(--f-color-level-1);
+  background: var(--f-color-level-1-soft);
+}
+.f-map-swatch[data-level='2'] {
+  border-color: var(--f-color-level-2);
+  background: var(--f-color-level-2-soft);
+}
+.f-map-swatch[data-level='3'] {
+  border-color: var(--f-color-level-3);
+  background: var(--f-color-level-3-soft);
+}
+.f-map-swatch[data-kind='embassy'] {
+  background: var(--f-map-embassy);
+}
+.f-map-swatch[data-kind='personal'] {
+  color: var(--f-map-personal);
+}
+.f-map-swatch[data-kind='you'] {
+  border: var(--f-map-line) solid var(--f-white);
+  border-radius: var(--f-radius-full);
+  background: var(--f-map-you);
+  box-shadow: var(--f-pin-shadow-box);
+}
+/* The providers' credits, complete, in the legal text size. */
+.f-map-credits {
+  margin: 0;
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-xs);
+  line-height: var(--f-leading-snug);
+}
+.f-map-credits a {
+  color: inherit;
+  text-decoration: none;
+}
+.f-map-credits a:hover,
+.f-map-credits a:focus-visible {
+  text-decoration: underline;
 }
 
 /* Earthquakes: a tag with the magnitude, pointing at the epicentre. Leaflet icons take a class
@@ -90,7 +226,7 @@
   font-size: 13px;
 }
 .f-map-canvas .marker-cluster {
-  background: rgb(21 31 28 / 14%);
+  background: var(--f-map-halo);
 }
 .f-map-canvas .marker-cluster div {
   background: var(--f-neutral-700);
@@ -114,6 +250,47 @@
 }
 .f-pin-hazard-red {
   background: var(--f-color-level-3);
+}
+
+/* A national warning's area, in the colour of its official level (src/lib/national.ts
+   severityLevel). A level the agency did not state stays neutral. Leaflet paths take a class. */
+.f-map-area {
+  fill: var(--f-neutral-600);
+  fill-opacity: 0.16;
+  stroke: var(--f-neutral-600);
+  stroke-width: var(--f-map-line);
+  stroke-opacity: 1;
+}
+.f-map-area-1 {
+  fill: var(--f-color-level-1);
+  stroke: var(--f-color-level-1);
+}
+.f-map-area-2 {
+  fill: var(--f-color-level-2);
+  stroke: var(--f-color-level-2);
+}
+.f-map-area-3 {
+  fill: var(--f-color-level-3);
+  stroke: var(--f-color-level-3);
+}
+/* Context, not data: plate boundaries under the markers. */
+.f-map-plates {
+  stroke: var(--f-map-plates);
+  stroke-width: 1.4px;
+  stroke-opacity: 0.6;
+}
+/* The person's approximate location: a dot in a ring of its accuracy. */
+.f-map-you-area {
+  fill: var(--f-map-you-area);
+  fill-opacity: 0.12;
+  stroke: var(--f-map-you-area);
+  stroke-width: 1px;
+}
+.f-map-you {
+  fill: var(--f-map-you);
+  fill-opacity: 1;
+  stroke: var(--f-white);
+  stroke-width: 3px;
 }
 
 /* Not data: an embassy, and the person's own meeting point. */

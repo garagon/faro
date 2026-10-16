@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import InformationDialog from './components/InformationDialog.tsx';
 import {
   CrosshairIcon,
+  MagnifyingGlassIcon,
   BookOpenTextIcon,
   UsersThreeIcon,
   ClockCounterClockwiseIcon,
@@ -31,15 +32,7 @@ import {
   DatabaseIcon,
   ShieldCheckIcon,
 } from '@phosphor-icons/react';
-import {
-  displayPlace,
-  distanceKm,
-  filterEvents,
-  placeLang,
-  type CatalogId,
-  type Quake,
-  type Bounds,
-} from './lib/domain.ts';
+import { distanceKm, filterEvents, type CatalogId, type Quake, type Bounds } from './lib/domain.ts';
 import { useLiveFeed } from './hooks/useLiveFeed.ts';
 import LiveActivity from './components/LiveActivity.tsx';
 import TripProfile from './components/TripProfile.tsx';
@@ -80,7 +73,7 @@ import {
   parseAlerts,
 } from './lib/alerts.ts';
 import { atLabel, checkedLabel } from './lib/time.ts';
-import { ageLabel } from './lib/feedUpdates.ts';
+import { quakeDate, quakeRegion, quakeTime, withPlace } from './lib/quakeText.ts';
 import { confirmFresh, earthquakeSummary, gdacsStatus, tsunamiStatus } from './lib/hazards.ts';
 import SituationBriefing from './components/SituationBriefing.tsx';
 import { destinationFor } from './data/destinations/index.ts';
@@ -98,6 +91,8 @@ import {
   parseNational,
   readableEvent,
   reviveNational,
+  severityLabels,
+  severityLevel,
 } from './lib/national.ts';
 import { NWS_COUNTRIES, nwsUrl, parseNws } from './lib/nws.ts';
 import AlertsPanel from './components/AlertsPanel.tsx';
@@ -190,15 +185,6 @@ const providerNames: Record<CatalogId, string> = {
   EMSC: 'EMSC',
   USGS: 'USGS',
 };
-// "em" + the country's article in Portuguese, for the earthquake page title.
-const PT_IN: Record<string, string> = Object.fromEntries(
-  Object.entries({
-    no: ['PA', 'MX', 'PE', 'EC', 'CL', 'BR', 'PY', 'UY', 'CA', 'JP'],
-    na: ['AR', 'CO', 'CR', 'GT', 'NI', 'VE', 'BO', 'DO', 'JM'],
-    nos: ['US'],
-    em: ['HN', 'SV', 'CU', 'PR', 'PT'],
-  }).flatMap(([prep, codes]) => codes.map((code) => [code, prep])),
-);
 function readPlan() {
   try {
     const p = JSON.parse(localStorage.getItem('faro-hotel-v1') || 'null');
@@ -325,7 +311,10 @@ export default function App() {
   });
   const [bounds, setBounds] = useState<Bounds>(initialRegion.bounds),
     [pending, setPending] = useState<Bounds>(initialRegion.bounds),
-    [view, setView] = useState<MapView>(initialRegion.view),
+    // The first view frames the country and its earthquakes (WebMap `fit`).
+    [view, setView] = useState<MapView>({ ...initialRegion.view, fit: true }),
+    // Set when the person moved the map since the app last placed it.
+    [mapMoved, setMapMoved] = useState(false),
     [detail, setDetail] = useState<string | null>(null),
     [geo, setGeo] = useState<Geo | null>(null),
     [tracking, setTracking] = useState(false),
@@ -457,8 +446,9 @@ export default function App() {
     },
     [],
   );
-  const center = (lat: number, lng: number, zoom = 8) =>
-    setView((v) => ({ lat, lng, zoom, key: v.key + 1 }));
+  // `fit`: frame the country and its earthquakes instead of the point (a new country).
+  const center = (lat: number, lng: number, zoom = 8, fit = false) =>
+    setView((v) => ({ lat, lng, zoom, key: v.key + 1, fit }));
   const stopLocation = () => {
     if (watch.current !== null) navigator.geolocation.clearWatch(watch.current);
     watch.current = null;
@@ -562,7 +552,7 @@ export default function App() {
     setDetail(null);
     setBounds(region.bounds);
     setPending(region.bounds);
-    center(region.view.lat, region.view.lng, region.view.zoom);
+    center(region.view.lat, region.view.lng, region.view.zoom, true);
   };
   // The language is stored only when the person chooses it.
   const changeLanguage = (value: Lang) => {
@@ -754,7 +744,9 @@ export default function App() {
       failedAt: alerts.failedAt ?? undefined,
     })),
   ];
-  // Active GDACS points (updated in 72 h) for cyclones, floods and volcanoes in the place.
+  // Active GDACS points (updated in 72 h) for cyclones, floods and volcanoes in the place. A
+  // tsunami bulletin is never drawn: which coasts it applies to is the agency's to say, not a
+  // shape Faro could infer.
   const kinds = { TC: 'cyclone', FL: 'flood', VO: 'volcano' } as const;
   const mapHazards: MapHazard[] = (countryAlerts ?? []).flatMap((a) =>
     a.lat !== null &&
@@ -830,11 +822,14 @@ export default function App() {
       hour: '2-digit',
       minute: '2-digit',
     }).format(n);
+  // Each area in the colour of its official level, as its row on Situación.
   const warningAreas: MapArea[] = nationalActive
     .filter((w) => w.polygons.length > 0)
     .map((w) => ({
       id: w.id,
       polygons: w.polygons,
+      level: w.severity ? severityLevel[w.severity] : undefined,
+      levelLabel: w.severity ? severityLabels[w.severity][idx] : undefined,
       title: readableEvent(w.event),
       detail: t(
         `Área bajo aviso de ${national.data!.agency} hasta el ${until(w.expires)}.`,
@@ -917,8 +912,79 @@ export default function App() {
       !live.online ||
       (live.fetched > 0 && live.now - live.fetched > 120000) ||
       (live.generated > 0 && live.now - live.generated > 600000),
+    // "Search this area" only after the person moved the map away from the area listed.
     dirty =
-      Math.abs(bounds.west - pending.west) > 0.5 || Math.abs(bounds.north - pending.north) > 0.5;
+      mapMoved &&
+      (Math.abs(bounds.west - pending.west) > 0.5 || Math.abs(bounds.north - pending.north) > 0.5);
+  // The map's first view: the country's land and its earthquakes, followed until the person
+  // moves the map. Before the borders load, the country's preset view.
+  const countryBox = useMemo(
+    () => (borders && country !== 'WORLD' ? borders.countryBounds(country) : null),
+    [borders, country],
+  );
+  const mapFrame = useMemo(() => {
+    if (!countryBox || scope !== 'country') return null;
+    const all = results.reduce(
+      (b, q) => ({
+        south: Math.min(b.south, q.lat),
+        north: Math.max(b.north, q.lat),
+        west: Math.min(b.west, q.lng),
+        east: Math.max(b.east, q.lng),
+      }),
+      countryBox,
+    );
+    // Earthquakes far from the mainland (Alaska or Hawaii for the United States, or across the
+    // date line) would shrink the country to a dot: then the country alone.
+    return all.east - all.west > 60 || all.north - all.south > 50 ? countryBox : all;
+  }, [countryBox, scope, results]);
+  // One earthquake row, the same in the list and in "Latest earthquakes": when it happened as the
+  // title (one format everywhere, src/lib/quakeText.ts), then where and how deep. The region the
+  // catalogue published is said only when it adds something: inside the country on screen, or
+  // when every earthquake shares it, it is named once in the list title instead.
+  const quakeHome = scope === 'country' && country !== 'WORLD' ? country : undefined;
+  const sharedRegion = useMemo(() => {
+    if (quakeHome || !results.length) return null;
+    const first = quakeRegion(results[0], lang);
+    return first && results.every((q) => quakeRegion(q, lang)?.text === first.text) ? first : null;
+  }, [results, lang, quakeHome]);
+  const quakeRow = (q: Quake) => {
+    const region = sharedRegion ? null : quakeRegion(q, lang, quakeHome);
+    return {
+      title: (
+        <time dateTime={new Date(q.time).toISOString()} title={quakeDate(q.time, lang, timeZone)}>
+          {quakeTime(q.time, live.now, lang, timeZone)}
+        </time>
+      ),
+      meta: (
+        <>
+          {region && (
+            <>
+              <span lang={region.lang === lang ? undefined : region.lang}>{region.text}</span>
+              {' · '}
+            </>
+          )}
+          {distance(q.depth, lang).replace(' ', '\u00a0')} {t('de prof.', 'deep', 'de prof.')}
+          {geo
+            ? ` · ${distance(distanceKm([geo.lat, geo.lng], [q.lat, q.lng]), lang).replace(' ', '\u00a0')} ${t('de ti', 'away', 'de você')}`
+            : ''}
+        </>
+      ),
+    };
+  };
+  // A list title with the place its rows leave out: "51 sismos en Panamá".
+  const placedTitle = (text: string) =>
+    quakeHome ? (
+      withPlace(text, country, countryName, lang)
+    ) : sharedRegion ? (
+      <>
+        {text} ·{' '}
+        <span lang={sharedRegion.lang === lang ? undefined : sharedRegion.lang}>
+          {sharedRegion.text}
+        </span>
+      </>
+    ) : (
+      text
+    );
   // An empty earthquake list says one thing: offline, waiting for a first answer, the source
   // failing with nothing received, or no records in an answer.
   const emptyList = !live.online
@@ -1102,59 +1168,15 @@ export default function App() {
     ),
   ];
   const headings: Record<Exclude<Screen, 'activity'>, [string, string]> = {
-    detail:
-      homeTab === 'tsunami'
-        ? [
-            t('Tsunami', 'Tsunami', 'Tsunami'),
-            t(
-              'Boletines de NOAA/PTWC y qué hacer si estás en la costa.',
-              'NOAA/PTWC bulletins and what to do if you are on the coast.',
-              'Boletins da NOAA/PTWC e o que fazer se você estiver no litoral.',
-            ),
-          ]
-        : homeTab === 'storms'
-          ? [
-              t('Ciclones tropicales', 'Tropical cyclones', 'Ciclones tropicais'),
-              t(
-                'Ciclones activos del Centro Nacional de Huracanes de NOAA.',
-                'Active cyclones from the NOAA National Hurricane Center.',
-                'Ciclones ativos do Centro Nacional de Furacões da NOAA.',
-              ),
-            ]
-          : homeTab === 'nws'
-            ? [
-                t('Avisos del NWS', 'NWS alerts', 'Avisos do NWS'),
-                t(
-                  'Alertas del Servicio Meteorológico Nacional de EE. UU. para esta zona.',
-                  'U.S. National Weather Service alerts for this area.',
-                  'Alertas do Serviço Meteorológico Nacional dos EUA para esta área.',
-                ),
-              ]
-            : homeTab === 'alerts'
-              ? [
-                  t('Alertas internacionales', 'International alerts', 'Alertas internacionais'),
-                  t(
-                    'Alertas de GDACS sobre ciclones, inundaciones y volcanes. No son avisos locales.',
-                    'GDACS alerts for cyclones, floods and volcanoes. They are not local warnings.',
-                    'Alertas do GDACS sobre ciclones, inundações e vulcões. Não são avisos locais.',
-                  ),
-                ]
-              : [
-                  t(
-                    `Sismos en ${countryName}`,
-                    `Earthquakes in ${countryName}`,
-                    // Portuguese contracts "em" with the country's article ("no Panamá", "na
-                    // Colômbia"); a country not listed keeps the neutral form.
-                    PT_IN[country]
-                      ? `Terremotos ${PT_IN[country]} ${countryName}`
-                      : `Terremotos · ${countryName}`,
-                  ),
-                  t(
-                    'Cada sismo como lo publica la fuente elegida, con filtros y por páginas.',
-                    'Each earthquake as the selected source publishes it, with filters and pages.',
-                    'Cada terremoto como a fonte escolhida o publica, com filtros e por páginas.',
-                  ),
-                ],
+    // One title for the detail pages, whatever the tab: each tab names its own panel.
+    detail: [
+      t('Detalle', 'Details', 'Detalhes'),
+      t(
+        `${countryName}: cada dato como lo publica su fuente.`,
+        `${countryName}: each item as its source publishes it.`,
+        `${countryName}: cada dado como a fonte o publica.`,
+      ),
+    ],
     // The same word as its menu entry.
     sources: [
       t('Fuentes', 'Sources', 'Fontes'),
@@ -1608,7 +1630,7 @@ export default function App() {
                 map={
                   <div className="f-stack" data-gap="lg">
                     <div className="f-stack" data-gap="sm">
-                      {/* The map's markers are focusable; keyboard users can pass them in one step. */}
+                      {/* Past the map's controls in one step, to its legend. */}
                       <a className="f-skip" href="#fw-map-foot">
                         {t('Saltar el mapa', 'Skip the map', 'Pular o mapa')}
                       </a>
@@ -1621,110 +1643,172 @@ export default function App() {
                           lang={lang}
                           events={results}
                           view={view}
+                          frame={mapFrame}
                           geo={geo}
                           point={visiblePoint}
                           selected={detail || focused || undefined}
                           onSelect={(q) => setDetail(q.id)}
-                          onBounds={setPending}
-                        />
-                      </MapFrame>
-                      <div id="fw-map-foot" tabIndex={-1} className="f-stack" data-gap="sm">
-                        {(availableEmbassy || dirty) && (
-                          <div className="f-actions">
-                            {dirty && (
-                              <button
-                                type="button"
+                          onBounds={(b, moved) => {
+                            setPending(b);
+                            setMapMoved(moved);
+                          }}
+                          legendId="fw-map-foot"
+                          action={
+                            dirty ? (
+                              <Button
+                                variant="secondary"
+                                icon={<MagnifyingGlassIcon size={18} aria-hidden="true" />}
                                 onClick={() => {
                                   setBounds(pending);
                                   setScope('area');
                                   setPage(1);
+                                  // The button goes with the search: focus stays on the map.
+                                  appRef.current
+                                    ?.querySelector<HTMLElement>('.f-map-canvas')
+                                    ?.focus({ preventScroll: true });
                                 }}
                               >
                                 {t('Buscar en esta área', 'Search this area', 'Buscar nesta área')}
-                              </button>
-                            )}
-                            {availableEmbassy && (
-                              <button
-                                type="button"
-                                aria-pressed={showEmbassies}
-                                onClick={() => setShowEmbassies((v) => !v)}
-                              >
-                                {showEmbassies
+                              </Button>
+                            ) : undefined
+                          }
+                        />
+                      </MapFrame>
+                      {availableEmbassy && (
+                        <Actions>
+                          <button
+                            type="button"
+                            aria-pressed={showEmbassies}
+                            onClick={() => setShowEmbassies((v) => !v)}
+                          >
+                            {showEmbassies
+                              ? t(
+                                  'Ocultar mi embajada',
+                                  'Hide my embassy',
+                                  'Ocultar minha embaixada',
+                                )
+                              : t(
+                                  'Mostrar mi embajada',
+                                  'Show my embassy',
+                                  'Mostrar minha embaixada',
+                                )}
+                          </button>
+                        </Actions>
+                      )}
+                    </div>
+                    {/* Wide screens have room for the latest earthquakes beside the hazards. The
+                        section stays when the catalogue fails or has nothing, and says which. */}
+                    <div className="f-when-split">
+                      <Section
+                        id="fw-latest"
+                        title={placedTitle(
+                          t('Últimos sismos', 'Latest earthquakes', 'Últimos terremotos'),
+                        )}
+                        aside={provider}
+                      >
+                        {results.length > 0 ? (
+                          <div className="f-stack" data-gap="sm">
+                            {/* Records from a source that stopped answering are not current. */}
+                            {stale && live.fetched > 0 && (
+                              <SourceStamp state="stale">
+                                {!live.online
                                   ? t(
-                                      'Ocultar mi embajada',
-                                      'Hide my embassy',
-                                      'Ocultar minha embaixada',
+                                      `Sin conexión · último dato ${checkedLabel(live.fetched, live.now, lang)}`,
+                                      `Offline · last data ${checkedLabel(live.fetched, live.now, lang)}`,
+                                      `Sem conexão · último dado ${checkedLabel(live.fetched, live.now, lang)}`,
+                                    )
+                                  : live.failed
+                                    ? t(
+                                        `Sin respuesta · último dato ${checkedLabel(live.fetched, live.now, lang)}`,
+                                        `No answer · last data ${checkedLabel(live.fetched, live.now, lang)}`,
+                                        `Sem resposta · último dado ${checkedLabel(live.fetched, live.now, lang)}`,
+                                      )
+                                    : t(
+                                        `Último dato ${checkedLabel(live.fetched, live.now, lang)}`,
+                                        `Last data ${checkedLabel(live.fetched, live.now, lang)}`,
+                                        `Último dado ${checkedLabel(live.fetched, live.now, lang)}`,
+                                      )}
+                              </SourceStamp>
+                            )}
+                            <List>
+                              {[...results]
+                                .sort((a, b) => b.time - a.time)
+                                .slice(0, 5)
+                                .map((q) => (
+                                  <ListRow
+                                    key={q.id}
+                                    lead={<Magnitude value={q.mag} />}
+                                    {...quakeRow(q)}
+                                    onClick={() => setDetail(q.id)}
+                                  />
+                                ))}
+                            </List>
+                          </div>
+                        ) : (
+                          // Never answered, failing, offline or empty: said here, never a "none"
+                          // for a failure.
+                          <div className="f-stack" data-gap="sm" role="status">
+                            <SourceStamp
+                              state={
+                                emptyList === 'failed' || emptyList === 'offline'
+                                  ? 'error'
+                                  : undefined
+                              }
+                            >
+                              {emptyList === 'offline'
+                                ? t(
+                                    'Sin conexión · sin datos de sismos',
+                                    'Offline · no earthquake data',
+                                    'Sem conexão · sem dados de terremotos',
+                                  )
+                                : emptyList === 'checking'
+                                  ? `${t('Consultando', 'Checking', 'Consultando')} ${provider}…`
+                                  : emptyList === 'failed'
+                                    ? live.failedAt
+                                      ? t(
+                                          `Sin respuesta · intento ${checkedLabel(live.failedAt, live.now, lang)}`,
+                                          `No answer · attempt ${checkedLabel(live.failedAt, live.now, lang)}`,
+                                          `Sem resposta · tentativa ${checkedLabel(live.failedAt, live.now, lang)}`,
+                                        )
+                                      : t('Sin respuesta', 'No answer', 'Sem resposta')
+                                    : t(
+                                        `Ninguno en ${periodLabel}`,
+                                        `None in ${periodLabel}`,
+                                        `Nenhum em ${periodLabel}`,
+                                      )}
+                            </SourceStamp>
+                            {emptyList !== 'checking' && (
+                              <Text caption>
+                                {emptyList === 'none'
+                                  ? t(
+                                      'La ausencia de registros no significa ausencia de peligro.',
+                                      'No records does not mean no danger.',
+                                      'A ausência de registros não significa ausência de perigo.',
                                     )
                                   : t(
-                                      'Mostrar mi embajada',
-                                      'Show my embassy',
-                                      'Mostrar minha embaixada',
+                                      'Esto no significa que no haya sismos.',
+                                      'This does not mean there are no earthquakes.',
+                                      'Isso não significa que não haja terremotos.',
                                     )}
-                              </button>
+                              </Text>
+                            )}
+                            {emptyList === 'failed' && (
+                              <Actions>
+                                <button
+                                  type="button"
+                                  disabled={live.busy}
+                                  onClick={() => void live.refresh()}
+                                >
+                                  {live.busy
+                                    ? t('Consultando…', 'Checking…', 'Consultando…')
+                                    : t('Reintentar', 'Retry', 'Tentar de novo')}
+                                </button>
+                              </Actions>
                             )}
                           </div>
                         )}
-                        <Note>
-                          {[
-                            t(
-                              'Puntos publicados, no zonas de riesgo',
-                              'Published points, not hazard zones',
-                              'Pontos publicados, não zonas de risco',
-                            ),
-                            t('marcador: magnitud', 'pin: magnitude', 'marcador: magnitude'),
-                            t('línea morada: placas', 'purple line: plates', 'linha roxa: placas'),
-                            mapHazards.length > 0
-                              ? t(
-                                  'ícono redondo: GDACS',
-                                  'round icon: GDACS',
-                                  'ícone redondo: GDACS',
-                                )
-                              : '',
-                            warningAreas.length > 0
-                              ? t(
-                                  `sombreado: aviso de ${national.data!.agency}`,
-                                  `shaded: ${national.data!.agency} warning`,
-                                  `sombreado: aviso do ${national.data!.agency}`,
-                                )
-                              : '',
-                            visiblePoint
-                              ? t(
-                                  'bandera: punto personal no verificado',
-                                  'flag: unverified personal point',
-                                  'bandeira: ponto pessoal não verificado',
-                                )
-                              : '',
-                          ]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </Note>
-                      </div>
+                      </Section>
                     </div>
-                    {/* Wide screens have room for the latest earthquakes beside the hazards. */}
-                    {results.length > 0 && (
-                      <div className="f-when-split">
-                        <Section
-                          id="fw-latest"
-                          title={t('Últimos sismos', 'Latest earthquakes', 'Últimos terremotos')}
-                          aside={provider}
-                        >
-                          <List>
-                            {[...results]
-                              .sort((a, b) => b.time - a.time)
-                              .slice(0, 5)
-                              .map((q) => (
-                                <ListRow
-                                  key={q.id}
-                                  lead={<Magnitude value={q.mag} />}
-                                  title={displayPlace(q.place)}
-                                  meta={`${shortTime(q.time)} · ${distance(q.depth, lang)} ${t('de prof.', 'deep', 'de prof.')}`}
-                                  onClick={() => setDetail(q.id)}
-                                />
-                              ))}
-                          </List>
-                        </Section>
-                      </div>
-                    )}
                   </div>
                 }
                 response={
@@ -1771,14 +1855,8 @@ export default function App() {
                 tabs={[
                   {
                     id: 'quakes',
+                    // The count is in the list title, so the four tabs fit from 360 px.
                     label: t('Sismos', 'Earthquakes', 'Terremotos'),
-                    // No answer yet (or a failing source): no count, never a "0".
-                    // No count from old data: "0" would read as "no earthquakes".
-                    // Nor from a quiet catalogue: its newest record is over a day old.
-                    count:
-                      (live.checked || live.fetched) && !stale && !(quietSince && !results.length)
-                        ? results.length
-                        : undefined,
                     content: (
                       <div className="f-stack" data-gap="lg" id="sismos">
                         <LiveActivity
@@ -2019,14 +2097,17 @@ export default function App() {
                         >
                           <div className="f-section-head">
                             <h2 className="f-section-title" id="fw-events-title" tabIndex={-1}>
-                              {/* No count before the catalog has answered: "0" would read as none. */}
+                              {/* No count before the catalog has answered: "0" would read as none.
+                                With a count, the place the rows leave out: "51 sismos en Panam\u00e1". */}
                               {!live.fetched || (quietSince && !results.length)
                                 ? t('Sismos', 'Earthquakes', 'Terremotos')
-                                : `${results.length}\u00a0${
-                                    results.length === 1
-                                      ? t('sismo', 'earthquake', 'terremoto')
-                                      : t('sismos', 'earthquakes', 'terremotos')
-                                  }`}
+                                : placedTitle(
+                                    `${results.length}\u00a0${
+                                      results.length === 1
+                                        ? t('sismo', 'earthquake', 'terremoto')
+                                        : t('sismos', 'earthquakes', 'terremotos')
+                                    }`,
+                                  )}
                             </h2>
                             {listPage.pages > 1 && (
                               <span className="f-section-aside">
@@ -2114,7 +2195,9 @@ export default function App() {
                                       </span>
                                     </>
                                   }
-                                  title={<span lang={placeLang(q)}>{displayPlace(q.place)}</span>}
+                                  // When it happened; then where, how deep and how far when the
+                                  // location is on (quakeRow, shared with "Latest earthquakes").
+                                  {...quakeRow(q)}
                                   badge={
                                     newIds.has(q.id) ? (
                                       <Badge>
@@ -2125,29 +2208,6 @@ export default function App() {
                                         )}
                                       </Badge>
                                     ) : undefined
-                                  }
-                                  // When it happened, how deep, and how far when the location is on.
-                                  // Local time reads as "10 min ago"; UTC as the published clock.
-                                  meta={
-                                    <>
-                                      <time
-                                        dateTime={new Date(q.time).toISOString()}
-                                        title={shortTime(q.time)}
-                                      >
-                                        {timeZone === 'utc'
-                                          ? `${shortTime(q.time)} UTC`
-                                          : ageLabel(q.time, live.now, lang).replace(
-                                              /(\d) /g,
-                                              '$1\u00a0',
-                                            )}
-                                      </time>
-                                      {' · '}
-                                      {distance(q.depth, lang).replace(' ', '\u00a0')}{' '}
-                                      {t('de prof.', 'deep', 'de prof.')}
-                                      {geo
-                                        ? ` · ${distance(distanceKm([geo.lat, geo.lng], [q.lat, q.lng]), lang).replace(' ', '\u00a0')} ${t('de ti', 'away', 'de você')}`
-                                        : ''}
-                                    </>
                                   }
                                   onClick={() => setDetail(q.id)}
                                 />
@@ -2346,9 +2406,6 @@ export default function App() {
                         {
                           id: 'storms',
                           label: t('Ciclones', 'Cyclones', 'Ciclones'),
-                          // No count: storms active in the basin read as storms affecting the place,
-                          // and the row may say none has an alert here. The tab explains both.
-                          count: undefined,
                           content: (
                             <StormsPanel
                               lang={lang}
@@ -2668,6 +2725,7 @@ export default function App() {
         provider={provider}
         fetched={live.fetched}
         generated={live.generated}
+        now={live.now}
         onClose={closeSheet}
         onMap={showEpicentre}
         onTsunami={() => {
