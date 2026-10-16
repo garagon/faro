@@ -1,18 +1,22 @@
 /*
- * Every application style, in three cascade layers. A later layer always wins over an earlier
- * one, whatever the selectors, so new work never needs higher specificity or !important:
+ * Every application style, in cascade layers. A later layer always wins over an earlier one,
+ * whatever the selectors, so new work never needs higher specificity or !important:
  *
  * 1. vendor: the map libraries' own styles.
- * 2. ds-base: tokens, the document and the defaults inside the app frame (type, links, fields).
- * 3. ds: the design system's components and the app frame (src/styles/ds).
+ * 2. theme, base: Tailwind's theme and preflight; the shadcn/ui variables (theme.css).
+ * 3. ds-base: Faro's tokens (pointing at the shadcn variables) and the document defaults.
+ * 4. components, ds: Faro's component and frame styles (src/styles/ds).
+ * 5. utilities: Tailwind classes, used by the shadcn/ui components (src/components/ui), last so
+ *    a class on an element always wins.
  *
  * The loading screen (boot.css) is linked from index.html and stays outside the layers.
  */
-@layer vendor, ds-base, ds;
+@layer vendor, theme, base, ds-base, components, ds, utilities;
 
-@import '@fontsource/public-sans/latin-400.css';
-@import '@fontsource/public-sans/latin-600.css';
-@import '@fontsource/public-sans/latin-700.css';
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/geist';
+@import './theme.css';
 
 @import 'leaflet/dist/leaflet.css' layer(vendor);
 @import 'leaflet.markercluster/dist/MarkerCluster.css' layer(vendor);

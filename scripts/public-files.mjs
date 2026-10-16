@@ -28,6 +28,8 @@ const rootFiles = new Set([
   'index.html',
   'vite.config.ts',
   'tsconfig.json',
+  // shadcn/ui CLI settings (where components go, the theme file).
+  'components.json',
   'eslint.config.js',
   '.gitignore',
   '.gitattributes',

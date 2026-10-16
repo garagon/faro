@@ -22,7 +22,7 @@ export type SafetyScene =
 type Pt = [number, number];
 type Ctx = { t: (es: string, en: string, pt: string) => string; ref: (name: string) => string };
 
-const FONT = "'Public Sans', system-ui, sans-serif";
+const FONT = "'Geist Variable', system-ui, sans-serif";
 const INK = '#1d3a35';
 const LINE = '#7d918a';
 const WATER = '#2b6c8c';

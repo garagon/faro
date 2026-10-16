@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { officialMiddleware } from './server/official.mjs';
 import { precacheList } from './src/lib/offline.ts';
 
@@ -79,6 +80,8 @@ function notices(): Plugin {
 }
 
 export default defineConfig({
+  // shadcn/ui components import from "@/…" (src/).
+  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   build: {
     outDir: 'dist/client',
     rollupOptions: {
@@ -93,6 +96,7 @@ export default defineConfig({
   preview: { host: '127.0.0.1' },
   plugins: [
     react(),
+    tailwindcss(),
     offlineShell(),
     siteUrl(),
     notices(),

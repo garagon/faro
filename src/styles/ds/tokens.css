@@ -1,12 +1,12 @@
 /*
- * Faro design tokens: the only place where colours, type sizes, spacing, radii, shadows and
- * layers are written as values. Components and screens use these names, never literals.
+ * Faro design tokens. The palette, radius and typeface are shadcn/ui's (theme.css: neutral,
+ * Geist); these names give them Faro's roles, so components and screens never write values.
  *
  * Colour roles have one meaning each:
- * - red is only for calling for help;
+ * - red is only for calling for help (shadcn's destructive);
  * - amber, orange and the alert red are only for official warning levels and stale data;
- * - green is the brand and the main action, and "answered / up to date" when paired with a dot;
- * - everything else is ink and neutrals.
+ * - near-black (shadcn's primary) is the main action; green only says "answered / up to date";
+ * - everything else is neutrals.
  */
 :root {
   /* Primitives */
@@ -39,25 +39,26 @@
   --f-alert-800: #8c1d1a;
   --f-blue-600: #1f5fd1;
 
-  /* Semantic colours */
-  --f-color-page: var(--f-neutral-50);
-  --f-color-surface: var(--f-white);
-  --f-color-surface-muted: var(--f-neutral-25);
-  --f-color-text: var(--f-neutral-900);
-  --f-color-text-muted: var(--f-neutral-600);
-  --f-color-text-subtle: var(--f-neutral-700);
-  --f-color-border: var(--f-neutral-100);
-  --f-color-border-strong: var(--f-neutral-200);
-  --f-color-action: var(--f-green-700);
-  --f-color-action-hover: var(--f-green-800);
-  --f-color-action-soft: var(--f-green-50);
-  --f-color-on-action: var(--f-white);
-  --f-color-brand: var(--f-green-900);
+  /* Semantic colours, on the shadcn/ui variables */
+  --f-color-page: var(--background);
+  --f-color-surface: var(--card);
+  --f-color-surface-muted: var(--muted);
+  --f-color-text: var(--foreground);
+  --f-color-text-muted: var(--muted-foreground);
+  --f-color-text-subtle: oklch(0.371 0 0);
+  --f-color-border: var(--border);
+  --f-color-border-strong: oklch(0.87 0 0);
+  --f-color-action: var(--primary);
+  --f-color-action-hover: oklch(0.205 0 0 / 90%);
+  --f-color-action-soft: var(--accent);
+  --f-color-on-action: var(--primary-foreground);
+  --f-color-brand: var(--foreground);
   --f-color-ok: var(--f-green-600);
-  --f-color-call: var(--f-red-700);
-  --f-color-call-hover: var(--f-red-800);
-  --f-color-call-soft: var(--f-red-50);
-  --f-color-focus: var(--f-blue-600);
+  --f-color-call: var(--destructive);
+  --f-color-call-hover: oklch(0.505 0.213 27.518);
+  --f-color-call-soft: oklch(0.971 0.013 17.38);
+  /* A focus ring that reads on white and on the grey sidebar (4.6:1). */
+  --f-color-focus: oklch(0.556 0 0);
   /* Official warning levels (and stale data, which uses the first). */
   --f-color-level-1: var(--f-amber-400);
   --f-color-level-1-soft: var(--f-amber-50);
@@ -76,21 +77,24 @@
   --f-mag-4: #2c4569;
   --f-mag-5: #142a4b;
 
-  /* Type: Public Sans. Roles are listed in components.css. Sizes in rem follow the reader's settings. */
-  --f-font: 'Public Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --f-text-nav: 0.75rem; /* 12: bottom tab labels only, under their icon */
-  --f-text-xs: 0.8125rem; /* 13: map attribution and legal only */
+  /* Type: Geist, on shadcn's scale. Roles are listed in components.css. Sizes in rem follow the
+     reader's settings; fields stay at 16 px so phones do not zoom. */
+  --f-font: var(--font-sans);
+  --f-text-nav: 0.6875rem; /* 11: bottom tab labels only, under their icon */
+  --f-text-xs: 0.75rem; /* 12: map attribution and legal only */
   --f-text-sm: 0.875rem; /* 14: captions: descriptions, sources, notes */
-  --f-text-md: 1rem; /* 16: body, row titles, buttons, fields */
-  --f-text-lg: 1.125rem; /* 18: section titles, figures, large buttons */
-  --f-text-2xl: 1.75rem; /* 28: screen titles */
-  --f-text-3xl: 2.125rem; /* 34: the one exception, the magnitude in an earthquake's detail */
+  --f-text-md: 0.875rem; /* 14: row titles, buttons, body (shadcn's text-sm) */
+  --f-text-body: 1rem; /* 16: instructions and steps, read in a hurry */
+  --f-text-lg: 1rem; /* 16: section titles, figures */
+  --f-text-2xl: 1.5rem; /* 24: screen titles */
+  --f-text-3xl: 1.875rem; /* 30: the one exception, the magnitude in an earthquake's detail */
   --f-leading-tight: 1.2;
-  --f-leading-snug: 1.35;
+  --f-leading-snug: 1.375;
   --f-leading-body: 1.5;
   --f-weight-regular: 400;
-  --f-weight-medium: 600;
-  --f-weight-bold: 700;
+  --f-weight-medium: 500;
+  --f-weight-bold: 600;
+  --f-tracking-title: -0.025em;
 
   /* Space: a 4 px grid. */
   --f-space-1: 0.25rem;
@@ -104,12 +108,12 @@
   --f-space-12: 3rem;
 
   /* Shape and depth */
-  --f-radius-sm: 8px;
-  --f-radius-md: 12px;
+  --f-radius-sm: calc(var(--radius) - 2px);
+  --f-radius-md: calc(var(--radius) + 4px);
   --f-radius-full: 999px;
   --f-hairline: 1px solid var(--f-color-border);
-  --f-shadow-raised: 0 1px 2px rgb(21 31 28 / 6%), 0 1px 3px rgb(21 31 28 / 8%);
-  --f-shadow-overlay: 0 12px 32px rgb(21 31 28 / 18%);
+  --f-shadow-raised: 0 1px 2px 0 rgb(0 0 0 / 5%);
+  --f-shadow-overlay: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -4px rgb(0 0 0 / 10%);
   /* Map pins sit on any background: a soft shadow under them, a halo around the selected one. */
   --f-pin-shadow: drop-shadow(0 1px 2px rgb(0 0 0 / 20%));
   --f-pin-shadow-selected: drop-shadow(0 0 2px #172d39) drop-shadow(0 0 5px #ffffff);
@@ -138,8 +142,8 @@
   --f-touch: 44px;
   /* The leading column of a list row (icon circle or magnitude): one text edge per screen. */
   --f-lead: 36px;
-  --f-control-md: 44px;
-  --f-control-lg: 56px;
+  --f-control-md: 2.5rem;
+  --f-control-lg: 3rem;
   --f-header: 56px;
   --f-tabbar: 60px;
   --f-reading: 42rem;

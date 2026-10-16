@@ -211,7 +211,7 @@ function Catalogue() {
         </Block>
         <Block
           title="Tipografía: cinco roles, nada más"
-          note="Public Sans. Cada texto de la app usa uno de estos roles; 13 px solo para atribución legal y 12 px solo para las pestañas."
+          note="Geist (shadcn/ui). Cada texto de la app usa uno de estos roles; 13 px solo para atribución legal y 12 px solo para las pestañas."
         >
           <div className="spec-type">
             {roles.map(([use, spec, size, weight]) => (
