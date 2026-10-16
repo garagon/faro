@@ -4,31 +4,31 @@
  */
 import { useMemo, useState } from 'react';
 import {
+  ActivityIcon,
   BackpackIcon,
   BookOpenTextIcon,
-  BuildingsIcon,
-  CaretRightIcon,
-  ChatCircleTextIcon,
+  Building2Icon,
   CheckIcon,
+  ChevronRightIcon,
+  CrossIcon,
   CrosshairIcon,
   DatabaseIcon,
-  DropIcon,
+  DropletIcon,
   FileTextIcon,
-  FirstAidIcon,
   FlagIcon,
-  HouseLineIcon,
-  HurricaneIcon,
-  MapTrifoldIcon,
-  MegaphoneSimpleIcon,
-  MountainsIcon,
+  HouseIcon,
+  LuggageIcon,
+  MapIcon,
+  MegaphoneIcon,
+  MessageSquareTextIcon,
+  MountainIcon,
   PhoneIcon,
-  PulseIcon,
   ShieldCheckIcon,
-  SuitcaseRollingIcon,
-  UsersThreeIcon,
+  UsersIcon,
   WavesIcon,
-  WifiSlashIcon,
-} from '@phosphor-icons/react';
+  WifiOffIcon,
+  WindIcon,
+} from 'lucide-react';
 import WebMap from '../../components/WebMap.tsx';
 import type { Quake } from '../../lib/domain.ts';
 import { emergencyFor } from '../../lib/emergency.ts';
@@ -61,8 +61,10 @@ import {
   StatusIcon,
   Steps,
   TabBar,
+  sideLinkClass,
   type Tab,
 } from '../index.ts';
+import { cn } from '@/lib/utils';
 
 export type TabId = 'activity' | 'help' | 'status' | 'kit' | 'trip' | 'guide';
 export type MockScreen = 'activity' | 'event' | 'emergency' | 'country' | 'quakes' | 'help';
@@ -73,11 +75,11 @@ const nb = (text: string) => text.replace(/(\d) (h|min|oct|km)\b/g, '$1 $2');
 export function tabsFor(lang: Lang): readonly Tab<TabId>[] {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   return [
-    { id: 'activity', label: t('Situación', 'Situation', 'Situação'), Icon: PulseIcon },
-    { id: 'help', label: t('Ayuda', 'Help', 'Ajuda'), Icon: UsersThreeIcon },
-    { id: 'status', label: t('Avisar', 'Check in', 'Avisar'), Icon: ChatCircleTextIcon },
+    { id: 'activity', label: t('Situación', 'Situation', 'Situação'), Icon: ActivityIcon },
+    { id: 'help', label: t('Ayuda', 'Help', 'Ajuda'), Icon: UsersIcon },
+    { id: 'status', label: t('Avisar', 'Check in', 'Avisar'), Icon: MessageSquareTextIcon },
     { id: 'kit', label: t('Mochila', 'Go bag', 'Mochila'), Icon: BackpackIcon },
-    { id: 'trip', label: t('Viaje', 'Trip', 'Viagem'), Icon: SuitcaseRollingIcon },
+    { id: 'trip', label: t('Viaje', 'Trip', 'Viagem'), Icon: LuggageIcon },
     { id: 'guide', label: t('Guía', 'Guide', 'Guia'), Icon: BookOpenTextIcon },
   ];
 }
@@ -192,12 +194,12 @@ export function MockApp({ lang, onLang, screen, onScreen }: Frame) {
         {...common}
         foot={
           <>
-            <button type="button" className="f-side-link">
-              <DatabaseIcon size={20} aria-hidden="true" />
+            <button type="button" className={cn('f-side-link', sideLinkClass)}>
+              <DatabaseIcon className="size-4" aria-hidden="true" />
               {t('Fuentes', 'Sources', 'Fontes')}
             </button>
-            <button type="button" className="f-side-link">
-              <ShieldCheckIcon size={20} aria-hidden="true" />
+            <button type="button" className={cn('f-side-link', sideLinkClass)}>
+              <ShieldCheckIcon className="size-4" aria-hidden="true" />
               {t('Privacidad', 'Privacy', 'Privacidade')}
             </button>
           </>
@@ -206,7 +208,7 @@ export function MockApp({ lang, onLang, screen, onScreen }: Frame) {
       <Header {...common} />
       {screen === 'event' && (
         <StatusBar>
-          <WifiSlashIcon size={16} aria-hidden="true" />
+          <WifiOffIcon className="size-4" aria-hidden="true" />
           {t(
             'Sin conexión · datos de las 14:52',
             'Offline · data from 14:52',
@@ -258,7 +260,7 @@ export function MockSituation({
   const actions = (
     <List>
       <ListRow
-        lead={<RowIcon icon={<ChatCircleTextIcon size={20} />} />}
+        lead={<RowIcon icon={<MessageSquareTextIcon className="size-4" />} />}
         title={t('Avisar cómo estoy', 'Tell people how I am', 'Avisar como estou')}
         meta={t(
           'Prepara un mensaje y envíalo tú',
@@ -268,7 +270,7 @@ export function MockSituation({
         onClick={() => {}}
       />
       <ListRow
-        lead={<RowIcon icon={<FirstAidIcon size={20} />} />}
+        lead={<RowIcon icon={<CrossIcon className="size-4" />} />}
         title={t('Qué hacer ahora', 'What to do now', 'O que fazer agora')}
         meta={t(
           'Primeros pasos y otros números',
@@ -278,7 +280,7 @@ export function MockSituation({
         onClick={() => onScreen('emergency')}
       />
       <ListRow
-        lead={<RowIcon icon={<FlagIcon size={20} />} />}
+        lead={<RowIcon icon={<FlagIcon className="size-4" />} />}
         title={t('Tu embajada', 'Your embassy', 'Sua embaixada')}
         meta={t('Elige tu nacionalidad', 'Choose your nationality', 'Escolha sua nacionalidade')}
         onClick={() => {}}
@@ -308,9 +310,7 @@ export function MockSituation({
       <List>
         {event && (
           <ListRow
-            lead={
-              <StatusIcon state="listed" level={3} icon={<WavesIcon size={20} weight="bold" />} />
-            }
+            lead={<StatusIcon state="listed" level={3} icon={<WavesIcon className="size-4" />} />}
             title="Tsunami"
             badge={
               <Badge level={3}>
@@ -328,7 +328,7 @@ export function MockSituation({
           />
         )}
         <ListRow
-          lead={<StatusIcon state="listed" level={1} icon={<DropIcon size={20} weight="fill" />} />}
+          lead={<StatusIcon state="listed" level={1} icon={<DropletIcon className="size-4" />} />}
           title={t('Inundaciones', 'Floods', 'Inundações')}
           badge={<Badge level={1}>{t('Aviso', 'Warning', 'Aviso')}</Badge>}
           meta={t(
@@ -339,7 +339,7 @@ export function MockSituation({
           onClick={() => {}}
         />
         <ListRow
-          lead={<StatusIcon state="listed" icon={<PulseIcon size={20} weight="bold" />} />}
+          lead={<StatusIcon state="listed" icon={<ActivityIcon className="size-4" />} />}
           title={t('Sismos', 'Earthquakes', 'Terremotos')}
           meta={nb(
             t(
@@ -352,7 +352,7 @@ export function MockSituation({
         />
         {!event && (
           <ListRow
-            lead={<StatusIcon state="none" icon={<WavesIcon size={20} weight="bold" />} />}
+            lead={<StatusIcon state="none" icon={<WavesIcon className="size-4" />} />}
             title="Tsunami"
             meta={t(
               'Sin mensajes de amenaza · 14:52',
@@ -363,7 +363,7 @@ export function MockSituation({
           />
         )}
         <ListRow
-          lead={<StatusIcon state="none" icon={<HurricaneIcon size={20} weight="bold" />} />}
+          lead={<StatusIcon state="none" icon={<WindIcon className="size-4" />} />}
           title={t('Ciclones', 'Cyclones', 'Ciclones')}
           meta={t(
             'Ninguno con alerta para Panamá',
@@ -376,7 +376,7 @@ export function MockSituation({
           lead={
             <StatusIcon
               state={event ? 'unknown' : 'none'}
-              icon={<MountainsIcon size={20} weight="bold" />}
+              icon={<MountainIcon className="size-4" />}
             />
           }
           title={t('Volcanes', 'Volcanoes', 'Vulcões')}
@@ -396,12 +396,12 @@ export function MockSituation({
           onClick={() => {}}
         />
       </List>
-      <div className="f-when-single">
+      <div className="f-when-single @min-[1200px]/app:hidden">
         <MapFrame
           more={
             <Button
               variant="ghost"
-              icon={<MapTrifoldIcon size={18} aria-hidden="true" />}
+              icon={<MapIcon className="size-4" aria-hidden="true" />}
               onClick={() => onScreen('quakes')}
             >
               {t(
@@ -433,7 +433,7 @@ export function MockSituation({
     >
       <List>
         <ListRow
-          lead={<RowIcon icon={<MegaphoneSimpleIcon size={20} />} />}
+          lead={<RowIcon icon={<MegaphoneIcon className="size-4" />} />}
           title={t(
             'Sismo M7.7 del 9 de octubre',
             'M7.7 earthquake, 9 October',
@@ -449,7 +449,7 @@ export function MockSituation({
           onClick={() => {}}
         />
         <ListRow
-          lead={<RowIcon icon={<FileTextIcon size={20} />} />}
+          lead={<RowIcon icon={<FileTextIcon className="size-4" />} />}
           title={t('Comunicados de SINAPROC', 'SINAPROC statements', 'Comunicados do SINAPROC')}
           meta={t('3 esta semana', '3 this week', '3 nesta semana')}
           onClick={() => {}}
@@ -458,13 +458,16 @@ export function MockSituation({
     </Section>
   );
   return (
-    <div className="f-split">
-      <div className="f-column">
+    <div className="f-split grid items-start gap-8 @min-[1200px]/app:grid-cols-[minmax(0,42rem)_minmax(20rem,1fr)] @min-[1200px]/app:[&>aside]:sticky @min-[1200px]/app:[&>aside]:top-8">
+      <div className="f-column grid w-full max-w-2xl gap-8">
         <ScreenHead
           title={t('Situación', 'Situation', 'Situação')}
           aside={
             event ? (
-              <span className="f-section-aside" data-state="stale">
+              <span
+                className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900"
+                data-state="stale"
+              >
                 {t('Datos de las 14:52', 'Data from 14:52', 'Dados das 14:52')}
               </span>
             ) : (
@@ -476,14 +479,14 @@ export function MockSituation({
           <>
             {call}
             {happening}
-            <div className="f-stack">
+            <div className="f-stack grid gap-4">
               {safety}
               {actions}
             </div>
           </>
         ) : (
           <>
-            <div className="f-stack">
+            <div className="f-stack grid gap-4">
               {call}
               {actions}
               {safety}
@@ -500,7 +503,7 @@ export function MockSituation({
           )}
         </ScopeNote>
       </div>
-      <aside className="f-when-split f-stack" data-gap="lg">
+      <aside className="f-when-split f-stack @max-[1200px]/app:hidden grid gap-8" data-gap="lg">
         <MapFrame size="tall">
           <MockMap lang={lang} />
         </MapFrame>
@@ -543,8 +546,8 @@ export function MockQuakes({ lang, onBack }: { lang: Lang; onBack: () => void })
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const [view, setView] = useState<'list' | 'map'>('list');
   return (
-    <div className="f-column">
-      <div className="f-stack" data-gap="sm">
+    <div className="f-column grid w-full max-w-2xl gap-8">
+      <div className="f-stack grid gap-2" data-gap="sm">
         <BackLink onClick={onBack}>{t('Situación', 'Situation', 'Situação')}</BackLink>
         <ScreenHead
           title={t('Sismos', 'Earthquakes', 'Terremotos')}
@@ -558,8 +561,8 @@ export function MockQuakes({ lang, onBack }: { lang: Lang; onBack: () => void })
           )}
         />
       </div>
-      <div className="f-stack">
-        <div className="f-section-head">
+      <div className="f-stack grid gap-4">
+        <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <Segmented
             label={t('Vista', 'View', 'Visualização')}
             value={view}
@@ -599,23 +602,23 @@ export function MockHelp({ lang, onScreen }: { lang: Lang; onScreen: (s: MockScr
     .map((n) => n.number)
     .join(' · ');
   return (
-    <div className="f-column">
+    <div className="f-column grid w-full max-w-2xl gap-8">
       <ScreenHead title={t('Ayuda', 'Help', 'Ajuda')} />
       <List>
         <ListRow
-          lead={<RowIcon icon={<PhoneIcon size={20} />} />}
+          lead={<RowIcon icon={<PhoneIcon className="size-4" />} />}
           title={t('Números de emergencia', 'Emergency numbers', 'Números de emergência')}
           meta={numbers}
           onClick={() => onScreen('emergency')}
         />
         <ListRow
-          lead={<RowIcon icon={<FlagIcon size={20} />} />}
+          lead={<RowIcon icon={<FlagIcon className="size-4" />} />}
           title={t('Tu embajada', 'Your embassy', 'Sua embaixada')}
           meta={t('Elige tu nacionalidad', 'Choose your nationality', 'Escolha sua nacionalidade')}
           onClick={() => {}}
         />
         <ListRow
-          lead={<RowIcon icon={<FirstAidIcon size={20} />} />}
+          lead={<RowIcon icon={<CrossIcon className="size-4" />} />}
           title={t('Farmacias y hospitales', 'Pharmacies and hospitals', 'Farmácias e hospitais')}
           meta={t(
             'Cerca de ti, en Google Maps',
@@ -625,7 +628,7 @@ export function MockHelp({ lang, onScreen }: { lang: Lang; onScreen: (s: MockScr
           onClick={() => {}}
         />
         <ListRow
-          lead={<RowIcon icon={<UsersThreeIcon size={20} />} />}
+          lead={<RowIcon icon={<UsersIcon className="size-4" />} />}
           title={t('Para tu familia', 'For your family', 'Para sua família')}
           meta={t(
             'Líneas consulares desde casa',
@@ -635,7 +638,7 @@ export function MockHelp({ lang, onScreen }: { lang: Lang; onScreen: (s: MockScr
           onClick={() => {}}
         />
         <ListRow
-          lead={<RowIcon icon={<HouseLineIcon size={20} />} />}
+          lead={<RowIcon icon={<HouseIcon className="size-4" />} />}
           title={t('Albergues', 'Shelters', 'Abrigos')}
           meta={t(
             'Los que publica SINAPROC',
@@ -645,13 +648,13 @@ export function MockHelp({ lang, onScreen }: { lang: Lang; onScreen: (s: MockScr
           onClick={() => {}}
         />
         <ListRow
-          lead={<RowIcon icon={<MapTrifoldIcon size={20} />} />}
+          lead={<RowIcon icon={<MapIcon className="size-4" />} />}
           title={t('Mapa sin conexión', 'Offline map', 'Mapa off-line')}
           meta={t('En la app de Google Maps', 'In the Google Maps app', 'No app do Google Maps')}
           onClick={() => {}}
         />
         <ListRow
-          lead={<RowIcon icon={<BuildingsIcon size={20} />} />}
+          lead={<RowIcon icon={<Building2Icon className="size-4" />} />}
           title={t('Organismos oficiales', 'Official agencies', 'Órgãos oficiais')}
           meta="SINAPROC · IMHPA · IGC · SUME"
           onClick={() => {}}
@@ -676,7 +679,7 @@ export function MockEmergency({ lang }: { lang: Lang }) {
   const [kind, setKind] = useState<EmergencyKind>('earthquake');
   const steps = hazardSteps[kind];
   return (
-    <div className="f-column">
+    <div className="f-column grid w-full max-w-2xl gap-8">
       <ScreenHead title={t('Emergencia', 'Emergency', 'Emergência')} />
       {main && (
         <CallButton
@@ -723,13 +726,13 @@ export function MockEmergency({ lang }: { lang: Lang }) {
             `See all ${steps.length} steps`,
             `Ver os ${steps.length} passos`,
           )}
-          <CaretRightIcon size={18} aria-hidden="true" />
+          <ChevronRightIcon className="size-4" aria-hidden="true" />
         </Button>
       </Section>
       <Section id="spec-more" title={t('Después', 'Next', 'Depois')}>
         <List>
           <ListRow
-            lead={<RowIcon icon={<ChatCircleTextIcon size={20} />} />}
+            lead={<RowIcon icon={<MessageSquareTextIcon className="size-4" />} />}
             title={t('Avisar cómo estoy', 'Tell people how I am', 'Avisar como estou')}
             meta={t(
               'Prepara un mensaje y envíalo tú',
@@ -739,7 +742,7 @@ export function MockEmergency({ lang }: { lang: Lang }) {
             onClick={() => {}}
           />
           <ListRow
-            lead={<RowIcon icon={<FlagIcon size={20} />} />}
+            lead={<RowIcon icon={<FlagIcon className="size-4" />} />}
             title={t('Tu embajada', 'Your embassy', 'Sua embaixada')}
             meta={t(
               'Elige tu nacionalidad',
@@ -749,7 +752,7 @@ export function MockEmergency({ lang }: { lang: Lang }) {
             onClick={() => {}}
           />
           <ListRow
-            lead={<RowIcon icon={<BookOpenTextIcon size={20} />} />}
+            lead={<RowIcon icon={<BookOpenTextIcon className="size-4" />} />}
             title={t('Guía completa', 'Full guide', 'Guia completo')}
             meta={t(
               'Sismo, tsunami, huracán y más',
@@ -787,19 +790,19 @@ export function MockCountry({
     return n ? t(`Emergencias ${n}`, `Emergencies ${n}`, `Emergências ${n}`) : undefined;
   };
   return (
-    <div className="f-column">
-      <div className="f-stack" data-gap="sm">
+    <div className="f-column grid w-full max-w-2xl gap-8">
+      <div className="f-stack grid gap-2" data-gap="sm">
         <BackLink onClick={onBack}>{t('Situación', 'Situation', 'Situação')}</BackLink>
         <ScreenHead title={t('País', 'Country', 'País')} />
       </div>
-      <div className="f-stack">
+      <div className="f-stack grid gap-4">
         <Field
           id="spec-country"
           label={t('Buscar un país', 'Search for a country', 'Buscar um país')}
           type="search"
           autoComplete="off"
         />
-        <Button variant="secondary" icon={<CrosshairIcon size={20} aria-hidden="true" />}>
+        <Button variant="secondary" icon={<CrosshairIcon className="size-4" aria-hidden="true" />}>
           {t('Usar mi ubicación', 'Use my location', 'Usar minha localização')}
         </Button>
       </div>
@@ -808,7 +811,7 @@ export function MockCountry({
           <ListRow
             title={names.of('PA')}
             meta={meta('PA')}
-            trail={<CheckIcon size={18} aria-hidden="true" />}
+            trail={<CheckIcon className="size-4" aria-hidden="true" />}
             onClick={() => {}}
           />
           <ListRow title={names.of('CR')} meta={meta('CR')} onClick={() => {}} />

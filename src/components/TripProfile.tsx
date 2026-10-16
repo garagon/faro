@@ -1,12 +1,12 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import {
-  CaretDownIcon,
-  CaretUpIcon,
-  CheckCircleIcon,
-  DownloadSimpleIcon,
-  WarningCircleIcon,
-} from '@phosphor-icons/react';
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CircleAlertIcon,
+  CircleCheckIcon,
+  DownloadIcon,
+} from 'lucide-react';
 import CountrySearch from './CountrySearch.tsx';
 import ShareButtons from './ShareButtons.tsx';
 import {
@@ -185,7 +185,7 @@ export default function TripProfile(p: Props) {
   // An error replaces the field's hint, with a mark so it is not read as a plain hint.
   const problem = (text: string) => (
     <>
-      <WarningCircleIcon size={16} weight="fill" aria-hidden="true" /> {text}
+      <CircleAlertIcon className="size-4" aria-hidden="true" /> {text}
     </>
   );
   const checkNumber = problem(t('Revisa el número.', 'Check the number.', 'Confira o número.'));
@@ -346,9 +346,9 @@ export default function TripProfile(p: Props) {
   });
 
   return (
-    <div className="f-column">
-      <form className="f-stack" onSubmit={save} noValidate>
-        <div className="f-stack" data-gap="sm">
+    <div className="f-column grid w-full max-w-2xl gap-8">
+      <form className="f-stack grid gap-4" onSubmit={save} noValidate>
+        <div className="f-stack grid gap-2" data-gap="sm">
           <Step
             {...step(1)}
             title={t('Tus datos', 'About you', 'Seus dados')}
@@ -478,7 +478,7 @@ export default function TripProfile(p: Props) {
               'Alergias, remédios, tipo sanguíneo',
             )}
           >
-            <div className="f-prose">
+            <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
               <p>
                 {t(
                   'Útil para quien te atienda. Es información sensible: solo entra en la ficha si lo marcas abajo.',
@@ -664,14 +664,14 @@ export default function TripProfile(p: Props) {
                 'Marcar o ponto de encontro no mapa',
               )}
               {coordinatesOpen ? (
-                <CaretUpIcon size={16} aria-hidden="true" />
+                <ChevronUpIcon className="size-4" aria-hidden="true" />
               ) : (
-                <CaretDownIcon size={16} aria-hidden="true" />
+                <ChevronDownIcon className="size-4" aria-hidden="true" />
               )}
             </Button>
             {/* The wrapper carries `hidden`: a layout class would override it with its display. */}
             <div id="trip-coordinates" hidden={!coordinatesOpen}>
-              <div className="f-stack">
+              <div className="f-stack grid gap-4">
                 <Field
                   id="trip-lat"
                   label={t('Latitud', 'Latitude', 'Latitude')}
@@ -721,8 +721,8 @@ export default function TripProfile(p: Props) {
           </Step>
         </div>
 
-        <div className="f-stack" data-gap="sm">
-          <Button type="submit" icon={<CheckCircleIcon size={20} aria-hidden="true" />}>
+        <div className="f-stack grid gap-2" data-gap="sm">
+          <Button type="submit" icon={<CircleCheckIcon className="size-4" aria-hidden="true" />}>
             {t('Guardar', 'Save', 'Salvar')}
           </Button>
           {/* Always present, so a screen reader announces the result when it appears. Focus
@@ -788,7 +788,7 @@ export default function TripProfile(p: Props) {
           </Button>
         ) : (
           <div
-            className="f-stack"
+            className="f-stack grid gap-2"
             data-gap="sm"
             role="group"
             aria-label={t('Confirmar', 'Confirm', 'Confirmar')}
@@ -823,7 +823,7 @@ export default function TripProfile(p: Props) {
             channels that do nothing. The channels and the image appear with the first detail. */}
         {filled ? (
           <>
-            <div className="f-prose">
+            <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
               <p>
                 {t(
                   'Envíala a tu familia, a tu empresa o a quien te atienda. Tú eliges la app y el destinatario.',
@@ -851,7 +851,7 @@ export default function TripProfile(p: Props) {
             {/* The image carries the same text as the preview above. */}
             <Button
               variant="secondary"
-              icon={<DownloadSimpleIcon size={20} aria-hidden="true" />}
+              icon={<DownloadIcon className="size-4" aria-hidden="true" />}
               onClick={() => void saveImage()}
             >
               {t(
@@ -924,7 +924,7 @@ function Step({
       meta={
         problem ? (
           <>
-            <WarningCircleIcon size={16} weight="fill" aria-hidden="true" /> {problem}
+            <CircleAlertIcon className="size-4" aria-hidden="true" /> {problem}
           </>
         ) : (
           summary || empty

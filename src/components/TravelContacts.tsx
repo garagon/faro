@@ -1,18 +1,17 @@
 import { writeLocal } from '../lib/browserStorage.ts';
-import { useState, type ComponentType } from 'react';
+import { useState } from 'react';
 import {
-  AddressBookIcon,
-  BankIcon,
   BedIcon,
+  BookUserIcon,
   BriefcaseIcon,
   CarIcon,
+  LandmarkIcon,
   PhoneIcon,
   PlusIcon,
   ShieldCheckIcon,
   UsersIcon,
-  UsersThreeIcon,
-  type IconProps,
-} from '@phosphor-icons/react';
+  type LucideIcon,
+} from 'lucide-react';
 import {
   contactKinds,
   contactGroups,
@@ -28,15 +27,15 @@ import { Button, Field, List, ListRow, Note, RowIcon, SelectField } from '../ui/
 import { caption } from '../lib/caption.ts';
 const blank = { kind: 'hotel' as ContactKind, name: '', phone: '', note: '' };
 // The kind's picture starts each saved contact, so the list shares the screen's text edge.
-const kindIcons: Record<ContactKind, ComponentType<IconProps>> = {
+const kindIcons: Record<ContactKind, LucideIcon> = {
   family: UsersIcon,
   hotel: BedIcon,
   insurance: ShieldCheckIcon,
-  consulate: BankIcon,
+  consulate: LandmarkIcon,
   work: BriefcaseIcon,
-  team: UsersThreeIcon,
+  team: UsersIcon,
   transport: CarIcon,
-  other: AddressBookIcon,
+  other: BookUserIcon,
 };
 /** Other people worth having at hand on this trip, beyond the emergency contact. */
 export default function TravelContacts({ country, lang }: { country: string; lang: Lang }) {
@@ -154,14 +153,14 @@ export default function TravelContacts({ country, lang }: { country: string; lan
   const addRow = (kind: ContactKind) => (
     <ListRow
       key={kind}
-      lead={<RowIcon icon={<PlusIcon size={20} />} />}
+      lead={<RowIcon icon={<PlusIcon className="size-4" />} />}
       title={contactKinds[kind][langIndex(lang)]}
       trail=""
       onClick={() => startContact(kind)}
     />
   );
   const starterGroups = (personal: readonly ContactKind[], work: readonly ContactKind[]) => (
-    <div className="f-stack">
+    <div className="f-stack grid gap-4">
       {[
         { id: 'personal', label: t('Personales', 'Personal', 'Pessoais'), kinds: personal },
         {
@@ -174,12 +173,15 @@ export default function TravelContacts({ country, lang }: { country: string; lan
         .map((group) => (
           <div
             key={group.id}
-            className="f-stack"
+            className="f-stack grid gap-2"
             data-gap="sm"
             role="group"
             aria-labelledby={`contact-group-${group.id}`}
           >
-            <div id={`contact-group-${group.id}`} className="f-section-aside">
+            <div
+              id={`contact-group-${group.id}`}
+              className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900"
+            >
               {group.label}
             </div>
             <List>{group.kinds.map(addRow)}</List>
@@ -191,11 +193,11 @@ export default function TravelContacts({ country, lang }: { country: string; lan
   // Viaje places this section in its reading column (App.tsx).
   return (
     <section
-      className="f-section"
+      className="f-section @container grid gap-3"
       aria-label={t('Contactos del viaje', 'Travel contacts', 'Contatos da viagem')}
     >
-      <div className="f-prose">
-        <h2 className="f-section-title">
+      <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+        <h2 className="f-section-title m-0 text-base leading-snug font-semibold">
           {t('Otros contactos', 'Other contacts', 'Outros contatos')}
         </h2>
         <p>
@@ -207,7 +209,7 @@ export default function TravelContacts({ country, lang }: { country: string; lan
         </p>
       </div>
       {country === 'WORLD' ? (
-        <div className="f-prose">
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
           <p>
             {t(
               'Selecciona un país para preparar los contactos de ese viaje.',
@@ -217,8 +219,8 @@ export default function TravelContacts({ country, lang }: { country: string; lan
           </p>
         </div>
       ) : (
-        <div className="f-stack">
-          <h3 className="f-visually-hidden">{t('Contactos', 'Contacts', 'Contatos')}</h3>
+        <div className="f-stack grid gap-4">
+          <h3 className="sr-only">{t('Contactos', 'Contacts', 'Contatos')}</h3>
           {local.length > 0 ? (
             <List>
               {local.map((r) => (
@@ -235,8 +237,8 @@ export default function TravelContacts({ country, lang }: { country: string; lan
             !open && starterGroups(contactGroups.personal, contactGroups.work)
           )}
           {local.length > 0 && !open && (
-            <div className="f-stack" data-gap="sm">
-              <h3 className="f-subhead">
+            <div className="f-stack grid gap-2" data-gap="sm">
+              <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
                 {t('Añade para este viaje', 'Add for this trip', 'Adicione para esta viagem')}
               </h3>
               {starterGroups(
@@ -246,8 +248,8 @@ export default function TravelContacts({ country, lang }: { country: string; lan
             </div>
           )}
           {open && (
-            <form className="f-stack" onSubmit={save}>
-              <h3 className="f-subhead">
+            <form className="f-stack grid gap-4" onSubmit={save}>
+              <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
                 {editing
                   ? t('Editar contacto', 'Edit contact', 'Editar contato')
                   : t('Nuevo contacto', 'New contact', 'Novo contato')}
@@ -363,7 +365,7 @@ function ContactRow({
   onDelete: () => void;
 }) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
-  const Icon = kindIcons[r.kind] ?? AddressBookIcon;
+  const Icon = kindIcons[r.kind] ?? BookUserIcon;
   return (
     <li>
       <a
@@ -373,7 +375,7 @@ function ContactRow({
         aria-label={`${t('Llamar a', 'Call', 'Ligar para')} ${r.name}: ${r.phone}`}
       >
         <span className="f-row-lead">
-          <RowIcon icon={<Icon size={20} />} />
+          <RowIcon icon={<Icon className="size-4" />} />
         </span>
         <span className="f-row-body">
           <span className="f-row-title">{r.name}</span>
@@ -382,11 +384,11 @@ function ContactRow({
           </span>
         </span>
         <span className="f-row-trail">
-          <PhoneIcon size={20} weight="fill" aria-hidden="true" />
+          <PhoneIcon className="size-4" aria-hidden="true" />
         </span>
       </a>
-      <div className="f-expand-body f-prose">
-        {r.note && <p className="f-caption">{r.note}</p>}
+      <div className="f-expand-body f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+        {r.note && <p className="f-caption m-0 text-sm text-muted-foreground">{r.note}</p>}
         {/* Actions on this contact: buttons, not links. */}
         <div className="flex flex-wrap gap-2">
           <Button variant="ghost" onClick={onEdit}>

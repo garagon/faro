@@ -5,13 +5,15 @@ the same everywhere. Screens compose these pieces; they do not restyle them.
 
 ## Where things live
 
-| Part                                                                      | File                                                                                        |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Tokens: colour roles, type scale, spacing, radii, shadows, layers, motion | `src/styles/ds/tokens.css`                                                                  |
-| Component styles                                                          | `src/styles/ds/components.css` and one file per larger part (`sheet.css`, `message.css`, …) |
-| App frame: header, tabs, sidebar, top bar, layout helpers                 | `src/styles/ds/shell.css`                                                                   |
-| React components                                                          | `src/ui/` (exported from `src/ui/index.ts`)                                                 |
-| Cascade order                                                             | `src/styles/index.css`                                                                      |
+| Part                                                                      | File                                                                                |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Tokens: colour roles, type scale, spacing, radii, shadows, layers, motion | `src/styles/ds/tokens.css`                                                          |
+| shadcn/ui components (generated with its CLI, adapted)                    | `src/components/ui/`                                                                |
+| Faro's wrappers: the API screens use, built on the shadcn components      | `src/ui/` (exported from `src/ui/index.ts`)                                         |
+| Shared text and layout helpers used directly by screens                   | `src/styles/ds/helpers.css` (Tailwind `@apply`)                                     |
+| App frame: header, tabs, sidebar, layout helpers; sheet; map card         | Tailwind classes in `src/ui/Shell.tsx`, `Sheet.tsx`, `Map.tsx` (pins: `ds/map.css`) |
+| React components                                                          | `src/ui/` (exported from `src/ui/index.ts`)                                         |
+| Cascade order                                                             | `src/styles/index.css`                                                              |
 
 ## Cascade layers
 
@@ -122,10 +124,10 @@ Three durations, in `tokens.css`: `--f-press` (100 ms) for hover and press colou
 (220 ms, `--f-ease`) for something arriving, `--f-leave` (160 ms, `--f-ease-exit`) for something
 leaving.
 
-- **Sheet:** on phones it slides up from the bottom edge; from 600 px it rises 8 px as it fades
-  in. It leaves faster, the same way back, and the veil fades with it. The animations hang on
-  Radix's `data-state`, which keeps the sheet mounted until the closing one ends; meanwhile the
-  sheet keeps showing its record, even if the app has already let it go.
+- **Sheet:** on phones it is shadcn's Drawer (vaul), sliding up from the bottom edge; from 600 px
+  it is shadcn's Dialog, fading and zooming in at the centre. The veil fades with it. Radix keeps
+  the sheet mounted until its closing animation ends; meanwhile the sheet keeps showing its
+  record, even if the app has already let it go.
 - **Disclosure and ExpandRow:** what opens fades in and settles 4 px down; closing is immediate.
 - **Reduced motion** (`prefers-reduced-motion`): nothing slides or scales. Sheets and opened parts
   fade in place, and hover and press colours change at once.

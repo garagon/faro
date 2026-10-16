@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from 'react';
 import {
+  ActivityIcon,
   CloudLightningIcon,
-  GlobeHemisphereWestIcon,
-  HurricaneIcon,
+  EarthIcon,
   MegaphoneIcon,
-  PulseIcon,
   WavesIcon,
-} from '@phosphor-icons/react';
+  WindIcon,
+} from 'lucide-react';
 import { checkedLabel } from '../lib/time.ts';
 import { capitalize, sourceTime, type SourceState } from '../lib/sourceStatus.ts';
 import type { FeedUpdate } from '../lib/feedUpdates.ts';
@@ -66,15 +66,15 @@ type Props = {
 };
 
 const icons: Record<string, ReactNode> = {
-  IGC: <PulseIcon size={20} weight="bold" />,
-  EMSC: <PulseIcon size={20} weight="bold" />,
-  USGS: <PulseIcon size={20} weight="bold" />,
-  national: <CloudLightningIcon size={20} weight="bold" />,
-  sinaproc: <MegaphoneIcon size={20} weight="bold" />,
-  nws: <CloudLightningIcon size={20} weight="bold" />,
-  tsunami: <WavesIcon size={20} weight="bold" />,
-  nhc: <HurricaneIcon size={20} weight="bold" />,
-  gdacs: <GlobeHemisphereWestIcon size={20} weight="bold" />,
+  IGC: <ActivityIcon className="size-4" />,
+  EMSC: <ActivityIcon className="size-4" />,
+  USGS: <ActivityIcon className="size-4" />,
+  national: <CloudLightningIcon className="size-4" />,
+  sinaproc: <MegaphoneIcon className="size-4" />,
+  nws: <CloudLightningIcon className="size-4" />,
+  tsunami: <WavesIcon className="size-4" />,
+  nhc: <WindIcon className="size-4" />,
+  gdacs: <EarthIcon className="size-4" />,
 };
 // A source that cannot confirm its data is shown with the stale-data level, never as calm.
 const signals: Record<SourceState, Signal> = {
@@ -141,9 +141,16 @@ export default function SourcesScreen({
       ? `${t('Próxima consulta', 'Next check', 'Próxima consulta')}: ${Math.max(0, Math.ceil((next.at - now) / 1000))}\u00a0s`
       : '';
   return (
-    <div className="f-column">
-      <section className="f-section" id="fw-sources-now" aria-labelledby="fw-sources-now-title">
-        <h2 className="f-section-title" id="fw-sources-now-title">
+    <div className="f-column grid w-full max-w-2xl gap-8">
+      <section
+        className="f-section @container grid gap-3"
+        id="fw-sources-now"
+        aria-labelledby="fw-sources-now-title"
+      >
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-sources-now-title"
+        >
           {t(
             `Estado de las fuentes para ${countryName}`,
             `Source status for ${countryName}`,
@@ -176,7 +183,7 @@ export default function SourcesScreen({
                   <StatusIcon
                     state={signals[r.state]}
                     level={problem(r.state) ? 1 : undefined}
-                    icon={icons[r.id] ?? <GlobeHemisphereWestIcon size={20} weight="bold" />}
+                    icon={icons[r.id] ?? <EarthIcon className="size-4" />}
                   />
                 }
                 title={keepSeparators(r.name)}
@@ -208,15 +215,20 @@ export default function SourcesScreen({
 
       {updates && (
         <section
-          className="f-section"
+          className="f-section @container grid gap-3"
           id="fw-sources-updates"
           aria-labelledby="fw-sources-updates-title"
         >
-          <div className="f-section-head">
-            <h2 className="f-section-title" id="fw-sources-updates-title">
+          <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2
+              className="f-section-title m-0 text-base leading-snug font-semibold"
+              id="fw-sources-updates-title"
+            >
               {t('Cambios recibidos', 'Updates received', 'Mudanças recebidas')}
             </h2>
-            <span className="f-section-aside">{updates.provider}</span>
+            <span className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900">
+              {updates.provider}
+            </span>
           </div>
           <Note>
             {t(
@@ -238,9 +250,7 @@ export default function SourcesScreen({
                   lead={
                     <>
                       <Magnitude value={u.event.mag} />
-                      <span className="f-visually-hidden">
-                        {t('Magnitud', 'Magnitude', 'Magnitude')}
-                      </span>
+                      <span className="sr-only">{t('Magnitud', 'Magnitude', 'Magnitude')}</span>
                     </>
                   }
                   title={<span lang={placeLang(u.event)}>{displayPlace(u.event.place)}</span>}
@@ -253,7 +263,7 @@ export default function SourcesScreen({
               ))}
             </List>
           ) : (
-            <div className="f-prose">
+            <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
               <p>
                 {t(
                   'Todavía no se recibieron otros eventos para esta vista.',
@@ -280,11 +290,18 @@ export default function SourcesScreen({
         </section>
       )}
 
-      <section className="f-section" id="fw-sources-what" aria-labelledby="fw-sources-what-title">
-        <h2 className="f-section-title" id="fw-sources-what-title">
+      <section
+        className="f-section @container grid gap-3"
+        id="fw-sources-what"
+        aria-labelledby="fw-sources-what-title"
+      >
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-sources-what-title"
+        >
           {t('Qué publica cada fuente', 'What each source publishes', 'O que cada fonte publica')}
         </h2>
-        <div className="f-prose">
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
           <dl>
             <div>
               <dt>IGC · Universidad de Panamá</dt>
@@ -357,8 +374,15 @@ export default function SourcesScreen({
       </section>
 
       {reviewed && (
-        <section className="f-section" id="fw-sources-help" aria-labelledby="fw-sources-help-title">
-          <h2 className="f-section-title" id="fw-sources-help-title">
+        <section
+          className="f-section @container grid gap-3"
+          id="fw-sources-help"
+          aria-labelledby="fw-sources-help-title"
+        >
+          <h2
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+            id="fw-sources-help-title"
+          >
             {t(
               'Teléfonos y enlaces de Ayuda',
               'Help numbers and links',
@@ -386,15 +410,23 @@ export default function SourcesScreen({
         </section>
       )}
 
-      <section className="f-section" id="fw-sources-read" aria-labelledby="fw-sources-read-title">
-        <h2 className="f-section-title" id="fw-sources-read-title" tabIndex={-1}>
+      <section
+        className="f-section @container grid gap-3"
+        id="fw-sources-read"
+        aria-labelledby="fw-sources-read-title"
+      >
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-sources-read-title"
+          tabIndex={-1}
+        >
           {t(
             'Cómo leer las fechas y la cobertura',
             'Reading dates and coverage',
             'Como ler as datas e a cobertura',
           )}
         </h2>
-        <div className="f-prose">
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
           <p>
             {t(
               'La hora de un sismo es cuando ocurrió; «consultado» es cuando Faro recibió los datos. IGC, EMSC y USGS se muestran por separado para no contar dos veces el mismo sismo.',
@@ -413,11 +445,18 @@ export default function SourcesScreen({
         <MagnitudeScale lang={lang} />
       </section>
 
-      <section className="f-section" id="fw-sources-maps" aria-labelledby="fw-sources-maps-title">
-        <h2 className="f-section-title" id="fw-sources-maps-title">
+      <section
+        className="f-section @container grid gap-3"
+        id="fw-sources-maps"
+        aria-labelledby="fw-sources-maps-title"
+      >
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-sources-maps-title"
+        >
           {t('Datos del mapa y licencias', 'Map data and licenses', 'Dados do mapa e licenças')}
         </h2>
-        <div className="f-prose">
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
           <p>
             {t(
               'Países: datos derivados de world-countries, bajo ODbL-1.0. Costa: Natural Earth, dominio público. Mapa base: OpenFreeMap © OpenMapTiles, datos de los colaboradores de OpenStreetMap. Límites de placas: PB2002 (Bird, 2003), versión de Hugo Ahlenius (Nordpil), bajo ODC-By 1.0.',

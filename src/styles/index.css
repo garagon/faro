@@ -27,6 +27,4 @@
 
 @import './ds/components.css' layer(ds);
 @import './ds/helpers.css' layer(ds);
-@import './ds/shell.css' layer(ds);
-@import './ds/sheet.css' layer(ds);
 @import './ds/map.css' layer(ds);

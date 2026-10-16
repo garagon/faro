@@ -1,18 +1,18 @@
 import { downloadText } from '../lib/download.ts';
-import { useEffect, useRef, useState, type ComponentType } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  BanknoteIcon,
   BatteryChargingIcon,
-  CheckCircleIcon,
+  CircleCheckIcon,
   CrosshairIcon,
-  DownloadSimpleIcon,
-  DropIcon,
+  DownloadIcon,
+  DropletIcon,
   HammerIcon,
-  MoneyIcon,
   PillIcon,
   PrinterIcon,
   ShoppingCartIcon,
-  type IconProps,
-} from '@phosphor-icons/react';
+  type LucideIcon,
+} from 'lucide-react';
 import {
   kitDays,
   kitHazards,
@@ -58,13 +58,13 @@ import {
 } from '../ui/index.ts';
 
 // Checklist rows are the box, a label and one caption line (CheckRow); shops keep an icon each.
-const storeIcons: Partial<Record<PlaceKind, ComponentType<IconProps>>> = {
+const storeIcons: Partial<Record<PlaceKind, LucideIcon>> = {
   supermarket: ShoppingCartIcon,
   pharmacy: PillIcon,
   hardware: HammerIcon,
   electronics: BatteryChargingIcon,
   copies: PrinterIcon,
-  atm: MoneyIcon,
+  atm: BanknoteIcon,
 };
 /** Up to twelve people, as before. */
 const peopleChoices = Array.from({ length: 12 }, (_, n) => n + 1);
@@ -154,7 +154,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
   const download = () =>
     downloadText(kitText(lang, checked, plan), `faro-emergency-kit-${lang}.txt`);
   return (
-    <div className="f-column">
+    <div className="f-column grid w-full max-w-2xl gap-8">
       <SafetyNotice>
         {t(
           'Si tienes que evacuar, sal sin buscar la mochila y no vuelvas por el equipaje.',
@@ -164,7 +164,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
       </SafetyNotice>
 
       <Section id="kit-plan" title={t('Tu reserva', 'Your supplies', 'Seus suprimentos')}>
-        <div className="f-stack">
+        <div className="f-stack grid gap-4">
           <SelectField
             id="kit-people"
             label={t('Personas', 'People', 'Pessoas')}
@@ -210,7 +210,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
             references. The choices themselves (people, days) are the caption. */}
         <List>
           <ListRow
-            lead={<RowIcon icon={<DropIcon size={20} />} />}
+            lead={<RowIcon icon={<DropletIcon className="size-4" />} />}
             figure
             title={water.minimum}
             meta={caption(
@@ -219,7 +219,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
             )}
           />
           <ListRow
-            lead={<RowIcon icon={<DropIcon size={20} />} />}
+            lead={<RowIcon icon={<DropletIcon className="size-4" />} />}
             figure
             title={water.ready}
             meta={t(
@@ -237,7 +237,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
           )}
         </Note>
         {plan.hazards.length > 0 && (
-          <div className="f-prose">
+          <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
             <ul>
               {kitHazards
                 .filter((h) => plan.hazards.includes(h.id))
@@ -259,7 +259,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
         >
           {done === items.length ? (
             <>
-              <CheckCircleIcon size={20} weight="fill" aria-hidden="true" />
+              <CircleCheckIcon className="size-4" aria-hidden="true" />
               {t('Tu mochila está completa', 'Your bag is complete', 'Sua mochila está completa')}
             </>
           ) : (
@@ -302,7 +302,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
             </Note>
           )}
         </div>
-        <div className="f-stack" data-gap="lg">
+        <div className="f-stack grid gap-8" data-gap="lg">
           {groups.map((group) => {
             const inGroup = items.filter((item) => item.group === group.id);
             const groupDone = inGroup.filter((item) => checked.includes(item.id)).length;
@@ -312,16 +312,19 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
             return (
               <div
                 key={group.id}
-                className="f-stack"
+                className="f-stack grid gap-2"
                 data-gap="sm"
                 role="group"
                 aria-labelledby={`kit-group-${group.id}`}
               >
                 {/* The count follows the title in every group, as in the old legend, so it never
                     jumps to the other side when a long title wraps. */}
-                <h3 className="f-subhead" id={`kit-group-${group.id}`}>
+                <h3
+                  className="f-subhead m-0 text-sm leading-snug font-medium"
+                  id={`kit-group-${group.id}`}
+                >
                   {group.title}{' '}
-                  <span className="f-section-aside">
+                  <span className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900">
                     {t(
                       `${groupDone}\u00a0de\u00a0${inGroup.length}`,
                       `${groupDone}\u00a0of\u00a0${inGroup.length}`,
@@ -366,10 +369,10 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
 
       <KitShopping key={country} lang={lang} country={country} checked={checked} plan={plan} />
 
-      <div className="f-stack" data-gap="sm">
+      <div className="f-stack grid gap-2" data-gap="sm">
         <Button
           id="kit-download"
-          icon={<DownloadSimpleIcon size={20} aria-hidden="true" />}
+          icon={<DownloadIcon className="size-4" aria-hidden="true" />}
           onClick={download}
         >
           {t('Descargar mi lista', 'Download my checklist', 'Baixar minha lista')}
@@ -382,7 +385,11 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
           </Actions>
         )}
         {confirmReset && (
-          <div className="f-prose" role="group" aria-label={t('Confirmar', 'Confirm', 'Confirmar')}>
+          <div
+            className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5"
+            role="group"
+            aria-label={t('Confirmar', 'Confirm', 'Confirmar')}
+          >
             <p>
               {t('¿Desmarcar toda la lista?', 'Uncheck the whole list?', 'Desmarcar a lista toda?')}
             </p>
@@ -477,7 +484,7 @@ function KitShopping({
       )}
     >
       {list.length === 0 ? (
-        <div className="f-prose">
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
           <p>
             {t(
               'Marcaste todo lo que se compra. Revisa vencimientos y cargas antes de viajar.',
@@ -488,7 +495,7 @@ function KitShopping({
         </div>
       ) : (
         <>
-          <div className="f-prose">
+          <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
             <p>
               {t(
                 'Lo que no marcaste, por tipo de tienda. Elige una zona y abre la búsqueda. Tras un desastre, un resultado no garantiza que esté abierta ni que tenga existencias.',
@@ -507,11 +514,11 @@ function KitShopping({
               return url ? (
                 <ListRow
                   key={store}
-                  lead={<RowIcon icon={<Icon size={20} />} />}
+                  lead={<RowIcon icon={<Icon className="size-4" />} />}
                   title={
                     <>
                       {storeLabels[store][i]}
-                      <span className="f-visually-hidden">
+                      <span className="sr-only">
                         {t(
                           `: buscar ${storeLabels[store][0].toLowerCase()} cerca en Google Maps`,
                           `: find a ${storeLabels[store][1].toLowerCase()} nearby on Google Maps`,
@@ -527,7 +534,7 @@ function KitShopping({
               ) : (
                 <ListRow
                   key={store}
-                  lead={<RowIcon icon={<Icon size={20} />} />}
+                  lead={<RowIcon icon={<Icon className="size-4" />} />}
                   title={storeLabels[store][i]}
                   meta={what}
                 />
@@ -558,7 +565,7 @@ function AreaChoice({ state, lang }: { state: SearchArea; lang: Lang }) {
   const { place, gps, status, country } = state;
   const common = careAreas[country] ?? [];
   return (
-    <div className="f-stack">
+    <div className="f-stack grid gap-4">
       <Field
         id="kit-area-place"
         label={t(
@@ -577,7 +584,7 @@ function AreaChoice({ state, lang }: { state: SearchArea; lang: Lang }) {
       />
       <Button
         variant="secondary"
-        icon={<CrosshairIcon size={20} aria-hidden="true" />}
+        icon={<CrosshairIcon className="size-4" aria-hidden="true" />}
         // aria-disabled rather than disabled: the older screens' styles fade disabled buttons
         // below 4.5:1; the design system draws aria-disabled with readable text.
         aria-disabled={status === 'pending' || undefined}

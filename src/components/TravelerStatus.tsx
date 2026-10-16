@@ -10,12 +10,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { recentLocation, statusLocation, type LocationFix } from '../lib/statusLocation.ts';
 import {
   ArrowRightIcon,
-  CheckCircleIcon,
-  ClockCounterClockwiseIcon,
+  CircleAlertIcon,
+  CircleCheckIcon,
+  HistoryIcon,
   ListPlusIcon,
   PhoneIcon,
-  WarningCircleIcon,
-} from '@phosphor-icons/react';
+} from 'lucide-react';
 import ShareButtons from './ShareButtons.tsx';
 import {
   ActionBar,
@@ -265,20 +265,23 @@ export default function TravelerStatus({
   };
   const notice = !!visibleRecord && ((!!prepared && (changed || expired)) || notSaved);
   return (
-    <div className="f-column">
+    <div className="f-column grid w-full max-w-2xl gap-8">
       <form
         ref={form}
-        className="f-section [&_:is(input,select,textarea,button,summary,a)]:scroll-mb-18"
+        className="f-section @container grid gap-3 [&_:is(input,select,textarea,button,summary,a)]:scroll-mb-18"
         aria-labelledby="fw-status-title"
         onSubmit={save}
         onChange={change}
       >
-        <div className="f-section-head">
-          <h2 className="f-section-title" id="fw-status-title">
+        <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h2
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+            id="fw-status-title"
+          >
             {t('¿Cómo estás?', 'How are you?', 'Como você está?')}
           </h2>
         </div>
-        <div className="f-prose">
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
           <p>
             {t(
               'Elige una opción. Verás el mensaje completo y podrás editarlo antes de enviarlo.',
@@ -287,7 +290,7 @@ export default function TravelerStatus({
             )}
           </p>
         </div>
-        <div className="f-stack">
+        <div className="f-stack grid gap-4">
           <RadioList
             name="personal-status"
             legend={t('Tu estado ahora', 'Your status now', 'Seu status agora')}
@@ -298,12 +301,12 @@ export default function TravelerStatus({
               setQuick('');
             }}
             options={(['ok', 'moving', 'help'] as const).map((s, i) => {
-              const Icon = [CheckCircleIcon, ArrowRightIcon, WarningCircleIcon][i];
+              const Icon = [CircleCheckIcon, ArrowRightIcon, CircleAlertIcon][i];
               return {
                 value: s,
                 title: statusLabels[s][idx],
                 meta: statusMeta[s],
-                icon: <Icon size={20} />,
+                icon: <Icon className="size-4" />,
               };
             })}
           />
@@ -490,7 +493,7 @@ export default function TravelerStatus({
             </>
           )}
           <Disclosure
-            lead={<RowIcon icon={<ListPlusIcon size={20} />} />}
+            lead={<RowIcon icon={<ListPlusIcon className="size-4" />} />}
             title={t(
               'Más detalles (opcional)',
               'More details (optional)',
@@ -699,7 +702,7 @@ export default function TravelerStatus({
         <ActionBar>
           <Button type="submit" block disabled={!status}>
             {t('Revisar mensaje', 'Review message', 'Revisar mensagem')}
-            <ArrowRightIcon size={18} aria-hidden="true" />
+            <ArrowRightIcon className="size-4" aria-hidden="true" />
           </Button>
         </ActionBar>
         <Note>
@@ -712,14 +715,16 @@ export default function TravelerStatus({
       </form>
 
       <section
-        className="f-section"
+        className="f-section @container grid gap-3"
         ref={preview}
         tabIndex={-1}
         aria-label={t('Vista previa del mensaje', 'Message preview', 'Prévia da mensagem')}
       >
-        <div className="f-section-head">
-          <h2 className="f-section-title">{t('Tu mensaje', 'Your message', 'Sua mensagem')}</h2>
-          <span className="f-section-aside">
+        <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h2 className="f-section-title m-0 text-base leading-snug font-semibold">
+            {t('Tu mensaje', 'Your message', 'Sua mensagem')}
+          </h2>
+          <span className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900">
             {shareAllowed
               ? t('Listo para compartir', 'Ready to share', 'Pronta para compartilhar')
               : t('Borrador', 'Draft', 'Rascunho')}
@@ -751,7 +756,7 @@ export default function TravelerStatus({
         {visibleRecord ? (
           <>
             {notice && (
-              <div className="f-stack" data-gap="sm" role="status">
+              <div className="f-stack grid gap-2" data-gap="sm" role="status">
                 <Note>
                   {changed && languageOnly
                     ? t(
@@ -800,7 +805,7 @@ export default function TravelerStatus({
             )}
             {/* On a phone the form's review button is far above; this one is next to sharing. */}
             {!prepared && (
-              <div className="f-stack" data-gap="sm">
+              <div className="f-stack grid gap-2" data-gap="sm">
                 <Note>
                   {t(
                     'Revisa el mensaje antes de compartir.',
@@ -836,7 +841,7 @@ export default function TravelerStatus({
             </Note>
           </>
         ) : (
-          <div className="f-prose">
+          <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
             <p>
               {t(
                 'Elige cómo estás. Verás el mensaje completo aquí mientras añades información.',
@@ -850,7 +855,7 @@ export default function TravelerStatus({
 
       {history.length > 0 && (
         <Disclosure
-          lead={<RowIcon icon={<ClockCounterClockwiseIcon size={20} />} />}
+          lead={<RowIcon icon={<HistoryIcon className="size-4" />} />}
           title={`${t('Mensajes preparados', 'Prepared messages', 'Mensagens preparadas')} (${history.length})`}
           meta={t('Guardados en este navegador', 'Saved in this browser', 'Salvas neste navegador')}
         >
@@ -861,7 +866,7 @@ export default function TravelerStatus({
               'Salvas neste navegador. Não indicam sua situação atual.',
             )}
           </Note>
-          <div className="f-prose">
+          <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
             <ul>
               {history.map((row) => (
                 <li key={row.id}>
@@ -876,7 +881,10 @@ export default function TravelerStatus({
             </ul>
           </div>
           {confirmClear ? (
-            <div className="f-stack f-prose" data-gap="sm">
+            <div
+              className="f-stack f-prose grid max-w-2xl gap-2 *:m-0 [&_dt]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5"
+              data-gap="sm"
+            >
               <p>
                 {t(
                   '¿Borrar los mensajes anteriores de este navegador?',
@@ -905,13 +913,13 @@ export default function TravelerStatus({
         </Disclosure>
       )}
 
-      <div className="f-stack" data-gap="sm">
+      <div className="f-stack grid gap-2" data-gap="sm">
         {/* Always present, so a screen reader announces the feedback when it appears. */}
         <div role="status">{feedback && <Note>{feedback}</Note>}</div>
         {/* Another screen: a row that opens Emergencia at its numbers. */}
         <List>
           <ListRow
-            lead={<RowIcon icon={<PhoneIcon size={20} />} />}
+            lead={<RowIcon icon={<PhoneIcon className="size-4" />} />}
             title={t('Teléfonos de emergencia', 'Emergency numbers', 'Telefones de emergência')}
             meta={t('En Emergencia', 'In Emergency', 'Em Emergência')}
             onClick={onHelp}

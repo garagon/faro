@@ -54,8 +54,10 @@ export default function TravelerSupport({ nationality, country, lang, part = 'tr
   // Under the agency's title in the embassy section; a section's own subhead for the family.
   const Heading = part === 'family' ? 'h3' : 'h4';
   const contact = (
-    <div className="f-stack" data-gap="sm">
-      <Heading className="f-subhead">{support.contactTitle[i]}</Heading>
+    <div className="f-stack grid gap-2" data-gap="sm">
+      <Heading className="f-subhead m-0 text-sm leading-snug font-medium">
+        {support.contactTitle[i]}
+      </Heading>
       <Text>
         {support.contactNote[i]}{' '}
         {t(
@@ -80,19 +82,21 @@ export default function TravelerSupport({ nationality, country, lang, part = 'tr
   );
   if (part === 'family')
     return (
-      <div className="f-stack">
+      <div className="f-stack grid gap-4">
         {contact}
         <Actions>{sourceLink}</Actions>
         {reviewed}
       </div>
     );
   return (
-    <section className="f-stack" aria-labelledby="fw-support-title">
-      <div className="f-section-head">
-        <h3 className="f-subhead" id="fw-support-title">
+    <section className="f-stack grid gap-4" aria-labelledby="fw-support-title">
+      <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 className="f-subhead m-0 text-sm leading-snug font-medium" id="fw-support-title">
           {support.title[i]}
         </h3>
-        <span className="f-section-aside">{support.agency}</span>
+        <span className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900">
+          {support.agency}
+        </span>
       </div>
       {!forFamily && contact}
       <Actions>

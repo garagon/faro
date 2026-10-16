@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { displayPhone } from '../lib/phone.ts';
-import { ArrowUpRightIcon } from '@phosphor-icons/react';
+import { ArrowUpRightIcon } from 'lucide-react';
 import { consularFallback, type Embassy } from '../lib/embassies.ts';
 import {
   missionsFor,
@@ -41,7 +41,7 @@ type Props = {
   onMap: (e: Embassy) => void;
 };
 
-const outIcon = <ArrowUpRightIcon size={16} aria-hidden="true" />;
+const outIcon = <ArrowUpRightIcon className="size-4" aria-hidden="true" />;
 
 /** Embassies and consulates for the chosen nationality, or the whole directory on request. */
 export default function EmbassyPanel({
@@ -123,9 +123,9 @@ export default function EmbassyPanel({
     const where = caption(all && whose(m), m.address);
     const onFaroMap = !m.locationUnconfirmed && m.map;
     return (
-      <article className="f-stack" data-gap="sm" key={m.id} aria-labelledby={titleId(m)}>
+      <article className="f-stack grid gap-2" data-gap="sm" key={m.id} aria-labelledby={titleId(m)}>
         <div>
-          <h3 className="f-subhead" id={titleId(m)}>
+          <h3 className="f-subhead m-0 text-sm leading-snug font-medium" id={titleId(m)}>
             {m.name[i]}
           </h3>
           {where && <Text caption>{where}</Text>}
@@ -178,7 +178,11 @@ export default function EmbassyPanel({
   /** A historical reference: no phone and no route until it is checked again. */
   function reference(m: Mission) {
     return (
-      <article className="f-prose" key={m.id} aria-labelledby={titleId(m)}>
+      <article
+        className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5"
+        key={m.id}
+        aria-labelledby={titleId(m)}
+      >
         <h3 id={titleId(m)}>{`${m.name[i]}, ${m.city}`}</h3>
         {(all || m.address) && <Text caption>{caption(all && whose(m), m.address)}</Text>}
         {m.note && <Text>{m.note[i]}</Text>}
@@ -241,7 +245,7 @@ export default function EmbassyPanel({
           : t('Explorar el directorio', 'Browse directory', 'Explorar o diretório')}
       </Button>
       {all && (
-        <div className="f-stack">
+        <div className="f-stack grid gap-4">
           <Field
             id="fw-consular-query"
             label={t(
@@ -308,7 +312,7 @@ export default function EmbassyPanel({
               'Confirme o atendimento antes de ir. As representações não são abrigos e as rotas não foram verificadas após um desastre.',
             )}
           </SafetyNotice>
-          <div className="f-stack">{current.map(office)}</div>
+          <div className="f-stack grid gap-4">{current.map(office)}</div>
         </>
       )}
       {/* Before a choice the introduction above says what to do; after one, an empty result says why. */}
@@ -347,8 +351,8 @@ export default function EmbassyPanel({
         </Disclosure>
       )}
       {(fallback || destinationConsularDirectories[country]) && (
-        <div className="f-stack" data-gap="sm">
-          <h3 className="f-subhead">
+        <div className="f-stack grid gap-2" data-gap="sm">
+          <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
             {t('Otros contactos oficiales', 'Other official contacts', 'Outros contatos oficiais')}
           </h3>
           <List>

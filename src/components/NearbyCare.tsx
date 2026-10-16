@@ -1,4 +1,4 @@
-import { ArrowUpRightIcon, CrosshairIcon } from '@phosphor-icons/react';
+import { ArrowUpRightIcon, CrosshairIcon } from 'lucide-react';
 import { careSearchUrl } from '../lib/nearbyCare.ts';
 import { hostOf, splitName } from '../lib/links.ts';
 import { caption } from '../lib/caption.ts';
@@ -8,7 +8,7 @@ import { healthDirectories } from '../data/healthDirectories.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
 import { Button, Field, List, ListRow, Note, Section, SelectField, Text } from '../ui/index.ts';
 
-const outIcon = <ArrowUpRightIcon size={16} aria-hidden="true" />;
+const outIcon = <ArrowUpRightIcon className="size-4" aria-hidden="true" />;
 
 /**
  * Searches for pharmacies and hospitals around an area the person types, picks or shares. The
@@ -66,7 +66,7 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
       )}
       <Button
         variant="secondary"
-        icon={<CrosshairIcon size={20} aria-hidden="true" />}
+        icon={<CrosshairIcon className="size-4" aria-hidden="true" />}
         // Unavailable while a request is running, but kept focusable and readable (no dimming).
         aria-disabled={status === 'pending' || undefined}
         onClick={() => status !== 'pending' && search.locate()}
@@ -118,8 +118,8 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
         )}
       </Note>
       {!!healthDirectories[country]?.length && (
-        <div className="f-stack" data-gap="sm">
-          <h3 className="f-subhead">
+        <div className="f-stack grid gap-2" data-gap="sm">
+          <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
             {t(
               'Directorios oficiales de salud',
               'Official health directories',

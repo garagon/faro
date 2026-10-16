@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { ArrowClockwiseIcon, FunnelSimpleIcon, PulseIcon } from '@phosphor-icons/react';
+import { ActivityIcon, FunnelIcon, RotateCwIcon } from 'lucide-react';
 import { displayPlace, placeLang, type Quake } from '../lib/domain.ts';
 import { type FeedUpdate } from '../lib/feedUpdates.ts';
 import { checkedLabel } from '../lib/time.ts';
@@ -77,7 +77,7 @@ export default function LiveActivity(p: Props) {
   });
   return (
     <section
-      className="f-stack"
+      className="f-stack grid gap-2"
       data-gap="sm"
       aria-label={t(
         'Últimos eventos y actualizaciones',
@@ -91,7 +91,7 @@ export default function LiveActivity(p: Props) {
             <StatusIcon
               state={old ? 'unknown' : p.busy || !p.checked ? 'pending' : 'listed'}
               level={old ? 1 : undefined}
-              icon={<PulseIcon size={20} weight="bold" />}
+              icon={<ActivityIcon className="size-4" />}
             />
           }
           title={state}
@@ -110,7 +110,7 @@ export default function LiveActivity(p: Props) {
               disabled={p.busy || !p.online}
               onClick={p.onRefresh}
             >
-              <ArrowClockwiseIcon size={20} aria-hidden="true" />
+              <RotateCwIcon className="size-4" aria-hidden="true" />
             </IconButton>
           }
         />
@@ -118,7 +118,7 @@ export default function LiveActivity(p: Props) {
           id="fw-quake-filters"
           open={filtersOpen}
           onToggle={() => setFiltersOpen((v) => !v)}
-          lead={<RowIcon icon={<FunnelSimpleIcon size={20} />} />}
+          lead={<RowIcon icon={<FunnelIcon className="size-4" />} />}
           title={t('Filtros', 'Filters', 'Filtros')}
           meta={p.filters.summary}
         >
@@ -127,15 +127,13 @@ export default function LiveActivity(p: Props) {
       </List>
       {p.children}
       {fresh && (
-        <div className="f-stack" data-gap="sm" role="status">
+        <div className="f-stack grid gap-2" data-gap="sm" role="status">
           <List label={t('Recibido', 'Received', 'Recebido')}>
             <ListRow
               lead={
                 <>
                   <Magnitude value={fresh.event.mag} />
-                  <span className="f-visually-hidden">
-                    {t('Magnitud', 'Magnitude', 'Magnitude')}
-                  </span>
+                  <span className="sr-only">{t('Magnitud', 'Magnitude', 'Magnitude')}</span>
                 </>
               }
               title={<span lang={placeLang(fresh.event)}>{displayPlace(fresh.event.place)}</span>}

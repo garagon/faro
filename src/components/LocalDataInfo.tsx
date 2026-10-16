@@ -33,7 +33,7 @@ export default function LocalDataInfo({ lang }: { lang: Lang }) {
     document.getElementById(open ? 'local-delete-confirm' : 'local-delete')?.focus();
   };
   return (
-    <div className="f-stack">
+    <div className="f-stack grid gap-4">
       {!confirm ? (
         <Button variant="ghost" data-tone="error" id="local-delete" onClick={() => ask(true)}>
           {/* "In this browser" is the scope note's first words, just below. */}
@@ -45,7 +45,7 @@ export default function LocalDataInfo({ lang }: { lang: Lang }) {
         </Button>
       ) : (
         <div
-          className="f-stack"
+          className="f-stack grid gap-2"
           data-gap="sm"
           role="group"
           aria-label={t('Confirmar', 'Confirm', 'Confirmar')}

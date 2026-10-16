@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DownloadSimpleIcon } from '@phosphor-icons/react';
+import { DownloadIcon } from 'lucide-react';
 import { installPlatform, type InstallPlatform } from '../lib/install.ts';
 import { langTag, pick, type Lang } from '../lib/i18n.ts';
 import { useBackToClose } from '../hooks/useBackToClose.ts';
@@ -114,7 +114,7 @@ export default function InstallFaro({ lang }: { lang: Lang }) {
     <>
       <Button
         variant="secondary"
-        icon={<DownloadSimpleIcon size={20} aria-hidden="true" />}
+        icon={<DownloadIcon className="size-4" aria-hidden="true" />}
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
       >

@@ -1,11 +1,11 @@
-import { ArrowUpRightIcon, BuildingOfficeIcon, MapTrifoldIcon } from '@phosphor-icons/react';
+import { ArrowUpRightIcon, BuildingIcon, MapIcon } from 'lucide-react';
 import { destinationFor } from '../data/destinations/index.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
 import { keepSeparators } from '../lib/caption.ts';
 import { hostOf } from '../lib/links.ts';
 import { List, ListRow, Note, RowIcon, SafetyNotice, Steps } from '../ui/index.ts';
 
-const out = <ArrowUpRightIcon size={16} aria-hidden="true" />;
+const out = <ArrowUpRightIcon className="size-4" aria-hidden="true" />;
 
 export default function EvacuationPlan({ country, lang }: { country: string; lang: Lang }) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
@@ -14,14 +14,17 @@ export default function EvacuationPlan({ country, lang }: { country: string; lan
     id,
     text: (
       <>
-        <h4 className="f-subhead">{title}</h4>
+        <h4 className="f-subhead m-0 text-sm leading-snug font-medium">{title}</h4>
         {body}
       </>
     ),
   });
   return (
-    <section className="f-section" aria-labelledby="evacuation-title">
-      <h3 id="evacuation-title" className="f-section-title">
+    <section className="f-section @container grid gap-3" aria-labelledby="evacuation-title">
+      <h3
+        id="evacuation-title"
+        className="f-section-title m-0 text-base leading-snug font-semibold"
+      >
         {t('Antes de seguir una ruta', 'Before following a route', 'Antes de seguir uma rota')}
       </h3>
       <SafetyNotice>
@@ -81,7 +84,7 @@ export default function EvacuationPlan({ country, lang }: { country: string; lan
             <ListRow
               href={destination.evacuation.url}
               external
-              lead={<RowIcon icon={<MapTrifoldIcon size={20} aria-hidden="true" />} />}
+              lead={<RowIcon icon={<MapIcon className="size-4" aria-hidden="true" />} />}
               title={t(
                 'Consultar planos oficiales',
                 'View official evacuation maps',
@@ -95,7 +98,7 @@ export default function EvacuationPlan({ country, lang }: { country: string; lan
             <ListRow
               href={destination.civilProtection.url}
               external
-              lead={<RowIcon icon={<BuildingOfficeIcon size={20} aria-hidden="true" />} />}
+              lead={<RowIcon icon={<BuildingIcon className="size-4" aria-hidden="true" />} />}
               title={t(
                 `Indicaciones de ${destination.civilProtection.name}`,
                 `${destination.civilProtection.name} guidance`,

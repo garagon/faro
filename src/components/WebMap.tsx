@@ -3,7 +3,9 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import L from 'leaflet';
 import 'leaflet.markercluster';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { DropIcon, FlagIcon, HurricaneIcon, MountainsIcon } from '@phosphor-icons/react';
+import { DropletIcon, FlagIcon, MinusIcon, MountainIcon, PlusIcon, WindIcon } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { directionsUrl, type Embassy } from '../lib/embassies.ts';
 import { displayPlace, type Quake, type Bounds } from '../lib/domain.ts';
 import { quakeRegion } from '../lib/quakeText.ts';
@@ -67,7 +69,43 @@ export type MapArea = {
   level?: 1 | 2 | 3;
   levelLabel?: string;
 };
-const hazardIcons = { cyclone: HurricaneIcon, flood: DropIcon, volcano: MountainsIcon };
+const hazardIcons = { cyclone: WindIcon, flood: DropletIcon, volcano: MountainIcon };
+/*
+ * Leaflet builds its controls, popups and tooltips itself and takes class names for them: these
+ * give them the shadcn look (outline buttons, a popover card, the dark tooltip).
+ */
+const zoomBar = 'grid gap-1 rounded-none border-0 bg-transparent shadow-none';
+const zoomButton = cn(
+  buttonVariants({ variant: 'outline', size: 'icon' }),
+  'size-10 text-foreground no-underline hover:text-foreground [&.leaflet-disabled]:pointer-events-none [&.leaflet-disabled]:opacity-50',
+);
+const popupClass = cn(
+  'font-sans',
+  '[&_.leaflet-popup-content-wrapper]:rounded-lg [&_.leaflet-popup-content-wrapper]:border [&_.leaflet-popup-content-wrapper]:bg-popover [&_.leaflet-popup-content-wrapper]:text-popover-foreground [&_.leaflet-popup-content-wrapper]:shadow-md',
+  '[&_.leaflet-popup-content]:my-3 [&_.leaflet-popup-content]:mr-8 [&_.leaflet-popup-content]:ml-3 [&_.leaflet-popup-content]:text-sm [&_.leaflet-popup-content]:leading-snug',
+  '[&_.leaflet-popup-tip]:bg-popover [&_.leaflet-popup-tip]:shadow-none',
+  '[&_.leaflet-popup-close-button]:text-muted-foreground [&_.leaflet-popup-close-button]:hover:text-foreground',
+);
+// A popup opens clear of the zoom buttons (12 px from the edge, 40 px wide).
+const popupOptions: L.PopupOptions = {
+  className: popupClass,
+  autoPanPaddingTopLeft: L.point(60, 12),
+};
+const tooltipClass =
+  'rounded-md border-0 bg-primary px-3 py-1.5 font-sans text-xs text-primary-foreground shadow-md before:hidden';
+/** The parts of a popup card, built as DOM (Leaflet takes an element). */
+const popupTitle = 'block font-semibold text-foreground';
+const popupText = 'm-0 mt-1 text-muted-foreground';
+const popupLink =
+  'mt-2 inline-block font-medium text-foreground underline underline-offset-4 hover:decoration-2';
+/** A legend key's swatch: the mark it stands for, in the map's own colours. */
+const swatch = 'inline-grid size-4 flex-none place-items-center rounded-[4px] text-white';
+const areaSwatch = {
+  0: 'border-(--f-neutral-600) bg-(--f-neutral-100)',
+  1: 'border-(--f-color-level-1) bg-(--f-color-level-1-soft)',
+  2: 'border-(--f-color-level-2) bg-(--f-color-level-2-soft)',
+  3: 'border-(--f-color-level-3) bg-(--f-color-level-3-soft)',
+};
 /** What the legend explains: only what is drawn inside the visible map. */
 type Shown = {
   quakes: boolean;
@@ -238,8 +276,21 @@ export default function WebMap({
       dragging: !touch,
       // The credits are written under the map, in the card (see the legend below).
       attributionControl: false,
+      // Added below with lucide icons, styled as shadcn outline buttons.
+      zoomControl: false,
     });
     map.current = m;
+    const zoom = L.control
+      .zoom({
+        zoomInText: renderToStaticMarkup(<PlusIcon className="size-4" aria-hidden="true" />),
+        zoomOutText: renderToStaticMarkup(<MinusIcon className="size-4" aria-hidden="true" />),
+      })
+      .addTo(m);
+    zoom.getContainer()?.classList.add(...zoomBar.split(' '));
+    zoom
+      .getContainer()
+      ?.querySelectorAll('a')
+      .forEach((a) => a.classList.add(...zoomButton.split(' ')));
     // A move the app did not make is the person's: from then on the view stays theirs.
     m.on('movestart zoomstart', () => {
       if (byApp.current) return;
@@ -443,18 +494,23 @@ export default function WebMap({
       const label = e.name[langIndex(lang)];
       const icon = L.divIcon({
         className: 'f-pin-embassy',
-        html: renderToStaticMarkup(<FlagIcon size={26} weight="fill" />),
+        html: renderToStaticMarkup(
+          <FlagIcon className="size-5" fill="currentColor" strokeWidth={1.75} />,
+        ),
         iconSize: [32, 32],
         iconAnchor: [16, 30],
       });
       const card = document.createElement('div');
       const name = document.createElement('strong');
+      name.className = popupTitle;
       name.textContent = label;
       card.append(name);
       const p = document.createElement('p');
+      p.className = popupText;
       p.textContent = e.address;
       card.append(p);
       const a = document.createElement('a');
+      a.className = popupLink;
       a.href = directionsUrl(e, 'walking');
       a.target = '_blank';
       a.rel = 'noreferrer';
@@ -466,6 +522,7 @@ export default function WebMap({
       );
       card.append(a);
       const warning = document.createElement('p');
+      warning.className = popupText;
       warning.textContent = pick(
         lang,
         'Ubicación aproximada. No es refugio ni ruta de evacuación.',
@@ -473,7 +530,9 @@ export default function WebMap({
         'Localização aproximada. Não é abrigo nem rota de evacuação.',
       );
       card.append(warning);
-      L.marker([e.lat, e.lng], { icon, title: label, alt: label }).bindPopup(card).addTo(group);
+      L.marker([e.lat, e.lng], { icon, title: label, alt: label })
+        .bindPopup(card, popupOptions)
+        .addTo(group);
     });
     if (geo) {
       L.circle([geo.lat, geo.lng], {
@@ -489,6 +548,7 @@ export default function WebMap({
             'Your approximate location',
             'Sua localização aproximada',
           ),
+          { className: tooltipClass },
         )
         .addTo(group);
     }
@@ -501,7 +561,9 @@ export default function WebMap({
       );
       const icon = L.divIcon({
         className: 'f-pin-personal',
-        html: renderToStaticMarkup(<FlagIcon size={28} weight="fill" />),
+        html: renderToStaticMarkup(
+          <FlagIcon className="size-7" fill="currentColor" strokeWidth={1.5} />,
+        ),
         iconSize: [32, 32],
         iconAnchor: [16, 30],
       });
@@ -510,7 +572,7 @@ export default function WebMap({
         title: personal,
         alt: personal,
       })
-        .bindTooltip(personal)
+        .bindTooltip(personal, { className: tooltipClass })
         .addTo(group);
     }
     measure();
@@ -523,10 +585,13 @@ export default function WebMap({
     latest.current.areas.forEach((a) => {
       const card = document.createElement('div');
       const title = document.createElement('strong');
+      title.className = popupTitle;
       title.textContent = a.levelLabel ? `${a.title} · ${a.levelLabel}` : a.title;
       const detail = document.createElement('p');
+      detail.className = popupText;
       detail.textContent = a.detail;
       const note = document.createElement('p');
+      note.className = popupText;
       note.textContent = pick(
         lang,
         'Es el área que cubre el aviso, no un mapa de calles inundadas.',
@@ -536,6 +601,7 @@ export default function WebMap({
       card.append(title, detail, note);
       if (a.url) {
         const link = document.createElement('a');
+        link.className = popupLink;
         link.href = a.url;
         link.target = '_blank';
         link.rel = 'noreferrer';
@@ -552,7 +618,7 @@ export default function WebMap({
         className: `f-map-area f-map-area-${a.level ?? 0}`,
         interactive: true,
       })
-        .bindPopup(card)
+        .bindPopup(card, popupOptions)
         .addTo(group);
     });
     measure();
@@ -566,16 +632,19 @@ export default function WebMap({
       const Icon = hazardIcons[h.kind];
       const icon = L.divIcon({
         className: `f-pin-hazard f-pin-hazard-${h.level}`,
-        html: renderToStaticMarkup(<Icon size={22} weight="bold" />),
+        html: renderToStaticMarkup(<Icon className="size-5" strokeWidth={2.25} />),
         iconSize: [36, 36],
         iconAnchor: [18, 18],
       });
       const card = document.createElement('div');
       const title = document.createElement('strong');
+      title.className = popupTitle;
       title.textContent = h.title;
       const detail = document.createElement('p');
+      detail.className = popupText;
       detail.textContent = h.detail;
       const note = document.createElement('p');
+      note.className = popupText;
       note.textContent = pick(
         lang,
         `Posición publicada por ${h.source}. No delimita la zona afectada.`,
@@ -583,6 +652,7 @@ export default function WebMap({
         `Posição publicada pela fonte (${h.source}). Não delimita a área afetada.`,
       );
       const link = document.createElement('a');
+      link.className = popupLink;
       link.href = h.url;
       link.target = '_blank';
       link.rel = 'noreferrer';
@@ -594,7 +664,7 @@ export default function WebMap({
       );
       card.append(title, detail, note, link);
       L.marker([h.lat, h.lng], { icon, title: h.title, alt: h.title, zIndexOffset: 500 })
-        .bindPopup(card)
+        .bindPopup(card, popupOptions)
         .addTo(group);
     });
     measure();
@@ -618,7 +688,7 @@ export default function WebMap({
       ? [
           {
             id: 'quake',
-            swatch: <span className="f-map-swatch" data-kind="quake" />,
+            swatch: <span className={cn(swatch, 'bg-(--f-mag-2)')} />,
             text: t('Sismo y magnitud', 'Earthquake and magnitude', 'Terremoto e magnitude'),
           },
         ]
@@ -627,14 +697,14 @@ export default function WebMap({
       ? [
           {
             id: 'cluster',
-            swatch: <span className="f-map-swatch" data-kind="cluster" />,
+            swatch: <span className={cn(swatch, 'rounded-full bg-(--f-neutral-700)')} />,
             text: t('Varios sismos', 'Several earthquakes', 'Vários terremotos'),
           },
         ]
       : []),
     ...shown.areas.map((a) => ({
       id: `area-${a.source}-${a.level}`,
-      swatch: <span className="f-map-swatch" data-kind="area" data-level={a.level} />,
+      swatch: <span className={cn(swatch, 'border-2', areaSwatch[a.level ?? 0])} />,
       text: `${t(`Aviso ${a.source}`, `${a.source} warning`, `Aviso ${a.source}`)}${a.label ? ` · ${a.label}` : ''}`,
     })),
     ...shown.hazards.map((h) => {
@@ -642,8 +712,8 @@ export default function WebMap({
       return {
         id: `hazard-${h.source}`,
         swatch: (
-          <span className="f-map-swatch" data-kind="hazard">
-            <Icon size={12} weight="bold" />
+          <span className={cn(swatch, 'rounded-full bg-(--f-neutral-700)')}>
+            <Icon className="size-3" strokeWidth={2.5} />
           </span>
         ),
         text:
@@ -658,7 +728,9 @@ export default function WebMap({
       ? [
           {
             id: 'plates',
-            swatch: <span className="f-map-swatch" data-kind="plates" />,
+            swatch: (
+              <span className={cn(swatch, 'h-0 rounded-none border-t-2 border-(--f-map-plates)')} />
+            ),
             text: t('Límite de placas', 'Plate boundary', 'Limite de placas'),
           },
         ]
@@ -668,8 +740,8 @@ export default function WebMap({
           {
             id: 'embassy',
             swatch: (
-              <span className="f-map-swatch" data-kind="embassy">
-                <FlagIcon size={10} weight="fill" />
+              <span className={cn(swatch, 'bg-(--f-map-embassy)')}>
+                <FlagIcon className="size-2.5" fill="currentColor" />
               </span>
             ),
             text: t('Embajada', 'Embassy', 'Embaixada'),
@@ -681,8 +753,8 @@ export default function WebMap({
           {
             id: 'point',
             swatch: (
-              <span className="f-map-swatch" data-kind="personal">
-                <FlagIcon size={16} weight="fill" />
+              <span className={cn(swatch, 'text-(--f-map-personal)')}>
+                <FlagIcon className="size-4" fill="currentColor" strokeWidth={1.5} />
               </span>
             ),
             text: t(
@@ -697,7 +769,14 @@ export default function WebMap({
       ? [
           {
             id: 'you',
-            swatch: <span className="f-map-swatch" data-kind="you" />,
+            swatch: (
+              <span
+                className={cn(
+                  swatch,
+                  'rounded-full border-2 border-white bg-(--f-map-you) shadow-[0_2px_6px_rgb(0_0_0/20%)]',
+                )}
+              />
+            ),
             text: t('Tu ubicación', 'Your location', 'Sua localização'),
           },
         ]
@@ -705,11 +784,11 @@ export default function WebMap({
   ];
   const published = shown.quakes || shown.hazards.length > 0 || shown.areas.length > 0;
   return (
-    <div className="f-map-frame">
-      <div className="f-map-stage">
+    <div className="f-map-frame flex h-full flex-col">
+      <div className="f-map-stage relative min-h-(--f-map-height) flex-auto">
         <div
           ref={el}
-          className="f-map-canvas"
+          className="f-map-canvas absolute inset-0 z-0 bg-(--f-map-ground) font-sans text-xs"
           role="region"
           aria-label={
             label ||
@@ -722,7 +801,10 @@ export default function WebMap({
           }
         />
         {touch && !active && (
-          <p className="f-map-hint" aria-hidden="true">
+          <p
+            className="f-map-hint pointer-events-none absolute top-3 right-3 z-[1] m-0 rounded-full bg-primary/80 px-3 py-1 text-xs whitespace-nowrap text-primary-foreground"
+            aria-hidden="true"
+          >
             {pick(
               lang,
               'Toca el mapa para moverlo',
@@ -732,10 +814,13 @@ export default function WebMap({
           </p>
         )}
         {(action || tileError) && (
-          <div className="f-map-overlay">
+          <div className="f-map-overlay pointer-events-none absolute inset-x-3 bottom-3 z-[1] grid justify-items-center gap-2 *:pointer-events-auto *:shadow-md">
             {action}
             {tileError && (
-              <p className="f-map-error" role="status">
+              <p
+                className="f-map-error m-0 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+                role="status"
+              >
                 {pick(
                   lang,
                   'Algunas partes del mapa no cargaron. Consulta la lista de eventos.',
@@ -747,14 +832,18 @@ export default function WebMap({
           </div>
         )}
       </div>
-      <div className="f-map-legend" id={legendId} tabIndex={legendId ? -1 : undefined}>
+      <div
+        className="f-map-legend grid gap-2 border-t px-4 py-3 text-xs text-muted-foreground outline-none"
+        id={legendId}
+        tabIndex={legendId ? -1 : undefined}
+      >
         {keys.length > 0 && (
           <ul
-            className="f-map-keys"
+            className="f-map-keys m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-xs leading-snug text-muted-foreground"
             aria-label={t('Leyenda del mapa', 'Map legend', 'Legenda do mapa')}
           >
             {keys.map((k) => (
-              <li key={k.id} className="f-map-key">
+              <li key={k.id} className="f-map-key inline-flex items-center gap-2">
                 {k.swatch}
                 {k.text}
               </li>
@@ -770,7 +859,7 @@ export default function WebMap({
             )}
           </Note>
         )}
-        <p className="f-map-credits">
+        <p className="f-map-credits m-0 text-xs leading-snug text-muted-foreground [&_a]:text-inherit [&_a]:no-underline [&_a]:hover:underline [&_a]:focus-visible:underline">
           {[
             <a key="ofm" href="https://openfreemap.org" target="_blank" rel="noreferrer">
               OpenFreeMap

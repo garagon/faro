@@ -1,4 +1,4 @@
-import { ChatCircleTextIcon, FirstAidIcon, FlagIcon, PhoneIcon } from '@phosphor-icons/react';
+import { CrossIcon, FlagIcon, MessageSquareTextIcon, PhoneIcon } from 'lucide-react';
 import { emergencyFor } from '../lib/emergency.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 import { CallButton, List, ListRow, RowIcon, SafetyNotice } from '../ui/index.ts';
@@ -39,7 +39,7 @@ export function HomeCall(p: Pick<Props, 'lang' | 'country' | 'onEmergency'>) {
   ) : (
     <List>
       <ListRow
-        lead={<RowIcon icon={<PhoneIcon size={20} />} />}
+        lead={<RowIcon icon={<PhoneIcon className="size-4" />} />}
         title={t('Teléfonos de emergencia', 'Emergency numbers', 'Telefones de emergência')}
         // "Choose a country" only when none is chosen; a chosen country without verified numbers
         // says so, like Emergencia and Ayuda.
@@ -66,10 +66,10 @@ export function HomeCall(p: Pick<Props, 'lang' | 'country' | 'onEmergency'>) {
 export default function HomeActions(p: Props) {
   const t = (es: string, en: string, pt: string) => pick(p.lang, es, en, pt);
   return (
-    <div className="f-stack">
+    <div className="f-stack grid gap-4">
       <List label={t('Acciones', 'Actions', 'Ações')}>
         <ListRow
-          lead={<RowIcon icon={<ChatCircleTextIcon size={20} />} />}
+          lead={<RowIcon icon={<MessageSquareTextIcon className="size-4" />} />}
           // The same name as the Avisar tab ("Check in" in English).
           title={t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
           meta={t(
@@ -80,7 +80,7 @@ export default function HomeActions(p: Props) {
           onClick={p.onStatus}
         />
         <ListRow
-          lead={<RowIcon icon={<FirstAidIcon size={20} />} />}
+          lead={<RowIcon icon={<CrossIcon className="size-4" />} />}
           title={t('Qué hacer ahora', 'What to do now', 'O que fazer agora')}
           meta={t(
             'Primeros pasos y otros números',
@@ -90,7 +90,7 @@ export default function HomeActions(p: Props) {
           onClick={p.onSteps}
         />
         <ListRow
-          lead={<RowIcon icon={<FlagIcon size={20} />} />}
+          lead={<RowIcon icon={<FlagIcon className="size-4" />} />}
           title={t('Tu embajada', 'Your embassy', 'Sua embaixada')}
           meta={
             p.nationalityName ??

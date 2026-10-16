@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import {
-  ChatCircleDotsIcon,
   CopyIcon,
-  EnvelopeSimpleIcon,
-  ShareNetworkIcon,
-  TelegramLogoIcon,
-  WhatsappLogoIcon,
-} from '@phosphor-icons/react';
+  MailIcon,
+  MessageCircleIcon,
+  MessageCircleMoreIcon,
+  SendIcon,
+  Share2Icon,
+  type LucideIcon,
+} from 'lucide-react';
 import { shareLink, type ShareChannel } from '../lib/share.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
 import { ActionRow, List, Note } from '../ui/index.ts';
@@ -53,7 +54,7 @@ export default function ShareButtons({
     id: ShareChannel;
     name: string;
     meta: string;
-    Icon: typeof WhatsappLogoIcon;
+    Icon: LucideIcon;
   }[] = [
     {
       id: 'whatsapp',
@@ -63,7 +64,7 @@ export default function ShareButtons({
         'You pick the chat in WhatsApp',
         'Escolha a conversa no WhatsApp',
       ),
-      Icon: WhatsappLogoIcon,
+      Icon: MessageCircleIcon,
     },
     {
       id: 'telegram',
@@ -73,7 +74,7 @@ export default function ShareButtons({
         'You pick the chat in Telegram',
         'Escolha a conversa no Telegram',
       ),
-      Icon: TelegramLogoIcon,
+      Icon: SendIcon,
     },
     {
       id: 'sms',
@@ -83,7 +84,7 @@ export default function ShareButtons({
         'Goes out with a call signal',
         'Sai com sinal de chamadas',
       ),
-      Icon: ChatCircleDotsIcon,
+      Icon: MessageCircleMoreIcon,
     },
     {
       id: 'email',
@@ -93,7 +94,7 @@ export default function ShareButtons({
         'You pick who in your email app',
         'Escolha para quem no e-mail',
       ),
-      Icon: EnvelopeSimpleIcon,
+      Icon: MailIcon,
     },
   ];
   const channels = online ? all : [all[2], ...all.filter((c) => c.id !== 'sms')];
@@ -135,18 +136,12 @@ export default function ShareButtons({
   };
   const status = [feedback || hint, offlineHint].filter(Boolean).join(' ');
   return (
-    <div className="f-stack" data-gap="sm">
+    <div className="f-stack grid gap-2" data-gap="sm">
       <List label={label}>
         {channels.map(({ id, name, meta, Icon }) => (
           <ActionRow
             key={id}
-            icon={
-              <Icon
-                size={20}
-                weight={id === 'sms' || id === 'email' ? 'regular' : 'fill'}
-                aria-hidden="true"
-              />
-            }
+            icon={<Icon className="size-4" aria-hidden="true" />}
             title={name}
             meta={meta}
             href={shareLink(id, text, subject)}
@@ -159,7 +154,7 @@ export default function ShareButtons({
         ))}
         {typeof navigator.share === 'function' && (
           <ActionRow
-            icon={<ShareNetworkIcon size={20} aria-hidden="true" />}
+            icon={<Share2Icon className="size-4" aria-hidden="true" />}
             title={t('Otras apps', 'Other apps', 'Outros apps')}
             meta={t(
               'El menú para compartir del teléfono',
@@ -171,7 +166,7 @@ export default function ShareButtons({
           />
         )}
         <ActionRow
-          icon={<CopyIcon size={20} aria-hidden="true" />}
+          icon={<CopyIcon className="size-4" aria-hidden="true" />}
           title={t('Copiar texto', 'Copy text', 'Copiar texto')}
           meta={t(
             'Para pegarlo en cualquier chat',

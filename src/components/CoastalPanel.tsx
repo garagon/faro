@@ -1,6 +1,6 @@
 import { destinationFor } from '../data/destinations/index.ts';
 import { useEffect, useState } from 'react';
-import { ArrowClockwiseIcon, CrosshairIcon, WavesIcon } from '@phosphor-icons/react';
+import { CrosshairIcon, RotateCwIcon, WavesIcon } from 'lucide-react';
 import type { Geo } from './WebMap.tsx';
 import { coastDistanceKm, decodeCoastline, type CoastLine } from '../lib/coast.ts';
 import {
@@ -184,7 +184,7 @@ export default function CoastalPanel({
           <StatusIcon
             state={notice ? 'listed' : 'none'}
             level={notice?.level}
-            icon={<WavesIcon size={20} weight="bold" />}
+            icon={<WavesIcon className="size-4" />}
           />
         }
         // NOAA's place, readable, in English as published.
@@ -222,7 +222,7 @@ export default function CoastalPanel({
           </p>
         ) : null}
         {!row.recent && (
-          <p className="f-caption">
+          <p className="f-caption m-0 text-sm text-muted-foreground">
             {t(
               'Archivo: fuera de la ventana de 6 horas. La antigüedad no equivale a cancelación.',
               'Archive: outside the 6-hour display window. Age does not mean cancellation.',
@@ -271,7 +271,11 @@ export default function CoastalPanel({
           </button>
         </Actions>
         {/* NOAA's product and event codes, for anyone matching the bulletin on tsunami.gov. */}
-        <p id={`${id}-codes`} className="f-caption" hidden={!more}>
+        <p
+          id={`${id}-codes`}
+          className="f-caption m-0 text-sm text-muted-foreground"
+          hidden={!more}
+        >
           {t('Producto', 'Product', 'Produto')} {b.product} ·{' '}
           {b.basin === 'Pacific'
             ? t('Pacífico', 'Pacific', 'Pacífico')
@@ -374,9 +378,9 @@ export default function CoastalPanel({
     lang,
   });
   return (
-    <div className="f-stack" data-gap="lg">
+    <div className="f-stack grid gap-8" data-gap="lg">
       {/* The answer first: what NOAA's products say now, when they were checked, and the limits. */}
-      <div className="f-stack" data-gap="sm">
+      <div className="f-stack grid gap-2" data-gap="sm">
         <div role="status">
           <List
             label={t('Información de tsunami', 'Tsunami information', 'Informação sobre tsunami')}
@@ -386,7 +390,7 @@ export default function CoastalPanel({
                 <StatusIcon
                   state={signal}
                   level={lead?.notice.level}
-                  icon={<WavesIcon size={20} weight="bold" />}
+                  icon={<WavesIcon className="size-4" />}
                 />
               }
               title={statusHeadline}
@@ -409,7 +413,7 @@ export default function CoastalPanel({
                   disabled={busy}
                   onClick={onRefresh}
                 >
-                  <ArrowClockwiseIcon size={20} aria-hidden="true" />
+                  <RotateCwIcon className="size-4" aria-hidden="true" />
                 </IconButton>
               }
             />
@@ -426,14 +430,20 @@ export default function CoastalPanel({
         </Note>
       </div>
       {current.length > 0 && (
-        <section className="f-section" aria-labelledby="fw-tsunami-current">
-          <h2 className="f-section-title" id="fw-tsunami-current">
+        <section className="f-section @container grid gap-3" aria-labelledby="fw-tsunami-current">
+          <h2
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+            id="fw-tsunami-current"
+          >
             {t('Mensajes recientes', 'Recent messages', 'Mensagens recentes')}
           </h2>
           <List>{current.map(renderBulletin)}</List>
         </section>
       )}
-      <section className="f-stack" aria-label={t('En la costa', 'On the coast', 'Na costa')}>
+      <section
+        className="f-stack grid gap-4"
+        aria-label={t('En la costa', 'On the coast', 'Na costa')}
+      >
         <SafetyNotice>
           {t(
             'Si estás en la costa y sientes un sismo fuerte o largo, ves que el mar se retira o sube de golpe, u oyes un rugido:',
@@ -475,8 +485,8 @@ export default function CoastalPanel({
           </OutLink>
         </Actions>
       </section>
-      <div className="f-stack" data-gap="sm">
-        <div className="f-prose">
+      <div className="f-stack grid gap-2" data-gap="sm">
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
           <p>
             {!geo
               ? t(
@@ -518,7 +528,7 @@ export default function CoastalPanel({
         {!geo && (
           <Button
             variant="secondary"
-            icon={<CrosshairIcon size={18} aria-hidden="true" />}
+            icon={<CrosshairIcon className="size-4" aria-hidden="true" />}
             onClick={onLocate}
             disabled={locating}
           >
@@ -529,8 +539,11 @@ export default function CoastalPanel({
         )}
       </div>
       {nws && (
-        <section className="f-section" aria-labelledby="fw-nws-title">
-          <h2 className="f-section-title" id="fw-nws-title">
+        <section className="f-section @container grid gap-3" aria-labelledby="fw-nws-title">
+          <h2
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+            id="fw-nws-title"
+          >
             {t(
               'Avisos de tsunami del NWS · EE. UU. y territorios',
               'NWS tsunami alerts · U.S. and territories',
@@ -558,12 +571,12 @@ export default function CoastalPanel({
             </div>
           )}
           {!nwsTsunami && !nws.failed && (
-            <div className="f-prose">
+            <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
               <p>{t('Consultando NWS…', 'Checking NWS…', 'Consultando o NWS…')}</p>
             </div>
           )}
           {nwsTsunami && nwsTsunami.length === 0 && !nws.failed && (
-            <div className="f-prose">
+            <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
               <p>
                 {t(
                   'El NWS no tiene avisos de tsunami activos. Esto no confirma ausencia de peligro.',
@@ -588,7 +601,7 @@ export default function CoastalPanel({
                       <StatusIcon
                         state="listed"
                         level={1}
-                        icon={<WavesIcon size={20} weight="bold" />}
+                        icon={<WavesIcon className="size-4" />}
                       />
                     }
                     title={nwsEventLabels[a.event][langIndex(lang)]}
@@ -620,16 +633,21 @@ export default function CoastalPanel({
         </section>
       )}
       {data && (
-        <section className="f-section" aria-labelledby="fw-tsunami-archive">
-          <div className="f-section-head">
-            <h2 className="f-section-title" id="fw-tsunami-archive">
+        <section className="f-section @container grid gap-3" aria-labelledby="fw-tsunami-archive">
+          <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2
+              className="f-section-title m-0 text-base leading-snug font-semibold"
+              id="fw-tsunami-archive"
+            >
               {t(
                 'Archivo de comunicados NOAA',
                 'NOAA statement archive',
                 'Arquivo de comunicados da NOAA',
               )}
             </h2>
-            <span className="f-section-aside">{archived.length}</span>
+            <span className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900">
+              {archived.length}
+            </span>
           </div>
           <Note>
             {t(

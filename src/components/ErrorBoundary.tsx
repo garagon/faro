@@ -2,7 +2,7 @@ import { Component, type ReactNode } from 'react';
 import { emergencyFor } from '../lib/emergency.ts';
 import { langIndex, langTag, pick } from '../lib/i18n.ts';
 import { readSiteLanguage } from '../lib/preferences.ts';
-import { Button, CallButton, List, PhoneRow, ScreenHead, Section } from '../ui/index.ts';
+import { Button, CallButton, List, PhoneRow, ScreenHead, Section, pageClass } from '../ui/index.ts';
 
 type State = { failed: boolean };
 
@@ -55,8 +55,8 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, St
     const i = langIndex(lang);
     // Design-system parts only: plain presentation, no app state, so it renders after a crash.
     return (
-      <main className="f-root" lang={langTag(lang)}>
-        <div className="f-page">
+      <main className="f-root h-full overflow-y-auto bg-background" lang={langTag(lang)}>
+        <div className={pageClass}>
           <ScreenHead
             title={t('Faro tuvo un problema', 'Faro ran into a problem', 'O Faro teve um problema')}
             lead={lead}

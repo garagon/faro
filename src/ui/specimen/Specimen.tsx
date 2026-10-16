@@ -4,14 +4,14 @@
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ChatCircleTextIcon,
-  DropIcon,
-  HurricaneIcon,
-  MountainsIcon,
+  DropletIcon,
+  MessageSquareTextIcon,
+  MountainIcon,
   PhoneIcon,
   WavesIcon,
-  WifiSlashIcon,
-} from '@phosphor-icons/react';
+  WifiOffIcon,
+  WindIcon,
+} from 'lucide-react';
 import { isLang, pick, type Lang } from '../../lib/i18n.ts';
 import {
   Badge,
@@ -278,7 +278,10 @@ function Catalogue() {
             note="44 px y 56 px. Principal, secundario y texto; el rojo solo para llamar."
           >
             <Button>{t('Revisar mensaje', 'Review message', 'Revisar mensagem')}</Button>
-            <Button variant="secondary" icon={<ChatCircleTextIcon size={20} aria-hidden="true" />}>
+            <Button
+              variant="secondary"
+              icon={<MessageSquareTextIcon className="size-4" aria-hidden="true" />}
+            >
               {t('Avisar cómo estoy', 'Tell people how I am', 'Avisar como estou')}
             </Button>
             <Button variant="ghost">
@@ -295,11 +298,7 @@ function Catalogue() {
             <List>
               <ListRow
                 lead={
-                  <StatusIcon
-                    state="listed"
-                    level={2}
-                    icon={<HurricaneIcon size={20} weight="bold" />}
-                  />
+                  <StatusIcon state="listed" level={2} icon={<WindIcon className="size-4" />} />
                 }
                 title={t('Ciclones', 'Cyclones', 'Ciclones')}
                 badge={
@@ -313,7 +312,7 @@ function Catalogue() {
                 onClick={() => {}}
               />
               <ListRow
-                lead={<StatusIcon state="none" icon={<WavesIcon size={20} weight="bold" />} />}
+                lead={<StatusIcon state="none" icon={<WavesIcon className="size-4" />} />}
                 title="Tsunami"
                 meta={t(
                   'Sin mensajes de amenaza · 14:52',
@@ -323,9 +322,7 @@ function Catalogue() {
                 onClick={() => {}}
               />
               <ListRow
-                lead={
-                  <StatusIcon state="pending" icon={<MountainsIcon size={20} weight="bold" />} />
-                }
+                lead={<StatusIcon state="pending" icon={<MountainIcon className="size-4" />} />}
                 title={t('Volcanes', 'Volcanoes', 'Vulcões')}
                 meta={
                   <>
@@ -336,7 +333,7 @@ function Catalogue() {
                 onClick={() => {}}
               />
               <ListRow
-                lead={<StatusIcon state="unknown" icon={<DropIcon size={20} weight="fill" />} />}
+                lead={<StatusIcon state="unknown" icon={<DropletIcon className="size-4" />} />}
                 title={t('Inundaciones', 'Floods', 'Inundações')}
                 meta={
                   <SourceStamp state="stale">
@@ -407,7 +404,7 @@ function Catalogue() {
               )}
             </SourceStamp>
             <StatusChip>
-              <WifiSlashIcon size={16} aria-hidden="true" />
+              <WifiOffIcon className="size-4" aria-hidden="true" />
               {t(
                 'Sin conexión · datos de 12:54',
                 'Offline · data from 12:54',
@@ -464,7 +461,7 @@ function Catalogue() {
             >
               <List>
                 <ListRow
-                  lead={<PhoneIcon size={20} aria-hidden="true" />}
+                  lead={<PhoneIcon className="size-4" aria-hidden="true" />}
                   title={t('Números', 'Numbers', 'Números')}
                   meta="911 · 104 · 103"
                   onClick={() => {}}

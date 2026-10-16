@@ -4,12 +4,7 @@ import EvacuationPlan from './EvacuationPlan.tsx';
 import { kitText } from '../data/emergencyKit.ts';
 import { destinationFor } from '../data/destinations/index.ts';
 import { useState } from 'react';
-import {
-  ArrowUpRightIcon,
-  BuildingOfficeIcon,
-  DownloadSimpleIcon,
-  MapTrifoldIcon,
-} from '@phosphor-icons/react';
+import { ArrowUpRightIcon, BuildingIcon, DownloadIcon, MapIcon } from 'lucide-react';
 import type { Lang } from '../lib/resources.ts';
 import { langIndex, langTag, pick, type Localized } from '../lib/i18n.ts';
 import {
@@ -969,8 +964,8 @@ export default function SafetyGuide({
   // The evacuation plan repeats the civil protection link, so it is listed once.
   const plan = active === 'hotel' || active === 'coast';
   const topicLabel = t('Temas', 'Topics', 'Temas');
-  const out = <ArrowUpRightIcon size={16} aria-hidden="true" />;
-  const agency = <RowIcon icon={<BuildingOfficeIcon size={20} aria-hidden="true" />} />;
+  const out = <ArrowUpRightIcon className="size-4" aria-hidden="true" />;
+  const agency = <RowIcon icon={<BuildingIcon className="size-4" aria-hidden="true" />} />;
   const sourceLanguage =
     sourceLang(current, lang) !== lang
       ? ` (${
@@ -980,9 +975,9 @@ export default function SafetyGuide({
         })`
       : '';
   return (
-    <div className="f-split">
-      <div className="f-column">
-        <div className="f-when-single">
+    <div className="f-split grid items-start gap-8 @min-[1200px]/app:grid-cols-[minmax(0,42rem)_minmax(20rem,1fr)] @min-[1200px]/app:[&>aside]:sticky @min-[1200px]/app:[&>aside]:top-8">
+      <div className="f-column grid w-full max-w-2xl gap-8">
+        <div className="f-when-single @min-[1200px]/app:hidden">
           <SelectField
             id="guide-situation"
             label={topicLabel}
@@ -1002,16 +997,23 @@ export default function SafetyGuide({
             ))}
           </SelectField>
         </div>
-        <article className="f-column" aria-labelledby="safety-title" key={active}>
-          <div className="f-stack">
-            <div className="f-prose">
-              <h2 id="safety-title" className="f-section-title">
+        <article
+          className="f-column grid w-full max-w-2xl gap-8"
+          aria-labelledby="safety-title"
+          key={active}
+        >
+          <div className="f-stack grid gap-4">
+            <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+              <h2
+                id="safety-title"
+                className="f-section-title m-0 text-base leading-snug font-semibold"
+              >
                 {current.title[i]}
               </h2>
               <p>{current.intro[i]}</p>
             </div>
             {active === 'during' && (
-              <div className="f-stack" data-gap="sm">
+              <div className="f-stack grid gap-2" data-gap="sm">
                 <Figure
                   inset
                   caption={
@@ -1085,7 +1087,9 @@ export default function SafetyGuide({
                 id: `${active}-${n}`,
                 text: (
                   <>
-                    <h3 className="f-subhead">{step.title[i]}</h3>
+                    <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
+                      {step.title[i]}
+                    </h3>
                     {step.body[i]}
                   </>
                 ),
@@ -1131,11 +1135,14 @@ export default function SafetyGuide({
             )}
           </div>
           {current.terms && (
-            <section className="f-section" aria-labelledby="safety-terms">
-              <h3 id="safety-terms" className="f-section-title">
+            <section className="f-section @container grid gap-3" aria-labelledby="safety-terms">
+              <h3
+                id="safety-terms"
+                className="f-section-title m-0 text-base leading-snug font-semibold"
+              >
                 {t('Vigilancia y aviso', 'Watch and warning', 'Vigilância e aviso')}
               </h3>
-              <div className="f-prose">
+              <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
                 <dl>
                   {current.terms.map((x) => (
                     <div key={x.term[1]}>
@@ -1165,7 +1172,7 @@ export default function SafetyGuide({
             </section>
           )}
           {active === 'during' && country === 'CL' && (
-            <div className="f-stack">
+            <div className="f-stack grid gap-4">
               <SafetyNotice>
                 {t(
                   'En Chile, SENAPRED distingue las construcciones de adobe o autoconstruidas: recomienda evacuarlas inmediatamente. Identifica el tipo de construcción y el plan de tu alojamiento antes de una emergencia.',
@@ -1185,7 +1192,7 @@ export default function SafetyGuide({
             </div>
           )}
           {active === 'coast' && country === 'CL' && (
-            <div className="f-stack">
+            <div className="f-stack grid gap-4">
               <Note>
                 {t(
                   'SENAPRED recomienda conocer previamente las rutas y puntos de encuentro de la localidad que visitas. Los planos siguientes corresponden solo a Chile.',
@@ -1208,7 +1215,7 @@ export default function SafetyGuide({
                 <ListRow
                   href="https://senapred.cl/planos-de-evacuacion/"
                   external
-                  lead={<RowIcon icon={<MapTrifoldIcon size={20} aria-hidden="true" />} />}
+                  lead={<RowIcon icon={<MapIcon className="size-4" aria-hidden="true" />} />}
                   title={t(
                     'Planos de evacuación de Chile',
                     'Chile evacuation maps',
@@ -1242,11 +1249,11 @@ export default function SafetyGuide({
             </Button>
           )}
         </article>
-        <div className="f-stack" data-gap="sm">
+        <div className="f-stack grid gap-2" data-gap="sm">
           <List>
             <ListRow
               onClick={download}
-              lead={<RowIcon icon={<DownloadSimpleIcon size={20} aria-hidden="true" />} />}
+              lead={<RowIcon icon={<DownloadIcon className="size-4" aria-hidden="true" />} />}
               title={t('Descargar guía', 'Download guide', 'Baixar guia')}
               meta={t(
                 'Texto · todas las situaciones · español',
@@ -1261,7 +1268,7 @@ export default function SafetyGuide({
           </span>
         </div>
       </div>
-      <aside className="f-when-split">
+      <aside className="f-when-split @max-[1200px]/app:hidden">
         <IndexNav
           label={t('Situaciones de la guía', 'Guide situations', 'Situações do guia')}
           groups={groups.map((g) => ({

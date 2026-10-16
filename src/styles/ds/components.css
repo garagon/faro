@@ -36,10 +36,6 @@
   }
 }
 
-  color: var(--f-color-text-muted);
-  font-size: var(--f-text-sm);
-}
-
 /* A button that reads as a link inside a sentence. */
 .f-inline-link {
   display: inline;
@@ -54,7 +50,7 @@
   text-underline-offset: 0.18em;
   cursor: pointer;
 }
-/* Links and text buttons answer the pointer and the finger: darker green, stronger underline. */
+/* Links and text buttons answer the pointer and the finger: darker, stronger underline. */
 .f-inline-link {
   transition-property: color, text-decoration-color, text-decoration-thickness;
   transition-duration: var(--f-press);
@@ -71,13 +67,9 @@
     text-decoration-thickness: var(--f-underline-hover);
   }
 }
-
-  color: var(--f-color-text-muted);
-  font-size: var(--f-text-sm);
-  font-weight: var(--f-weight-regular);
-}
+@media (prefers-reduced-motion: reduce) {
+  .f-inline-link {
     transition: none;
-    animation: none;
   }
 }
 
@@ -96,12 +88,6 @@
 @keyframes f-fade-out {
   to {
     opacity: 0;
-  }
-}
-/* With reduced motion nothing slides or scales: what opens fades in, colours change at once. */
-@media (prefers-reduced-motion: reduce) {
-  .f-inline-link {
-    transition: none;
   }
 }
 

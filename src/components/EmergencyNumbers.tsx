@@ -1,4 +1,4 @@
-import { WhatsappLogoIcon } from '@phosphor-icons/react';
+import { MessageCircleIcon } from 'lucide-react';
 import { emergencyFor } from '../lib/emergency.ts';
 import { reviewDate } from '../lib/links.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
@@ -45,7 +45,7 @@ export default function EmergencyNumbers({ country, lang }: { country: string; l
                   figure
                   title={data.whatsapp.number}
                   meta={data.whatsapp.label[idx]}
-                  trail={<WhatsappLogoIcon size={20} weight="fill" aria-hidden="true" />}
+                  trail={<MessageCircleIcon className="size-4" aria-hidden="true" />}
                 />
               )}
             </List>

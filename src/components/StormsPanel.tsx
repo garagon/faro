@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HurricaneIcon } from '@phosphor-icons/react';
+import { WindIcon } from 'lucide-react';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import { checkedLabel } from '../lib/time.ts';
 import { lineStamp, sourceLine } from '../lib/sourceStatus.ts';
@@ -69,8 +69,8 @@ export default function StormsPanel(p: Props) {
     lang: p.lang,
   });
   return (
-    <div className="f-stack" data-gap="lg">
-      <div className="f-stack" data-gap="sm">
+    <div className="f-stack grid gap-8" data-gap="lg">
+      <div className="f-stack grid gap-2" data-gap="sm">
         {line.state !== 'checked' && (
           <div role="status">
             <SourceStamp issuer="NHC" state={lineStamp(line.state)}>
@@ -87,7 +87,7 @@ export default function StormsPanel(p: Props) {
           </div>
         )}
         {p.data && storms.length === 0 && (
-          <div className="f-prose">
+          <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
             <p>
               {t(
                 'El NHC no tiene ciclones activos: no emitió pronósticos en las últimas 12 horas.',
@@ -114,9 +114,7 @@ export default function StormsPanel(p: Props) {
                   id={id}
                   open={!closed.has(id)}
                   onToggle={() => toggle(id)}
-                  lead={
-                    <StatusIcon state="listed" icon={<HurricaneIcon size={20} weight="bold" />} />
-                  }
+                  lead={<StatusIcon state="listed" icon={<WindIcon className="size-4" />} />}
                   title={`${stormClassLabels[s.classification][idx]} ${s.name}`}
                   meta={nb(
                     [
