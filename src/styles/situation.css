@@ -17,19 +17,6 @@
 /* Briefing headline: the place in the brand serif and what sources say, in one breath. */
 
 /* Warnings in force: the only tinted surface, because it is the only urgent content. */
-.fw-link-button {
-  min-height: 40px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: #6b4610;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
 
 /* Status board: one row per hazard, read left to right like a signal panel. */
 /* The signal: lit when the source lists something, an empty ring when it lists nothing,
@@ -61,220 +48,15 @@
 }
 
 /* Guide index grouped by hazard. */
-.fw-safety-group {
-  display: grid;
-  gap: 4px;
-}
-.fw-safety-group + .fw-safety-group {
-  margin-top: 14px;
-}
-.fw-safety-group > small {
-  padding: 0 4px 2px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  color: #7a8a84;
-}
 
 /* One heading scale for the cards on the local help screen. */
 
 /* Watch and warning glossary inside a guide section. */
-.fw-safety-terms {
-  margin: 18px 0 6px;
-  padding: 16px 18px;
-  border-radius: 8px;
-  background: #f4f7f5;
-}
-.fw-safety-terms h3 {
-  margin: 0 0 10px;
-  font-size: 15px;
-}
-.fw-safety-terms dl {
-  display: grid;
-  gap: 10px;
-  margin: 0 0 10px;
-}
-.fw-safety-terms dt {
-  font-size: 13px;
-  font-weight: 700;
-  color: #19332f;
-}
-.fw-safety-terms dd {
-  margin: 2px 0 0;
-  font-size: 13px;
-  line-height: 1.55;
-  color: #4d6259;
-}
-.fw-safety-terms p {
-  margin: 0;
-  font-size: 11.5px;
-  color: #657570;
-}
 
 /* Source sections (GDACS, NHC, NWS): a title, one line of context, rows split by hairlines. */
-.fw-feed {
-  margin: 36px 0 0;
-}
-.fw-feed-head h2 {
-  margin: 0 0 4px;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-  color: #12302b;
-}
-.fw-feed-head p {
-  margin: 0 0 12px;
-  font-size: 13px;
-  color: #66756f;
-}
-.fw-feed-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid #e1e7e3;
-  border-bottom: 1px solid #e1e7e3;
-  background: #fff;
-}
-.fw-feed-list > li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 3px 24px;
-  padding: 14px 16px;
-}
-.fw-feed-list > li + li {
-  border-top: 1px solid #e1e7e3;
-}
-.fw-feed-main {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 14px;
-}
-.fw-feed-main strong {
-  font-size: 16px;
-  font-weight: 600;
-  color: #12302b;
-}
-.fw-feed-list > li > p {
-  grid-column: 1;
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: #4d625b;
-  font-variant-numeric: tabular-nums;
-}
-.fw-feed-list > li > p.fw-feed-old {
-  color: #8a5a12;
-}
-.fw-feed-list > li > a,
-.fw-feed-links {
-  grid-column: 2;
-  grid-row: 1 / span 3;
-  align-self: center;
-}
-.fw-feed-links {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-.fw-feed-list a {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 36px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #285b50;
-}
 /* Level words carry their color in a small disc, never in a filled box. */
-.fw-level {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #4d625b;
-}
-.fw-level::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #8aa298;
-}
-.fw-level[data-level='green']::before {
-  background: #3f8a55;
-}
-.fw-level[data-level='orange'] {
-  color: #9a4a12;
-}
-.fw-level[data-level='orange']::before {
-  background: #c66a1b;
-}
-.fw-level[data-level='red'] {
-  color: #a12b33;
-}
-.fw-level[data-level='red']::before {
-  background: #b3343c;
-}
-.fw-level[data-level='info']::before {
-  background: #24526a;
-}
-.fw-feed-empty,
-.fw-feed-problem {
-  margin: 0;
-  padding: 14px 16px;
-  border-top: 1px solid #e1e7e3;
-  border-bottom: 1px solid #e1e7e3;
-  background: #fff;
-  font-size: 14px;
-  color: #4d625b;
-}
-.fw-feed-problem {
-  color: #7a4a10;
-  background: #fbf6ec;
-}
-.fw-feed-note {
-  margin: 10px 0 0;
-  max-width: 90ch;
-  font-size: 12px;
-  line-height: 1.6;
-  color: #66756f;
-}
-.fw-feed-note a {
-  color: #285b50;
-}
-.fw-feed .fw-link-button {
-  color: #285b50;
-}
-@media (max-width: 760px) {
-  .fw-feed-list,
-  .fw-feed-empty,
-  .fw-feed-problem {
-    margin-inline: -16px;
-  }
-  .fw-feed-list > li {
-    grid-template-columns: 1fr;
-  }
-  .fw-feed-list > li > a,
-  .fw-feed-links {
-    grid-column: 1;
-    grid-row: auto;
-    align-items: flex-start;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0 18px;
-  }
-}
 
 /* Top bar: place on the left, source status and installation on the right. */
-.fw-feed-aside {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: #4d625b;
-}
 
 /* Official response to a specific disaster: dated facts, then how to help, then sources. */
 .fw-response h3 {
@@ -283,34 +65,5 @@
   font-weight: 700;
   color: var(--ink-strong);
 }
-.fw-response .fw-link-rows {
-  border-top: 1px solid var(--hair);
-  border-bottom: 1px solid var(--hair);
-}
-@media (max-width: 760px) {
-  .fw-response .fw-link-rows a {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
 
 /* Labels in sentence case: no tracked-out capitals anywhere in the interface. */
-:is(
-  .fw-message-reason legend,
-  .fw-latest-place .fw-latest-kicker,
-  .fw-safety-index > span,
-  .fw-safety-group > small,
-  .fw-eyebrow,
-  .fw-mag small,
-  .fw-safety-document header > span,
-  .fw-contact-group-title
-) {
-  text-transform: none;
-  letter-spacing: 0;
-}
-.fw-safety-index > span,
-.fw-safety-group > small {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #5d6f69;
-}

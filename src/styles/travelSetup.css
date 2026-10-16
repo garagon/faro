@@ -24,88 +24,9 @@
 .fw-app a > svg {
   flex-shrink: 0;
 }
-.fw-monitor-check button {
-  min-height: 44px;
-}
-.fw-monitor-foot button {
-  min-height: 44px;
-}
-.fw-arrival-actions button,
-.fw-arrival-dismiss {
-  min-height: 44px;
-  min-width: 44px;
-}
-.fw-latest-actions button {
-  min-height: 44px;
-}
 @media (max-width: 760px) {
-  .fw-toolbar select,
-  .fw-filter-extra > summary {
-    min-height: 44px;
-    height: auto;
-  }
   .fw-save-feedback {
     font-size: 12px;
-  }
-  .fw-app .fw-event > span small {
-    font-size: 11px;
-  }
-}
-.fw-local-data {
-  margin: -8px 0 24px;
-  border-bottom: 1px solid #d5dfd9;
-  padding: 0 2px 14px;
-  color: #3e5c50;
-  font-size: 12px;
-}
-.fw-local-data summary {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  font-weight: 600;
-}
-.fw-local-data summary:after {
-  content: '+';
-  margin-left: auto;
-  font-size: 20px;
-  font-weight: 400;
-}
-.fw-local-data[open] summary:after {
-  content: '−';
-}
-.fw-local-data > div {
-  max-width: 780px;
-  padding: 0 0 4px 27px;
-  line-height: 1.7;
-}
-.fw-local-data p {
-  margin: 0 0 12px;
-}
-.fw-local-data dl {
-  margin: 16px 0 0;
-}
-.fw-local-data dl > div {
-  display: grid;
-  grid-template-columns: 155px 1fr;
-  gap: 18px;
-  padding: 10px 0;
-  border-top: 1px solid #e0e6e1;
-}
-.fw-local-data dt {
-  font-weight: 600;
-}
-.fw-local-data dd {
-  margin: 0;
-}
-@media (max-width: 600px) {
-  .fw-local-data dl > div {
-    grid-template-columns: 1fr;
-    gap: 3px;
-  }
-  .fw-local-data > div {
-    padding-left: 0;
   }
 }
 

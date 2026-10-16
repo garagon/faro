@@ -11,46 +11,23 @@
 
 /* Secondary text: one grey that passes on white (6.5:1) and on the page background (6.0:1). */
 .fw-app,
-.fw-info-dialog,
-.fw-event-dialog,
-.fw-trip {
+.fw-info-dialog {
   --muted: var(--text-muted);
   --quiet: var(--text-muted);
 }
 
 /* Focus: dark ring on light surfaces, white ring on the dark sidebar and top bar. */
 .fw-app :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
-.fw-info-dialog :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
-.fw-event-dialog :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+.fw-info-dialog :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
-}
-.fw-app .fw-status-options label:focus-within {
-  outline-color: var(--focus);
 }
 
 /* Navigation on phones: 12px labels in the readable grey. */
 
 /* Footer, disclaimer and source times: never below 12px. */
-.fw-app .fw-disclaimer,
-.fw-app .fw-disclaimer p {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-.fw-app :is(.fw-monitor-check > span) {
-  font-size: 12px;
-}
-.fw-app .fw-message-body p:last-child {
-  color: var(--text-muted);
-}
 
 /* Earthquake list: the place and the time are what people read first. */
-.fw-app .fw-event > span b {
-  font-size: 14px;
-}
-.fw-app .fw-event > span small {
-  font-size: 13px;
-}
 
 /* Earthquake list header: the count, which rows are shown and the order. */
 .fw-app .fw-events-title p {
@@ -71,54 +48,18 @@
 }
 
 /* Guide steps are instructions: full size and full contrast. */
-.fw-app .fw-safety-steps li > span {
-  border-color: #c9d6cf;
-  background: #eef3ef;
-  color: #2f4a43;
-  font-size: 13px;
-  font-weight: 700;
-}
-.fw-app .fw-safety-steps p {
-  font-size: 16px;
-  line-height: 1.55;
-  color: #12302b;
-}
 
 /* "Call first" on the status screen is a safety sentence. */
-.fw-app .fw-status-help > p {
-  font-size: 14px;
-  line-height: 1.5;
-  color: #12302b;
-}
 
 /* Help presets and "Edit details" are buttons: a white face, a visible edge, a dark selection. */
-.fw-app .fw-needs-presets button {
-  border-color: var(--line-control);
-  background: #fff;
-  color: #12302b;
-}
-.fw-app .fw-needs-presets button[aria-pressed='true'] {
-  border-color: #1d4f45;
-  background: #1d4f45;
-  color: #fff;
-}
-.fw-app .fw-edit-message {
-  border-color: var(--line-control);
-  background: #fff;
-  color: #12302b;
-  font-weight: 600;
-}
 
 /* While the emergency screen is open, its button shows it is the current page. */
 
 /* Footer link to the sources page: looks like the other footer links. */
 
 /* Touch targets: every control at least 44px tall. */
-.fw-app :is(.fw-ext, .fw-text, .fw-link-button, .fw-map-foot > button, .fw-icon) {
+.fw-app :is(.fw-ext, .fw-map-foot > button) {
   min-height: 44px;
-}
-.fw-app .fw-icon {
-  min-width: 44px;
 }
 .fw-app .fw-events-title select {
   min-height: 44px;
@@ -128,76 +69,14 @@
   height: 44px;
   line-height: 44px;
 }
-.fw-app
-  :is(
-    .fw-consular-route-mode button,
-    .fw-care-areas button,
-    .fw-kit-hazards button,
-    .fw-trip-coordinates > summary,
-    .fw-magnitude-legend summary,
-    .fw-share-more button,
-    .fw-share-channel
-  ) {
+.fw-app :is(.fw-care-areas button) {
   min-height: 44px;
 }
 /* Links that stand alone (sources, credits): a full-height tap area. */
-.fw-app :is(.fw-safety-layout figcaption a, .fw-safety-document footer a, .fw-evacuation > a) {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
 
 /* Smallest readable size: 12px, 13px for labels that name a control. */
-.fw-app
-  :is(
-    .fw-toolbar label,
-    .fw-filter-extra > summary,
-    .fw-filter-location small,
-    .fw-monitor-check button,
-    .fw-resource small,
-    .fw-draft-badge,
-    .fw-safety-mobile-label,
-    .fw-safety-download button,
-    .fw-safety-document footer,
-    .fw-safety-document footer a
-  ) {
-  font-size: 13px;
-}
-.fw-app .fw-resource .fw-eyebrow {
-  font-size: 12px;
-  letter-spacing: 0;
-  text-transform: none;
-}
-.fw-app .fw-contact-group-title {
-  font-size: 13px;
-  letter-spacing: 0;
-  text-transform: none;
-}
-.fw-app .fw-safety-index select {
-  min-height: 44px;
-}
-.fw-app .fw-safety-download button {
-  min-height: 44px;
-}
 
 /* No side stripes. Notes are plain text under a hairline; cards keep one even edge. */
-.fw-app :is(.fw-preparation-note, .fw-safety-note, .fw-message-notice, .fw-chile-guidance) {
-  margin-top: 12px;
-  padding: 10px 0 0;
-  border: 0;
-  border-top: 1px solid #dde5e0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  color: #4f625c;
-}
-.fw-app :is(.fw-emergency-numbers) {
-  border-left: 0;
-}
-.fw-app .fw-event.is-new {
-  border-left: 0;
-  background: #f4f8f6;
-}
 .fw-app .fw-checkin-reminder {
   border: 1px solid #ae8138;
   border-radius: 12px;
@@ -297,9 +176,6 @@
 /* One per row on a phone, two side by side on medium cards, four on wide ones: rows stay even. */
 /* Saved countries: readable chips, never the country already on screen. */
 /* Phone menu: icons on one line whether the label takes one line or two. */
-.fw-app .fw-kit-count {
-  white-space: nowrap;
-}
 /* A link inside a sentence stays part of the line: 44px boxes opened gaps mid-sentence. WCAG
    exempts links in running text from the target size; standalone links keep it. */
 .fw-app :is(p, small, li) > .fw-ext {

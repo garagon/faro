@@ -61,91 +61,6 @@
 }
 
 /* Earthquake page: filters and update status in one card, then coverage and legend, then list. */
-.fw-app .fw-home-panel .fw-query-controls {
-  margin: 0;
-  padding: 0;
-}
-.fw-app .fw-home-panel .fw-query-filters {
-  margin: 0;
-  border: 1px solid var(--board-hair);
-  border-radius: 12px 12px 0 0;
-  background: #fff;
-  box-shadow: none;
-}
-.fw-app .fw-home-panel .fw-query-filters > summary {
-  min-height: 52px;
-  padding: 0 16px;
-  font-size: 14px;
-}
-.fw-app .fw-home-panel .fw-query-filters > summary span {
-  font-size: 14px;
-  color: var(--board-muted);
-}
-.fw-app .fw-home-panel .fw-monitor {
-  margin: 0 0 12px;
-  padding: 0;
-  border: 1px solid var(--board-hair);
-  border-top: 0;
-  border-radius: 0 0 12px 12px;
-  background: #fff;
-  box-shadow: none;
-}
-.fw-app .fw-home-panel .fw-monitor-connection {
-  margin: 0;
-  padding: 10px 16px;
-  border: 0;
-  border-radius: 0;
-  background: none;
-}
-.fw-app .fw-home-panel .fw-monitor-connection strong {
-  font-size: 14px;
-}
-.fw-app .fw-home-panel .fw-monitor-connection :is(span, .fw-monitor-check > span) {
-  font-size: 13px;
-  color: var(--board-muted);
-}
-.fw-app .fw-home-panel .fw-monitor-foot {
-  margin: 0;
-  padding: 8px 16px;
-  border-top: 1px solid var(--board-hair);
-  font-size: 13px;
-  color: var(--board-muted);
-}
-.fw-app .fw-home-panel .fw-monitor-foot button {
-  min-height: 44px;
-  font-size: 13px;
-}
-.fw-app .fw-quake-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 24px;
-  margin: 0 0 12px;
-}
-.fw-app .fw-quake-meta > .fw-area-scope {
-  margin: 0;
-  font-size: 13px;
-  color: var(--board-muted);
-}
-.fw-app .fw-quake-meta .fw-magnitude-legend {
-  margin: 0;
-}
-@media (max-width: 760px) {
-  .fw-app .fw-home-panel .fw-monitor-check {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    width: 100%;
-  }
-  .fw-app .fw-home-panel .fw-monitor-foot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0 12px;
-  }
-}
 
 /* Urgent official message (a recent NOAA tsunami threat): the warning tone, never call red. */
 .fw-app .fw-tsunami-banner {
@@ -176,94 +91,11 @@
   line-height: 1.5;
   color: #3d2a08;
 }
-.fw-app .fw-tsunami-banner :is(.fw-ext, .fw-link-button) {
+.fw-app .fw-tsunami-banner :is(.fw-ext) {
   color: #4a3207;
 }
 
 /* Detail tabs: each panel is one board card; the status leads, then the detail. */
-.fw-app .fw-home-panel :is(.fw-coast, .fw-feed) {
-  margin: 0;
-  padding: 0 0 4px;
-  border: 1px solid var(--board-hair);
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: none;
-  overflow: hidden;
-}
-.fw-app .fw-home-panel .fw-coast > *,
-.fw-app .fw-home-panel .fw-feed > :not(ul):not(ol) {
-  margin-right: 20px;
-  margin-left: 20px;
-}
-.fw-app .fw-home-panel :is(.fw-coast, .fw-feed) > :is(.fw-coast-title, .fw-feed-head) {
-  margin: 0;
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--board-hair);
-  background: none;
-}
-.fw-app .fw-home-panel :is(.fw-coast-title, .fw-feed-head) h2 {
-  margin: 0;
-  font-family: 'Public Sans', sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--board-ink);
-}
-.fw-app .fw-home-panel :is(.fw-coast-title small, .fw-feed-head p) {
-  font-size: 13px;
-  color: var(--board-muted);
-}
-.fw-app .fw-home-panel .fw-tsunami-status {
-  margin-top: 16px;
-  margin-bottom: 16px;
-  padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-}
-.fw-app .fw-home-panel .fw-tsunami-status > strong {
-  display: block;
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--board-ink);
-}
-.fw-app
-  .fw-home-panel
-  .fw-tsunami-status:is([data-state='review'], [data-state='unresolved'])
-  > strong {
-  color: #6b4610;
-}
-.fw-app .fw-home-panel .fw-tsunami-status > p {
-  margin: 4px 0 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--board-muted);
-}
-.fw-app .fw-home-panel .fw-coast-now {
-  margin-top: 0;
-  margin-bottom: 16px;
-  border-radius: 10px;
-}
-.fw-app .fw-home-panel :is(.fw-coast-where, .fw-nws, .fw-bulletin-archive, .fw-coast-foot) {
-  padding-top: 14px;
-  border-top: 1px solid var(--board-hair);
-  border-right: 0;
-  border-bottom: 0;
-  border-left: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-.fw-app .fw-home-panel .fw-feed > :is(ul, ol) {
-  margin: 0;
-  border: 0;
-}
-.fw-app .fw-home-panel .fw-feed .fw-feed-note {
-  margin-top: 12px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  color: var(--board-muted);
-}
 
 /* Go bag on the board system: a plain warning line, one card per step, figures without boxes,
    one list with hairlines. A ticked item shows its check, not a tint. */
@@ -296,104 +128,10 @@
 }
 
 /* International alerts: the answer first, then one plain row per event. */
-.fw-app .fw-home-panel .fw-alerts-answer {
-  margin: 16px 20px 4px;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--board-ink);
-}
-.fw-app .fw-home-panel .fw-alerts .fw-feed-list {
-  margin: 8px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.fw-app .fw-alert-row {
-  display: grid;
-  grid-template-columns: 10px minmax(0, 1fr);
-  gap: 14px;
-  padding: 14px 20px;
-  border-top: 1px solid var(--board-hair);
-}
-.fw-app .fw-alert-row:last-child {
-  border-bottom: 1px solid var(--board-hair);
-}
-.fw-app .fw-alert-dot {
-  width: 10px;
-  height: 10px;
-  margin-top: 7px;
-  border-radius: 50%;
-  background: #3f8a55;
-}
-.fw-app .fw-alert-row[data-level='orange'] .fw-alert-dot {
-  background: #c66a1b;
-}
-.fw-app .fw-alert-row[data-level='red'] .fw-alert-dot {
-  background: #6d3a8f;
-}
-.fw-app .fw-alert-row strong {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--board-ink);
-}
-.fw-app .fw-alert-row p {
-  max-width: 72ch;
-  margin: 4px 0 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--board-body);
-}
-.fw-app .fw-alert-row .fw-alert-when {
-  font-size: 13px;
-  color: var(--board-muted);
-  font-variant-numeric: tabular-nums;
-}
-.fw-app .fw-alert-row a {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 44px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #205f50;
-}
-.fw-app .fw-home-panel .fw-alerts :is(.fw-feed-aside, .fw-feed-note) {
-  margin: 12px 20px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--board-muted);
-}
-@media (max-width: 760px) {
-  .fw-app .fw-alert-row {
-    padding: 14px 16px;
-  }
-  .fw-app .fw-home-panel .fw-alerts-answer,
-  .fw-app .fw-home-panel .fw-alerts :is(.fw-feed-aside, .fw-feed-note) {
-    margin-right: 16px;
-    margin-left: 16px;
-  }
-}
 /* Same weight as the shared card rule, later in the file: the setup card never clips (and so
    never scrolls its own content) when the country list opens. */
 
 /* Local help: the shelter pointer is a card like its neighbours, not a tinted panel. */
-.fw-app .fw-help-summary {
-  margin: 0 0 16px;
-  padding: 18px 20px;
-  border: 1px solid var(--board-hair);
-  border-radius: 12px;
-  background: #fff;
-  color: var(--board-body);
-}
-.fw-app .fw-help-summary h2 {
-  color: var(--board-ink);
-}
-.fw-app .fw-help-summary p {
-  font-size: 14px;
-  color: var(--board-body);
-}
-.fw-app .fw-help-summary > svg {
-  color: var(--board-muted);
-}
 
 /* Offline map through the Google Maps app: a card like Local help's, with numbered steps. */
 .fw-app .fw-offline-map {
@@ -423,12 +161,6 @@
   font-size: 14px;
   line-height: 1.5;
 }
-.fw-app .fw-offline-map .fw-offline-map-open {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-weight: 600;
-}
 .fw-app .fw-offline-map ol {
   margin: 0;
   padding-left: 20px;
@@ -437,11 +169,6 @@
 }
 .fw-app .fw-offline-map li + li {
   margin-top: 4px;
-}
-.fw-app .fw-offline-map .fw-offline-map-note {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--board-muted);
 }
 @media (max-width: 760px) {
   .fw-app .fw-offline-map {

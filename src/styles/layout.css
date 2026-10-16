@@ -18,17 +18,7 @@
  * The gutter matches the bar's negative margin: 32px, or 24px up to 1200px wide.
  */
 /* Nested screen wrappers fill the column instead of setting their own width. */
-.fw-home-tabs,
-.fw-traveler,
-.fw-safety-layout {
-  max-width: none;
-}
 
 /* Touch screens keep :hover after a tap; only the current screen may look selected. */
 /* Focus must stay visible on the dark sidebar and header (3:1 against #143d35). */
 /* Tabs that do not fit: a soft edge says the row scrolls. */
-@media (max-width: 760px) {
-  .fw-home-tablist {
-    mask-image: linear-gradient(to right, #000 85%, transparent);
-  }
-}
