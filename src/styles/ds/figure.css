@@ -1,0 +1,35 @@
+/*
+ * Figure: an illustration beside written steps. It sits on the surface with a fine border, like
+ * a list, and is never wider than a phone (the call button's width), so labels drawn inside it
+ * stay at caption size on a wide screen. The caption is a caption: 14 / 400, muted.
+ */
+.f-figure {
+  display: grid;
+  gap: var(--f-space-2);
+  max-width: var(--f-call-width);
+  margin: 0;
+}
+.f-figure-media {
+  overflow: hidden;
+  border: var(--f-hairline);
+  border-radius: var(--f-radius-md);
+  background: var(--f-color-surface);
+}
+.f-figure-media[data-inset] {
+  padding: var(--f-space-3);
+}
+.f-figure-media :where(a, img, svg) {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* An enlargeable image: the focus ring sits in the inset, clear of the artwork's own frame. */
+.f-figure-media :where(a):focus-visible {
+  outline: 3px solid var(--f-color-focus);
+  outline-offset: 2px;
+}
+.f-figure-caption {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  line-height: var(--f-leading-snug);
+}

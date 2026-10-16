@@ -4,9 +4,27 @@ import EvacuationPlan from './EvacuationPlan.tsx';
 import { kitText } from '../data/emergencyKit.ts';
 import { destinationFor } from '../data/destinations/index.ts';
 import { useState } from 'react';
-import { ArrowUpRightIcon, DownloadSimpleIcon, ArrowRightIcon } from '@phosphor-icons/react';
+import {
+  ArrowUpRightIcon,
+  BuildingOfficeIcon,
+  DownloadSimpleIcon,
+  MapTrifoldIcon,
+} from '@phosphor-icons/react';
 import type { Lang } from '../lib/resources.ts';
 import { langIndex, langTag, pick, type Localized } from '../lib/i18n.ts';
+import {
+  Button,
+  Figure,
+  IndexNav,
+  List,
+  ListRow,
+  Note,
+  OutLink,
+  RowIcon,
+  SafetyNotice,
+  SelectField,
+  Steps,
+} from '../ui/index.ts';
 
 type Copy = Localized;
 // "During" uses the attributed ShakeOut graphic and "kit" its own checklist drawing.
@@ -837,6 +855,8 @@ const sections: Section[] = [
     url: '',
   },
 ];
+/** Notes that say how to read the topic (Faro's adaptation, privacy) rather than what to do. */
+const readingNotes = new Set(['contacts', 'kit']);
 const outdoors: Copy = [
   'En el exterior, permanece fuera y aléjate de edificios y cables.',
   'Outdoors, stay outside and away from buildings and power lines.',
@@ -936,287 +956,318 @@ export default function SafetyGuide({
     downloadText(guideText(lang, country), `faro-guide-${lang}.txt`);
     setDownloaded(true);
   };
+  // The go bag opens its own screen; every other topic opens here.
+  const choose = (id: string) => (id === 'kit' ? onKit() : setActive(id));
+  const scene = scenes[active];
+  // The evacuation plan repeats the civil protection link, so it is listed once.
+  const plan = active === 'hotel' || active === 'coast';
+  const topicLabel = t('Temas', 'Topics', 'Temas');
+  const out = <ArrowUpRightIcon size={16} aria-hidden="true" />;
+  const agency = <RowIcon icon={<BuildingOfficeIcon size={20} aria-hidden="true" />} />;
+  const sourceLanguage =
+    sourceLang(current, lang) !== lang
+      ? ` (${
+          sourceLang(current, lang) === 'es'
+            ? t('', 'in Spanish', 'em espanhol')
+            : t('en inglés', '', 'em inglês')
+        })`
+      : '';
   return (
-    <div className="fw-safety-layout">
-      <aside className="fw-safety-index">
-        <span>{t('Temas', 'Topics', 'Temas')}</span>
-        <nav aria-label={t('Situaciones de la guía', 'Guide situations', 'Situações do guia')}>
-          {groups.map((g) => (
-            <div key={g.id} className="fw-safety-group">
-              <small>{g.label[i]}</small>
-              {sections
-                .filter((s) => s.group === g.id)
-                .map((s) => (
-                  <button
-                    key={s.id}
-                    aria-current={active === s.id ? 'true' : undefined}
-                    onClick={() => (s.id === 'kit' ? onKit() : setActive(s.id))}
-                  >
-                    {s.label[i]}
-                    <ArrowRightIcon size={15} />
-                  </button>
-                ))}
+    <div className="f-split">
+      <div className="f-column">
+        <div className="f-when-single">
+          <SelectField
+            id="guide-situation"
+            label={topicLabel}
+            value={active}
+            onChange={(e) => choose(e.target.value)}
+          >
+            {groups.map((g) => (
+              <optgroup key={g.id} label={g.label[i]}>
+                {sections
+                  .filter((s) => s.group === g.id)
+                  .map((s) => (
+                    <option value={s.id} key={s.id}>
+                      {s.label[i]}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+          </SelectField>
+        </div>
+        <article className="f-column" aria-labelledby="safety-title" key={active}>
+          <div className="f-stack">
+            <div className="f-prose">
+              <h2 id="safety-title" className="f-section-title">
+                {current.title[i]}
+              </h2>
+              <p>{current.intro[i]}</p>
             </div>
-          ))}
-        </nav>
-        <label htmlFor="guide-situation" className="fw-safety-mobile-label">
-          {t('Temas', 'Topics', 'Temas')}
-        </label>
-        <select
-          id="guide-situation"
-          value={active}
-          onChange={(e) => (e.target.value === 'kit' ? onKit() : setActive(e.target.value))}
-        >
-          {groups.map((g) => (
-            <optgroup key={g.id} label={g.label[i]}>
-              {sections
-                .filter((s) => s.group === g.id)
-                .map((s) => (
-                  <option value={s.id} key={s.id}>
-                    {s.label[i]}
-                  </option>
-                ))}
-            </optgroup>
-          ))}
-        </select>
-        <div className="fw-safety-download">
-          <button onClick={download}>
-            <DownloadSimpleIcon size={17} />
-            {t('Descargar guía', 'Download guide', 'Baixar guia')}
-          </button>
-          <small>
-            {t(
-              'Texto · todas las situaciones · español',
-              'Text · all situations · English',
-              'Texto · todas as situações · português',
+            {active === 'during' && (
+              <div className="f-stack" data-gap="sm">
+                <Figure
+                  inset
+                  caption={
+                    <>
+                      <a
+                        href="https://www.earthquakecountry.org/graphics/"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t(
+                          'Ilustración: ShakeOut, Earthquake Country Alliance',
+                          'Illustration: ShakeOut, Earthquake Country Alliance',
+                          'Ilustração: ShakeOut, Earthquake Country Alliance',
+                        )}
+                      </a>
+                      .{' '}
+                      {t(
+                        'Toca la imagen para ampliarla.',
+                        'Tap the image to enlarge.',
+                        'Imagem em espanhol. Toque para ampliar.',
+                      )}
+                    </>
+                  }
+                >
+                  <a
+                    href={`/illustrations/drop-cover-hold-${shakeOutLang}.png`}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label={t(
+                      'Ampliar las instrucciones ilustradas',
+                      'Enlarge illustrated instructions',
+                      'Ampliar as instruções ilustradas (em espanhol)',
+                    )}
+                  >
+                    <img
+                      src={`/illustrations/drop-cover-hold-${shakeOutLang}.png`}
+                      width="1920"
+                      height="631"
+                      alt={t(
+                        'Agáchate sobre manos y rodillas. Cubre cabeza y cuello bajo una mesa resistente. Sujeta la mesa con una mano y sigue protegiéndote con la otra.',
+                        'Drop onto your hands and knees. Cover your head and neck under a sturdy table. Hold the table with one hand and keep protecting yourself with the other.',
+                        'Imagem em espanhol. Abaixe-se sobre as mãos e os joelhos. Proteja a cabeça e o pescoço debaixo de uma mesa resistente. Segure a mesa com uma mão e continue se protegendo com a outra.',
+                      )}
+                    />
+                  </a>
+                </Figure>
+                <OutLink
+                  href={`https://www.earthquakecountry.org/library/Accessible_Earthquake_Protective_Actions_Image-${shakeOutLang === 'es' ? 'SP' : 'EN'}.pdf`}
+                >
+                  {t(
+                    'Guía ilustrada: bastón, andador y silla de ruedas (PDF)',
+                    'Illustrated guide: cane, walker and wheelchair (PDF)',
+                    'Guia ilustrado: bengala, andador e cadeira de rodas (PDF em espanhol)',
+                  )}
+                </OutLink>
+              </div>
             )}
-          </small>
-          <span role="status">
+            {scene && (
+              <Figure
+                caption={t(
+                  'Esquema de Faro. Las instrucciones son las del texto; sigue a las autoridades locales.',
+                  'Faro diagram. The written steps are the instructions; follow local authorities.',
+                  'Esquema do Faro. As instruções são as do texto; siga as autoridades locais.',
+                )}
+              >
+                <SafetyIllustration scene={scene} lang={lang} />
+              </Figure>
+            )}
+            <Steps
+              items={current.steps.map((step, n) => ({
+                id: `${active}-${n}`,
+                text: (
+                  <>
+                    <h3 className="f-subhead">{step.title[i]}</h3>
+                    {step.body[i]}
+                  </>
+                ),
+              }))}
+            />
+            {current.note &&
+              (readingNotes.has(active) ? (
+                <Note>{current.note[i]}</Note>
+              ) : (
+                <SafetyNotice>{current.note[i]}</SafetyNotice>
+              ))}
+            {active === 'during' && <SafetyNotice>{outdoors[i]}</SafetyNotice>}
+            <Note>
+              {current.url ? (
+                <>
+                  {t('Resumen de recomendaciones', 'Guidance summary', 'Resumo de recomendações')}:{' '}
+                  <a href={sourceUrl(current, lang)} target="_blank" rel="noreferrer">
+                    {current.source}
+                  </a>
+                  {sourceLanguage}.
+                </>
+              ) : (
+                <>
+                  {t(
+                    'Lista de preparación para viajeros',
+                    'Travel preparation checklist',
+                    'Lista de preparação para viajantes',
+                  )}
+                  {' · '}
+                  {t(
+                    'Confirmar con recepción',
+                    'Confirm with reception',
+                    'Confirmar com a recepção',
+                  )}
+                  .
+                </>
+              )}
+            </Note>
+            {active === 'contacts' && (
+              <Button onClick={onStatus}>
+                {t('Preparar mi actualización', 'Prepare my update', 'Preparar minha atualização')}
+              </Button>
+            )}
+          </div>
+          {current.terms && (
+            <section className="f-section" aria-labelledby="safety-terms">
+              <h3 id="safety-terms" className="f-section-title">
+                {t('Vigilancia y aviso', 'Watch and warning', 'Vigilância e aviso')}
+              </h3>
+              <div className="f-prose">
+                <dl>
+                  {current.terms.map((x) => (
+                    <div key={x.term[1]}>
+                      <dt>{x.term[i]}</dt>
+                      <dd>{x.meaning[i]}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+              <Note
+                more={
+                  <a
+                    href="https://www.nhc.noaa.gov/aboutgloss.shtml"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {t('Glosario del NHC', 'NHC glossary', 'Glossário do NHC')}
+                  </a>
+                }
+              >
+                {t(
+                  'Términos del Centro Nacional de Huracanes (NHC). Cada país puede usar los suyos: sigue los avisos de su servicio meteorológico.',
+                  'National Hurricane Center (NHC) terms. Each country may use its own: follow its meteorological service.',
+                  'Termos do Centro Nacional de Furacões (NHC). Cada país pode usar os seus: siga os avisos do serviço meteorológico local.',
+                )}
+              </Note>
+            </section>
+          )}
+          {active === 'during' && country === 'CL' && (
+            <div className="f-stack">
+              <SafetyNotice>
+                {t(
+                  'En Chile, SENAPRED distingue las construcciones de adobe o autoconstruidas: recomienda evacuarlas inmediatamente. Identifica el tipo de construcción y el plan de tu alojamiento antes de una emergencia.',
+                  'In Chile, SENAPRED distinguishes adobe and self-built structures: it recommends evacuating them immediately. Identify your accommodation’s construction type and plan before an emergency.',
+                  'No Chile, o SENAPRED distingue as construções de adobe ou autoconstruídas: recomenda evacuá-las imediatamente. Identifique o tipo de construção e o plano da sua hospedagem antes de uma emergência.',
+                )}
+              </SafetyNotice>
+              <List>
+                <ListRow
+                  href="https://www.senapred.gov.cl/sismos/"
+                  external
+                  lead={agency}
+                  title={t('SENAPRED: sismos', 'SENAPRED: earthquakes', 'SENAPRED: terremotos')}
+                  trail={out}
+                />
+              </List>
+            </div>
+          )}
+          {active === 'coast' && country === 'CL' && (
+            <div className="f-stack">
+              <Note>
+                {t(
+                  'SENAPRED recomienda conocer previamente las rutas y puntos de encuentro de la localidad que visitas. Los planos siguientes corresponden solo a Chile.',
+                  'SENAPRED recommends knowing the routes and assembly points in the place you visit. The following maps cover Chile only.',
+                  'O SENAPRED recomenda conhecer antes as rotas e os pontos de encontro do lugar que você visita. Os mapas a seguir são apenas do Chile.',
+                )}
+              </Note>
+              <List>
+                <ListRow
+                  href="https://www.senapred.gov.cl/tsunami/"
+                  external
+                  lead={agency}
+                  title={t(
+                    'Recomendaciones de SENAPRED, Chile',
+                    'SENAPRED guidance, Chile',
+                    'Recomendações do SENAPRED, Chile',
+                  )}
+                  trail={out}
+                />
+                <ListRow
+                  href="https://senapred.cl/planos-de-evacuacion/"
+                  external
+                  lead={<RowIcon icon={<MapTrifoldIcon size={20} aria-hidden="true" />} />}
+                  title={t(
+                    'Planos de evacuación de Chile',
+                    'Chile evacuation maps',
+                    'Mapas de evacuação do Chile',
+                  )}
+                  trail={out}
+                />
+              </List>
+            </div>
+          )}
+          {country !== 'CL' && destination?.civilProtection && !plan && (
+            <List>
+              <ListRow
+                href={destination.civilProtection.url}
+                external
+                lead={agency}
+                title={`${t('Indicaciones locales de', 'Local guidance from', 'Orientações locais:')} ${destination.civilProtection.name}`}
+                meta={t(
+                  'Confirma las instrucciones y las rutas de evacuación del lugar donde estás.',
+                  'Check the instructions and evacuation routes for your location.',
+                  'Confirme as instruções e as rotas de evacuação do lugar onde você está.',
+                )}
+                trail={out}
+              />
+            </List>
+          )}
+          {plan && <EvacuationPlan country={country} lang={lang} />}
+          {active === 'hotel' && (
+            <Button onClick={onHotel}>
+              {t('Guardar plan del hotel', 'Save hotel plan', 'Salvar plano do hotel')}
+            </Button>
+          )}
+        </article>
+        <div className="f-stack" data-gap="sm">
+          <List>
+            <ListRow
+              onClick={download}
+              lead={<RowIcon icon={<DownloadSimpleIcon size={20} aria-hidden="true" />} />}
+              title={t('Descargar guía', 'Download guide', 'Baixar guia')}
+              meta={t(
+                'Texto · todas las situaciones · español',
+                'Text · all situations · English',
+                'Texto · todas as situações · português',
+              )}
+              trail={false}
+            />
+          </List>
+          <span className="f-field-hint" role="status">
             {downloaded ? t('Archivo generado.', 'File generated.', 'Arquivo gerado.') : ''}
           </span>
         </div>
+      </div>
+      <aside className="f-when-split">
+        <IndexNav
+          label={t('Situaciones de la guía', 'Guide situations', 'Situações do guia')}
+          groups={groups.map((g) => ({
+            id: g.id,
+            label: g.label[i],
+            items: sections
+              .filter((s) => s.group === g.id)
+              .map((s) => ({ id: s.id, label: s.label[i] })),
+          }))}
+          value={active}
+          onChange={choose}
+        />
       </aside>
-      <article className="fw-safety-document" aria-labelledby="safety-title" key={active}>
-        <header>
-          <span>{current.label[i]}</span>
-          <h2 id="safety-title">{current.title[i]}</h2>
-          <p>{current.intro[i]}</p>
-        </header>
-        {active === 'during' && (
-          <figure className="fw-official-instructions">
-            <a
-              href={`/illustrations/drop-cover-hold-${shakeOutLang}.png`}
-              target="_blank"
-              rel="noopener"
-              aria-label={t(
-                'Ampliar las instrucciones ilustradas',
-                'Enlarge illustrated instructions',
-                'Ampliar as instruções ilustradas (em espanhol)',
-              )}
-            >
-              <img
-                src={`/illustrations/drop-cover-hold-${shakeOutLang}.png`}
-                width="1920"
-                height="631"
-                alt={t(
-                  'Agáchate sobre manos y rodillas. Cubre cabeza y cuello bajo una mesa resistente. Sujeta la mesa con una mano y sigue protegiéndote con la otra.',
-                  'Drop onto your hands and knees. Cover your head and neck under a sturdy table. Hold the table with one hand and keep protecting yourself with the other.',
-                  'Imagem em espanhol. Abaixe-se sobre as mãos e os joelhos. Proteja a cabeça e o pescoço debaixo de uma mesa resistente. Segure a mesa com uma mão e continue se protegendo com a outra.',
-                )}
-              />
-            </a>
-            <figcaption>
-              <a
-                href="https://www.earthquakecountry.org/graphics/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t(
-                  'Ilustración: ShakeOut, Earthquake Country Alliance',
-                  'Illustration: ShakeOut, Earthquake Country Alliance',
-                  'Ilustração: ShakeOut, Earthquake Country Alliance',
-                )}
-                <ArrowUpRightIcon size={13} aria-hidden="true" />
-              </a>
-              <span>
-                {t(
-                  'Toca la imagen para ampliarla.',
-                  'Tap the image to enlarge.',
-                  'Imagem em espanhol. Toque para ampliar.',
-                )}
-              </span>
-            </figcaption>
-            <a
-              className="fw-accessible-guide"
-              href={`https://www.earthquakecountry.org/library/Accessible_Earthquake_Protective_Actions_Image-${shakeOutLang === 'es' ? 'SP' : 'EN'}.pdf`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {t(
-                'Guía ilustrada: bastón, andador y silla de ruedas (PDF)',
-                'Illustrated guide: cane, walker and wheelchair (PDF)',
-                'Guia ilustrado: bengala, andador e cadeira de rodas (PDF em espanhol)',
-              )}
-              <ArrowUpRightIcon size={13} aria-hidden="true" />
-            </a>
-          </figure>
-        )}
-        {scenes[active] && (
-          <figure className="fw-guide-illustration">
-            <SafetyIllustration scene={scenes[active]!} lang={lang} />
-            <figcaption>
-              {t(
-                'Esquema de Faro. Las instrucciones son las del texto; sigue a las autoridades locales.',
-                'Faro diagram. The written steps are the instructions; follow local authorities.',
-                'Esquema do Faro. As instruções são as do texto; siga as autoridades locais.',
-              )}
-            </figcaption>
-          </figure>
-        )}
-        <ol className="fw-safety-steps" role="list">
-          {current.steps.map((step, n) => (
-            <li role="listitem" key={n}>
-              <span aria-hidden="true">{n + 1}</span>
-              <div>
-                <h3>{step.title[i]}</h3>
-                <p>{step.body[i]}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
-        {current.note && (
-          <div className="fw-safety-note">
-            <p>{current.note[i]}</p>
-          </div>
-        )}
-        {current.terms && (
-          <section className="fw-safety-terms" aria-labelledby="safety-terms">
-            <h3 id="safety-terms">
-              {t('Vigilancia y aviso', 'Watch and warning', 'Vigilância e aviso')}
-            </h3>
-            <dl>
-              {current.terms.map((x) => (
-                <div key={x.term[1]}>
-                  <dt>{x.term[i]}</dt>
-                  <dd>{x.meaning[i]}</dd>
-                </div>
-              ))}
-            </dl>
-            <p>
-              {t(
-                'Términos del Centro Nacional de Huracanes (NHC). Cada país puede usar los suyos: sigue los avisos de su servicio meteorológico.',
-                'National Hurricane Center (NHC) terms. Each country may use its own: follow its meteorological service.',
-                'Termos do Centro Nacional de Furacões (NHC). Cada país pode usar os seus: siga os avisos do serviço meteorológico local.',
-              )}{' '}
-              <a href="https://www.nhc.noaa.gov/aboutgloss.shtml" target="_blank" rel="noreferrer">
-                {t('Glosario del NHC', 'NHC glossary', 'Glossário do NHC')}
-                <ArrowUpRightIcon size={13} aria-hidden="true" />
-              </a>
-            </p>
-          </section>
-        )}
-        {active === 'during' && <p className="fw-safety-outdoors">{outdoors[i]}</p>}
-        {active === 'during' && country === 'CL' && (
-          <div className="fw-chile-guidance">
-            <p>
-              {t(
-                'En Chile, SENAPRED distingue las construcciones de adobe o autoconstruidas: recomienda evacuarlas inmediatamente. Identifica el tipo de construcción y el plan de tu alojamiento antes de una emergencia.',
-                'In Chile, SENAPRED distinguishes adobe and self-built structures: it recommends evacuating them immediately. Identify your accommodation’s construction type and plan before an emergency.',
-                'No Chile, o SENAPRED distingue as construções de adobe ou autoconstruídas: recomenda evacuá-las imediatamente. Identifique o tipo de construção e o plano da sua hospedagem antes de uma emergência.',
-              )}
-            </p>
-            <a href="https://www.senapred.gov.cl/sismos/" target="_blank" rel="noreferrer">
-              {t('SENAPRED: sismos', 'SENAPRED: earthquakes', 'SENAPRED: terremotos')}
-              <ArrowUpRightIcon size={13} aria-hidden="true" />
-            </a>
-          </div>
-        )}
-        {active === 'contacts' && (
-          <button className="fw-primary" onClick={onStatus}>
-            {t('Preparar mi actualización', 'Prepare my update', 'Preparar minha atualização')}
-            <ArrowRightIcon size={16} />
-          </button>
-        )}
-        {active === 'coast' && country === 'CL' && (
-          <div className="fw-chile-guidance">
-            <a href="https://www.senapred.gov.cl/tsunami/" target="_blank" rel="noreferrer">
-              {t(
-                'Recomendaciones de SENAPRED, Chile',
-                'SENAPRED guidance, Chile',
-                'Recomendações do SENAPRED, Chile',
-              )}
-              <ArrowUpRightIcon size={13} aria-hidden="true" />
-            </a>
-            <p>
-              {t(
-                'SENAPRED recomienda conocer previamente las rutas y puntos de encuentro de la localidad que visitas. Los planos siguientes corresponden solo a Chile.',
-                'SENAPRED recommends knowing the routes and assembly points in the place you visit. The following maps cover Chile only.',
-                'O SENAPRED recomenda conhecer antes as rotas e os pontos de encontro do lugar que você visita. Os mapas a seguir são apenas do Chile.',
-              )}
-            </p>
-            <a href="https://senapred.cl/planos-de-evacuacion/" target="_blank" rel="noreferrer">
-              {t(
-                'Planos de evacuación de Chile',
-                'Chile evacuation maps',
-                'Mapas de evacuação do Chile',
-              )}
-              <ArrowUpRightIcon size={13} aria-hidden="true" />
-            </a>
-          </div>
-        )}
-        {country !== 'CL' && destination?.civilProtection && (
-          <div className="fw-chile-guidance">
-            <a href={destination.civilProtection.url} target="_blank" rel="noreferrer">
-              {t('Indicaciones locales de', 'Local guidance from', 'Orientações locais:')}{' '}
-              {destination.civilProtection.name}
-              <ArrowUpRightIcon size={13} aria-hidden="true" />
-            </a>
-            <p>
-              {t(
-                'Confirma las instrucciones y las rutas de evacuación del lugar donde estás.',
-                'Check the instructions and evacuation routes for your location.',
-                'Confirme as instruções e as rotas de evacuação do lugar onde você está.',
-              )}
-            </p>
-          </div>
-        )}
-        {(active === 'hotel' || active === 'coast') && (
-          <EvacuationPlan country={country} lang={lang} />
-        )}
-        {active === 'hotel' && (
-          <button className="fw-primary" onClick={onHotel}>
-            {t('Guardar plan del hotel', 'Save hotel plan', 'Salvar plano do hotel')}
-            <ArrowRightIcon size={16} />
-          </button>
-        )}
-        <footer>
-          <span>
-            {current.url
-              ? t('Resumen de recomendaciones', 'Guidance summary', 'Resumo de recomendações')
-              : t(
-                  'Lista de preparación para viajeros',
-                  'Travel preparation checklist',
-                  'Lista de preparação para viajantes',
-                )}
-          </span>
-          {current.url ? (
-            <a href={sourceUrl(current, lang)} target="_blank" rel="noreferrer">
-              {current.source}
-              {sourceLang(current, lang) !== lang &&
-                ` (${
-                  sourceLang(current, lang) === 'es'
-                    ? t('', 'in Spanish', 'em espanhol')
-                    : t('en inglés', '', 'em inglês')
-                })`}
-              <ArrowUpRightIcon size={14} />
-            </a>
-          ) : (
-            <span>
-              {t('Confirmar con recepción', 'Confirm with reception', 'Confirmar com a recepção')}
-            </span>
-          )}
-        </footer>
-      </article>
     </div>
   );
 }
