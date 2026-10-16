@@ -7,7 +7,8 @@ export function checkedLabel(at: number, now: number, lang: Lang) {
   const sameDay = new Date(at).toDateString() === new Date(now).toDateString();
   return new Intl.DateTimeFormat(lang, {
     ...(sameDay ? {} : { day: 'numeric', month: 'short' }),
-    hour: '2-digit',
+    // English reads "7:05 PM", not "07:05 PM"; Spanish and Portuguese keep two digits ("07:05").
+    hour: lang === 'en' ? 'numeric' : '2-digit',
     minute: '2-digit',
   }).format(at);
 }

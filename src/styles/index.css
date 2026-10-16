@@ -60,3 +60,7 @@
 @import './ds/message.css' layer(ds);
 @import './ds/combobox.css' layer(ds);
 @import './ds/text.css' layer(ds);
+@import './ds/sheet.css' layer(ds);
+@import './ds/facts.css' layer(ds);
+@import './ds/pager.css' layer(ds);
+@import './ds/scrollCue.css' layer(ds);

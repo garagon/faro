@@ -378,15 +378,6 @@
   margin-inline: 0;
 }
 
-/* Screens not yet on the design system keep their own block flow and margins. */
-.f-page[data-legacy] {
-  display: block;
-}
-/* Their heading block keeps its own space below; on design-system screens the page gap does it. */
-.f-page[data-legacy] [data-head] {
-  margin-bottom: var(--f-space-6);
-}
-
 /* Skip links: hidden until focused. */
 .f-skip {
   position: absolute;

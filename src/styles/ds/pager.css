@@ -1,0 +1,64 @@
+/*
+ * Pager: previous, the page numbers and next. Below 36 rem of container width the numbers give
+ * way to "Página 2 de 4", on its own line above the two buttons.
+ */
+.f-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--f-space-2) var(--f-space-3);
+}
+.f-pager-pages {
+  display: none;
+  align-items: center;
+  gap: var(--f-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.f-pager-pages > li {
+  display: grid;
+  place-items: center;
+  min-width: var(--f-space-5);
+  color: var(--f-color-text-muted);
+}
+.f-pager-page {
+  min-width: var(--f-touch);
+  min-height: var(--f-touch);
+  margin: 0;
+  padding: 0 var(--f-space-2);
+  border: 0;
+  border-radius: var(--f-radius-sm);
+  background: transparent;
+  color: var(--f-color-text);
+  font-weight: var(--f-weight-medium);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.f-pager-page[aria-current='page'] {
+  background: var(--f-color-action);
+  color: var(--f-color-on-action);
+}
+@media (hover: hover) {
+  .f-pager-page:not([aria-current]):hover {
+    background: var(--f-color-surface-muted);
+  }
+}
+.f-pager-count {
+  flex-basis: 100%;
+  order: -1;
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+@container (min-width: 36rem) {
+  .f-pager-pages {
+    display: flex;
+  }
+  .f-pager-count {
+    display: none;
+  }
+}
