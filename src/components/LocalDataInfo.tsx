@@ -57,7 +57,7 @@ export default function LocalDataInfo({ lang }: { lang: Lang }) {
               'Apagar perfil, saúde, hospedagem, contatos, mensagens, mochila e países salvos? Não é possível desfazer.',
             )}
           </Text>
-          <div className="f-chips">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="secondary"
               id="local-delete-confirm"

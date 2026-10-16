@@ -800,7 +800,7 @@ export default function TripProfile(p: Props) {
                 'Apagar perfil, saúde, seguro e hospedagem?',
               )}
             </Text>
-            <div className="f-chips">
+            <div className="flex flex-wrap gap-2">
               <Button variant="secondary" id="trip-delete-confirm" onClick={deleteAll}>
                 {t('Sí, borrar', 'Yes, delete', 'Sim, apagar')}
               </Button>

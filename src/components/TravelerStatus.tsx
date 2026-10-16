@@ -183,10 +183,11 @@ export default function TravelerStatus({
     // Only language changes trigger this; the form values are read at that moment.
   }, [outputLang]);
   const review = () => {
-    // The chosen status, or the first one when none is chosen yet.
+    // The chosen status, or the first one when none is chosen yet (the radios are buttons).
     (
-      form.current?.querySelector<HTMLInputElement>('input[type=radio]:checked') ??
-      form.current?.querySelector<HTMLInputElement>('input[type=radio]')
+      form.current?.querySelector<HTMLElement>(
+        '[role=radiogroup] [role=radio][aria-checked=true]',
+      ) ?? form.current?.querySelector<HTMLElement>('[role=radiogroup] [role=radio]')
     )?.focus({ preventScroll: true });
     form.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
   };
@@ -267,7 +268,7 @@ export default function TravelerStatus({
     <div className="f-column">
       <form
         ref={form}
-        className="f-section f-action-scope"
+        className="f-section [&_:is(input,select,textarea,button,summary,a)]:scroll-mb-18"
         aria-labelledby="fw-status-title"
         onSubmit={save}
         onChange={change}
@@ -386,7 +387,7 @@ export default function TravelerStatus({
           {(countryName || hotel?.name) && (
             // Actions that fill the field: buttons, not links.
             <div
-              className="f-chips"
+              className="flex flex-wrap gap-2"
               role="group"
               aria-label={t(
                 'Añadir un lugar al mensaje',
@@ -597,8 +598,8 @@ export default function TravelerStatus({
               </Note>
             )}
             {(profile?.phone || profile?.email) && (
-              <div className="f-field">
-                <span className="f-field-label" aria-hidden="true">
+              <div className="grid gap-3">
+                <span className="text-sm leading-snug font-medium" aria-hidden="true">
                   {t(
                     'Incluir cómo contactarme',
                     'Include how to reach me',
@@ -883,7 +884,7 @@ export default function TravelerStatus({
                   'Apagar as mensagens anteriores deste navegador?',
                 )}
               </p>
-              <div className="f-chips">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="secondary" onClick={clear}>
                   {t(
                     'Borrar mensajes anteriores',

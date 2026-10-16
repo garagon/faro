@@ -286,7 +286,7 @@ export default function EmbassyPanel({
         <>
           {current.some((m) => missionDirections(m, mode)) && (
             <div className="f-stack" data-gap="sm">
-              <span className="f-field-label" aria-hidden="true">
+              <span className="text-sm leading-snug font-medium" aria-hidden="true">
                 {t('Rutas en Google Maps', 'Google Maps directions', 'Rotas no Google Maps')}
               </span>
               <Segmented
