@@ -318,22 +318,6 @@
   color: var(--f-color-level-3-text);
 }
 
-/* The map frame. The map itself is the legacy WebMap until it moves to the design system. */
-.f-map-block {
-  display: grid;
-  gap: var(--f-space-2);
-}
-.f-map {
-  overflow: hidden;
-  height: 240px;
-  border: var(--f-hairline);
-  border-radius: var(--f-radius-md);
-  background: var(--f-neutral-100);
-}
-.f-map[data-size='tall'] {
-  height: 520px;
-}
-
 /* Expandable row: the caret turns; the body is prose, indented to the text edge. */
 .f-expand-caret {
   transition: transform var(--f-move) var(--f-ease);
@@ -787,10 +771,11 @@
   outline-offset: -3px;
 }
 
-/* Tabs: text with an underline on the selected one; scrolls sideways when it does not fit. */
+/* Tabs: text with an underline on the selected one; scrolls sideways when it does not fit.
+   The first label starts on the text edge and labels sit 16 px apart, so four one-word tabs fit
+   from 360 px in Spanish, English and Portuguese. */
 .f-tabs {
   display: flex;
-  gap: var(--f-space-1);
   overflow-x: auto;
   border-bottom: var(--f-hairline);
   scrollbar-width: none;
@@ -801,7 +786,7 @@
   gap: var(--f-space-2);
   min-height: var(--f-touch);
   margin: 0 0 -1px;
-  padding: 0 var(--f-space-3);
+  padding: 0 var(--f-space-2);
   border: 0;
   border-bottom: 3px solid transparent;
   background: transparent;
@@ -810,6 +795,12 @@
   font-weight: var(--f-weight-medium);
   white-space: nowrap;
   cursor: pointer;
+}
+.f-tabs button:first-child {
+  padding-inline-start: 0;
+}
+.f-tabs button:last-child {
+  padding-inline-end: 0;
 }
 .f-tabs button[aria-selected='true'] {
   border-bottom-color: var(--f-color-action);
@@ -881,22 +872,6 @@
 }
 
 /* Placeholder while the first answer arrives: never a failure message. */
-/* On touch screens, the map in a page says how to move it until it is tapped. */
-.f-map-hint {
-  position: absolute;
-  top: var(--f-space-3);
-  right: var(--f-space-3);
-  z-index: 500;
-  margin: 0;
-  padding: var(--f-space-1) var(--f-space-3);
-  border-radius: var(--f-radius-full);
-  background: rgb(21 31 28 / 72%);
-  color: var(--f-white);
-  font-size: var(--f-text-sm);
-  white-space: nowrap;
-  pointer-events: none;
-}
-
 .f-skeleton {
   display: inline-block;
   width: var(--f-skeleton-width, 8rem);

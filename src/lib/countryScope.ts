@@ -57,6 +57,39 @@ export function inCountryScope(event: { lat: number; lng: number }, code: string
   );
 }
 
+/**
+ * The box around a country's land, for the map's first view: its main islands and mainland,
+ * without small far-off islands (Easter Island, the Galápagos). A country that would still span
+ * more than a continent's width (the United States with Alaska) is framed on its largest part.
+ */
+export function countryBounds(
+  code: string,
+): { south: number; north: number; west: number; east: number } | null {
+  const polygons = countries[code];
+  if (!polygons?.length) return null;
+  const boxes = polygons.map(([outer]) => {
+    const lngs = outer.map((p) => p[0]),
+      lats = outer.map((p) => p[1]);
+    return {
+      south: Math.min(...lats),
+      north: Math.max(...lats),
+      west: Math.min(...lngs),
+      east: Math.max(...lngs),
+    };
+  });
+  type Box = (typeof boxes)[number];
+  const size = (b: Box) => (b.east - b.west) * (b.north - b.south);
+  const largest = boxes.reduce((a, b) => (size(b) > size(a) ? b : a));
+  const main = boxes.filter((b) => size(b) >= size(largest) * 0.05);
+  const all = {
+    south: Math.min(...main.map((b) => b.south)),
+    north: Math.max(...main.map((b) => b.north)),
+    west: Math.min(...main.map((b) => b.west)),
+    east: Math.max(...main.map((b) => b.east)),
+  };
+  return all.east - all.west <= 60 && all.north - all.south <= 50 ? all : largest;
+}
+
 /** Approximate country on land only. Offshore browsing buffers are not a person's location. */
 export function countryOnLand(point: { lat: number; lng: number }): string | null {
   if (

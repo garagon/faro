@@ -1,17 +1,31 @@
 import { magnitudeBand } from '../lib/magnitude.ts';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import L from 'leaflet';
 import 'leaflet.markercluster';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { DropIcon, FlagIcon, HurricaneIcon, MountainsIcon } from '@phosphor-icons/react';
 import { directionsUrl, type Embassy } from '../lib/embassies.ts';
 import { displayPlace, type Quake, type Bounds } from '../lib/domain.ts';
+import { quakeRegion } from '../lib/quakeText.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
-export type MapView = { lat: number; lng: number; zoom: number; key: number };
+import { Note } from '../ui/index.ts';
+/**
+ * A view the app asks for. `fit` frames the `frame` area (the country and its earthquakes) until
+ * the person moves the map; without it the map centres on the point (an epicentre, an embassy).
+ */
+export type MapView = { lat: number; lng: number; zoom: number; key: number; fit?: boolean };
 // A light, low-contrast style, so earthquakes, warnings and areas stand out on it.
 const BASE_STYLE = 'https://tiles.openfreemap.org/styles/positron';
-const BASE_ATTRIBUTION =
-  '<a href="https://openfreemap.org" target="_blank" rel="noreferrer">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noreferrer">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>';
+const PLATES_SOURCE = 'https://github.com/fraxen/tectonicplates';
+// A fitted view keeps 24 px between every marker and the edge: pins hang 34 px above their
+// point and are 34 px wide; clusters and hazard icons are centred and up to 40 px. On the left,
+// markers also stay clear of the zoom buttons (58 px from the edge).
+const FIT = {
+  paddingTopLeft: L.point(58 + 10 + 20, 24 + 34),
+  paddingBottomRight: L.point(24 + 20, 24 + 20),
+  maxZoom: 11,
+  animate: false,
+};
 type GlMap = import('maplibre-gl').Map;
 /** Map labels in the reader's language, then the Latin-script name, then the local name. */
 function labelIn(gl: GlMap, lang: Lang) {
@@ -28,8 +42,6 @@ function labelIn(gl: GlMap, lang: Lang) {
     ]);
   }
 }
-const PLATES_ATTRIBUTION =
-  '<a href="https://github.com/fraxen/tectonicplates" target="_blank" rel="noreferrer">PB2002 (Bird, 2003)</a>';
 export type Geo = { lat: number; lng: number; accuracy: number; at: number };
 /** A point published by a hazard source. Its position is the source's, not an affected area. */
 export type MapHazard = {
@@ -51,12 +63,37 @@ export type MapArea = {
   detail: string;
   url: string;
   source: string;
+  /** The official level (src/lib/national.ts `severityLevel`) and its word; none is neutral. */
+  level?: 1 | 2 | 3;
+  levelLabel?: string;
 };
 const hazardIcons = { cyclone: HurricaneIcon, flood: DropIcon, volcano: MountainsIcon };
+/** What the legend explains: only what is drawn inside the visible map. */
+type Shown = {
+  quakes: boolean;
+  clusters: boolean;
+  plates: boolean;
+  hazards: { source: string; kind: MapHazard['kind'] }[];
+  areas: { source: string; level?: 1 | 2 | 3; label?: string }[];
+  embassies: boolean;
+  point: boolean;
+  you: boolean;
+};
+const NOTHING: Shown = {
+  quakes: false,
+  clusters: false,
+  plates: false,
+  hazards: [],
+  areas: [],
+  embassies: false,
+  point: false,
+  you: false,
+};
 export default function WebMap({
   label,
   events,
   view,
+  frame = null,
   geo,
   point,
   selected,
@@ -67,6 +104,8 @@ export default function WebMap({
   hazards = [],
   areas = [],
   cooperative = false,
+  action,
+  legendId,
 }: {
   label?: string;
   embassies: Embassy[];
@@ -79,17 +118,27 @@ export default function WebMap({
   cooperative?: boolean;
   events: Quake[];
   view: MapView;
+  /** The area a `fit` view frames: the country with its earthquakes. */
+  frame?: Bounds | null;
   geo: Geo | null;
   point: [number, number] | null;
   selected: string | undefined;
   onSelect: (q: Quake) => void;
-  onBounds: (b: Bounds) => void;
+  /** The visible area after every move; `moved` when the person moved it (not the app). */
+  onBounds: (b: Bounds, moved: boolean) => void;
   lang: Lang;
+  /** A small action over the map, such as "Search this area". */
+  action?: ReactNode;
+  /** The legend's id: the target of a link that skips the map. */
+  legendId?: string;
 }) {
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const [tileError, setTileError] = useState(false);
   const touch =
     cooperative && typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
   const [active, setActive] = useState(false);
+  const [shown, setShown] = useState<Shown>(NOTHING);
+  const [platesDrawn, setPlatesDrawn] = useState(false);
   const el = useRef<HTMLDivElement>(null),
     map = useRef<L.Map | null>(null),
     quakes = useRef<L.MarkerClusterGroup | null>(null),
@@ -97,18 +146,107 @@ export default function WebMap({
     extras = useRef<L.LayerGroup | null>(null),
     hazardLayer = useRef<L.LayerGroup | null>(null),
     areaLayer = useRef<L.LayerGroup | null>(null),
+    plates = useRef<L.GeoJSON | null>(null),
     callback = useRef({ onSelect, onBounds }),
     glMap = useRef<GlMap | null>(null);
   callback.current = { onSelect, onBounds };
+  // The latest props, for map event handlers registered once.
+  const latest = useRef({ view, frame, events, hazards, areas, embassies, point, geo });
+  latest.current = { view, frame, events, hazards, areas, embassies, point, geo };
+  // The view follows the requested frame until the person moves the map. Moves the app makes
+  // itself are marked, so they never count as the person's.
+  const fitting = useRef(!!view.fit),
+    byApp = useRef(false),
+    moved = useRef(false);
+  const place = () => {
+    const m = map.current;
+    if (!m) return;
+    const { view: v, frame: f } = latest.current;
+    const size = m.getSize();
+    moved.current = false;
+    byApp.current = true;
+    try {
+      if (fitting.current && f && size.x > 100 && size.y > 100)
+        m.fitBounds(
+          [
+            [f.south, f.west],
+            [f.north, f.east],
+          ],
+          FIT,
+        );
+      else m.setView([v.lat, v.lng], v.zoom, { animate: false });
+    } finally {
+      byApp.current = false;
+    }
+  };
+  const measureFrame = useRef(0);
+  const measure = () => {
+    cancelAnimationFrame(measureFrame.current);
+    measureFrame.current = requestAnimationFrame(() => {
+      const m = map.current,
+        box = el.current?.getBoundingClientRect();
+      if (!m || !box) return;
+      const visible = m.getBounds();
+      const inView = (lat: number, lng: number) => visible.contains([lat, lng]);
+      const p = latest.current;
+      const hazardKeys = new Map<string, Shown['hazards'][number]>();
+      for (const h of p.hazards)
+        if (inView(h.lat, h.lng) && !hazardKeys.has(h.source))
+          hazardKeys.set(h.source, { source: h.source, kind: h.kind });
+      const areaKeys = new Map<string, Shown['areas'][number]>();
+      for (const a of p.areas)
+        if (
+          a.polygons.some((ring) => ring.length && L.latLngBounds(ring).intersects(visible)) &&
+          !areaKeys.has(`${a.source}:${a.level}`)
+        )
+          areaKeys.set(`${a.source}:${a.level}`, {
+            source: a.source,
+            level: a.level,
+            label: a.levelLabel,
+          });
+      const next: Shown = {
+        quakes: p.events.some((q) => inView(q.lat, q.lng)),
+        // Clusters exist a little beyond the edges: only those on screen count.
+        clusters: [...(el.current?.querySelectorAll('.marker-cluster') ?? [])].some((c) => {
+          const r = c.getBoundingClientRect();
+          return (
+            r.right > box.left && r.left < box.right && r.bottom > box.top && r.top < box.bottom
+          );
+        }),
+        plates:
+          !!plates.current &&
+          plates.current
+            .getLayers()
+            .some((line) => (line as L.Polyline).getBounds().intersects(visible)),
+        hazards: [...hazardKeys.values()],
+        areas: [...areaKeys.values()].sort((a, b) => (b.level ?? 0) - (a.level ?? 0)),
+        embassies: p.embassies.some((e) => inView(e.lat, e.lng)),
+        point: !!p.point && inView(p.point[0], p.point[1]),
+        you: !!p.geo && inView(p.geo.lat, p.geo.lng),
+      };
+      setShown((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+    });
+  };
   useEffect(() => {
     if (!el.current) return;
     const m = L.map(el.current, {
       scrollWheelZoom: false,
       worldCopyJump: true,
       maxZoom: 18,
+      // Fractional zoom, so a fitted country fills the frame instead of the next whole level.
+      zoomSnap: 0.25,
       dragging: !touch,
-    }).setView([view.lat, view.lng], view.zoom);
+      // The credits are written under the map, in the card (see the legend below).
+      attributionControl: false,
+    });
     map.current = m;
+    // A move the app did not make is the person's: from then on the view stays theirs.
+    m.on('movestart zoomstart', () => {
+      if (byApp.current) return;
+      moved.current = true;
+      fitting.current = false;
+    });
+    place();
     // On a touch screen in a scrolling page, a tap hands the gestures to the map; touching the
     // page anywhere else gives them back to scrolling.
     let release: (() => void) | undefined;
@@ -131,6 +269,7 @@ export default function WebMap({
       showCoverageOnHover: false,
       spiderfyOnMaxZoom: true,
     }).addTo(m);
+    quakes.current.on('animationend', measure);
     areaLayer.current = L.layerGroup().addTo(m);
     extras.current = L.layerGroup().addTo(m);
     hazardLayer.current = L.layerGroup().addTo(m);
@@ -152,20 +291,29 @@ export default function WebMap({
       });
     const report = () => {
       const b = m.getBounds();
-      callback.current.onBounds({
-        south: b.getSouth(),
-        north: b.getNorth(),
-        west: b.getWest(),
-        east: b.getEast(),
-      });
+      callback.current.onBounds(
+        {
+          south: b.getSouth(),
+          north: b.getNorth(),
+          west: b.getWest(),
+          east: b.getEast(),
+        },
+        moved.current,
+      );
+      measure();
     };
     m.on('moveend', report);
-    const resize = new ResizeObserver(() => m.invalidateSize());
+    // A new size reframes a view the person has not moved (the side column on a wide screen).
+    const resize = new ResizeObserver(() => {
+      m.invalidateSize();
+      if (fitting.current) place();
+    });
     resize.observe(el.current);
     return () => {
       release?.();
       pins.disconnect();
       resize.disconnect();
+      cancelAnimationFrame(measureFrame.current);
       m.off('moveend', report);
       m.stop();
       m.remove();
@@ -195,10 +343,7 @@ export default function WebMap({
         setWorkerUrl(workerUrl);
         await import('@maplibre/maplibre-gl-leaflet');
         if (gone || !map.current) return;
-        const base = L.maplibreGL({
-          style: BASE_STYLE,
-          attributionControl: { customAttribution: BASE_ATTRIBUTION },
-        });
+        const base = L.maplibreGL({ style: BASE_STYLE });
         base.addTo(map.current);
         const gl = base.getMaplibreMap();
         gl.on('error', () => setTileError(true));
@@ -225,7 +370,6 @@ export default function WebMap({
   useEffect(() => {
     const m = map.current;
     if (!m) return;
-    let layer: L.GeoJSON | null = null;
     const controller = new AbortController();
     if (!m.getPane('plates')) {
       const pane = m.createPane('plates');
@@ -235,32 +379,42 @@ export default function WebMap({
     fetch('/data/plates.json', { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(Error('plates'))))
       .then((data: GeoJSON.FeatureCollection) => {
-        layer = L.geoJSON(data, {
+        const options: L.GeoJSONOptions & L.PathOptions = {
           pane: 'plates',
           interactive: false,
-          attribution: PLATES_ATTRIBUTION,
-          style: { color: '#8a4fb8', weight: 1.4, opacity: 0.6 },
-        }).addTo(m);
+          className: 'f-map-plates',
+        };
+        plates.current = L.geoJSON(data, options).addTo(m);
+        setPlatesDrawn(true);
+        measure();
       })
       // Context only: without it the map, markers and list are unchanged.
       .catch(() => {});
     return () => {
       controller.abort();
-      layer?.remove();
+      plates.current?.remove();
+      plates.current = null;
     };
   }, []);
+  // A requested view: a new country (fitted) or a point to centre on.
   useEffect(() => {
-    map.current?.setView([view.lat, view.lng], view.zoom, { animate: false });
+    fitting.current = !!view.fit;
+    place();
   }, [view]);
+  // The frame changes as borders and earthquakes arrive: followed until the person moves the map.
+  const frameKey = frame
+    ? [frame.south, frame.north, frame.west, frame.east].map((n) => n.toFixed(2)).join(',')
+    : '';
+  useEffect(() => {
+    if (fitting.current) place();
+  }, [frameKey]);
   // Rebuild markers only when the visible events actually change, not on every new array.
   // Rebuilding resets keyboard focus and expanded clusters.
   const eventKey = events.map((q) => `${q.id}:${q.mag}:${q.lat}:${q.lng}`).join('|');
-  const latestEvents = useRef(events);
-  latestEvents.current = events;
   useEffect(() => {
     quakes.current?.clearLayers();
     focus.current?.clearLayers();
-    latestEvents.current.forEach((q) => {
+    latest.current.events.forEach((q) => {
       const size = q.id === selected ? 42 : 34;
       const icon = L.divIcon({
         className: `f-pin f-pin-band-${magnitudeBand(q.mag)}${q.id === selected ? ' f-pin-selected' : ''}`,
@@ -268,15 +422,17 @@ export default function WebMap({
         iconSize: [size, size],
         iconAnchor: [size / 2, size],
       });
+      const name = `${pick(lang, 'Magnitud', 'Magnitude', 'Magnitude')} ${q.mag?.toFixed(1) ?? '—'} · ${quakeRegion(q, lang)?.text ?? displayPlace(q.place)}`;
       L.marker([q.lat, q.lng], {
         icon,
-        title: `${pick(lang, 'Magnitud', 'Magnitude', 'Magnitude')} ${q.mag?.toFixed(1) ?? '—'} · ${displayPlace(q.place)}`,
-        alt: `${pick(lang, 'Magnitud', 'Magnitude', 'Magnitude')} ${q.mag?.toFixed(1) ?? '—'} · ${displayPlace(q.place)}`,
+        title: name,
+        alt: name,
         zIndexOffset: q.id === selected ? 1000 : 0,
       })
         .on('click', () => callback.current.onSelect(q))
         .addTo(q.id === selected ? focus.current! : quakes.current!);
     });
+    measure();
   }, [eventKey, selected, lang]);
   useEffect(() => {
     const group = extras.current;
@@ -322,17 +478,10 @@ export default function WebMap({
     if (geo) {
       L.circle([geo.lat, geo.lng], {
         radius: geo.accuracy,
-        color: '#367aaa',
-        weight: 1,
-        fillOpacity: 0.12,
+        className: 'f-map-you-area',
+        interactive: false,
       }).addTo(group);
-      L.circleMarker([geo.lat, geo.lng], {
-        radius: 7,
-        color: '#fff',
-        weight: 3,
-        fillColor: '#226b9c',
-        fillOpacity: 1,
-      })
+      L.circleMarker([geo.lat, geo.lng], { radius: 7, className: 'f-map-you' })
         .bindTooltip(
           pick(
             lang,
@@ -364,18 +513,17 @@ export default function WebMap({
         .bindTooltip(personal)
         .addTo(group);
     }
+    measure();
   }, [geo, point, lang, embassies]);
-  const areaKey = areas.map((a) => `${a.id}:${a.polygons.length}`).join('|');
-  const latestAreas = useRef(areas);
-  latestAreas.current = areas;
+  const areaKey = areas.map((a) => `${a.id}:${a.level}:${a.polygons.length}`).join('|');
   useEffect(() => {
     const group = areaLayer.current;
     if (!group) return;
     group.clearLayers();
-    latestAreas.current.forEach((a) => {
+    latest.current.areas.forEach((a) => {
       const card = document.createElement('div');
       const title = document.createElement('strong');
-      title.textContent = a.title;
+      title.textContent = a.levelLabel ? `${a.title} · ${a.levelLabel}` : a.title;
       const detail = document.createElement('p');
       detail.textContent = a.detail;
       const note = document.createElement('p');
@@ -399,26 +547,22 @@ export default function WebMap({
         );
         card.append(link);
       }
+      // Coloured by the agency's level, as its row on Situación; a level not stated is neutral.
       L.polygon(a.polygons, {
-        color: '#9a6512',
-        weight: 1.5,
-        dashArray: '6 4',
-        fillColor: '#e0a33a',
-        fillOpacity: 0.12,
+        className: `f-map-area f-map-area-${a.level ?? 0}`,
         interactive: true,
       })
         .bindPopup(card)
         .addTo(group);
     });
+    measure();
   }, [areaKey, lang]);
   const hazardKey = hazards.map((h) => `${h.id}:${h.level}:${h.lat}:${h.lng}`).join('|');
-  const latestHazards = useRef(hazards);
-  latestHazards.current = hazards;
   useEffect(() => {
     const group = hazardLayer.current;
     if (!group) return;
     group.clearLayers();
-    latestHazards.current.forEach((h) => {
+    latest.current.hazards.forEach((h) => {
       const Icon = hazardIcons[h.kind];
       const icon = L.divIcon({
         className: `f-pin-hazard f-pin-hazard-${h.level}`,
@@ -453,6 +597,7 @@ export default function WebMap({
         .bindPopup(card)
         .addTo(group);
     });
+    measure();
   }, [hazardKey, lang]);
   useEffect(() => {
     const controls = map.current
@@ -467,42 +612,196 @@ export default function WebMap({
       a.setAttribute('aria-label', label);
     });
   }, [lang]);
+  // The legend: one short key per kind of mark in view, in the order they are drawn.
+  const keys: { id: string; swatch: ReactNode; text: string }[] = [
+    ...(shown.quakes
+      ? [
+          {
+            id: 'quake',
+            swatch: <span className="f-map-swatch" data-kind="quake" />,
+            text: t('Sismo y magnitud', 'Earthquake and magnitude', 'Terremoto e magnitude'),
+          },
+        ]
+      : []),
+    ...(shown.clusters
+      ? [
+          {
+            id: 'cluster',
+            swatch: <span className="f-map-swatch" data-kind="cluster" />,
+            text: t('Varios sismos', 'Several earthquakes', 'Vários terremotos'),
+          },
+        ]
+      : []),
+    ...shown.areas.map((a) => ({
+      id: `area-${a.source}-${a.level}`,
+      swatch: <span className="f-map-swatch" data-kind="area" data-level={a.level} />,
+      text: `${t(`Aviso ${a.source}`, `${a.source} warning`, `Aviso ${a.source}`)}${a.label ? ` · ${a.label}` : ''}`,
+    })),
+    ...shown.hazards.map((h) => {
+      const Icon = hazardIcons[h.kind];
+      return {
+        id: `hazard-${h.source}`,
+        swatch: (
+          <span className="f-map-swatch" data-kind="hazard">
+            <Icon size={12} weight="bold" />
+          </span>
+        ),
+        text:
+          h.source === 'NHC'
+            ? t('Ciclón activo (NHC)', 'Active cyclone (NHC)', 'Ciclone ativo (NHC)')
+            : h.source === 'GDACS'
+              ? t('Alerta de GDACS', 'GDACS alert', 'Alerta do GDACS')
+              : h.source,
+      };
+    }),
+    ...(shown.plates
+      ? [
+          {
+            id: 'plates',
+            swatch: <span className="f-map-swatch" data-kind="plates" />,
+            text: t('Límite de placas', 'Plate boundary', 'Limite de placas'),
+          },
+        ]
+      : []),
+    ...(shown.embassies
+      ? [
+          {
+            id: 'embassy',
+            swatch: (
+              <span className="f-map-swatch" data-kind="embassy">
+                <FlagIcon size={10} weight="fill" />
+              </span>
+            ),
+            text: t('Embajada', 'Embassy', 'Embaixada'),
+          },
+        ]
+      : []),
+    ...(shown.point
+      ? [
+          {
+            id: 'point',
+            swatch: (
+              <span className="f-map-swatch" data-kind="personal">
+                <FlagIcon size={16} weight="fill" />
+              </span>
+            ),
+            text: t(
+              'Tu punto, no verificado',
+              'Your point, not verified',
+              'Seu ponto, não verificado',
+            ),
+          },
+        ]
+      : []),
+    ...(shown.you
+      ? [
+          {
+            id: 'you',
+            swatch: <span className="f-map-swatch" data-kind="you" />,
+            text: t('Tu ubicación', 'Your location', 'Sua localização'),
+          },
+        ]
+      : []),
+  ];
+  const published = shown.quakes || shown.hazards.length > 0 || shown.areas.length > 0;
   return (
     <div className="f-map-frame">
-      <div
-        ref={el}
-        className="f-map-canvas"
-        role="region"
-        aria-label={
-          label ||
-          pick(
-            lang,
-            'Mapa de sismos y punto personal',
-            'Earthquake and personal point map',
-            'Mapa de terremotos e ponto pessoal',
-          )
-        }
-      />
-      {touch && !active && (
-        <p className="f-map-hint" aria-hidden="true">
-          {pick(
-            lang,
-            'Toca el mapa para moverlo',
-            'Tap the map to move it',
-            'Toque o mapa para movê-lo',
-          )}
+      <div className="f-map-stage">
+        <div
+          ref={el}
+          className="f-map-canvas"
+          role="region"
+          aria-label={
+            label ||
+            pick(
+              lang,
+              'Mapa de sismos y punto personal',
+              'Earthquake and personal point map',
+              'Mapa de terremotos e ponto pessoal',
+            )
+          }
+        />
+        {touch && !active && (
+          <p className="f-map-hint" aria-hidden="true">
+            {pick(
+              lang,
+              'Toca el mapa para moverlo',
+              'Tap the map to move it',
+              'Toque o mapa para movê-lo',
+            )}
+          </p>
+        )}
+        {(action || tileError) && (
+          <div className="f-map-overlay">
+            {action}
+            {tileError && (
+              <p className="f-map-error" role="status">
+                {pick(
+                  lang,
+                  'Algunas partes del mapa no cargaron. Consulta la lista de eventos.',
+                  'Some map tiles did not load. Use the event list.',
+                  'Algumas partes do mapa não carregaram. Consulte a lista de eventos.',
+                )}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="f-map-legend" id={legendId} tabIndex={legendId ? -1 : undefined}>
+        {keys.length > 0 && (
+          <ul
+            className="f-map-keys"
+            aria-label={t('Leyenda del mapa', 'Map legend', 'Legenda do mapa')}
+          >
+            {keys.map((k) => (
+              <li key={k.id} className="f-map-key">
+                {k.swatch}
+                {k.text}
+              </li>
+            ))}
+          </ul>
+        )}
+        {published && (
+          <Note>
+            {t(
+              'Puntos publicados, no zonas de riesgo.',
+              'Published points, not hazard zones.',
+              'Pontos publicados, não zonas de risco.',
+            )}
+          </Note>
+        )}
+        <p className="f-map-credits">
+          {[
+            <a key="ofm" href="https://openfreemap.org" target="_blank" rel="noreferrer">
+              OpenFreeMap
+            </a>,
+            <a key="omt" href="https://www.openmaptiles.org/" target="_blank" rel="noreferrer">
+              © OpenMapTiles
+            </a>,
+            <Fragment key="osm">
+              {t('Datos de ', 'Data from ', 'Dados do ')}
+              <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
+                OpenStreetMap
+              </a>
+            </Fragment>,
+            ...(platesDrawn
+              ? [
+                  <a key="pb" href={PLATES_SOURCE} target="_blank" rel="noreferrer">
+                    PB2002 (Bird, 2003)
+                  </a>,
+                ]
+              : []),
+            <a key="leaflet" href="https://leafletjs.com" target="_blank" rel="noreferrer">
+              Leaflet
+            </a>,
+          ].map((part, i) => (
+            <Fragment key={i}>
+              {i > 0 && ' · '}
+              {part}
+            </Fragment>
+          ))}
         </p>
-      )}
-      {tileError && (
-        <div className="f-map-error" role="status">
-          {pick(
-            lang,
-            'Algunas partes del mapa no cargaron. Consulta la lista de eventos.',
-            'Some map tiles did not load. Use the event list.',
-            'Algumas partes do mapa não carregaram. Consulte a lista de eventos.',
-          )}
-        </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type { Geo } from './WebMap.tsx';
 import QuakeImpact from './QuakeImpact.tsx';
 import { langTag, pick, type Lang } from '../lib/i18n.ts';
 import { depthInFull, distance } from '../lib/units.ts';
+import { quakeTime } from '../lib/quakeText.ts';
 import {
   Disclosure,
   Button,
@@ -22,6 +23,8 @@ type Props = {
   provider: string;
   fetched: number | null;
   generated: number | null;
+  /** The app's clock, so the sheet and the lists say the same "hace 26 min". */
+  now: number;
   onClose: () => void;
   onMap: (q: Quake) => void;
   onTsunami: () => void;
@@ -49,22 +52,6 @@ export default function InformationDialog(p: Props) {
     new Intl.DateTimeFormat(lang, { timeZoneName: 'short' })
       .formatToParts(n)
       .find((part) => part.type === 'timeZoneName')?.value ?? '';
-  const ago = (n: number) => {
-    const min = Math.max(0, Math.round((Date.now() - n) / 60000));
-    return min < 60
-      ? t(`hace ${min} min`, `${min} min ago`, `há ${min} min`)
-      : min < 48 * 60
-        ? t(
-            `hace ${Math.round(min / 60)} h`,
-            `${Math.round(min / 60)} h ago`,
-            `há ${Math.round(min / 60)} h`,
-          )
-        : t(
-            `hace ${Math.round(min / 1440)} días`,
-            `${Math.round(min / 1440)} days ago`,
-            `há ${Math.round(min / 1440)} dias`,
-          );
-  };
   const close = t('Cerrar', 'Close', 'Fechar');
   if (!q)
     return (
@@ -107,7 +94,8 @@ export default function InformationDialog(p: Props) {
       description={
         <>
           {/* Who calculated it, when EMSC credits another agency, is under the facts. */}
-          {ago(q.time)} · {q.source || 'USGS'} ·{' '}
+          {/* The same time format as the lists (src/lib/quakeText.ts). */}
+          {quakeTime(q.time, p.now, lang)} · {q.source || 'USGS'} ·{' '}
           {q.reviewed
             ? t('revisado', 'reviewed', 'revisado')
             : q.source === 'EMSC'

@@ -8,7 +8,7 @@ OpenFreeMap's public instance is free, needs no account or key, and states no li
 - Tiles load automatically only when the map is mounted and displayed. Do not prefetch areas, sweep zooms or store tiles; `src/sw.ts` never caches them.
 - Keep the page's `strict-origin-when-cross-origin` Referer policy, so requests carry the origin without the page path. Never use `no-referrer`.
 - Keep browser HTTP caching intact; no cache-busting parameters.
-- Keep the attribution visible: "OpenFreeMap © OpenMapTiles Data from OpenStreetMap", plus "PB2002 (Bird, 2003)" for the plate lines.
+- Keep the attribution visible and complete: "OpenFreeMap · © OpenMapTiles · Data from OpenStreetMap" (the connector in the interface language), "PB2002 (Bird, 2003)" for the plate lines, and Leaflet. It is the credits line of the map card, right under the map and its legend, in the 13 px legal size.
 - Place names follow the interface language when the tiles have them (`name:es`, `name:en`, `name:pt`), then the Latin-script and local names.
 - A blocked or failing tile service is a provider problem, not absence of earthquakes. Do not evade blocks; the list remains available.
 

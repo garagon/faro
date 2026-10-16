@@ -1,13 +1,15 @@
 import { useEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { ScrollCue } from '../ui/index.ts';
 
-export type HomeTab = { id: string; label: string; count?: number; content: ReactNode };
+export type HomeTab = { id: string; label: string; content: ReactNode };
 
 /**
  * The detail pages of Situación (earthquakes, tsunami, cyclones, alerts), one panel at a time.
  * Drawn with the design system's tab strip (`f-tabs`), which scrolls on a phone with a cue at
  * the hidden edge. It keeps its own buttons because the app focuses `#fw-tab-<id>` when it opens
  * a tab, and each tab names the panel it controls. Arrow keys, Home and End move between tabs.
+ * Labels are one short word with no count (counts go in the panel's list title), so the four tabs
+ * fit from 360 px; narrower, the strip scrolls with its cue.
  */
 export default function HomeTabs({
   label,
@@ -69,7 +71,6 @@ export default function HomeTabs({
               onKeyDown={onKey}
             >
               {tab.label}
-              {tab.count !== undefined && <span className="f-tabs-count">{tab.count}</span>}
             </button>
           ))}
         </div>
