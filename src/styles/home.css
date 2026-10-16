@@ -3,30 +3,6 @@
  * a map with one status row per hazard, the official response and the detail in tabs.
  * One surface style for every block; color only for the call action, warnings and signals.
  */
-
-/* Actions. */
-/* The coast rule with the actions: plain text, never red (red only means "call"). A row under
-   the three actions on wide screens; right after the call button on phones. */
-
-/* First-visit setup. */
-
-/* Warnings in force: the only tinted surface. */
-
-/* What is happening: map and one row per hazard. */
-
-/* Official response, collapsed by default. */
-
-/* Earthquake tab: the latest and largest are already in the status rows above. */
-
-/* Detail tabs. */
-
-/* Each tab is one card: the same header, rows and source note as the rest of the home. */
-
-/* The agency's own instructions under each warning. */
-
-/* Tsunami tab: the natural warning signs first, always; location is optional. */
-
-/* SINAPROC posts: what the civil protection agency is publishing, newest first. */
 /* Blocks reached from a status row stop below the fixed top bar on phones. */
 @media (max-width: 760px) {
   .fw-app .fw-events {

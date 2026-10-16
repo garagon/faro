@@ -1,39 +1,5 @@
-.fw-save-feedback {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #eaf2e8;
-  padding: 12px 16px;
-  margin: 0 0 18px;
-  border: 1px solid #d0dfcf;
-  border-radius: 6px;
-  font-size: 12px;
-}
-.fw-save-feedback > span {
-  flex: 1;
-}
-.fw-save-feedback button {
-  border: 0;
-  background: none;
-  color: #315d41;
-  min-height: 44px;
-  padding: 8px;
-}
 /* Practical touch sizes and stable icons on narrow screens. */
 .fw-app button > svg,
 .fw-app a > svg {
   flex-shrink: 0;
 }
-@media (max-width: 760px) {
-  .fw-save-feedback {
-    font-size: 12px;
-  }
-}
-
-/* Keep navigation outside the scrolling fields, including above a mobile keyboard. */
-/* visualViewport also shrinks for keyboards that leave layout media queries unchanged. */
-
-/*
- * Onboarding: one column, the title in the brand serif, quiet fields. Only optional fields are
- * marked; emergency access stays one tap away as a plain link.
- */

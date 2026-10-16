@@ -22,7 +22,7 @@ import {
   CrosshairIcon,
   BookOpenTextIcon,
   UsersThreeIcon,
-  XIcon,
+  ClockCounterClockwiseIcon,
   BackpackIcon,
   ChatCircleTextIcon,
   WifiSlashIcon,
@@ -124,6 +124,7 @@ import {
   MapFrame,
   Note,
   OutLink,
+  RowIcon,
   ScopeNote,
   ScreenHead,
   Section,
@@ -1309,7 +1310,7 @@ export default function App() {
       {/* The scrolling region keeps the older screens' classes while they move to the design system. */}
       <main id="main" className="f-content fw-app" ref={appRef} data-screen={screen}>
         <div className="f-page fw-main" data-screen={screen}>
-          <p className="fw-visually-hidden" role="status">
+          <p className="f-visually-hidden" role="status">
             {connection === 'lost'
               ? t(
                   'Sin conexión. Los números de emergencia y la guía siguen disponibles.',
@@ -1325,56 +1326,61 @@ export default function App() {
                 : ''}
           </p>
           {profileFeedback && (
-            <div className="fw-save-feedback">
-              <span role="status">
-                {profileFeedback === 'storage'
-                  ? t(
-                      'No se pudo guardar el cambio en este navegador. Inténtalo de nuevo.',
-                      'Could not save the change in this browser. Please retry.',
-                      'Não foi possível salvar a alteração neste navegador. Tente de novo.',
-                    )
-                  : profileFeedback === 'saved'
+            <div className="f-stack" data-gap="sm">
+              <Note>
+                <span role="status">
+                  {profileFeedback === 'storage'
                     ? t(
-                        'Perfil guardado en este navegador.',
-                        'Profile saved in this browser.',
-                        'Perfil salvo neste navegador.',
+                        'No se pudo guardar el cambio en este navegador. Inténtalo de nuevo.',
+                        'Could not save the change in this browser. Please retry.',
+                        'Não foi possível salvar a alteração neste navegador. Tente de novo.',
                       )
-                    : t(
-                        'Perfil borrado. Tus contactos y planes se conservaron.',
-                        'Profile deleted. Your contacts and plans were kept.',
-                        'Perfil apagado. Seus contatos e planos foram mantidos.',
-                      )}
-              </span>
-              {profileFeedback === 'saved' && (
-                <button
-                  onClick={() => {
-                    setScreen('hotel');
-                    setProfileFeedback(null);
-                  }}
-                >
-                  {t('Preparar mi viaje', 'Prepare my trip', 'Preparar minha viagem')}
+                    : profileFeedback === 'saved'
+                      ? t(
+                          'Perfil guardado en este navegador.',
+                          'Profile saved in this browser.',
+                          'Perfil salvo neste navegador.',
+                        )
+                      : t(
+                          'Perfil borrado. Tus contactos y planes se conservaron.',
+                          'Profile deleted. Your contacts and plans were kept.',
+                          'Perfil apagado. Seus contatos e planos foram mantidos.',
+                        )}
+                </span>
+              </Note>
+              <Actions>
+                {profileFeedback === 'saved' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScreen('hotel');
+                      setProfileFeedback(null);
+                    }}
+                  >
+                    {t('Preparar mi viaje', 'Prepare my trip', 'Preparar minha viagem')}
+                  </button>
+                )}
+                <button type="button" onClick={() => setProfileFeedback(null)}>
+                  {t('Entendido', 'Dismiss', 'Entendi')}
                 </button>
-              )}
-              <button
-                aria-label={t('Cerrar confirmación', 'Dismiss confirmation', 'Fechar confirmação')}
-                onClick={() => setProfileFeedback(null)}
-              >
-                <XIcon size={18} />
-              </button>
+              </Actions>
             </div>
           )}
           {screen !== 'status' && checkInDue(checkIns[0], live.now) && (
-            <div className="fw-checkin-reminder" role="status">
-              <span>
-                {t(
-                  'Tienes pendiente avisar cómo estás.',
-                  'Your planned check-in is overdue.',
-                  'Você ainda precisa avisar como está.',
-                )}
-              </span>
-              <button onClick={() => setScreen('status')}>
-                {t('Actualizar mi estado', 'Update my status', 'Atualizar meu status')}
-              </button>
+            // A reminder the person set, not a status: one row that opens Avisar.
+            <div role="status">
+              <List>
+                <ListRow
+                  lead={<RowIcon icon={<ClockCounterClockwiseIcon size={20} />} />}
+                  title={t(
+                    'Tienes pendiente avisar cómo estás.',
+                    'Your planned check-in is overdue.',
+                    'Você ainda precisa avisar como está.',
+                  )}
+                  meta={t('Actualizar mi estado', 'Update my status', 'Atualizar meu status')}
+                  onClick={() => setScreen('status')}
+                />
+              </List>
             </div>
           )}
           {screen !== 'activity' && screen !== 'emergency' && screen !== 'country' && (
@@ -2509,7 +2515,7 @@ export default function App() {
                 <>
                   {' '}
                   ·{' '}
-                  <span className="fw-offline-ready">
+                  <span>
                     {t(
                       'Disponible sin conexión en este dispositivo',
                       'Available offline on this device',

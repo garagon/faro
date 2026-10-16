@@ -10,24 +10,16 @@
 }
 
 /* Secondary text: one grey that passes on white (6.5:1) and on the page background (6.0:1). */
-.fw-app,
-.fw-info-dialog {
+.fw-app {
   --muted: var(--text-muted);
   --quiet: var(--text-muted);
 }
 
 /* Focus: dark ring on light surfaces, white ring on the dark sidebar and top bar. */
-.fw-app :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
-.fw-info-dialog :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+.fw-app :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
-
-/* Navigation on phones: 12px labels in the readable grey. */
-
-/* Footer, disclaimer and source times: never below 12px. */
-
-/* Earthquake list: the place and the time are what people read first. */
 
 /* Earthquake list header: the count, which rows are shown and the order. */
 .fw-app .fw-events-title p {
@@ -47,18 +39,8 @@
   max-width: none;
 }
 
-/* Guide steps are instructions: full size and full contrast. */
-
-/* "Call first" on the status screen is a safety sentence. */
-
-/* Help presets and "Edit details" are buttons: a white face, a visible edge, a dark selection. */
-
-/* While the emergency screen is open, its button shows it is the current page. */
-
-/* Footer link to the sources page: looks like the other footer links. */
-
 /* Touch targets: every control at least 44px tall. */
-.fw-app :is(.fw-ext, .fw-map-foot > button) {
+.fw-app :is(.fw-map-foot > button) {
   min-height: 44px;
 }
 .fw-app .fw-events-title select {
@@ -72,21 +54,10 @@
 .fw-app :is(.fw-care-areas button) {
   min-height: 44px;
 }
-/* Links that stand alone (sources, credits): a full-height tap area. */
-
-/* Smallest readable size: 12px, 13px for labels that name a control. */
-
-/* No side stripes. Notes are plain text under a hairline; cards keep one even edge. */
-.fw-app .fw-checkin-reminder {
-  border: 1px solid #ae8138;
-  border-radius: 12px;
-  background: #fdf8ec;
-  color: #3d2a08;
-}
 
 /* One select for every form: the field border, one drawn chevron, room so text never runs under
    it. The :not(#_) raises specificity above the older per-form select rules. */
-:is(.fw-app, .fw-info-dialog) select:not([multiple]):not([size]):not(#_) {
+:is(.fw-app) select:not([multiple]):not([size]):not(#_) {
   -webkit-appearance: none;
   appearance: none;
   box-sizing: border-box;
@@ -109,12 +80,12 @@
   text-overflow: ellipsis;
   cursor: pointer;
 }
-:is(.fw-app, .fw-info-dialog) select:not([multiple]):not([size]):not(#_):disabled {
+:is(.fw-app) select:not([multiple]):not([size]):not(#_):disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 @media (hover: hover) {
-  :is(.fw-app, .fw-info-dialog) select:not([multiple]):not([size]):not(#_):hover {
+  :is(.fw-app) select:not([multiple]):not([size]):not(#_):hover {
     border-color: #205f50;
   }
 }
@@ -137,9 +108,6 @@
 .fw-app :is(h1, h2, p)[tabindex='-1']:focus {
   outline: none;
 }
-/* Zoomed phones (150% and beyond, 300px or less): the top bar wraps instead of pushing the
-   emergency button, profile or languages off the screen; the menu buttons share the width and the
-   country search takes its own row so the name stays readable. */
 /* Very short screens (landscape phones, 400% zoom): the bars scroll with the page instead of
    covering half of it. */
 @media (max-width: 760px) and (max-height: 500px) {
@@ -147,12 +115,7 @@
     scroll-padding-top: 0;
     scroll-padding-bottom: 0;
   }
-  /* The menu gets its own rows below the emergency button instead of one row off the screen. */
 }
-/* Short screens with the sidebar (landscape phones, small laptops): the sidebar scrolls, and on
-   the shortest the emergency button comes right after the logo. */
-/* The country bar is as wide as its search and buttons; when the row is full, "Install" moves to
-   the next line instead of covering "Save" (tablets and small laptops, 761–900px). */
 /* High-contrast (forced colours) mode drops backgrounds and tints, which is how Faro marks the
    chosen hazard, the current screen and the pressed language: give them an outline instead. */
 @media (forced-colors: active) {
@@ -171,21 +134,3 @@
     color: inherit;
   }
 }
-/* The setup card on the home: text and nationality form side by side only when both fit; on
-   tablets and with the sidebar the form goes under the text instead of squeezing it. */
-/* One per row on a phone, two side by side on medium cards, four on wide ones: rows stay even. */
-/* Saved countries: readable chips, never the country already on screen. */
-/* Phone menu: icons on one line whether the label takes one line or two. */
-/* A link inside a sentence stays part of the line: 44px boxes opened gaps mid-sentence. WCAG
-   exempts links in running text from the target size; standalone links keep it. */
-.fw-app :is(p, small, li) > .fw-ext {
-  display: inline;
-  min-height: 0;
-}
-.fw-app :is(p, small, li) > .fw-ext > svg {
-  vertical-align: -2px;
-}
-/* Map legend: one entry per line part, each with a small copy of its map symbol. */
-/* On the narrowest phones the profile shortcut was squeezed to 27px; "My trip" in the menu
-   opens the same screen. */
-/* The warned area under a warning's title, so several warnings of one kind can be told apart. */

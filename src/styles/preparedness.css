@@ -1,25 +1,7 @@
-.fw-care-location {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.fw-care-location > label {
-  flex: 1 1 240px;
-  min-width: 0;
-}
 .fw-safety-illustration {
   width: 100%;
   height: auto;
   display: block;
-}
-@media (max-width: 600px) {
-  .fw-care-location {
-    align-items: stretch;
-  }
-  .fw-care-location > button {
-    width: 100%;
-  }
 }
 .fw-care-areas {
   display: flex;
@@ -57,11 +39,7 @@
   outline: 3px solid #2f6f5f;
   outline-offset: 2px;
 }
-/* Hotel plan: evacuation guidance as a uniform numbered list, aligned with the form card. */
-
-/* Original drawings that accompany, never replace, the written steps. */
 
 /* Official reunification services on the local help screen. */
 @media (max-width: 560px) {
-  /* Diagrams use the full card width on phones so their labels stay legible. */
 }

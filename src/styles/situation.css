@@ -2,27 +2,6 @@
  * Situation screen. One surface per section, rows separated by hairlines, color only where it
  * carries meaning (severity, signal). The briefing headline is the single expressive element.
  */
-.fw-visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* Briefing headline: the place in the brand serif and what sources say, in one breath. */
-
-/* Warnings in force: the only tinted surface, because it is the only urgent content. */
-
-/* Status board: one row per hazard, read left to right like a signal panel. */
-/* The signal: lit when the source lists something, an empty ring when it lists nothing,
-   dashed when it could not be confirmed. Text always states the same thing. */
-
-/* Section titles below the briefing share one quiet style. */
 
 /* Hazard points on the map (GDACS, NHC). Level colors follow the publishing source. */
 .fw-hazard-pin {
@@ -47,17 +26,6 @@
   background: #24526a;
 }
 
-/* Guide index grouped by hazard. */
-
-/* One heading scale for the cards on the local help screen. */
-
-/* Watch and warning glossary inside a guide section. */
-
-/* Source sections (GDACS, NHC, NWS): a title, one line of context, rows split by hairlines. */
-/* Level words carry their color in a small disc, never in a filled box. */
-
-/* Top bar: place on the left, source status and installation on the right. */
-
 /* Official response to a specific disaster: dated facts, then how to help, then sources. */
 .fw-response h3 {
   margin: 22px 0 8px;
@@ -65,5 +33,3 @@
   font-weight: 700;
   color: var(--ink-strong);
 }
-
-/* Labels in sentence case: no tracked-out capitals anywhere in the interface. */

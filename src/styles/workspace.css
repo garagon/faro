@@ -28,23 +28,6 @@
   padding: 0 32px 12px;
   min-width: 0;
 }
-.fw-secondary {
-  min-height: 42px;
-  border-radius: 6px;
-  padding: 10px 15px;
-  font-size: 12px;
-  gap: 8px;
-  box-shadow: none;
-}
-.fw-secondary {
-  background: white;
-  border: 1px solid #cfdcd4;
-  color: #28493c;
-}
-.fw-secondary:hover {
-  background: #edf3ee;
-  border-color: #a9c0b1;
-}
 .fw-events {
   border: 0;
   border-radius: 0;
@@ -81,19 +64,7 @@
   font-size: 11px;
   max-width: 125px;
 }
-/* Assistance: one country selection, a visible emergency line, one mission. */
-/* Personal update: selection first, exact share preview second. */
-/* Trip documents use a clear form rhythm and quieter supporting guidance. */
 /* Guide stays one readable document with a persistent situation index. */
-.fw-modal {
-  border-radius: 12px;
-  background: #fcfdf9;
-  border: 1px solid #d5dfd0;
-}
-.fw-modal-overlay {
-  background: #14392e66;
-  backdrop-filter: blur(3px);
-}
 @media (min-width: 1750px) {
   .fw-main {
     margin-left: calc(var(--sidebar) + (100vw - var(--sidebar) - 1480px) / 2);
@@ -183,5 +154,3 @@
 .fw-bulletin-current > h3 {
   font-size: 15px;
 }
-
-/* Personal travel card: a compact document beside an actionable contact directory. */

@@ -13,8 +13,6 @@
   --board-warn: #b5802e;
 }
 
-/* Page titles: one style on every screen. */
-
 /* Blocks. */
 .fw-app :is(.fw-official) {
   margin: 0 0 16px;
@@ -24,10 +22,6 @@
   box-shadow: none;
   overflow: hidden;
 }
-
-/* Official now: one line per message, opening in place. */
-
-/* What is happening: map beside one row per hazard, the hazard name in its own column. */
 
 /* Map footer: the legend on one line, then the two map actions. */
 .fw-app .fw-map-foot {
@@ -60,8 +54,6 @@
   }
 }
 
-/* Earthquake page: filters and update status in one card, then coverage and legend, then list. */
-
 /* Urgent official message (a recent NOAA tsunami threat): the warning tone, never call red. */
 .fw-app .fw-tsunami-banner {
   display: grid;
@@ -91,26 +83,6 @@
   line-height: 1.5;
   color: #3d2a08;
 }
-.fw-app .fw-tsunami-banner :is(.fw-ext) {
-  color: #4a3207;
-}
-
-/* Detail tabs: each panel is one board card; the status leads, then the detail. */
-
-/* Go bag on the board system: a plain warning line, one card per step, figures without boxes,
-   one list with hairlines. A ticked item shows its check, not a tint. */
-
-/* Translation of Spanish-only official text (English interface). */
-
-/* Official now, grouped by source: a heading with its check time, then one line per message. */
-/* Who reports water, power, roads and health: one service per line, under the footnote. */
-
-/* The disaster this place is living through: named by magnitude and place, with its date on its
-   own line, the latest official picture, and a clear button to open the full response. */
-
-/* Country bar: part of the page, not a separate white band. One field like every other field,
-   a labeled save button, the install button on the right. */
-/* Cards that hold a country search must not clip its list. */
 
 /* Live status of "What is happening": live only while checks succeed; otherwise the last data. */
 @media (prefers-reduced-motion: no-preference) {
@@ -126,12 +98,6 @@
     }
   }
 }
-
-/* International alerts: the answer first, then one plain row per event. */
-/* Same weight as the shared card rule, later in the file: the setup card never clips (and so
-   never scrolls its own content) when the country list opens. */
-
-/* Local help: the shelter pointer is a card like its neighbours, not a tinted panel. */
 
 /* Offline map through the Google Maps app: a card like Local help's, with numbered steps. */
 .fw-app .fw-offline-map {

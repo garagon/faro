@@ -5,21 +5,4 @@
  * Older stylesheets load after this one, so every rule is scoped to the screen.
  */
 @media (min-width: 900px) {
-  /* Beside the numbers, the steps start at the top instead of under a hairline. */
 }
-
-/* Call. */
-
-/* Choosing the country: the first thing to do when none is set. */
-
-/* Sections below the call: one hairline each, no boxes. */
-
-/* First minutes. */
-
-/* Consular help. */
-
-/* Meeting point. */
-
-/* Latest earthquake. */
-
-/* Where to go next. */

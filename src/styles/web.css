@@ -18,12 +18,10 @@
 .fw-app * {
   box-sizing: border-box;
 }
-.fw-app :where(button, input, select, textarea),
-.fw-modal :where(button) {
+.fw-app :where(button, input, select, textarea) {
   font: inherit;
 }
-.fw-app button,
-.fw-modal button {
+.fw-app button {
   cursor: pointer;
 }
 .fw-app button:disabled {
@@ -40,8 +38,7 @@
 .fw-app a:focus-visible,
 .fw-app input:focus-visible,
 .fw-app select:focus-visible,
-.fw-app textarea:focus-visible,
-.fw-modal :focus-visible {
+.fw-app textarea:focus-visible {
   outline: 3px solid #47869d;
   outline-offset: 3px;
 }
@@ -72,24 +69,6 @@
   height: 7px;
   border-radius: 50%;
   background: #427660;
-}
-.fw-secondary {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  border: 0;
-  border-radius: 9px;
-  padding: 11px 17px;
-  font-weight: 600 !important;
-  text-decoration: none;
-  line-height: 1.4;
-}
-.fw-secondary {
-  background: #edf0e9;
-  border: 1px solid #dce0d7;
-  color: #285b50;
 }
 .fw-events {
   border: 1px solid var(--line);
@@ -211,59 +190,6 @@
   gap: 18px;
   margin-top: 24px;
 }
-.fw-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: #18393677;
-  z-index: 2000;
-}
-.fw-modal {
-  position: fixed;
-  z-index: 2001;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: min(560px, calc(100vw - 28px));
-  max-height: 90dvh;
-  overflow: auto;
-  padding: 30px;
-  border-radius: 16px;
-  background: #faf9f6;
-  color: #183936;
-  font:
-    14px/1.6 'Public Sans',
-    sans-serif;
-  box-shadow: 0 15px 70px #10272233;
-}
-.fw-modal h2 {
-  font-size: 25px;
-  margin: 0 36px 10px 0;
-  line-height: 1.25;
-}
-.fw-modal p {
-  color: #63736c;
-  font-size: 13px;
-}
-.fw-modal dl {
-  margin: 25px 0;
-  display: grid;
-  grid-template-columns: 1fr 1.3fr;
-  gap: 10px;
-  font-size: 13px;
-}
-.fw-modal dt {
-  color: #63736c;
-}
-.fw-modal dd {
-  margin: 0;
-  text-align: right;
-  overflow-wrap: anywhere;
-}
-.fw-modal > small {
-  display: block;
-  margin-top: 15px;
-  color: #63736c;
-}
 .fw-app .leaflet-container {
   font-family: 'Public Sans', sans-serif;
 }
@@ -297,17 +223,6 @@
   .fw-resource-grid {
     grid-template-columns: 1fr;
     gap: 16px;
-  }
-  .fw-modal {
-    padding: 24px 20px;
-    max-height: 88dvh;
-  }
-  .fw-modal h2 {
-    font-size: 23px;
-  }
-  .fw-modal dl {
-    font-size: 12px;
-    gap: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

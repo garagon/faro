@@ -25,6 +25,7 @@ import {
   Section,
   Segmented,
   Steps,
+  Text,
 } from '../ui/index.ts';
 import { emergencyFor } from '../lib/emergency.ts';
 import { reviewDate } from '../lib/links.ts';
@@ -125,7 +126,7 @@ export default function EmergencyScreen(p: Props) {
     requestAnimationFrame(() =>
       root.current
         ?.querySelector<HTMLElement>(
-          choosing ? '#fw-emergency-where' : '.f-call a, .fw-emergency-prompt',
+          choosing ? '#fw-emergency-where' : '.f-call a, [data-emergency-start]',
         )
         ?.focus(),
     );
@@ -252,13 +253,13 @@ export default function EmergencyScreen(p: Props) {
               note={main.label[idx]}
             />
           ) : (
-            <p className="fw-emergency-prompt" tabIndex={-1}>
+            <Text tabIndex={-1} data-emergency-start="">
               {t(
                 'No tenemos teléfonos verificados para este país. Pregunta en tu alojamiento o a la autoridad local.',
                 'We have no verified numbers for this country. Ask where you are staying or local authorities.',
                 'Não temos números verificados para este país. Pergunte na sua hospedagem ou às autoridades locais.',
               )}
-            </p>
+            </Text>
           )}
           {local && (others.length > 0 || local.whatsapp) && (
             <Section

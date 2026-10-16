@@ -2,7 +2,7 @@ import { Component, type ReactNode } from 'react';
 import { emergencyFor } from '../lib/emergency.ts';
 import { langIndex, langTag, pick } from '../lib/i18n.ts';
 import { readSiteLanguage } from '../lib/preferences.ts';
-import { telHref } from '../lib/phone.ts';
+import { Button, CallButton, List, PhoneRow, ScreenHead, Section } from '../ui/index.ts';
 
 type State = { failed: boolean };
 
@@ -40,36 +40,53 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, St
     const data = emergencyFor(country);
     const name = new Intl.DisplayNames([langTag(lang)], { type: 'region' }).of(country);
     const heading = t(`Emergencias en ${name}`, `Emergencies in ${name}`, `Emergência · ${name}`);
+    const lead = data
+      ? t(
+          'Los números de emergencia siguen aquí. Recarga la página para volver a usar Faro.',
+          'Emergency numbers are still here. Reload the page to use Faro again.',
+          'Os números de emergência continuam aqui. Recarregue a página para voltar a usar o Faro.',
+        )
+      : t(
+          'Faro no tiene teléfonos verificados para este país. Pregunta en tu alojamiento o a la autoridad local, y recarga la página para volver a usar Faro.',
+          'Faro has no verified numbers for this country. Ask where you are staying or local authorities, and reload the page to use Faro again.',
+          'O Faro não tem números verificados para este país. Pergunte na sua hospedagem ou às autoridades locais e recarregue a página para voltar a usar o Faro.',
+        );
+    const [main, ...others] = data?.numbers ?? [];
+    const i = langIndex(lang);
+    // Design-system parts only: plain presentation, no app state, so it renders after a crash.
     return (
-      <main className="fw-fallback" lang={langTag(lang)}>
-        <h1>{t('Faro tuvo un problema', 'Faro ran into a problem', 'O Faro teve um problema')}</h1>
-        <p>
-          {data
-            ? t(
-                'Los números de emergencia siguen aquí. Recarga la página para volver a usar Faro.',
-                'Emergency numbers are still here. Reload the page to use Faro again.',
-                'Os números de emergência continuam aqui. Recarregue a página para voltar a usar o Faro.',
-              )
-            : t(
-                'Faro no tiene teléfonos verificados para este país. Pregunta en tu alojamiento o a la autoridad local, y recarga la página para volver a usar Faro.',
-                'Faro has no verified numbers for this country. Ask where you are staying or local authorities, and reload the page to use Faro again.',
-                'O Faro não tem números verificados para este país. Pergunte na sua hospedagem ou às autoridades locais e recarregue a página para voltar a usar o Faro.',
+      <main className="f-root" lang={langTag(lang)}>
+        <div className="f-page">
+          <ScreenHead
+            title={t('Faro tuvo un problema', 'Faro ran into a problem', 'O Faro teve um problema')}
+            lead={lead}
+          />
+          {main && (
+            <Section id="fw-fallback-numbers" title={heading}>
+              <CallButton
+                number={main.number}
+                label={t(
+                  `Llamar al ${main.number}`,
+                  `Call ${main.number}`,
+                  `Ligar para ${main.number}`,
+                )}
+                note={main.label[i]}
+              />
+              {others.length > 0 && (
+                <List>
+                  {others.map((n) => (
+                    <PhoneRow key={n.number} number={n.number} name={n.label[i]} />
+                  ))}
+                </List>
               )}
-        </p>
-        {data && (
-          <section aria-label={heading}>
-            <h2>{heading}</h2>
-            {data.numbers.map((n) => (
-              <a key={n.number} href={telHref(n.number)}>
-                {t('Llamar al', 'Call', 'Ligar para o')} {n.number}
-                <small>{n.label[langIndex(lang)]}</small>
-              </a>
-            ))}
-          </section>
-        )}
-        <button onClick={() => location.reload()}>
-          {t('Recargar Faro', 'Reload Faro', 'Recarregar o Faro')}
-        </button>
+            </Section>
+          )}
+          <div>
+            <Button variant="secondary" onClick={() => location.reload()}>
+              {t('Recargar Faro', 'Reload Faro', 'Recarregar o Faro')}
+            </Button>
+          </div>
+        </div>
       </main>
     );
   }
