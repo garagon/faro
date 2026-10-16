@@ -31,7 +31,7 @@ const readable = cn(
  * height is a minimum. A ghost button that removes the person's data (`data-tone="error"`) takes
  * the caution colour, never the call red.
  */
-const look = ({ variant = 'primary', size = 'md', block }: Look, className?: string) => ({
+const look = ({ variant = 'primary', size = 'md', block, icon }: Look, className?: string) => ({
   variant: variants[variant],
   size: size === 'lg' ? ('lg' as const) : ('default' as const),
   'data-block': block || undefined,
@@ -39,6 +39,9 @@ const look = ({ variant = 'primary', size = 'md', block }: Look, className?: str
     'f-pressable h-auto whitespace-normal',
     size === 'lg' ? 'min-h-12 px-6 text-base' : 'min-h-10 py-2',
     block ? 'w-full justify-self-stretch' : 'justify-self-start',
+    // A text-like ghost button lines its label up with the text above it; its hover fill
+    // extends into the margin.
+    variant === 'ghost' && !block && (icon ? '-ms-3' : '-ms-4'),
     'data-[tone=error]:text-amber-800 data-[tone=error]:hover:text-amber-900',
     'motion-reduce:transition-none',
     readable,
@@ -57,7 +60,7 @@ export function Button({
   ...rest
 }: Look & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <UIButton type={type} {...look({ variant, size, block }, className)} {...rest}>
+    <UIButton type={type} {...look({ variant, size, block, icon }, className)} {...rest}>
       {icon}
       {children}
     </UIButton>
@@ -76,7 +79,7 @@ export function LinkButton({
   ...rest
 }: Look & AnchorHTMLAttributes<HTMLAnchorElement> & { external?: boolean }) {
   return (
-    <UIButton asChild {...look({ variant, size, block }, className)}>
+    <UIButton asChild {...look({ variant, size, block, icon }, className)}>
       <a {...(external ? { target: '_blank', rel: 'noreferrer' } : {})} {...rest}>
         {icon}
         {children}

@@ -71,8 +71,9 @@
 .f-stack[data-gap='lg'] {
   @apply gap-8;
 }
+/* minmax(0, 1fr): a wide child (a tab strip that scrolls) never widens the column. */
 .f-column {
-  @apply mx-0 grid w-full max-w-[42rem] gap-8;
+  @apply mx-0 grid w-full max-w-[42rem] grid-cols-[minmax(0,1fr)] gap-8;
 }
 
 /* Faro's own scene drawings (the guide): the width of their column, never cropped. */
