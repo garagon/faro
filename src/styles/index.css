@@ -54,3 +54,4 @@
 
 @import './ds/components.css' layer(ds);
 @import './ds/shell.css' layer(ds);
+@import './ds/compose.css' layer(ds);
