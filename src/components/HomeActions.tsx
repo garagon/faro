@@ -70,7 +70,8 @@ export default function HomeActions(p: Props) {
       <List label={t('Acciones', 'Actions', 'Ações')}>
         <ListRow
           lead={<RowIcon icon={<ChatCircleTextIcon size={20} />} />}
-          title={t('Avisar cómo estoy', 'Tell people how I am', 'Avisar como estou')}
+          // The same name as the Avisar tab ("Check in" in English).
+          title={t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
           meta={t(
             'Prepara un mensaje y envíalo tú',
             'Prepare a message, send it yourself',

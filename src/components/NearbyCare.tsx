@@ -1,21 +1,12 @@
-import { ArrowUpRightIcon, CrosshairIcon, FirstAidKitIcon, PillIcon } from '@phosphor-icons/react';
+import { ArrowUpRightIcon, CrosshairIcon } from '@phosphor-icons/react';
 import { careSearchUrl } from '../lib/nearbyCare.ts';
 import { hostOf, splitName } from '../lib/links.ts';
+import { caption } from '../lib/caption.ts';
 import { areaStatus, useSearchArea } from './AreaPicker.tsx';
 import { careAreas } from '../data/careAreas.ts';
 import { healthDirectories } from '../data/healthDirectories.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
-import {
-  Button,
-  Field,
-  List,
-  ListRow,
-  Note,
-  RowIcon,
-  Section,
-  SelectField,
-  Text,
-} from '../ui/index.ts';
+import { Button, Field, List, ListRow, Note, Section, SelectField, Text } from '../ui/index.ts';
 
 const outIcon = <ArrowUpRightIcon size={16} aria-hidden="true" />;
 
@@ -37,9 +28,9 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
     >
       <Text>
         {t(
-          'Escribe una zona o usa tu ubicación. Antes de ir, llama para confirmar que están atendiendo.',
-          'Enter an area or use your location. Before going, call to confirm they are open.',
-          'Digite uma área ou use sua localização. Antes de ir, ligue para confirmar que estão atendendo.',
+          'Escribe una zona o usa tu ubicación. Tras un desastre, un resultado no garantiza que atiendan: llama antes de ir.',
+          'Enter an area or use your location. After a disaster, a result does not mean they are open: call before going.',
+          'Digite uma área ou use sua localização. Depois de um desastre, um resultado não garante atendimento: ligue antes de ir.',
         )}
       </Text>
       <Field
@@ -87,19 +78,17 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
       <div role="status">
         <Note>{areaStatus(search, lang)}</Note>
       </div>
+      {/* No icons: no other row in Ayuda has one, so every row starts at the same edge. */}
       <List label={t('Buscar en Google Maps', 'Search Google Maps', 'Buscar no Google Maps')}>
         {(['pharmacy', 'hospital'] as const).map((kind) => {
           const label =
             kind === 'pharmacy'
               ? t('Buscar farmacias', 'Find pharmacies', 'Buscar farmácias')
               : t('Buscar hospitales', 'Find hospitals', 'Buscar hospitais');
-          const Icon = kind === 'pharmacy' ? PillIcon : FirstAidKitIcon;
           const url = careSearchUrl(kind, area, lang);
-          const lead = <RowIcon icon={<Icon size={20} />} />;
           return url ? (
             <ListRow
               key={kind}
-              lead={lead}
               title={label}
               meta={t('En Google Maps', 'On Google Maps', 'No Google Maps')}
               href={url}
@@ -110,7 +99,6 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
             // Nothing to search yet: a row that says what is missing, not a link.
             <ListRow
               key={kind}
-              lead={lead}
               title={label}
               meta={t(
                 'Primero elige una zona',
@@ -121,11 +109,12 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
           );
         })}
       </List>
+      {/* What the third party receives, in one line next to its buttons. */}
       <Note>
         {t(
-          'La búsqueda se abre en Google Maps con la zona o tu ubicación aproximada. Faro no la guarda. Después de un desastre, un resultado no garantiza que el lugar esté atendiendo. Buscar necesita conexión; sin señal, usa el mapa que guardaste en Google Maps.',
-          'The search opens in Google Maps with the area or your approximate location. Faro does not save it. After a disaster, a result does not guarantee the place is open. Searching needs a connection; without signal, use the map you saved in Google Maps.',
-          'A busca abre no Google Maps com a área ou sua localização aproximada. O Faro não a salva. Depois de um desastre, um resultado não garante que o lugar esteja atendendo. Buscar precisa de conexão; sem sinal, use o mapa que você salvou no Google Maps.',
+          'Google Maps recibe la zona; Faro no la guarda.',
+          'Google Maps gets the area; Faro keeps nothing.',
+          'O Google Maps recebe a área; o Faro não a guarda.',
         )}
       </Note>
       {!!healthDirectories[country]?.length && (
@@ -147,7 +136,7 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
                   external
                   title={what ? `${agency}: ${what}` : agency}
                   // Official pages in Spanish: said for English and Portuguese readers.
-                  meta={`${hostOf(s.url)}${what ? t('', ' · in Spanish', ' · em espanhol') : ''}`}
+                  meta={caption(hostOf(s.url), what && t('', 'in Spanish', 'em espanhol'))}
                   trail={outIcon}
                 />
               );

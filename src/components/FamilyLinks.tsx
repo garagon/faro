@@ -1,8 +1,9 @@
 import { ArrowUpRightIcon, ChatCircleTextIcon } from '@phosphor-icons/react';
 import { hostOf, splitName } from '../lib/links.ts';
+import { caption } from '../lib/caption.ts';
 import { familyLinksFor } from '../data/familyLinks.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
-import { Button, List, ListRow, Note, Section, Text } from '../ui/index.ts';
+import { Button, List, ListRow, Section, Text } from '../ui/index.ts';
 import TravelerSupport from './TravelerSupport.tsx';
 
 type Props = {
@@ -34,7 +35,8 @@ export default function FamilyLinks({ country, lang, onStatus, nationality }: Pr
         icon={<ChatCircleTextIcon size={20} aria-hidden="true" />}
         onClick={onStatus}
       >
-        {t('Avisar cómo estoy', 'Send a status update', 'Avisar como estou')}
+        {/* The same name as the Avisar tab ("Check in" in English). */}
+        {t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
       </Button>
       <List
         label={t(
@@ -51,19 +53,13 @@ export default function FamilyLinks({ country, lang, onStatus, nationality }: Pr
               href={l.url[idx]}
               external
               title={service ? `${service} (${agency})` : agency}
-              meta={`${l.description[idx]} · ${hostOf(l.url[idx])}`}
+              meta={caption(l.description[idx], hostOf(l.url[idx]))}
               trail={<ArrowUpRightIcon size={16} aria-hidden="true" />}
             />
           );
         })}
       </List>
-      <Note>
-        {t(
-          'Faro no envía búsquedas ni datos a estos servicios. Cada sitio tiene su propia política de privacidad.',
-          'Faro does not send searches or data to these services. Each site has its own privacy policy.',
-          'O Faro não envia buscas nem dados a esses serviços. Cada site tem sua própria política de privacidade.',
-        )}
-      </Note>
+      {/* That Faro sends nothing to these services is said once, in Ayuda's scope note. */}
       <TravelerSupport part="family" nationality={nationality} country={country} lang={lang} />
     </Section>
   );

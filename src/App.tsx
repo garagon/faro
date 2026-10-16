@@ -2495,6 +2495,7 @@ export default function App() {
             <SourcesScreen
               lang={lang}
               now={live.now}
+              country={country}
               countryName={countryName}
               rows={sourceRows}
               // The polling countdown and the changes received belong here, not on the list.
@@ -2645,16 +2646,21 @@ export default function App() {
                         'O Faro não tem dados verificados de abrigos aqui. Pergunte às autoridades locais ou na sua hospedagem antes de se deslocar.',
                       )}
                 </Text>
-                <Actions>
-                  {civilProtection && (
+                {civilProtection && (
+                  <Actions>
                     <OutLink href={civilProtection.url}>
                       {t('Sitio oficial', 'Official website', 'Site oficial')}
                     </OutLink>
-                  )}
-                  <button type="button" onClick={() => setScreen('hotel')}>
-                    {t('Preparar mi plan', 'Prepare my plan', 'Preparar meu plano')}
-                  </button>
-                </Actions>
+                  </Actions>
+                )}
+                {/* Another screen: a row that opens it, not a link-styled button. */}
+                <List>
+                  <ListRow
+                    title={t('Preparar mi plan', 'Prepare my plan', 'Preparar meu plano')}
+                    meta={t('En Viaje', 'In Trip', 'Em Viagem')}
+                    onClick={() => setScreen('hotel')}
+                  />
+                </List>
               </Section>
               <OfflineMap lang={lang} detail {...offlineArea(visiblePoint)} />
               <DestinationInfo
@@ -2662,12 +2668,14 @@ export default function App() {
                 lang={lang}
                 resources={regionResources}
                 regionName={countryName}
+                onCountry={() => setScreen('country')}
               />
+              {/* What Google Maps receives is said once, next to each of its buttons. */}
               <ScopeNote>
                 {t(
-                  'Faro solo enlaza a cada servicio: no llama, no busca personas ni envía tus datos. Google Maps recibe la zona o tu ubicación aproximada solo cuando tocas uno de sus enlaces.',
-                  'Faro only links to each service: it does not call, look for people or send your data. Google Maps receives the area or your approximate location only when you tap one of its links.',
-                  'O Faro só leva a cada serviço: não liga, não procura pessoas nem envia seus dados. O Google Maps recebe a área ou sua localização aproximada só quando você toca em um dos links dele.',
+                  'Faro solo enlaza a cada servicio: no llama, no busca personas ni envía tus datos.',
+                  'Faro only links to each service: it does not call, look for people or send your data.',
+                  'O Faro só leva a cada serviço: não liga, não procura pessoas nem envia seus dados.',
                 )}
               </ScopeNote>
             </div>
@@ -2687,12 +2695,13 @@ export default function App() {
             />
           </div>
           {screen === 'hotel' && (
-            <>
+            // The rest of Viaje shares the form's reading column, so no block runs wider.
+            <div className="f-column">
               <OfflineMap lang={lang} {...offlineArea(point)} />
               <TravelContacts key={country} country={country} lang={lang} />
               <EvacuationPlan country={country} lang={lang} />
               <LocalDataInfo lang={lang} />
-            </>
+            </div>
           )}
           {screen === 'kit' && <EmergencyKit lang={lang} country={country} />}
           {screen === 'guide' && (
@@ -2721,53 +2730,34 @@ export default function App() {
               country={country}
             />
           </div>
+          {/* One footer on every screen: who made Faro, its pages, and what opens offline. Each
+              source is credited where its data appears and on Fuentes. */}
           <footer className="f-footer">
             <span>
-              Faro · {t('Creado por', 'Created by', 'Criado por')}{' '}
+              {t('Creado por', 'Created by', 'Criado por')}{' '}
               <a href="https://oktsec.com" target="_blank" rel="noopener">
                 Oktsec
-              </a>{' '}
-              · <a href="/about.html">{t('Acerca de Faro', 'About Faro', 'Sobre o Faro')}</a> ·{' '}
-              <a href="/privacy.html">
-                {t('Privacidad y condiciones', 'Privacy and terms', 'Privacidade e termos')}
-              </a>{' '}
-              ·{' '}
+              </a>
+              {'\u00a0· '}
+              <a href="/about.html">{t('Acerca de', 'About Faro', 'Sobre o Faro')}</a>
+              {'\u00a0· '}
+              <a href="/privacy.html">{t('Privacidad', 'Privacy', 'Privacidade')}</a>
+              {'\u00a0· '}
               <button type="button" className="f-inline-link" onClick={() => setScreen('sources')}>
-                {t('Fuentes y actualización', 'Sources & updates', 'Fontes e atualizações')}
+                {t('Fuentes', 'Sources', 'Fontes')}
               </button>
-              {offlineReady && (
-                <>
-                  {' '}
-                  ·{' '}
-                  <span>
-                    {t(
-                      'Disponible sin conexión en este dispositivo',
-                      'Available offline on this device',
-                      'Disponível sem conexão neste dispositivo',
-                    )}
-                  </span>
-                </>
-              )}
             </span>
-            <span>
-              {screen === 'status'
-                ? t(
-                    'Mensajes personales · Envío manual',
-                    'Personal messages · Sent manually',
-                    'Mensagens pessoais · Envio manual',
-                  )
-                : screen === 'guide'
-                  ? t(
-                      'Recomendaciones: SENAPRED, CDC, NOAA, Ready.gov y FCC',
-                      'Guidance: SENAPRED, CDC, NOAA, Ready.gov and FCC',
-                      'Recomendações: SENAPRED, CDC, NOAA, Ready.gov e FCC',
-                    )
-                  : t(
-                      'Sismos: IGC-UP / EMSC / USGS · Tsunami y ciclones: NOAA · Avisos: servicios meteorológicos y GDACS · Mapa: OpenFreeMap y OpenStreetMap',
-                      'Earthquakes: IGC-UP / EMSC / USGS · Tsunami and cyclones: NOAA · Warnings: weather services and GDACS · Map: OpenFreeMap and OpenStreetMap',
-                      'Terremotos: IGC-UP / EMSC / USGS · Tsunami e ciclones: NOAA · Avisos: serviços meteorológicos e GDACS · Mapa: OpenFreeMap e OpenStreetMap',
-                    )}
-            </span>
+            {/* Said only once the offline copy has started here (src/sw.ts), in the same words
+                as the install sheet: the app opens from the copy, new data needs a connection. */}
+            {offlineReady && (
+              <span>
+                {t(
+                  'Abre sin conexión; los datos nuevos necesitan internet.',
+                  'Opens offline; new data needs internet.',
+                  'Abre sem conexão; dados novos precisam de internet.',
+                )}
+              </span>
+            )}
           </footer>
         </div>
       </main>

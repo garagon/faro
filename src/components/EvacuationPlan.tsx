@@ -1,6 +1,8 @@
 import { ArrowUpRightIcon, BuildingOfficeIcon, MapTrifoldIcon } from '@phosphor-icons/react';
 import { destinationFor } from '../data/destinations/index.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
+import { keepSeparators } from '../lib/caption.ts';
+import { hostOf } from '../lib/links.ts';
 import { List, ListRow, Note, RowIcon, SafetyNotice, Steps } from '../ui/index.ts';
 
 const out = <ArrowUpRightIcon size={16} aria-hidden="true" />;
@@ -85,7 +87,7 @@ export default function EvacuationPlan({ country, lang }: { country: string; lan
                 'View official evacuation maps',
                 'Ver mapas oficiais de evacuação',
               )}
-              meta={destination.evacuation.name}
+              meta={keepSeparators(destination.evacuation.name)}
               trail={out}
             />
           )}
@@ -94,16 +96,13 @@ export default function EvacuationPlan({ country, lang }: { country: string; lan
               href={destination.civilProtection.url}
               external
               lead={<RowIcon icon={<BuildingOfficeIcon size={20} aria-hidden="true" />} />}
-              title={`${t('Indicaciones locales de', 'Local guidance from', 'Orientações locais:')} ${destination.civilProtection.name}`}
-              meta={
-                destination.evacuation
-                  ? t(
-                      'Instrucciones del lugar donde estás',
-                      'Instructions for where you are',
-                      'Instruções do lugar onde você está',
-                    )
-                  : undefined
-              }
+              title={t(
+                `Indicaciones de ${destination.civilProtection.name}`,
+                `${destination.civilProtection.name} guidance`,
+                `Orientações: ${destination.civilProtection.name}`,
+              )}
+              // Every row is a label and one caption: here, the site that opens.
+              meta={hostOf(destination.civilProtection.url)}
               trail={out}
             />
           )}

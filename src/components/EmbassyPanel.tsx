@@ -11,9 +11,11 @@ import {
 } from '../data/consularMissions.ts';
 import CountrySearch from './CountrySearch.tsx';
 import { hostOf, reviewDate, splitName } from '../lib/links.ts';
+import { caption } from '../lib/caption.ts';
 import TravelerSupport from './TravelerSupport.tsx';
 import {
   Actions,
+  Button,
   Disclosure,
   Field,
   List,
@@ -78,6 +80,7 @@ export default function EmbassyPanel({
       .
     </SourceStamp>
   );
+  // Links that leave Faro. Showing the office on Faro's own map is a row in its list.
   const links = (m: Mission) => {
     const route = missionDirections(m, mode);
     return (
@@ -96,11 +99,6 @@ export default function EmbassyPanel({
             )}
           </OutLink>
         )}
-        {!m.historical && !m.locationUnconfirmed && m.map && (
-          <button type="button" onClick={() => onMap(m.map!)}>
-            {t('Ver en el mapa', 'Show on the map', 'Ver no mapa')}
-          </button>
-        )}
       </Actions>
     );
   };
@@ -108,7 +106,10 @@ export default function EmbassyPanel({
   const titleId = (m: Mission) => `fw-office-${m.id.replace(/[^\w-]/g, '_')}`;
   // In the directory, each office says whose it is and what kind.
   const whose = (m: Mission) => `${names.of(m.nation)}, ${missionKinds[m.kind][i].toLowerCase()}`;
-  /** A current office: its name and address, then its lines as rows, then how to use them. */
+  /**
+   * A current office: its name and address, then its lines and its place on the map as rows,
+   * then how to use them. An address can be long, so it is a caption under the name, not a row.
+   */
   function office(m: Mission) {
     const sameLine = !!m.phone && m.phone === m.emergency;
     const emergencyNote =
@@ -119,40 +120,49 @@ export default function EmbassyPanel({
           `For citizens of ${names.of(m.nation)} in an emergency. Does not replace local emergency services.`,
           `Para emergências de cidadãos (${names.of(m.nation)}). Não substitui o serviço de emergência local.`,
         ));
+    const where = caption(all && whose(m), m.address);
+    const onFaroMap = !m.locationUnconfirmed && m.map;
     return (
       <article className="f-stack" data-gap="sm" key={m.id} aria-labelledby={titleId(m)}>
-        <List>
-          <ListRow
-            title={
-              <h3 className="f-subhead" id={titleId(m)}>
-                {m.name[i]}
-              </h3>
-            }
-            meta={[all && whose(m), m.address].filter(Boolean).join(' · ') || undefined}
-          />
-          {m.emergency && !sameLine && (
-            <PhoneRow
-              number={displayPhone(m.emergency)}
-              dial={m.emergency}
-              name={t('Emergencia consular', 'Consular emergency', 'Emergência consular')}
-            />
-          )}
-          {m.phone && (
-            <PhoneRow
-              number={displayPhone(m.phone)}
-              dial={m.phone}
-              name={
-                sameLine
-                  ? t(
-                      'Oficina y emergencia consular',
-                      'Office and consular emergency',
-                      'Atendimento e emergência consular',
-                    )
-                  : t('Oficina', 'Office', 'Atendimento')
-              }
-            />
-          )}
-        </List>
+        <div>
+          <h3 className="f-subhead" id={titleId(m)}>
+            {m.name[i]}
+          </h3>
+          {where && <Text caption>{where}</Text>}
+        </div>
+        {(m.emergency || m.phone || onFaroMap) && (
+          <List>
+            {m.emergency && !sameLine && (
+              <PhoneRow
+                number={displayPhone(m.emergency)}
+                dial={m.emergency}
+                name={t('Emergencia consular', 'Consular emergency', 'Emergência consular')}
+              />
+            )}
+            {m.phone && (
+              <PhoneRow
+                number={displayPhone(m.phone)}
+                dial={m.phone}
+                name={
+                  sameLine
+                    ? t(
+                        'Oficina y emergencia consular',
+                        'Office and consular emergency',
+                        'Atendimento e emergência consular',
+                      )
+                    : t('Oficina', 'Office', 'Atendimento')
+                }
+              />
+            )}
+            {onFaroMap && (
+              <ListRow
+                title={t('Ver en el mapa', 'Show on the map', 'Ver no mapa')}
+                meta={t('En Situación', 'In Situation', 'Em Situação')}
+                onClick={() => onMap(m.map!)}
+              />
+            )}
+          </List>
+        )}
         {(m.note || emergencyNote) && (
           <Note>
             {m.note?.[i]}
@@ -170,9 +180,7 @@ export default function EmbassyPanel({
     return (
       <article className="f-prose" key={m.id} aria-labelledby={titleId(m)}>
         <h3 id={titleId(m)}>{`${m.name[i]}, ${m.city}`}</h3>
-        {(all || m.address) && (
-          <Text caption>{[all && whose(m), m.address].filter(Boolean).join(' · ')}</Text>
-        )}
+        {(all || m.address) && <Text caption>{caption(all && whose(m), m.address)}</Text>}
         {m.note && <Text>{m.note[i]}</Text>}
         {links(m)}
         <Text caption>{reviewed(m)}</Text>
@@ -208,31 +216,30 @@ export default function EmbassyPanel({
           setKind('all');
         }}
       />
-      <Actions>
-        <button
-          type="button"
-          aria-pressed={all}
-          onClick={() => {
-            setAll(!all);
-            setQuery('');
-            setKind('all');
-          }}
-        >
-          {all
-            ? t('Filtrar por nacionalidad', 'Filter by nationality', 'Filtrar por nacionalidade')
-            : t('Explorar el directorio', 'Browse directory', 'Explorar o diretório')}
-        </button>
-        {/* Only a nationality saved in Viaje needs Viaje to change it; otherwise it is chosen here. */}
-        {savedNationality && (
-          <button type="button" onClick={onProfile}>
-            {t(
-              'Editar mis datos en Viaje',
-              'Edit my details in Trip',
-              'Editar meus dados em Viagem',
-            )}
-          </button>
-        )}
-      </Actions>
+      {/* Only a nationality saved in Viaje needs Viaje to change it; otherwise it is chosen here.
+          Opening another screen is a row; switching this list's view is a button. */}
+      {savedNationality && (
+        <List>
+          <ListRow
+            title={t('Editar mis datos', 'Edit my details', 'Editar meus dados')}
+            meta={t('En Viaje', 'In Trip', 'Em Viagem')}
+            onClick={onProfile}
+          />
+        </List>
+      )}
+      <Button
+        variant="secondary"
+        aria-pressed={all}
+        onClick={() => {
+          setAll(!all);
+          setQuery('');
+          setKind('all');
+        }}
+      >
+        {all
+          ? t('Filtrar por nacionalidad', 'Filter by nationality', 'Filtrar por nacionalidade')
+          : t('Explorar el directorio', 'Browse directory', 'Explorar o diretório')}
+      </Button>
       {all && (
         <div className="f-stack">
           <Field
@@ -364,7 +371,7 @@ export default function EmbassyPanel({
                   href={d.url}
                   external
                   title={what ? `${agency}: ${what}` : agency}
-                  meta={d.note ? `${d.note[i]} · ${hostOf(d.url)}` : hostOf(d.url)}
+                  meta={caption(d.note?.[i], hostOf(d.url))}
                   trail={outIcon}
                 />
               );

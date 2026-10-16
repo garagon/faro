@@ -2,7 +2,6 @@ import { downloadText } from '../lib/download.ts';
 import { useEffect, useRef, useState, type ComponentType } from 'react';
 import {
   BatteryChargingIcon,
-  BowlFoodIcon,
   CheckCircleIcon,
   CrosshairIcon,
   DownloadSimpleIcon,
@@ -21,10 +20,11 @@ import {
   kitKey,
   kitPlanKey,
   kitSources,
-  itemDetail,
+  itemCaption,
   kitText,
   parseKit,
   parseKitPlan,
+  shopCaption,
   shoppingList,
   storeLabels,
   waterShown,
@@ -37,6 +37,7 @@ import { careSearchUrl, type PlaceKind } from '../lib/nearbyCare.ts';
 import { writeLocal, removeLocal } from '../lib/browserStorage.ts';
 import { areaStatus, useSearchArea, type SearchArea } from './AreaPicker.tsx';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
+import { caption, keepSeparators } from '../lib/caption.ts';
 import {
   Actions,
   Button,
@@ -205,33 +206,34 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
             </Chips>
           </div>
         </div>
+        {/* Only what Faro calculates is a figure: the water for these people and days, by two
+            references. The choices themselves (people, days) are the caption. */}
         <List>
           <ListRow
             lead={<RowIcon icon={<DropIcon size={20} />} />}
             figure
             title={water.minimum}
-            meta={t(
-              `Agua, como mínimo · ${people(plan.people)}, ${days(plan.days)}`,
-              `Water, at least · ${people(plan.people)}, ${days(plan.days)}`,
-              `Água, no mínimo · ${people(plan.people)}, ${days(plan.days)}`,
+            meta={caption(
+              t('Mínimo para beber', 'Minimum to drink', 'Mínimo para beber'),
+              `${people(plan.people)}, ${days(plan.days)}`,
             )}
           />
           <ListRow
-            lead={<RowIcon icon={<BowlFoodIcon size={20} />} />}
+            lead={<RowIcon icon={<DropIcon size={20} />} />}
             figure
-            title={days(plan.days)}
+            title={water.ready}
             meta={t(
-              `Comida lista para comer · ${people(plan.people)}`,
-              `Ready-to-eat food · ${people(plan.people)}`,
-              `Comida pronta para consumo · ${people(plan.people)}`,
+              'Con higiene, según Ready.gov (EE.\u00a0UU.)',
+              'With hygiene, per Ready.gov (U.S.)',
+              'Com higiene, pelo Ready.gov (EUA)',
             )}
           />
         </List>
         <Note>
           {t(
-            `Agua: 2 L por persona y día para beber, según la referencia de SENAPRED (Chile). Ready.gov (EE. UU.) recomienda ${water.ready} para este caso, porque incluye higiene; con calor, lleva más.`,
-            `Water: about half a gallon (2 L) per person per day for drinking, per the SENAPRED (Chile) reference. Ready.gov (U.S.) recommends ${water.ready} here, one per person per day, as it includes hygiene; in heat, carry more.`,
-            `Água: 2 L por pessoa por dia para beber, segundo a referência do SENAPRED (Chile). O Ready.gov (EUA) recomenda ${water.ready} para este caso, porque inclui higiene; no calor, leve mais.`,
+            'Mínimo: 2 L por persona y día, según SENAPRED (Chile), una guía en español que da esa cifra. Con calor, lleva más.',
+            'Minimum: about half a gallon (2 L) per person per day, per SENAPRED (Chile), a Spanish-language guide that gives that figure. In heat, carry more.',
+            'Mínimo: 2 L por pessoa por dia, segundo o SENAPRED (Chile), um guia em espanhol que traz esse número. No calor, leve mais.',
           )}
         </Note>
         {plan.hazards.length > 0 && (
@@ -344,7 +346,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
                         checked={checked.includes(item.id)}
                         onChange={() => toggle(item.id)}
                         title={item.title[i]}
-                        meta={itemDetail(item, lang, plan)}
+                        meta={itemCaption(item, lang, plan)}
                       />
                     ))}
                   </List>
@@ -427,8 +429,13 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
           <span key={s.url}>
             {n > 0 && ', '}
             <a href={s.url} target="_blank" rel="noreferrer">
-              {s.name}
+              {keepSeparators(s.name)}
             </a>
+            {/* A title in another language is said to be so, kept on one line. */}
+            {s.lang !== lang &&
+              (s.lang === 'es'
+                ? t('', ' (in\u00a0Spanish)', ' (em\u00a0espanhol)')
+                : t(' (en\u00a0inglés)', '', ' (em\u00a0inglês)'))}
           </span>
         ))}
         .
@@ -460,7 +467,6 @@ function KitShopping({
     i = langIndex(lang);
   const search = useSearchArea(country, lang);
   const list = shoppingList(checked, plan);
-  const water = waterShown(plan, lang);
   return (
     <Section
       id="kit-shop"
@@ -485,9 +491,9 @@ function KitShopping({
           <div className="f-prose">
             <p>
               {t(
-                'Lo que no marcaste, agrupado por tipo de tienda. Elige una zona y abre la búsqueda.',
-                'What you have not checked, grouped by type of shop. Choose an area and open the search.',
-                'O que você não marcou, agrupado por tipo de loja. Escolha uma área e abra a busca.',
+                'Lo que no marcaste, por tipo de tienda. Elige una zona y abre la búsqueda. Tras un desastre, un resultado no garantiza que esté abierta ni que tenga existencias.',
+                'What you have not checked, by type of shop. Choose an area and open the search. After a disaster, a result does not mean it is open or has stock.',
+                'O que você não marcou, por tipo de loja. Escolha uma área e abra a busca. Depois de um desastre, um resultado não garante que esteja aberta nem que tenha estoque.',
               )}
             </p>
           </div>
@@ -496,11 +502,8 @@ function KitShopping({
             {list.map(({ store, items }) => {
               const url = careSearchUrl(store, search.area, lang);
               const Icon = storeIcons[store] || ShoppingCartIcon;
-              const what = items
-                .map((item) =>
-                  item.id === 'water' ? `${item.title[i]} (${water.minimum})` : item.title[i],
-                )
-                .join(', ');
+              // Short names, so the shop's list stays one caption line.
+              const what = shopCaption(items, lang, plan);
               return url ? (
                 <ListRow
                   key={store}
@@ -531,11 +534,12 @@ function KitShopping({
               );
             })}
           </List>
+          {/* What the third party receives, in one line next to its rows (as in Ayuda). */}
           <Note>
             {t(
-              'La búsqueda se abre en Google Maps con la zona o tu ubicación aproximada. Faro no la guarda. Después de un desastre, un resultado no garantiza que el lugar esté abierto ni que tenga existencias.',
-              'The search opens in Google Maps with the area or your approximate location. Faro does not save it. After a disaster, a result does not guarantee the place is open or has stock.',
-              'A busca abre no Google Maps com a área ou sua localização aproximada. O Faro não a salva. Depois de um desastre, um resultado não garante que o lugar esteja aberto nem que tenha estoque.',
+              'Google Maps recibe la zona; Faro no la guarda.',
+              'Google Maps gets the area; Faro keeps nothing.',
+              'O Google Maps recebe a área; o Faro não a guarda.',
             )}
           </Note>
         </>
