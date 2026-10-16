@@ -18,6 +18,7 @@ export {
   type Signal,
 } from './List.tsx';
 export { MapFrame } from './Map.tsx';
+export { MessagePreview, Progress } from './Message.tsx';
 export { CheckRow, Disclosure, SelectField, Tabs, TextArea } from './Form.tsx';
 export { Figure } from './Figure.tsx';
 export { IndexNav } from './IndexNav.tsx';

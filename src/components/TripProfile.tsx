@@ -1,5 +1,11 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { CheckCircleIcon, DownloadSimpleIcon, LockSimpleIcon } from '@phosphor-icons/react';
+import {
+  CaretDownIcon,
+  CaretUpIcon,
+  CheckCircleIcon,
+  DownloadSimpleIcon,
+  WarningCircleIcon,
+} from '@phosphor-icons/react';
 import CountrySearch from './CountrySearch.tsx';
 import ShareButtons from './ShareButtons.tsx';
 import {
@@ -15,8 +21,23 @@ import { validProfileEmail, validProfilePhone, type Preferences } from '../lib/p
 import { planCoordinates, type HotelPlan } from '../lib/resources.ts';
 import { cardLines, downloadCardImage } from '../lib/travelCardImage.ts';
 import { readContacts } from '../lib/tripData.ts';
+import { displayPhone } from '../lib/phone.ts';
 import type { Geo } from './WebMap.tsx';
 import { pick, type Lang } from '../lib/i18n.ts';
+import {
+  Actions,
+  Button,
+  CheckRow,
+  Disclosure,
+  Field,
+  List,
+  MessagePreview,
+  Note,
+  RowIcon,
+  Section,
+  SelectField,
+  TextArea,
+} from '../ui/index.ts';
 
 type Props = {
   lang: Lang;
@@ -70,6 +91,8 @@ export default function TripProfile(p: Props) {
   const [status, setStatus] = useState<'saved' | 'invalid' | 'storage' | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [imageNote, setImageNote] = useState('');
+  // The coordinates are a rarely used part of the stay section: closed until asked for.
+  const [coordinatesOpen, setCoordinatesOpen] = useState(false);
   const set = (patch: Partial<Draft>) => {
     setDraft((d) => ({ ...d, ...patch }));
     setStatus(null);
@@ -94,6 +117,18 @@ export default function TripProfile(p: Props) {
     dates: !!info.stay.arrival && !!info.stay.departure && info.stay.departure < info.stay.arrival,
   };
   const invalid = Object.values(errors).some(Boolean);
+  // An error replaces the field's hint, with a mark so it is not read as a plain hint.
+  const problem = (text: string) => (
+    <>
+      <WarningCircleIcon size={16} weight="fill" aria-hidden="true" /> {text}
+    </>
+  );
+  const checkNumber = problem(t('Revisa el número.', 'Check the number.', 'Confira o número.'));
+  // Examples follow the country you are in: Panama's prefix there, no country's number elsewhere.
+  const panama = draft.destination === 'PA';
+  const phoneExample = panama
+    ? displayPhone('+50760000000')
+    : t('+ código de país y número', '+ country code and number', '+ código do país e número');
 
   const card = fichaText(p.lang, {
     country: draft.destination,
@@ -201,27 +236,27 @@ export default function TripProfile(p: Props) {
   };
 
   return (
-    <div className="fw-trip">
-      <form className="fw-trip-form" onSubmit={save} noValidate>
-        <Section
-          n={1}
-          open
-          title={t('Tus datos', 'About you', 'Seus dados')}
-          summary={[draft.name, draft.nationality && names.of(draft.nationality)]
-            .filter(Boolean)
-            .join(', ')}
-          empty={t('Nombre y nacionalidad', 'Name and nationality', 'Nome e nacionalidade')}
-        >
-          <Field label={t('Nombre', 'Name', 'Nome')}>
-            <input
+    <div className="f-column">
+      <form className="f-stack" onSubmit={save} noValidate>
+        <div className="f-stack" data-gap="sm">
+          <Step
+            n={1}
+            open
+            title={t('Tus datos', 'About you', 'Seus dados')}
+            summary={[draft.name, draft.nationality && names.of(draft.nationality)]
+              .filter(Boolean)
+              .join(', ')}
+            empty={t('Nombre y nacionalidad', 'Name and nationality', 'Nome e nacionalidade')}
+          >
+            <Field
+              id="trip-name"
+              label={t('Nombre', 'Name', 'Nome')}
               name="traveler-name"
               autoComplete="name"
               maxLength={80}
               value={draft.name}
               onChange={(e) => set({ name: e.target.value })}
             />
-          </Field>
-          <div className="fw-trip-row">
             <CountrySearch
               label={t('Nacionalidad', 'Nationality', 'Nacionalidade')}
               lang={p.lang}
@@ -234,114 +269,114 @@ export default function TripProfile(p: Props) {
               value={draft.destination}
               onChange={(value) => value && set({ destination: value })}
             />
-          </div>
-          <div className="fw-trip-row">
             <Field
+              id="trip-phone"
               label={t('Tu teléfono', 'Your phone', 'Seu telefone')}
-              error={
-                errors.phone ? t('Revisa el número.', 'Check the number.', 'Confira o número.') : ''
-              }
-            >
-              <input
-                type="tel"
-                autoComplete="tel"
-                inputMode="tel"
-                maxLength={40}
-                placeholder="+54 9 11 5555 0000"
-                value={draft.phone}
-                onChange={(e) => set({ phone: e.target.value })}
-              />
-            </Field>
+              hint={errors.phone ? checkNumber : undefined}
+              aria-invalid={errors.phone || undefined}
+              type="tel"
+              autoComplete="tel"
+              inputMode="tel"
+              maxLength={40}
+              placeholder={phoneExample}
+              value={draft.phone}
+              onChange={(e) => set({ phone: e.target.value })}
+            />
             <Field
+              id="trip-email"
               label={t('Tu correo', 'Your email', 'Seu e-mail')}
-              error={
-                errors.email ? t('Revisa el correo.', 'Check the email.', 'Confira o e-mail.') : ''
+              hint={
+                errors.email
+                  ? problem(t('Revisa el correo.', 'Check the email.', 'Confira o e-mail.'))
+                  : undefined
               }
-            >
-              <input
-                type="email"
-                autoComplete="email"
-                maxLength={254}
-                value={draft.email}
-                onChange={(e) => set({ email: e.target.value })}
-              />
-            </Field>
-          </div>
-        </Section>
+              aria-invalid={errors.email || undefined}
+              type="email"
+              autoComplete="email"
+              maxLength={254}
+              value={draft.email}
+              onChange={(e) => set({ email: e.target.value })}
+            />
+          </Step>
 
-        <Section
-          n={2}
-          title={t('Contacto de emergencia', 'Emergency contact', 'Contato de emergência')}
-          summary={summary.contact}
-          empty={t(
-            'A quién avisar si te pasa algo',
-            'Who to notify if something happens',
-            'Quem avisar se algo acontecer',
-          )}
-        >
-          <div className="fw-trip-row">
-            <Field label={t('Nombre', 'Name', 'Nome')}>
-              <input
-                maxLength={80}
-                value={info.contact.name}
-                onChange={(e) => setInfo('contact', { name: e.target.value })}
-              />
-            </Field>
-            <Field label={t('Relación', 'Relationship', 'Relação')}>
-              <input
-                maxLength={40}
-                placeholder={t(
-                  'Madre, pareja, empresa…',
-                  'Mother, partner, employer…',
-                  'Mãe, cônjuge, empresa…',
-                )}
-                value={info.contact.relation}
-                onChange={(e) => setInfo('contact', { relation: e.target.value })}
-              />
-            </Field>
-          </div>
-          <Field
-            label={t('Teléfono', 'Phone', 'Telefone')}
-            hint={t(
-              'Con código de país, por ejemplo +54.',
-              'With country code, for example +1.',
-              'Com o código do país, por exemplo +55.',
+          <Step
+            n={2}
+            title={t('Contacto de emergencia', 'Emergency contact', 'Contato de emergência')}
+            summary={summary.contact}
+            empty={t(
+              'A quién avisar si te pasa algo',
+              'Who to notify if something happens',
+              'Quem avisar se algo acontecer',
             )}
-            error={
-              errors.contactPhone
-                ? t('Revisa el número.', 'Check the number.', 'Confira o número.')
-                : ''
-            }
           >
-            <input
+            <Field
+              id="trip-contact-name"
+              label={t('Nombre', 'Name', 'Nome')}
+              maxLength={80}
+              value={info.contact.name}
+              onChange={(e) => setInfo('contact', { name: e.target.value })}
+            />
+            <Field
+              id="trip-contact-relation"
+              label={t('Relación', 'Relationship', 'Relação')}
+              maxLength={40}
+              placeholder={t(
+                'Madre, pareja, empresa…',
+                'Mother, partner, employer…',
+                'Mãe, cônjuge, empresa…',
+              )}
+              value={info.contact.relation}
+              onChange={(e) => setInfo('contact', { relation: e.target.value })}
+            />
+            <Field
+              id="trip-contact-phone"
+              label={t('Teléfono', 'Phone', 'Telefone')}
+              hint={
+                errors.contactPhone
+                  ? checkNumber
+                  : panama
+                    ? t(
+                        'Con código de país, por ejemplo +507.',
+                        'With country code, for example +507.',
+                        'Com o código do país, por exemplo +507.',
+                      )
+                    : t(
+                        'Con código de país, empezando por +.',
+                        'With country code, starting with +.',
+                        'Com o código do país, começando por +.',
+                      )
+              }
+              aria-invalid={errors.contactPhone || undefined}
               type="tel"
               inputMode="tel"
               maxLength={30}
               value={info.contact.phone}
               onChange={(e) => setInfo('contact', { phone: e.target.value })}
             />
-          </Field>
-        </Section>
+          </Step>
 
-        <Section
-          n={3}
-          title={t('Salud', 'Health', 'Saúde')}
-          summary={summary.health}
-          empty={t(
-            'Alergias, medicamentos, grupo sanguíneo',
-            'Allergies, medication, blood type',
-            'Alergias, medicamentos, tipo sanguíneo',
-          )}
-        >
-          <p className="fw-trip-note">
-            {t(
-              'Útil para quien te atienda. Es información sensible: solo entra en la ficha si lo marcas abajo.',
-              'Useful for whoever treats you. It is sensitive: it goes into your card only if you tick the box below.',
-              'Útil para quem for atender você. É uma informação sensível: só entra na ficha se você marcar a opção abaixo.',
+          <Step
+            n={3}
+            title={t('Salud', 'Health', 'Saúde')}
+            summary={summary.health}
+            empty={t(
+              'Alergias, medicamentos, grupo sanguíneo',
+              'Allergies, medication, blood type',
+              'Alergias, medicamentos, tipo sanguíneo',
             )}
-          </p>
-          <Field label={t('Alergias', 'Allergies', 'Alergias')}>
-            <input
+          >
+            <div className="f-prose">
+              <p>
+                {t(
+                  'Útil para quien te atienda. Es información sensible: solo entra en la ficha si lo marcas abajo.',
+                  'Useful for whoever treats you. It is sensitive: it goes into your card only if you tick the box below.',
+                  'Útil para quem for atender você. É uma informação sensível: só entra na ficha se você marcar a opção abaixo.',
+                )}
+              </p>
+            </div>
+            <Field
+              id="trip-allergies"
+              label={t('Alergias', 'Allergies', 'Alergias')}
               maxLength={300}
               placeholder={t(
                 'Por ejemplo, penicilina',
@@ -351,9 +386,9 @@ export default function TripProfile(p: Props) {
               value={info.health.allergies}
               onChange={(e) => setInfo('health', { allergies: e.target.value })}
             />
-          </Field>
-          <Field label={t('Condiciones médicas', 'Medical conditions', 'Condições médicas')}>
-            <input
+            <Field
+              id="trip-conditions"
+              label={t('Condiciones médicas', 'Medical conditions', 'Condições médicas')}
               maxLength={300}
               placeholder={t(
                 'Por ejemplo, asma o diabetes',
@@ -363,169 +398,170 @@ export default function TripProfile(p: Props) {
               value={info.health.conditions}
               onChange={(e) => setInfo('health', { conditions: e.target.value })}
             />
-          </Field>
-          <div className="fw-trip-row">
-            <Field label={t('Medicamentos', 'Medication', 'Medicamentos')}>
-              <input
-                maxLength={300}
-                value={info.health.medications}
-                onChange={(e) => setInfo('health', { medications: e.target.value })}
-              />
-            </Field>
-            <Field label={t('Grupo sanguíneo', 'Blood type', 'Tipo sanguíneo')}>
-              <select
-                value={info.health.bloodType}
-                onChange={(e) => setInfo('health', { bloodType: e.target.value })}
-              >
-                {bloodTypes.map((b) => (
-                  <option key={b} value={b}>
-                    {b || t('No lo sé', 'Not known', 'Não sei')}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </div>
-          <label className="fw-trip-check">
-            <input
-              type="checkbox"
-              checked={info.health.share}
-              onChange={(e) => setInfo('health', { share: e.target.checked })}
+            <Field
+              id="trip-medications"
+              label={t('Medicamentos', 'Medication', 'Medicamentos')}
+              maxLength={300}
+              value={info.health.medications}
+              onChange={(e) => setInfo('health', { medications: e.target.value })}
             />
-            {t(
-              'Incluir mi salud en la ficha que comparto',
-              'Include my health details in the card I share',
-              'Incluir minha saúde na ficha que compartilho',
-            )}
-          </label>
-        </Section>
+            <SelectField
+              id="trip-blood"
+              label={t('Grupo sanguíneo', 'Blood type', 'Tipo sanguíneo')}
+              value={info.health.bloodType}
+              onChange={(e) => setInfo('health', { bloodType: e.target.value })}
+            >
+              {bloodTypes.map((b) => (
+                <option key={b} value={b}>
+                  {b || t('No lo sé', 'Not known', 'Não sei')}
+                </option>
+              ))}
+            </SelectField>
+            <List>
+              <CheckRow
+                id="trip-health-share"
+                checked={info.health.share}
+                onChange={(share) => setInfo('health', { share })}
+                title={t(
+                  'Incluir mi salud en la ficha que comparto',
+                  'Include my health details in the card I share',
+                  'Incluir minha saúde na ficha que compartilho',
+                )}
+              />
+            </List>
+          </Step>
 
-        <Section
-          n={4}
-          title={t('Seguro de viaje', 'Travel insurance', 'Seguro viagem')}
-          summary={summary.insurance}
-          empty={t(
-            'Aseguradora, póliza y asistencia 24 h',
-            'Insurer, policy and 24-hour assistance',
-            'Seguradora, apólice e assistência 24 h',
-          )}
-        >
-          <div className="fw-trip-row">
-            <Field label={t('Aseguradora', 'Insurer', 'Seguradora')}>
-              <input
-                maxLength={80}
-                value={info.insurance.company}
-                onChange={(e) => setInfo('insurance', { company: e.target.value })}
-              />
-            </Field>
-            <Field label={t('Número de póliza', 'Policy number', 'Número da apólice')}>
-              <input
-                maxLength={60}
-                value={info.insurance.policy}
-                onChange={(e) => setInfo('insurance', { policy: e.target.value })}
-              />
-            </Field>
-          </div>
-          <Field
-            label={t('Teléfono de asistencia', 'Assistance phone', 'Telefone da assistência')}
-            error={
-              errors.insurancePhone
-                ? t('Revisa el número.', 'Check the number.', 'Confira o número.')
-                : ''
-            }
+          <Step
+            n={4}
+            title={t('Seguro de viaje', 'Travel insurance', 'Seguro viagem')}
+            summary={summary.insurance}
+            empty={t(
+              'Aseguradora, póliza y asistencia 24 h',
+              'Insurer, policy and 24-hour assistance',
+              'Seguradora, apólice e assistência 24 h',
+            )}
           >
-            <input
+            <Field
+              id="trip-insurer"
+              label={t('Aseguradora', 'Insurer', 'Seguradora')}
+              maxLength={80}
+              value={info.insurance.company}
+              onChange={(e) => setInfo('insurance', { company: e.target.value })}
+            />
+            <Field
+              id="trip-policy"
+              label={t('Número de póliza', 'Policy number', 'Número da apólice')}
+              maxLength={60}
+              value={info.insurance.policy}
+              onChange={(e) => setInfo('insurance', { policy: e.target.value })}
+            />
+            <Field
+              id="trip-insurance-phone"
+              label={t('Teléfono de asistencia', 'Assistance phone', 'Telefone da assistência')}
+              hint={errors.insurancePhone ? checkNumber : undefined}
+              aria-invalid={errors.insurancePhone || undefined}
               type="tel"
               inputMode="tel"
               maxLength={30}
               value={info.insurance.phone}
               onChange={(e) => setInfo('insurance', { phone: e.target.value })}
             />
-          </Field>
-        </Section>
+          </Step>
 
-        <Section
-          n={5}
-          title={t('Alojamiento y fechas', 'Accommodation and dates', 'Hospedagem e datas')}
-          summary={summary.stay}
-          empty={t(
-            'Dónde te alojas y punto de encuentro',
-            'Where you stay and meeting point',
-            'Onde você se hospeda e ponto de encontro',
-          )}
-        >
-          <div className="fw-trip-row">
-            <Field label={t('Alojamiento', 'Accommodation', 'Hospedagem')}>
-              <input
-                maxLength={120}
-                value={draft.stayName}
-                onChange={(e) => set({ stayName: e.target.value })}
-              />
-            </Field>
-            <Field label={t('Dirección', 'Address', 'Endereço')}>
-              <input
-                maxLength={200}
-                autoComplete="street-address"
-                value={info.stay.address}
-                onChange={(e) => setInfo('stay', { address: e.target.value })}
-              />
-            </Field>
-          </div>
-          <div className="fw-trip-row">
-            <Field label={t('Llegada', 'Arrival', 'Chegada')}>
-              <input
-                type="date"
-                value={info.stay.arrival}
-                onChange={(e) => setInfo('stay', { arrival: e.target.value })}
-              />
-            </Field>
-            <Field
-              label={t('Salida', 'Departure', 'Saída')}
-              error={
-                errors.dates
-                  ? t('Es anterior a la llegada.', 'It is before arrival.', 'É anterior à chegada.')
-                  : ''
-              }
-            >
-              <input
-                type="date"
-                value={info.stay.departure}
-                onChange={(e) => setInfo('stay', { departure: e.target.value })}
-              />
-            </Field>
-          </div>
-          <Field
-            label={t('Punto de encuentro', 'Meeting point', 'Ponto de encontro')}
-            hint={t(
-              'Pregúntalo en recepción. Es una nota personal, no un punto seguro verificado.',
-              'Ask reception. It is a personal note, not a verified safe point.',
-              'Pergunte na recepção. É uma anotação pessoal, não um ponto seguro verificado.',
+          <Step
+            n={5}
+            title={t('Alojamiento y fechas', 'Accommodation and dates', 'Hospedagem e datas')}
+            summary={summary.stay}
+            empty={t(
+              'Dónde te alojas y punto de encuentro',
+              'Where you stay and meeting point',
+              'Onde você se hospeda e ponto de encontro',
             )}
           >
-            <input
+            <Field
+              id="trip-stay"
+              label={t('Alojamiento', 'Accommodation', 'Hospedagem')}
+              maxLength={120}
+              value={draft.stayName}
+              onChange={(e) => set({ stayName: e.target.value })}
+            />
+            <Field
+              id="trip-address"
+              label={t('Dirección', 'Address', 'Endereço')}
+              maxLength={200}
+              autoComplete="street-address"
+              value={info.stay.address}
+              onChange={(e) => setInfo('stay', { address: e.target.value })}
+            />
+            <Field
+              id="trip-arrival"
+              label={t('Llegada', 'Arrival', 'Chegada')}
+              type="date"
+              value={info.stay.arrival}
+              onChange={(e) => setInfo('stay', { arrival: e.target.value })}
+            />
+            <Field
+              id="trip-departure"
+              label={t('Salida', 'Departure', 'Saída')}
+              hint={
+                errors.dates
+                  ? problem(
+                      t(
+                        'Es anterior a la llegada.',
+                        'It is before arrival.',
+                        'É anterior à chegada.',
+                      ),
+                    )
+                  : undefined
+              }
+              aria-invalid={errors.dates || undefined}
+              type="date"
+              value={info.stay.departure}
+              onChange={(e) => setInfo('stay', { departure: e.target.value })}
+            />
+            <Field
+              id="trip-meeting"
+              label={t('Punto de encuentro', 'Meeting point', 'Ponto de encontro')}
+              hint={t(
+                'Pregúntalo en recepción. Es una nota personal, no un punto seguro verificado.',
+                'Ask reception. It is a personal note, not a verified safe point.',
+                'Pergunte na recepção. É uma anotação pessoal, não um ponto seguro verificado.',
+              )}
               maxLength={300}
               value={draft.meeting}
               onChange={(e) => set({ meeting: e.target.value })}
             />
-          </Field>
-          <Field label={t('Ruta e indicaciones', 'Route and instructions', 'Rota e instruções')}>
-            <textarea
+            <TextArea
+              id="trip-route"
+              label={t('Ruta e indicaciones', 'Route and instructions', 'Rota e instruções')}
               maxLength={1500}
               rows={3}
               value={draft.notes}
               onChange={(e) => set({ notes: e.target.value })}
             />
-          </Field>
-          <details className="fw-trip-coordinates">
-            <summary>
+            <Button
+              variant="ghost"
+              aria-expanded={coordinatesOpen}
+              aria-controls="trip-coordinates"
+              onClick={() => setCoordinatesOpen((open) => !open)}
+            >
               {t(
                 'Marcar el punto de encuentro en el mapa',
                 'Pin the meeting point on the map',
                 'Marcar o ponto de encontro no mapa',
               )}
-            </summary>
-            <div className="fw-trip-row">
-              <Field label={t('Latitud', 'Latitude', 'Latitude')}>
-                <input
+              {coordinatesOpen ? (
+                <CaretUpIcon size={16} aria-hidden="true" />
+              ) : (
+                <CaretDownIcon size={16} aria-hidden="true" />
+              )}
+            </Button>
+            {/* The wrapper carries `hidden`: a layout class would override it with its display. */}
+            <div id="trip-coordinates" hidden={!coordinatesOpen}>
+              <div className="f-stack">
+                <Field
+                  id="trip-lat"
+                  label={t('Latitud', 'Latitude', 'Latitude')}
                   type="number"
                   step="any"
                   min="-90"
@@ -533,20 +569,21 @@ export default function TripProfile(p: Props) {
                   value={draft.lat}
                   onChange={(e) => set({ lat: e.target.value })}
                 />
-              </Field>
-              <Field
-                label={t('Longitud', 'Longitude', 'Longitude')}
-                error={
-                  errors.coordinates
-                    ? t(
-                        'Completa ambas coordenadas válidas.',
-                        'Enter both valid coordinates.',
-                        'Preencha as duas coordenadas válidas.',
-                      )
-                    : ''
-                }
-              >
-                <input
+                <Field
+                  id="trip-lng"
+                  label={t('Longitud', 'Longitude', 'Longitude')}
+                  hint={
+                    errors.coordinates
+                      ? problem(
+                          t(
+                            'Completa ambas coordenadas válidas.',
+                            'Enter both valid coordinates.',
+                            'Preencha as duas coordenadas válidas.',
+                          ),
+                        )
+                      : undefined
+                  }
+                  aria-invalid={errors.coordinates || undefined}
                   type="number"
                   step="any"
                   min="-180"
@@ -554,115 +591,126 @@ export default function TripProfile(p: Props) {
                   value={draft.lng}
                   onChange={(e) => set({ lng: e.target.value })}
                 />
-              </Field>
-            </div>
-            {p.geo && (
-              <button
-                type="button"
-                className="fw-text"
-                onClick={() => set({ lat: p.geo!.lat.toFixed(6), lng: p.geo!.lng.toFixed(6) })}
-              >
-                {t(
-                  'Estoy en el punto acordado: usar mi ubicación',
-                  'I am at the agreed point: use my location',
-                  'Estou no ponto combinado: usar minha localização',
+                {p.geo && (
+                  <Actions>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        set({ lat: p.geo!.lat.toFixed(6), lng: p.geo!.lng.toFixed(6) })
+                      }
+                    >
+                      {t(
+                        'Estoy en el punto acordado: usar mi ubicación',
+                        'I am at the agreed point: use my location',
+                        'Estou no ponto combinado: usar minha localização',
+                      )}
+                    </button>
+                  </Actions>
                 )}
-              </button>
-            )}
-          </details>
-        </Section>
+              </div>
+            </div>
+          </Step>
+        </div>
 
-        <div className="fw-trip-actions">
-          <button className="fw-primary" type="submit">
-            <CheckCircleIcon size={19} aria-hidden="true" />
+        <div className="f-stack" data-gap="sm">
+          <Button type="submit" icon={<CheckCircleIcon size={20} aria-hidden="true" />}>
             {t('Guardar', 'Save', 'Salvar')}
-          </button>
-          <p role="status" className={status === 'saved' ? 'is-saved' : status ? 'is-error' : ''}>
-            {status === 'saved'
-              ? t('Guardado en este navegador.', 'Saved in this browser.', 'Salvo neste navegador.')
-              : status === 'invalid'
-                ? t(
-                    'Revisa los campos marcados.',
-                    'Check the highlighted fields.',
-                    'Confira os campos marcados.',
-                  )
-                : status === 'storage'
+          </Button>
+          {/* Always present, so a screen reader announces the result when it appears. */}
+          <div role="status">
+            {status && (
+              <Note>
+                {status === 'saved'
                   ? t(
-                      'El navegador no permitió guardar. Descarga o comparte tu ficha.',
-                      'The browser did not allow saving. Download or share your card.',
-                      'O navegador não permitiu salvar. Baixe ou compartilhe sua ficha.',
+                      'Guardado en este navegador.',
+                      'Saved in this browser.',
+                      'Salvo neste navegador.',
                     )
-                  : ''}
-          </p>
+                  : status === 'invalid'
+                    ? t(
+                        'Revisa los campos marcados.',
+                        'Check the highlighted fields.',
+                        'Confira os campos marcados.',
+                      )
+                    : t(
+                        'El navegador no permitió guardar. Descarga o comparte tu ficha.',
+                        'The browser did not allow saving. Download or share your card.',
+                        'O navegador não permitiu salvar. Baixe ou compartilhe sua ficha.',
+                      )}
+              </Note>
+            )}
+          </div>
           {!confirmDelete ? (
-            <button type="button" className="fw-text" onClick={() => setConfirmDelete(true)}>
-              {t('Borrar mis datos', 'Delete my details', 'Apagar meus dados')}
-            </button>
+            <Actions>
+              <button type="button" onClick={() => setConfirmDelete(true)}>
+                {t('Borrar mis datos', 'Delete my details', 'Apagar meus dados')}
+              </button>
+            </Actions>
           ) : (
-            <span
-              className="fw-trip-confirm"
+            <div
+              className="f-prose"
               role="group"
               aria-label={t('Confirmar', 'Confirm', 'Confirmar')}
             >
-              {t(
-                '¿Borrar perfil, salud, seguro y alojamiento?',
-                'Delete profile, health, insurance and stay?',
-                'Apagar perfil, saúde, seguro e hospedagem?',
-              )}
-              <button
-                type="button"
-                className="fw-text"
-                onClick={() => {
-                  p.onDeleteAll();
-                  setDraft({
-                    name: '',
-                    nationality: '',
-                    destination: initialCountry,
-                    phone: '',
-                    email: '',
-                    info: emptyEmergencyInfo(),
-                    stayName: '',
-                    meeting: '',
-                    notes: '',
-                    lat: '',
-                    lng: '',
-                  });
-                  setConfirmDelete(false);
-                  setStatus(null);
-                }}
-              >
-                {t('Sí, borrar', 'Yes, delete', 'Sim, apagar')}
-              </button>
-              <button type="button" className="fw-text" onClick={() => setConfirmDelete(false)}>
-                {t('Cancelar', 'Cancel', 'Cancelar')}
-              </button>
-            </span>
+              <p>
+                {t(
+                  '¿Borrar perfil, salud, seguro y alojamiento?',
+                  'Delete profile, health, insurance and stay?',
+                  'Apagar perfil, saúde, seguro e hospedagem?',
+                )}
+              </p>
+              <Actions>
+                <button
+                  type="button"
+                  onClick={() => {
+                    p.onDeleteAll();
+                    setDraft({
+                      name: '',
+                      nationality: '',
+                      destination: initialCountry,
+                      phone: '',
+                      email: '',
+                      info: emptyEmergencyInfo(),
+                      stayName: '',
+                      meeting: '',
+                      notes: '',
+                      lat: '',
+                      lng: '',
+                    });
+                    setConfirmDelete(false);
+                    setStatus(null);
+                  }}
+                >
+                  {t('Sí, borrar', 'Yes, delete', 'Sim, apagar')}
+                </button>
+                <button type="button" onClick={() => setConfirmDelete(false)}>
+                  {t('Cancelar', 'Cancel', 'Cancelar')}
+                </button>
+              </Actions>
+            </div>
           )}
         </div>
       </form>
 
-      <aside className="fw-ficha" aria-labelledby="fw-ficha-title">
-        <h2 id="fw-ficha-title">{t('Tu ficha', 'Your card', 'Sua ficha')}</h2>
-        <p>
-          {t(
-            'Envíala a tu familia, a tu empresa o a quien te atienda. Tú eliges la app y el destinatario.',
-            'Send it to family, your employer or whoever helps you. You choose the app and recipient.',
-            'Envie para sua família, sua empresa ou quem atender você. Você escolhe o app e o destinatário.',
-          )}
-        </p>
-        <div className="fw-ficha-text" aria-live="polite">
-          {filled ? (
-            card
-          ) : (
-            <span>
-              {t(
-                'Completa tus datos y aparecerán aquí, listos para enviar.',
-                'Fill in your details and they will appear here, ready to send.',
-                'Preencha seus dados e eles aparecerão aqui, prontos para enviar.',
-              )}
-            </span>
-          )}
+      <Section id="fw-ficha" title={t('Tu ficha', 'Your card', 'Sua ficha')}>
+        <div className="f-prose">
+          <p>
+            {t(
+              'Envíala a tu familia, a tu empresa o a quien te atienda. Tú eliges la app y el destinatario.',
+              'Send it to family, your employer or whoever helps you. You choose the app and recipient.',
+              'Envie para sua família, sua empresa ou quem atender você. Você escolhe o app e o destinatário.',
+            )}
+          </p>
         </div>
+        <MessagePreview
+          live
+          text={filled ? card : ''}
+          empty={t(
+            'Completa tus datos y aparecerán aquí, listos para enviar.',
+            'Fill in your details and they will appear here, ready to send.',
+            'Preencha seus dados e eles aparecerão aqui, prontos para enviar.',
+          )}
+        />
         <ShareButtons
           lang={p.lang}
           text={card}
@@ -679,33 +727,23 @@ export default function TripProfile(p: Props) {
               : undefined
           }
         />
-        <button
-          type="button"
-          className="fw-text fw-ficha-image"
-          disabled={!p.profile && !p.plan}
-          onClick={() => void saveImage()}
+        <Button
+          variant="secondary"
+          block
+          icon={<DownloadSimpleIcon size={20} aria-hidden="true" />}
+          // aria-disabled rather than disabled: the older screens' styles fade disabled buttons
+          // below 4.5:1; the design system draws aria-disabled with readable text.
+          aria-disabled={(!p.profile && !p.plan) || undefined}
+          onClick={() => (p.profile || p.plan) && void saveImage()}
         >
-          <DownloadSimpleIcon size={17} aria-hidden="true" />
           {t(
             'Guardar como imagen para el teléfono',
             'Save as an image for your phone',
             'Salvar como imagem para o celular',
           )}
-        </button>
-        {imageNote && (
-          <p className="fw-share-note" role="status">
-            {imageNote}
-          </p>
-        )}
-        <p className="fw-ficha-privacy">
-          <LockSimpleIcon size={15} aria-hidden="true" />
-          {t(
-            'Se guarda solo en este navegador, sin cuenta. Faro no envía nada por ti.',
-            'Stored only in this browser, with no account. Faro never sends anything for you.',
-            'Fica salvo só neste navegador, sem conta. O Faro não envia nada por você.',
-          )}
-        </p>
-      </aside>
+        </Button>
+        <div role="status">{imageNote && <Note>{imageNote}</Note>}</div>
+      </Section>
     </div>
   );
 }
@@ -720,7 +758,8 @@ const emptyPlanFields: HotelPlan = {
   country: 'PA',
 };
 
-function Section({
+/** One optional part of the profile: its number, its title and what is filled in so far. */
+function Step({
   n,
   title,
   summary,
@@ -736,37 +775,13 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <details className="fw-trip-section" open={open}>
-      <summary>
-        <span className="fw-trip-step" aria-hidden="true">
-          {n}
-        </span>
-        <span className="fw-trip-heading">
-          <strong>{title}</strong>
-          <small data-filled={!!summary}>{summary || empty}</small>
-        </span>
-      </summary>
-      <div className="fw-trip-fields">{children}</div>
-    </details>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  error,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  error?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className={`fw-trip-field ${error ? 'has-error' : ''}`}>
-      <span>{label}</span>
+    <Disclosure
+      open={open}
+      lead={<RowIcon icon={<span>{n}</span>} />}
+      title={title}
+      meta={summary || empty}
+    >
       {children}
-      {(error || hint) && <small>{error || hint}</small>}
-    </label>
+    </Disclosure>
   );
 }

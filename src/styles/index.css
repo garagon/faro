@@ -57,3 +57,4 @@
 @import './ds/figure.css' layer(ds);
 @import './ds/index-nav.css' layer(ds);
 @import './ds/compose.css' layer(ds);
+@import './ds/message.css' layer(ds);
