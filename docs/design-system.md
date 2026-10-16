@@ -5,13 +5,13 @@ the same everywhere. Screens compose these pieces; they do not restyle them.
 
 ## Where things live
 
-| Part                                                                      | File                                        |
-| ------------------------------------------------------------------------- | ------------------------------------------- |
-| Tokens: colour roles, type scale, spacing, radii, shadows, layers, motion | `src/styles/ds/tokens.css`                  |
-| Component styles                                                          | `src/styles/ds/components.css`              |
-| App frame: header, tabs, sidebar, top bar, layout helpers                 | `src/styles/ds/shell.css`                   |
-| React components                                                          | `src/ui/` (exported from `src/ui/index.ts`) |
-| Cascade order                                                             | `src/styles/index.css`                      |
+| Part                                                                      | File                                                                                        |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Tokens: colour roles, type scale, spacing, radii, shadows, layers, motion | `src/styles/ds/tokens.css`                                                                  |
+| Component styles                                                          | `src/styles/ds/components.css` and one file per larger part (`sheet.css`, `compose.css`, …) |
+| App frame: header, tabs, sidebar, top bar, layout helpers                 | `src/styles/ds/shell.css`                                                                   |
+| React components                                                          | `src/ui/` (exported from `src/ui/index.ts`)                                                 |
+| Cascade order                                                             | `src/styles/index.css`                                                                      |
 
 ## Cascade layers
 
@@ -27,10 +27,11 @@ A later layer always wins, whatever the selector, so design-system rules never n
 specificity or `!important`. The loading screen (`boot.css`) is linked from `index.html` and stays
 outside. Components set their own margins; nothing in `ds-base` resets elements globally.
 
-Situación, Emergencia, the country screen and the app frame are on the design system. Ayuda,
-Avisar, Mochila, Viaje, Guía, the detail pages and Fuentes still use `legacy` inside the new
-frame (their content region keeps the `fw-app` and `fw-main` classes). Moving a screen means
-rebuilding it with `src/ui` components and deleting the legacy rules it used, in the same change.
+Every screen, the earthquake sheet, the install sheet and the crash fallback are on the design
+system. What remains in `legacy` is small: the map's pins and error state (WebMap), the guide's
+illustrations and a few frame rules; the content region still carries the `fw-app` and `fw-main`
+classes for them. A legacy rule whose class no source renders any more is deleted, not kept
+"just in case"; check with a visual regression run before and after.
 
 ## Rules
 
@@ -51,7 +52,11 @@ rebuilding it with `src/ui` components and deleting the legacy rules it used, in
   button. On the Emergency screen it is marked as the current place.
 - Order on Situación: on a normal day the actions come first; when a warning of level 2 or more is
   in force, "What is happening" moves up under the call button.
-- Every tappable element has a 44 px target and pressed feedback (`f-pressable`).
+- Every tappable element has a 44 px target, pressed feedback and, with a mouse, hover feedback:
+  rows (links, buttons, section headers, checklist rows), chips and segments alike.
+- A dialog or sheet is a history entry: Back closes it and leaves the screen as it was
+  (`useBackToClose`; the earthquake sheet in `App.tsx`).
+- `Section` renders its `id`, so a link can open a screen at one of its parts.
 - Text sizes are in `rem`, so the reader's browser setting applies. Fields use 16 px.
 
 ## Colour roles
@@ -85,20 +90,25 @@ a label and one caption line; state, source and time share that caption.
 
 ## Components
 
-| Component                                                         | Use                                                                                                                                                                                                                     |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CallButton`                                                      | The main emergency number: the large button in call red, at most as wide as a phone (26 rem). Once per screen.                                                                                                          |
-| `PhoneRow`                                                        | Other numbers, as list rows: the number first, who answers under it.                                                                                                                                                    |
-| `Button`, `LinkButton`, `IconButton`                              | One family, 44 and 56 px: primary (one per screen), secondary, ghost; `call` only for calling.                                                                                                                          |
-| `List`, `ListRow`                                                 | Grouped rows; a row opens a screen, leaves to a link, or shows a value.                                                                                                                                                 |
-| `StatusIcon`, `RowIcon`                                           | The 36 px circle that starts a row: a hazard icon tinted by the official level when something is listed (neutral, faded without an answer, pulsing while checking), or a neutral action icon. One text edge per screen. |
-| `Section`, `ScreenHead`, `BackLink`                               | A title and space instead of boxes; the screen title equals its menu label.                                                                                                                                             |
-| `Badge`                                                           | An official level in the agency's own words, beside a row title. Warnings in force are the first rows of the list, never a separate coloured box.                                                                       |
-| `SafetyNotice`, `Note`, `ScopeNote`                               | The three tiers below.                                                                                                                                                                                                  |
-| `SourceStamp`                                                     | Who said it and when.                                                                                                                                                                                                   |
-| `Magnitude`, `Skeleton`                                           | Published magnitude; placeholder while the first answer arrives.                                                                                                                                                        |
-| `ChoiceChip`, `Segmented`, `Field`                                | Choosing, switching views, typing.                                                                                                                                                                                      |
-| `AppFrame`, `Header`, `StatusBar`, `TabBar`, `Sidebar`, `Content` | The frame. Phone: header, offline/stale strip, content, tabs. Desktop: sidebar with brand, country, Emergency, menu, sources, privacy and language; no top bar.                                                         |
+| Component                                                                          | Use                                                                                                                                                                                                                     |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CallButton`                                                                       | The main emergency number: the large button in call red, at most as wide as a phone (26 rem). Once per screen.                                                                                                          |
+| `PhoneRow`                                                                         | Other numbers, as list rows: the number first, who answers under it.                                                                                                                                                    |
+| `Button`, `LinkButton`, `IconButton`                                               | One family, 44 and 56 px: primary (one per screen), secondary, ghost; `call` only for calling.                                                                                                                          |
+| `List`, `ListRow`                                                                  | Grouped rows; a row opens a screen, leaves to a link, or shows a value.                                                                                                                                                 |
+| `StatusIcon`, `RowIcon`                                                            | The 36 px circle that starts a row: a hazard icon tinted by the official level when something is listed (neutral, faded without an answer, pulsing while checking), or a neutral action icon. One text edge per screen. |
+| `Section`, `ScreenHead`, `BackLink`                                                | A title and space instead of boxes; the screen title equals its menu label.                                                                                                                                             |
+| `Badge`                                                                            | An official level in the agency's own words, beside a row title. Warnings in force are the first rows of the list, never a separate coloured box.                                                                       |
+| `SafetyNotice`, `Note`, `ScopeNote`                                                | The three tiers below.                                                                                                                                                                                                  |
+| `SourceStamp`                                                                      | Who said it and when.                                                                                                                                                                                                   |
+| `Magnitude`, `Skeleton`                                                            | Published magnitude; placeholder while the first answer arrives.                                                                                                                                                        |
+| `ChoiceChip`, `Segmented`, `Field`                                                 | Choosing, switching views, typing.                                                                                                                                                                                      |
+| `AppFrame`, `Header`, `StatusBar`, `TabBar`, `Sidebar`, `Content`                  | The frame. Phone: header, offline/stale strip, content, tabs. Desktop: sidebar with brand, country, Emergency, menu, sources, privacy and language; no top bar.                                                         |
+| `SelectField`, `TextArea`, `CheckRow`, `Combobox`                                  | Long lists on the device's picker, multi-line text, checklist rows, country search with suggestions.                                                                                                                    |
+| `Tabs`, `Disclosure`, `ExpandRow`                                                  | Sibling panels; a whole optional part of a form (its caption turns to the error colour when something inside needs fixing); a row with detail.                                                                          |
+| `RadioList`, `ActionBar`, `ActionRow`, `MessageText`, `MessagePreview`, `Progress` | Avisar: one choice as rows, the main action kept in view on phones (natural width on desktop), share channels, the message as it will be sent, a checklist's progress.                                                  |
+| `Sheet`, `Facts`, `Pager`, `ScrollCue`                                             | A record over the screen (earthquake, install): from the bottom on phones, centred on desktop, with Back closing it; label/value rows; page numbers; the edge cue of a tab strip that scrolls.                          |
+| `Figure`, `IndexNav`, `Text`                                                       | An illustration with its credit; the guide's topic list beside the text on desktop; a paragraph in the text or caption role.                                                                                            |
 
 ## Notices and sources
 
@@ -122,6 +132,6 @@ shows one mockup filling the window. Production builds do not include it.
 
 ## Not yet
 
-Dark mode comes after every screen uses the design system: tokens already separate roles from
-values, so it is a `prefers-color-scheme` block in `tokens.css`, but a dark frame around light
-legacy screens would look worse than no dark mode.
+Dark mode: tokens already separate roles from values, so it is a `prefers-color-scheme` block in
+`tokens.css`. It waits for the last legacy rules (map pins, illustrations) to read tokens too, and
+for a contrast review of the official level colours on a dark page.
