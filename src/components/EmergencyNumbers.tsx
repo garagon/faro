@@ -19,14 +19,11 @@ import {
 export default function EmergencyNumbers({ country, lang }: { country: string; lang: Lang }) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
     idx = langIndex(lang);
-  const data = emergencyFor(country),
-    name =
-      country === 'WORLD'
-        ? undefined
-        : new Intl.DisplayNames([lang], { type: 'region' }).of(country);
+  // The frame names the country; the section does not repeat it.
+  const data = emergencyFor(country);
   const [main, ...others] = data?.numbers ?? [];
   return (
-    <Section id="fw-help-numbers" title={t('Números', 'Numbers', 'Números')} aside={name}>
+    <Section id="fw-help-numbers" title={t('Números', 'Numbers', 'Números')}>
       {data && main ? (
         <>
           {/* The main number is the only red button; backups are rows. */}

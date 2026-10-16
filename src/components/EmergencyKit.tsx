@@ -269,6 +269,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
           )}
         </Progress>
         <Segmented
+          block
           label={t('Qué mostrar', 'What to show', 'O que mostrar')}
           value={pendingOnly ? 'missing' : 'all'}
           onChange={(view) => {

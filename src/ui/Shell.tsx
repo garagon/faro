@@ -25,12 +25,15 @@ function Brand({ onClick, label }: { onClick: () => void; label: string }) {
   );
 }
 
-/** "Panamá ▾": opens the country screen (search, my location, saved countries). */
+/**
+ * "Panamá ▾": opens the country screen (search, my location, saved countries). In the phone
+ * header it is drawn like the language picker beside it: a label and the same caret.
+ */
 function Place({ name, onClick, label }: { name: string; onClick: () => void; label: string }) {
   return (
     <button type="button" className="f-place f-pressable" onClick={onClick} aria-label={label}>
       <span>{name}</span>
-      <CaretDownIcon size={14} weight="bold" aria-hidden="true" />
+      <CaretDownIcon className="f-caret" size={14} weight="bold" aria-hidden="true" />
     </button>
   );
 }
@@ -51,9 +54,7 @@ function Language({
     <label className="f-lang f-pressable">
       <GlobeSimpleIcon className="f-lang-globe" size={full ? 20 : 18} aria-hidden="true" />
       <span aria-hidden="true">{full ? languageNames[lang] : lang.toUpperCase()}</span>
-      {!full && (
-        <CaretDownIcon className="f-lang-caret" size={12} weight="bold" aria-hidden="true" />
-      )}
+      {!full && <CaretDownIcon className="f-caret" size={14} weight="bold" aria-hidden="true" />}
       <select
         className="f-lang-select"
         aria-label={label}

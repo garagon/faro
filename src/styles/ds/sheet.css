@@ -1,6 +1,7 @@
 /*
  * Sheet: the detail of one record over the screen. From the bottom on phones, centred from
- * 600 px. It renders in a portal outside the app frame, so its breakpoint is the window's.
+ * 600 px ("desktop" here). It renders in a portal outside the app frame, so its breakpoint is
+ * the window's.
  * Head: an optional figure, the title (section title role) and one caption line; the body
  * scrolls; the actions stay at the foot.
  */
@@ -91,6 +92,64 @@
 .f-sheet-actions > * {
   flex: 1 0 auto;
 }
+/*
+ * Motion. Radix keeps the sheet and the veil mounted until their closing animation ends, so
+ * each state has its own animation: phones slide the sheet up from the bottom edge, wide
+ * screens raise it 8 px as it fades in; it leaves faster, accelerating out, and the veil fades.
+ * The `translate` property moves it without touching the centring `transform`.
+ */
+.f-sheet-overlay[data-state='open'] {
+  animation: f-fade-in var(--f-move) var(--f-ease);
+}
+.f-sheet-overlay[data-state='closed'] {
+  animation: f-fade-out var(--f-leave) var(--f-ease-exit) forwards;
+}
+.f-sheet[data-state='open'] {
+  animation: f-sheet-up var(--f-move) var(--f-ease);
+}
+.f-sheet[data-state='closed'] {
+  animation: f-sheet-down var(--f-leave) var(--f-ease-exit) forwards;
+}
+@media (min-width: 600px) {
+  .f-sheet[data-state='open'] {
+    animation-name: f-sheet-rise;
+  }
+  .f-sheet[data-state='closed'] {
+    animation-name: f-sheet-sink;
+  }
+}
+/* With reduced motion the sheet does not travel: it fades in and out where it stands. */
+@media (prefers-reduced-motion: reduce) {
+  .f-sheet[data-state='open'] {
+    animation-name: f-fade-in;
+  }
+  .f-sheet[data-state='closed'] {
+    animation-name: f-fade-out;
+  }
+}
+@keyframes f-sheet-up {
+  from {
+    translate: 0 100%;
+  }
+}
+@keyframes f-sheet-down {
+  to {
+    translate: 0 100%;
+  }
+}
+@keyframes f-sheet-rise {
+  from {
+    opacity: 0;
+    translate: 0 var(--f-space-2);
+  }
+}
+@keyframes f-sheet-sink {
+  to {
+    opacity: 0;
+    translate: 0 var(--f-space-2);
+  }
+}
+
 @media (max-width: 22.5em) {
   .f-sheet-head {
     padding-inline-start: var(--f-space-4);

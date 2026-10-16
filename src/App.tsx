@@ -1183,72 +1183,48 @@ export default function App() {
       { failed: alerts.failed, partial: alerts.data?.partial, maxAge: 20 * 60000 },
     ),
   ];
+  // Each screen's head: its title and one line of lead, or none. A lead fits one line at 390 px
+  // in Spanish and says what the content does not; the country is in the frame, never here.
   const headings: Record<Exclude<Screen, 'activity'>, [string, string]> = {
     // One title for the detail pages, whatever the tab: each tab names its own panel.
     detail: [
       t('Detalle', 'Details', 'Detalhes'),
       t(
-        `${countryName}: cada dato como lo publica su fuente.`,
-        `${countryName}: each item as its source publishes it.`,
-        `${countryName}: cada dado como a fonte o publica.`,
+        `${countryName}, como lo publica cada fuente.`,
+        `${countryName}, as each source publishes it.`,
+        `${countryName}, como cada fonte publica.`,
       ),
     ],
-    // The same word as its menu entry.
-    sources: [
-      t('Fuentes', 'Sources', 'Fontes'),
-      t(
-        'De dónde viene cada dato, cuándo se consultó por última vez y qué cubre.',
-        'Where each piece of data comes from, when it was last checked and what it covers.',
-        'De onde vem cada dado, quando foi consultado pela última vez e o que cobre.',
-      ),
-    ],
+    // The same word as its menu entry. Sections and rows already say what each screen holds.
+    sources: [t('Fuentes', 'Sources', 'Fontes'), ''],
+    // Country and Emergency draw their own heads (CountryScreen, EmergencyScreen).
     country: [t('País', 'Country', 'País'), ''],
-    emergency: [
-      t('Emergencia', 'Emergency', 'Emergência'),
-      t(
-        'Al tocar un número se abre tu teléfono. Faro no llama ni pide ayuda por ti.',
-        'Tapping a number opens your phone. Faro does not call or request help for you.',
-        'Tocar em um número abre o seu telefone. O Faro não liga nem pede ajuda por você.',
-      ),
-    ],
-    help: [
-      t('Ayuda', 'Help', 'Ajuda'),
-      t(
-        'Teléfonos de emergencia, farmacias y hospitales, fuentes oficiales y tu embajada.',
-        'Emergency numbers, pharmacies and hospitals, official sources and your embassy.',
-        'Telefones de emergência, farmácias e hospitais, fontes oficiais e sua embaixada.',
-      ),
-    ],
+    emergency: [t('Emergencia', 'Emergency', 'Emergência'), ''],
+    help: [t('Ayuda', 'Help', 'Ajuda'), ''],
     status: [
       t('Avisar', 'Check in', 'Avisar'),
       t(
-        'Prepara un mensaje para tu familia o tu equipo: cómo estás, dónde y cuándo volverás a escribir.',
-        'Prepare a message for your family or team: how you are, where, and when you will write again.',
-        'Prepare uma mensagem para sua família ou sua equipe: como você está, onde e quando vai escrever de novo.',
+        'Prepara un mensaje para decir cómo estás.',
+        'Prepare a message to say how you are.',
+        'Prepare um recado dizendo como você está.',
       ),
     ],
-    kit: [
-      t('Mochila', 'Go bag', 'Mochila'),
-      t(
-        'Calcula tu reserva, marca lo que ya tienes y encuentra dónde comprar lo que falta.',
-        'Work out your supplies, tick what you have and find where to buy what is missing.',
-        'Calcule sua reserva, marque o que você já tem e encontre onde comprar o que falta.',
-      ),
-    ],
+    kit: [t('Mochila', 'Go bag', 'Mochila'), ''],
     hotel: [
       t('Viaje', 'Trip', 'Viagem'),
       t(
-        'Tus datos para una emergencia, listos para enviar por WhatsApp, Telegram, SMS o correo. Todo es opcional.',
-        'Your details for an emergency, ready to send by WhatsApp, Telegram, SMS or email. Everything is optional.',
-        'Seus dados para uma emergência, prontos para enviar por WhatsApp, Telegram, SMS ou e-mail. Tudo é opcional.',
+        'Tus datos de emergencia. Todo es opcional.',
+        'Your emergency details, all optional.',
+        'Seus dados de emergência. Tudo é opcional.',
       ),
     ],
+    // The guide's general rule, kept above every topic.
     guide: [
       t('Guía', 'Guide', 'Guia'),
       t(
-        'Pasos generales por tipo de emergencia. Sigue siempre las instrucciones de las autoridades locales.',
-        'General steps by type of emergency. Always follow instructions from local authorities.',
-        'Passos gerais por tipo de emergência. Siga sempre as instruções das autoridades locais.',
+        'Sigue siempre a las autoridades locales.',
+        'Always follow local authorities.',
+        'Siga sempre as autoridades locais.',
       ),
     ],
   };

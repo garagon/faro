@@ -2,27 +2,9 @@ import { useRef, type ReactNode } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { XIcon } from '@phosphor-icons/react';
 
-/**
- * The detail of one record over the screen: from the bottom on phones, centred on wide screens.
- * A Radix dialog: focus moves in, Escape and the close button close it, and focus returns to
- * what opened it (a list row or a map pin) when that is still on the page.
- */
-export function Sheet({
-  open,
-  onClose,
-  lang,
-  closeLabel,
-  lead,
-  title,
-  description,
-  actions,
-  children,
-}: {
-  open: boolean;
-  onClose: () => void;
+type Content = {
   /** Language tag of the content (the portal sits outside the app's `lang`). */
   lang?: string;
-  closeLabel: string;
   /** A figure before the title, e.g. the magnitude. */
   lead?: ReactNode;
   title: ReactNode;
@@ -31,8 +13,31 @@ export function Sheet({
   /** Buttons at the foot, always visible. */
   actions?: ReactNode;
   children: ReactNode;
+};
+
+/**
+ * The detail of one record over the screen: from the bottom on phones, centred on wide screens.
+ * A Radix dialog: focus moves in, Escape and the close button close it, and focus returns to
+ * what opened it (a list row or a map pin) when that is still on the page.
+ *
+ * It slides up on phones and rises and fades in on wide screens; it leaves faster, and the veil
+ * fades (sheet.css, through Radix's `data-state`). While it leaves it keeps showing the record it
+ * showed, even if the app has already let go of it.
+ */
+export function Sheet({
+  open,
+  onClose,
+  closeLabel,
+  ...content
+}: Content & {
+  open: boolean;
+  onClose: () => void;
+  closeLabel: string;
 }) {
   const opener = useRef<HTMLElement | null>(null);
+  const shown = useRef(content);
+  if (open) shown.current = content;
+  const { lang, lead, title, description, actions, children } = open ? content : shown.current;
   return (
     <Dialog.Root
       open={open}

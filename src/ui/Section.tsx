@@ -9,7 +9,7 @@ export function Section({
   children,
 }: {
   title?: ReactNode;
-  /** Short text at the end of the title line, e.g. "En vivo · hace 1 min". */
+  /** Short text at the end of the title line, e.g. "En vivo · hace 1 min"; never the country. */
   aside?: ReactNode;
   id?: string;
   children: ReactNode;
@@ -31,7 +31,11 @@ export function Section({
   );
 }
 
-/** The screen title: the same words as its menu entry, and a lead only when it helps. */
+/**
+ * The one screen head: the title (the same words as its menu entry), a short status at the end
+ * of its line when the screen has one, and at most one line of lead. The frame already names
+ * the country, so neither the title nor the status repeats it.
+ */
 export function ScreenHead({
   title,
   lead,
@@ -39,7 +43,9 @@ export function ScreenHead({
   titleId,
 }: {
   title: ReactNode;
+  /** One line at 390 px in Spanish, saying what the content does not; or nothing. */
   lead?: ReactNode;
+  /** A short status, e.g. Situación's "Comprobado hace 1 min". */
   aside?: ReactNode;
   titleId?: string;
 }) {
