@@ -12,6 +12,17 @@
  *   legal          13 / 400        tab label      12 / 600
  */
 
+/* One focus ring everywhere. It lives in this layer (not the base) so the older screens' own
+   rings, in the legacy layer, cannot replace it. Headings and regions receive focus from the app
+   when a screen changes: no ring for that. */
+.f-root :where(:focus-visible) {
+  outline: 3px solid var(--f-color-focus);
+  outline-offset: 2px;
+}
+.f-root :where([tabindex='-1']:focus) {
+  outline: none;
+}
+
 /* Text inside the app takes the colour of its role: older blanket rules on paragraphs and list
    items (muted greys) do not reach design-system text. */
 .f-content :where(p, li, dd) {
@@ -207,17 +218,14 @@
   text-align: start;
   text-decoration: none;
 }
-button.f-row,
-a.f-row {
+:is(button, a, summary, label).f-row {
   cursor: pointer;
 }
-button.f-row:active,
-a.f-row:active {
+:is(button, a, summary, label).f-row:active {
   background: var(--f-color-surface-muted);
 }
 @media (hover: hover) {
-  button.f-row:hover,
-  a.f-row:hover {
+  :is(button, a, summary, label).f-row:hover {
     background: var(--f-color-surface-muted);
   }
 }
@@ -372,6 +380,7 @@ a.f-row:active {
 /* A button that reads as a link inside a sentence. */
 .f-inline-link {
   display: inline;
+  min-height: 0;
   margin: 0;
   padding: 0;
   border: 0;
@@ -515,6 +524,7 @@ a.f-row:active {
   letter-spacing: -0.01em;
 }
 .f-screen-lead {
+  max-width: var(--f-reading);
   margin: 0;
   color: var(--f-color-text-muted);
 }
@@ -642,6 +652,14 @@ a.f-row:active {
   background: var(--f-color-action-soft);
   color: var(--f-color-action-hover);
 }
+.f-chip:not([aria-pressed='true']):active {
+  background: var(--f-color-surface-muted);
+}
+@media (hover: hover) {
+  .f-chip:not([aria-pressed='true']):hover {
+    background: var(--f-color-surface-muted);
+  }
+}
 .f-segmented {
   display: inline-flex;
   justify-self: start;
@@ -679,6 +697,14 @@ a.f-row:active {
   background: var(--f-color-surface);
   box-shadow: var(--f-shadow-raised);
   color: var(--f-color-text);
+}
+.f-segmented button:not([aria-pressed='true']):active {
+  color: var(--f-color-text);
+}
+@media (hover: hover) {
+  .f-segmented button:not([aria-pressed='true']):hover {
+    color: var(--f-color-text);
+  }
 }
 
 /* Fields: 16 px text so phones do not zoom. */
@@ -853,8 +879,8 @@ a.f-row:active {
 /* On touch screens, the map in a page says how to move it until it is tapped. */
 .f-map-hint {
   position: absolute;
-  bottom: var(--f-space-6);
-  left: 50%;
+  top: var(--f-space-3);
+  right: var(--f-space-3);
   z-index: 500;
   margin: 0;
   padding: var(--f-space-1) var(--f-space-3);
@@ -863,7 +889,6 @@ a.f-row:active {
   color: var(--f-white);
   font-size: var(--f-text-sm);
   white-space: nowrap;
-  transform: translateX(-50%);
   pointer-events: none;
 }
 

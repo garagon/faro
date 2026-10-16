@@ -222,9 +222,16 @@ export default function EmbassyPanel({
             ? t('Filtrar por nacionalidad', 'Filter by nationality', 'Filtrar por nacionalidade')
             : t('Explorar el directorio', 'Browse directory', 'Explorar o diretório')}
         </button>
-        <button type="button" onClick={onProfile}>
-          {t('Editar mis datos en Viaje', 'Edit my details in Trip', 'Editar meus dados em Viagem')}
-        </button>
+        {/* Only a nationality saved in Viaje needs Viaje to change it; otherwise it is chosen here. */}
+        {savedNationality && (
+          <button type="button" onClick={onProfile}>
+            {t(
+              'Editar mis datos en Viaje',
+              'Edit my details in Trip',
+              'Editar meus dados em Viagem',
+            )}
+          </button>
+        )}
       </Actions>
       {all && (
         <div className="f-stack">
@@ -297,25 +304,20 @@ export default function EmbassyPanel({
           <div className="f-stack">{current.map(office)}</div>
         </>
       )}
-      {!current.length && (
+      {/* Before a choice the introduction above says what to do; after one, an empty result says why. */}
+      {!current.length && (nationality || all) && (
         <Text role="status">
-          {!nationality && !all
+          {nationality === country && !all
             ? t(
-                'Selecciona tu nacionalidad o explora las oficinas registradas.',
-                'Select your nationality or browse the listed offices.',
-                'Selecione sua nacionalidade ou explore as representações registradas.',
+                'Estás consultando tu propio país. Usa las autoridades y servicios locales.',
+                'You are viewing your own country. Use local authorities and services.',
+                'Você está consultando seu próprio país. Use as autoridades e os serviços locais.',
               )
-            : nationality === country && !all
-              ? t(
-                  'Estás consultando tu propio país. Usa las autoridades y servicios locales.',
-                  'You are viewing your own country. Use local authorities and services.',
-                  'Você está consultando seu próprio país. Use as autoridades e os serviços locais.',
-                )
-              : t(
-                  'No hay fichas actuales para esta selección. Revisa las referencias y directorios oficiales.',
-                  'No current contact cards for this selection. Check the references and official directories.',
-                  'Não há fichas atuais para esta seleção. Consulte as referências e os diretórios oficiais.',
-                )}
+            : t(
+                'No hay fichas actuales para esta selección. Revisa las referencias y directorios oficiales.',
+                'No current contact cards for this selection. Check the references and official directories.',
+                'Não há fichas atuais para esta seleção. Consulte as referências e os diretórios oficiais.',
+              )}
         </Text>
       )}
       <TravelerSupport nationality={nationality} country={country} lang={lang} />

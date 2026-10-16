@@ -20,14 +20,6 @@
   color: var(--f-color-action);
   text-underline-offset: 0.18em;
 }
-.f-root :where(:focus-visible) {
-  outline: 3px solid var(--f-color-focus);
-  outline-offset: 2px;
-}
-/* Headings and regions receive focus from the app when a screen changes: no ring for that. */
-.f-root :where([tabindex='-1']:focus) {
-  outline: none;
-}
 .f-root :where(svg) {
   flex: none;
 }

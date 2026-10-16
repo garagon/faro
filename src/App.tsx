@@ -180,6 +180,8 @@ const SCREENS = [
   'status',
 ] as const;
 type Screen = (typeof SCREENS)[number];
+/** Screens not yet rebuilt on the design system (see docs/design-system.md). */
+const LEGACY_SCREENS: ReadonlySet<Screen> = new Set(['detail', 'sources']);
 const isScreen = (value: unknown): value is Screen => SCREENS.includes(value as Screen);
 const providerNames: Record<CatalogId, string> = {
   IGC: 'IGC · UP',
@@ -345,11 +347,37 @@ export default function App() {
     app.addEventListener('scroll', remember, { passive: true });
     return () => app.removeEventListener('scroll', remember);
   }, []);
+  // An open earthquake sheet is a history entry of its own: Back closes the sheet and leaves the
+  // list, its filters and position as they were.
+  const sheetOpen = useRef(false);
+  sheetOpen.current = !!detail;
   useEffect(() => {
-    history.replaceState({ ...(history.state ?? {}), faroScreen: screenRef.current }, '');
+    if (detail && !(history.state as { faroSheet?: boolean } | null)?.faroSheet)
+      history.pushState({ faroScreen: screenRef.current, faroSheet: true }, '');
+  }, [detail]);
+  const closeSheet = () => {
+    if ((history.state as { faroSheet?: boolean } | null)?.faroSheet) history.back();
+    else setDetail(null);
+  };
+  useEffect(() => {
+    // A reload while a sheet was open starts without the sheet.
+    history.replaceState(
+      { ...(history.state ?? {}), faroScreen: screenRef.current, faroSheet: false },
+      '',
+    );
     const back = (e: PopStateEvent) => {
-      const target = (e.state as { faroScreen?: unknown } | null)?.faroScreen;
+      const entry = e.state as { faroScreen?: unknown; faroSheet?: boolean } | null;
+      // A sheet entry left behind (the sheet was closed by moving to the map) is skipped.
+      if (entry?.faroSheet && !sheetOpen.current) {
+        history.back();
+        return;
+      }
+      const target = entry?.faroScreen;
       const next = isScreen(target) ? target : 'activity';
+      if (sheetOpen.current && next === screenRef.current) {
+        setDetail(null);
+        return;
+      }
       if (next === screenRef.current) return;
       fromHistory.current = true;
       restoring.current = true;
@@ -640,14 +668,16 @@ export default function App() {
   );
   // The map lives on the home: go there, centre on the epicentre and bring the map into view.
   const showEpicentre = (q: Quake) => {
-    setDetail(null);
+    // On the same screen the sheet's history entry goes with it; from another screen, Back skips it.
+    if (screenRef.current === 'activity') closeSheet();
+    else setDetail(null);
     setFocused(q.id);
     center(q.lat, q.lng, 9);
     setScreen('activity');
     setTimeout(
       () =>
         appRef.current
-          ?.querySelector('.fw-map-card')
+          ?.querySelector('.f-map-block')
           ?.scrollIntoView({ block: 'center', behavior: scrollMotion() }),
       150,
     );
@@ -1255,9 +1285,8 @@ export default function App() {
         <div
           className="f-page fw-main"
           data-screen={screen}
-          data-legacy={
-            (screen !== 'activity' && screen !== 'emergency' && screen !== 'country') || undefined
-          }
+          // Screens still drawn with legacy styles keep their block flow.
+          data-legacy={LEGACY_SCREENS.has(screen) || undefined}
         >
           <p className="fw-visually-hidden" role="status">
             {connection === 'lost'
@@ -2279,8 +2308,9 @@ export default function App() {
                 go('guide');
               }}
               onStatus={() => go('status')}
-              onHelp={() => go('help')}
+              onHelp={() => go('help', '#fw-help-care')}
               onTrip={() => go('hotel')}
+              onQuake={(q) => setDetail(q.id)}
               onActivity={(section) => {
                 go('activity');
                 if (section === 'tsunami') openTab('tsunami');
@@ -2457,10 +2487,11 @@ export default function App() {
         provider={provider}
         fetched={live.fetched}
         generated={live.generated}
-        onClose={() => setDetail(null)}
+        onClose={closeSheet}
         onMap={showEpicentre}
         onTsunami={() => {
-          setDetail(null);
+          if (screenRef.current === 'activity') closeSheet();
+          else setDetail(null);
           go('activity');
           openTab('tsunami');
         }}

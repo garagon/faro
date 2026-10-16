@@ -34,7 +34,9 @@ export default function ShareButtons({
   allow,
 }: Props) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
-  const [feedback, setFeedback] = useState('');
+  const [copied, setCopied] = useState<{ text: string; note: string } | null>(null);
+  const feedback = copied && copied.text === text && enabled ? copied.note : '';
+  const setFeedback = (note: string) => setCopied({ text, note });
   // Without data, WhatsApp and Telegram wait in the outbox; SMS only needs a phone signal.
   const [online, setOnline] = useState(() => navigator.onLine);
   useEffect(() => {

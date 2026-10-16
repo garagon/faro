@@ -13,18 +13,9 @@
 .fw-app,
 .fw-info-dialog,
 .fw-event-dialog,
-.fw-trip,
-.fw-main[data-screen='help'],
-.fw-main[data-screen='activity'],
-.fw-main[data-screen='status'],
-.fw-main[data-screen='kit'] .fw-kit {
+.fw-trip {
   --muted: var(--text-muted);
   --quiet: var(--text-muted);
-}
-
-/* Calling is the only use of red, in one shade everywhere. */
-.fw-main[data-screen='help'] {
-  --call: #b42318;
 }
 
 /* Focus: dark ring on light surfaces, white ring on the dark sidebar and top bar. */
@@ -36,9 +27,6 @@
 }
 .fw-app .fw-status-options label:focus-within {
   outline-color: var(--focus);
-}
-@media (max-width: 760px) {
-  /* On phones the navigation is a white bar at the bottom. */
 }
 
 /* Navigation on phones: 12px labels in the readable grey. */
@@ -140,9 +128,6 @@
   height: 44px;
   line-height: 44px;
 }
-.fw-main[data-screen='status'] :is(.fw-quick-messages button, .fw-message-reason label) {
-  min-height: 44px;
-}
 .fw-app
   :is(
     .fw-consular-route-mode button,
@@ -188,8 +173,6 @@
   letter-spacing: 0;
   text-transform: none;
 }
-.fw-app .fw-main[data-screen='help'] :is(button, select, summary, .fw-resource > a),
-.fw-app .fw-main[data-screen='status'] :is(button, select),
 .fw-app .fw-safety-index select {
   min-height: 44px;
 }
@@ -210,9 +193,6 @@
 }
 .fw-app :is(.fw-emergency-numbers) {
   border-left: 0;
-}
-.fw-app .fw-main[data-screen='help'] .fw-emergency-numbers {
-  border: 1px solid #dde5e0;
 }
 .fw-app .fw-event.is-new {
   border-left: 0;
@@ -314,43 +294,7 @@
 }
 /* The setup card on the home: text and nationality form side by side only when both fit; on
    tablets and with the sidebar the form goes under the text instead of squeezing it. */
-/* Local help: the main line first and full width, reading "Call 911" as on the home and
-   emergency screens; the others share each row evenly, so no row ends in an empty column. */
-.fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.fw-main[data-screen='help'] .fw-emergency-numbers {
-  container-type: inline-size;
-}
 /* One per row on a phone, two side by side on medium cards, four on wide ones: rows stay even. */
-.fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone {
-  flex: 1 1 100%;
-  min-width: 0;
-}
-@container (min-width: 460px) {
-  .fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone {
-    flex-basis: calc(50% - 4px);
-  }
-}
-@container (min-width: 960px) {
-  .fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone {
-    flex-basis: calc(25% - 6px);
-  }
-}
-.fw-main[data-screen='help'] .fw-emergency-numbers > .fw-phones > .fw-phone[data-tone='call'] {
-  flex-basis: 100%;
-  min-height: 64px;
-  padding: 10px 20px;
-}
-.fw-main[data-screen='help'] .fw-phone[data-tone='call'] > span {
-  display: flex;
-  flex-direction: column-reverse;
-}
-.fw-main[data-screen='help'] .fw-phone[data-tone='call'] strong {
-  font-size: 22px;
-}
 /* Saved countries: readable chips, never the country already on screen. */
 /* Phone menu: icons on one line whether the label takes one line or two. */
 .fw-app .fw-kit-count {

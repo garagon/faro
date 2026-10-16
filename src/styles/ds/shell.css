@@ -382,7 +382,8 @@
 .f-page[data-legacy] {
   display: block;
 }
-.f-page [data-head] {
+/* Their heading block keeps its own space below; on design-system screens the page gap does it. */
+.f-page[data-legacy] [data-head] {
   margin-bottom: var(--f-space-6);
 }
 

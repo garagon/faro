@@ -22,9 +22,7 @@
     color 0.15s,
     border-color 0.15s;
 }
-.fw-main,
-.fw-main[data-screen='guide'],
-.fw-main[data-screen='status'] {
+.fw-main {
   max-width: 1480px;
   margin: 0 auto 0 var(--sidebar);
   padding: 0 32px 12px;
@@ -599,9 +597,7 @@
   backdrop-filter: blur(3px);
 }
 @media (min-width: 1750px) {
-  .fw-main,
-  .fw-main[data-screen='guide'],
-  .fw-main[data-screen='status'] {
+  .fw-main {
     margin-left: calc(var(--sidebar) + (100vw - var(--sidebar) - 1480px) / 2);
   }
 }
@@ -609,9 +605,7 @@
   .fw-app {
     --sidebar: 188px;
   }
-  .fw-main,
-  .fw-main[data-screen='guide'],
-  .fw-main[data-screen='status'] {
+  .fw-main {
     padding-left: 24px;
     padding-right: 24px;
   }
@@ -681,9 +675,7 @@
   .fw-app {
     --sidebar: 0px;
   }
-  .fw-main,
-  .fw-main[data-screen='guide'],
-  .fw-main[data-screen='status'] {
+  .fw-main {
     margin: 0;
     padding: 20px 16px 90px;
     width: 100%;

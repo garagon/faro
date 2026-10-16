@@ -217,13 +217,6 @@ export default function TravelContacts({ country, lang }: { country: string; lan
         ) : (
           <div className="f-stack">
             <h3 className="f-visually-hidden">{t('Contactos', 'Contacts', 'Contatos')}</h3>
-            <Button
-              variant="secondary"
-              icon={<PlusIcon size={20} aria-hidden="true" />}
-              onClick={() => startContact(blank.kind)}
-            >
-              {t('Añadir contacto', 'Add contact', 'Adicionar contato')}
-            </Button>
             {local.length > 0 ? (
               <List>
                 {local.map((r) => (
@@ -237,27 +230,18 @@ export default function TravelContacts({ country, lang }: { country: string; lan
                 ))}
               </List>
             ) : (
-              !open && (
-                <>
-                  <div className="f-prose">
-                    <p>
-                      {t(
-                        'Guarda a quién llamar antes de necesitarlo.',
-                        'Save the people you may need to call.',
-                        'Salve para quem ligar antes de precisar.',
-                      )}
-                    </p>
-                    <p className="f-caption">
-                      {t(
-                        'Ten a mano a tu familia, tu alojamiento, tu seguro y, si viajas por trabajo, a tu equipo.',
-                        'Keep your family, accommodation, insurer and, if you travel for work, your team close at hand.',
-                        'Tenha à mão sua família, sua hospedagem, seu seguro e, se viaja a trabalho, sua equipe.',
-                      )}
-                    </p>
-                  </div>
-                  {starterGroups(contactGroups.personal, contactGroups.work)}
-                </>
-              )
+              !open && starterGroups(contactGroups.personal, contactGroups.work)
+            )}
+            {!open && (
+              <div>
+                <Button
+                  variant="secondary"
+                  icon={<PlusIcon size={20} aria-hidden="true" />}
+                  onClick={() => startContact(blank.kind)}
+                >
+                  {t('Añadir contacto', 'Add contact', 'Adicionar contato')}
+                </Button>
+              </div>
             )}
             {local.length > 0 && !open && missing.length > 0 && (
               <div className="f-stack" data-gap="sm">

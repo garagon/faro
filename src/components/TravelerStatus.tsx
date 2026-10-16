@@ -860,7 +860,7 @@ export default function TravelerStatus({
       {history.length > 0 && (
         <Disclosure
           lead={<RowIcon icon={<ClockCounterClockwiseIcon size={20} />} />}
-          title={`${t('Mensajes anteriores', 'Previous messages', 'Mensagens anteriores')} (${history.length})`}
+          title={`${t('Mensajes preparados', 'Prepared messages', 'Mensagens preparadas')} (${history.length})`}
           meta={t('Guardados en este navegador', 'Saved in this browser', 'Salvas neste navegador')}
         >
           <Note>

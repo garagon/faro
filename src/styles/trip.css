@@ -307,30 +307,3 @@
     padding: 16px;
   }
 }
-
-/* Other contacts: the directory now spans the card; starters in a responsive grid. */
-.fw-main[data-screen='hotel'] .fw-trip-contacts {
-  margin: 0 0 18px;
-  padding: 22px 24px;
-  border: 1px solid var(--hair, #e1e7e3);
-  border-radius: 12px;
-  background: #fff;
-}
-.fw-main[data-screen='hotel'] .fw-trip-contacts h2 {
-  margin: 0 0 4px;
-  font-size: 19px;
-  font-weight: 700;
-  color: #12302b;
-}
-.fw-main[data-screen='hotel'] .fw-trip-contacts header p {
-  margin: 0;
-  font-size: 14px;
-  color: #5d6f69;
-}
-.fw-main[data-screen='hotel'] .fw-trip-contacts .fw-trip-kit {
-  display: block;
-  margin-top: 16px;
-}
-.fw-main[data-screen='hotel'] .fw-contact-starters {
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-}

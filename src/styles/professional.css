@@ -403,10 +403,6 @@
   }
 }
 /* Safety reference: situation index and a single reading column. */
-.fw-main[data-screen='guide'] {
-  max-width: 1180px;
-  padding-top: 30px;
-}
 .fw-safety-layout {
   display: grid;
   grid-template-columns: 222px minmax(0, 1fr);
@@ -603,9 +599,6 @@
   }
 }
 @media (max-width: 760px) {
-  .fw-main[data-screen='guide'] {
-    padding-top: 22px;
-  }
   .fw-safety-layout {
     display: flex;
     flex-direction: column;
@@ -695,10 +688,6 @@
   }
 }
 /* Personal check-ins: one editor and an explicit message snapshot. */
-.fw-main[data-screen='status'] {
-  max-width: 1200px;
-  padding-top: 24px;
-}
 .fw-traveler {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
@@ -982,9 +971,6 @@
   }
 }
 @media (max-width: 760px) {
-  .fw-main[data-screen='status'] {
-    padding-top: 22px;
-  }
   .fw-traveler {
     grid-template-columns: 1fr;
   }

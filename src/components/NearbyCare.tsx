@@ -65,7 +65,7 @@ export default function NearbyCare({ lang, country }: { lang: Lang; country: str
           value={chosenArea}
           onChange={(e) => e.target.value && search.setPlace(e.target.value)}
         >
-          <option value="">—</option>
+          <option value="">{t('Elige una zona', 'Choose an area', 'Escolha uma área')}</option>
           {areas.map((name) => (
             <option key={name} value={name}>
               {name}

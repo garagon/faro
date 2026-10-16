@@ -71,6 +71,8 @@ type Props = {
   onHelp: () => void;
   onTrip: () => void;
   onActivity: (section?: 'tsunami') => void;
+  /** Opens one earthquake's sheet. */
+  onQuake: (q: Quake) => void;
 };
 
 /**
@@ -464,7 +466,7 @@ export default function EmergencyScreen(p: Props) {
                     )
                   : ''
               }`}
-              onClick={() => p.onActivity()}
+              onClick={() => p.onQuake(latest)}
             />
           </List>
           {/* Right after a felt quake the list still shows an older one: said plainly. */}
@@ -492,7 +494,7 @@ export default function EmergencyScreen(p: Props) {
           />
           <ListRow
             lead={<RowIcon icon={<FirstAidKitIcon size={20} />} />}
-            title={t('Hospitales y embajadas', 'Hospitals and embassies', 'Hospitais e embaixadas')}
+            title={t('Hospitales y farmacias', 'Hospitals and pharmacies', 'Hospitais e farmácias')}
             meta={t('En Ayuda', 'In Help', 'Em Ajuda')}
             onClick={p.onHelp}
           />

@@ -3,15 +3,6 @@
  * Go bag section: three cards (supplies, what to pack, where to buy) under one warning.
  * The legacy .fw-kit card styling is reset here so each part is its own surface.
  */
-.fw-main[data-screen='kit'] .fw-kit {
-  --hair: #e1e7e3;
-  --quiet: #5d6f69;
-  --ink-strong: #12302b;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-}
 .fw-kit .fw-kit-warning {
   display: flex;
   align-items: flex-start;
@@ -203,29 +194,10 @@
 .fw-kit-list-head h2 {
   margin: 0;
 }
-.fw-main[data-screen='kit'] .fw-kit-filter {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 14px;
-}
 .fw-kit-saved {
   margin: 4px 0 6px;
   font-size: 13px;
   color: var(--quiet);
-}
-.fw-main[data-screen='kit'] .fw-kit fieldset {
-  margin: 18px 0 0;
-}
-.fw-main[data-screen='kit'] .fw-kit legend {
-  font-size: 16px;
-}
-.fw-main[data-screen='kit'] .fw-kit-items label {
-  padding: 14px 4px;
-}
-.fw-main[data-screen='kit'] .fw-kit-items .is-checked {
-  background: #f3f8f4;
 }
 .fw-kit-footnote {
   margin: 12px 0 0;
@@ -363,15 +335,6 @@
     grid-column: 2;
     justify-self: start;
   }
-}
-.fw-main[data-screen='kit'] .fw-kit h2 {
-  margin: 0 0 14px;
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-.fw-main[data-screen='kit'] .fw-kit-list-head h2 {
-  margin: 0;
 }
 .fw-kit-stats progress::-webkit-progress-bar {
   background: #e3ebe6;

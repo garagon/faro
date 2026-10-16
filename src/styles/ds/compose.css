@@ -71,6 +71,16 @@
   padding-block: var(--f-space-3);
   background: var(--f-color-page);
 }
+@container app (min-width: 900px) {
+  .f-action-bar-inner {
+    justify-items: start;
+  }
+  .f-action-bar-inner > .f-button[data-block] {
+    justify-self: start;
+    width: auto;
+    min-width: 16rem;
+  }
+}
 /* A main action that is not available yet stays readable (no fading from older screen rules). */
 .f-action-bar-inner > :disabled {
   opacity: 1;

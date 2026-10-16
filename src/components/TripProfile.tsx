@@ -729,7 +729,6 @@ export default function TripProfile(p: Props) {
         />
         <Button
           variant="secondary"
-          block
           icon={<DownloadSimpleIcon size={20} aria-hidden="true" />}
           // aria-disabled rather than disabled: the older screens' styles fade disabled buttons
           // below 4.5:1; the design system draws aria-disabled with readable text.
