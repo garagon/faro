@@ -1,31 +1,17 @@
 import { downloadText } from '../lib/download.ts';
 import { useEffect, useRef, useState, type ComponentType } from 'react';
 import {
-  ArrowUpRightIcon,
-  BagSimpleIcon,
   BatteryChargingIcon,
   BowlFoodIcon,
   CheckCircleIcon,
+  CrosshairIcon,
   DownloadSimpleIcon,
   DropIcon,
-  FaceMaskIcon,
-  FirstAidKitIcon,
-  FlashlightIcon,
   HammerIcon,
-  HandSoapIcon,
-  IdentificationCardIcon,
-  InfoIcon,
-  MapTrifoldIcon,
-  MegaphoneSimpleIcon,
   MoneyIcon,
-  PackageIcon,
   PillIcon,
   PrinterIcon,
-  RadioIcon,
   ShoppingCartIcon,
-  TShirtIcon,
-  UsersThreeIcon,
-  WarningIcon,
   type IconProps,
 } from '@phosphor-icons/react';
 import {
@@ -46,30 +32,31 @@ import {
   type KitHazard,
   type KitPlan,
 } from '../data/emergencyKit.ts';
+import { careAreas } from '../data/careAreas.ts';
 import { careSearchUrl, type PlaceKind } from '../lib/nearbyCare.ts';
 import { writeLocal, removeLocal } from '../lib/browserStorage.ts';
-import { AreaFields, useSearchArea } from './AreaPicker.tsx';
+import { useSearchArea, type SearchArea } from './AreaPicker.tsx';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
+import {
+  Actions,
+  Button,
+  CheckRow,
+  ChoiceChip,
+  Chips,
+  Field,
+  List,
+  ListRow,
+  Note,
+  Progress,
+  RowIcon,
+  SafetyNotice,
+  ScopeNote,
+  Section,
+  Segmented,
+  SelectField,
+} from '../ui/index.ts';
 
-// One recognizable picture per item, so the list can be scanned without reading every line.
-const itemIcons: Record<string, ComponentType<IconProps>> = {
-  water: DropIcon,
-  food: BowlFoodIcon,
-  medicine: PillIcon,
-  firstaid: FirstAidKitIcon,
-  light: FlashlightIcon,
-  radio: RadioIcon,
-  power: BatteryChargingIcon,
-  whistle: MegaphoneSimpleIcon,
-  documents: IdentificationCardIcon,
-  plan: MapTrifoldIcon,
-  cash: MoneyIcon,
-  clothes: TShirtIcon,
-  hygiene: HandSoapIcon,
-  access: UsersThreeIcon,
-  drybag: BagSimpleIcon,
-  mask: FaceMaskIcon,
-};
+// Checklist rows are the box, a label and one caption line (CheckRow); shops keep an icon each.
 const storeIcons: Partial<Record<PlaceKind, ComponentType<IconProps>>> = {
   supermarket: ShoppingCartIcon,
   pharmacy: PillIcon,
@@ -78,6 +65,8 @@ const storeIcons: Partial<Record<PlaceKind, ComponentType<IconProps>>> = {
   copies: PrinterIcon,
   atm: MoneyIcon,
 };
+/** Up to twelve people, as before. */
+const peopleChoices = Array.from({ length: 12 }, (_, n) => n + 1);
 
 function readStored<T>(key: string, parse: (raw: string | null) => T): T {
   try {
@@ -96,8 +85,10 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
     [pendingOnly, setPendingOnly] = useState<string[] | null>(null),
     [confirmReset, setConfirmReset] = useState(false);
   const confirmButton = useRef<HTMLButtonElement>(null),
-    startOverButton = useRef<HTMLButtonElement>(null),
-    downloadButton = useRef<HTMLButtonElement>(null);
+    startOverButton = useRef<HTMLButtonElement>(null);
+  // The download button is a design-system Button; it is focused by its id.
+  const focusDownload = () =>
+    requestAnimationFrame(() => document.getElementById('kit-download')?.focus());
   const focusLater = (target: { current: HTMLElement | null }) =>
     requestAnimationFrame(() => target.current?.focus());
   useEffect(() => {
@@ -155,303 +146,299 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
           .map((item) => item.id),
       );
   }
+  // A number and its unit never break apart (non-breaking space).
   const people = (n: number) =>
-    `${n} ${n === 1 ? t('persona', 'person', 'pessoa') : t('personas', 'people', 'pessoas')}`;
+    `${n}\u00a0${n === 1 ? t('persona', 'person', 'pessoa') : t('personas', 'people', 'pessoas')}`;
+  const days = (n: number) => t(`${n}\u00a0días`, `${n}\u00a0days`, `${n}\u00a0dias`);
   const download = () =>
     downloadText(kitText(lang, checked, plan), `faro-emergency-kit-${lang}.txt`);
   return (
-    <div className="fw-kit">
-      <p className="fw-kit-warning">
-        <WarningIcon size={17} weight="bold" aria-hidden="true" />
+    <div className="f-column">
+      <SafetyNotice>
         {t(
           'Si tienes que evacuar, sal sin buscar la mochila y no vuelvas por el equipaje.',
           'If you have to evacuate, leave without looking for the bag and do not go back for luggage.',
           'Se precisar evacuar, saia sem procurar a mochila e não volte para buscar a bagagem.',
         )}
-      </p>
+      </SafetyNotice>
 
-      <section className="fw-kit-card fw-kit-plan" aria-labelledby="kit-plan-title">
-        <h2 id="kit-plan-title">{t('Tu reserva', 'Your supplies', 'Seus suprimentos')}</h2>
-        <div className="fw-kit-plan-fields">
-          <div className="fw-stepper" role="group" aria-labelledby="kit-people">
-            <span id="kit-people">{t('Personas', 'People', 'Pessoas')}</span>
-            <div>
-              <button
-                type="button"
-                aria-label={t('Una persona menos', 'One person fewer', 'Uma pessoa a menos')}
-                disabled={plan.people <= 1}
-                onClick={() => setPlan({ ...plan, people: plan.people - 1 })}
-              >
-                −
-              </button>
-              <output aria-live="polite">{plan.people}</output>
-              <button
-                type="button"
-                aria-label={t('Una persona más', 'One more person', 'Uma pessoa a mais')}
-                disabled={plan.people >= 12}
-                onClick={() => setPlan({ ...plan, people: plan.people + 1 })}
-              >
-                +
-              </button>
-            </div>
+      <Section id="kit-plan" title={t('Tu reserva', 'Your supplies', 'Seus suprimentos')}>
+        <div className="f-stack">
+          <SelectField
+            id="kit-people"
+            label={t('Personas', 'People', 'Pessoas')}
+            value={plan.people}
+            onChange={(e) => setPlan({ ...plan, people: Number(e.target.value) })}
+          >
+            {peopleChoices.map((n) => (
+              <option key={n} value={n}>
+                {people(n)}
+              </option>
+            ))}
+          </SelectField>
+          <div className="f-field">
+            <span className="f-field-label" aria-hidden="true">
+              {t('Días', 'Days', 'Dias')}
+            </span>
+            <Segmented
+              block
+              label={t('Días', 'Days', 'Dias')}
+              value={String(plan.days)}
+              onChange={(value) => setPlan({ ...plan, days: Number(value) })}
+              options={kitDays.map((d) => ({ value: String(d), label: days(d) }))}
+            />
           </div>
-          <label className="fw-kit-days">
-            {t('Días', 'Days', 'Dias')}
-            <select
-              value={plan.days}
-              onChange={(e) => setPlan({ ...plan, days: Number(e.target.value) })}
-            >
-              {kitDays.map((d) => (
-                <option key={d} value={d}>
-                  {t(`${d} días`, `${d} days`, `${d} dias`)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="fw-kit-hazards" role="group" aria-labelledby="kit-hazards-label">
-            <span id="kit-hazards-label">
+          <div className="f-field">
+            <span className="f-field-label" aria-hidden="true">
               {t('Te preparas para', 'Preparing for', 'Você se prepara para')}
             </span>
-            <div>
+            <Chips label={t('Te preparas para', 'Preparing for', 'Você se prepara para')}>
               {kitHazards.map((h) => (
-                <button
+                <ChoiceChip
                   key={h.id}
-                  type="button"
-                  aria-pressed={plan.hazards.includes(h.id)}
+                  pressed={plan.hazards.includes(h.id)}
                   onClick={() => toggleHazard(h.id)}
                 >
                   {h.label[i]}
-                </button>
+                </ChoiceChip>
               ))}
-            </div>
+            </Chips>
           </div>
         </div>
-        <dl className="fw-kit-stats">
-          <div>
-            <dt>{t('Agua', 'Water', 'Água')}</dt>
-            <dd>
-              <strong>{water.minimum}</strong>
-              <span>
-                {t(
-                  `como mínimo, para ${people(plan.people)} y ${plan.days} días`,
-                  `at least, for ${people(plan.people)} and ${plan.days} days`,
-                  `no mínimo, para ${people(plan.people)} e ${plan.days} dias`,
-                )}
-              </span>
-            </dd>
-          </div>
-          <div>
-            <dt>{t('Comida', 'Food', 'Comida')}</dt>
-            <dd>
-              <strong>{t(`${plan.days} días`, `${plan.days} days`, `${plan.days} dias`)}</strong>
-              <span>
-                {t(
-                  `lista para comer, para ${people(plan.people)}`,
-                  `ready to eat, for ${people(plan.people)}`,
-                  `pronta para consumo, para ${people(plan.people)}`,
-                )}
-              </span>
-            </dd>
-          </div>
-          <div className={done === items.length ? 'is-complete' : ''}>
-            <dt>{t('Tu mochila', 'Your bag', 'Sua mochila')}</dt>
-            <dd>
-              <strong role="status">
-                {done === items.length ? (
-                  <>
-                    <CheckCircleIcon size={20} weight="fill" aria-hidden="true" />
-                    {t('Completa', 'Complete', 'Completa')}
-                  </>
-                ) : (
-                  t(
-                    `${done} de ${items.length}`,
-                    `${done} of ${items.length}`,
-                    `${done} de ${items.length}`,
-                  )
-                )}
-              </strong>
-              <progress
-                value={done}
-                max={items.length}
-                aria-label={t('Elementos marcados', 'Items checked', 'Itens marcados')}
-              />
-            </dd>
-          </div>
-        </dl>
-        <p className="fw-kit-basis">
-          <InfoIcon size={16} aria-hidden="true" />
+        <List>
+          <ListRow
+            lead={<RowIcon icon={<DropIcon size={20} />} />}
+            figure
+            title={water.minimum}
+            meta={t(
+              `Agua, como mínimo · ${people(plan.people)}, ${days(plan.days)}`,
+              `Water, at least · ${people(plan.people)}, ${days(plan.days)}`,
+              `Água, no mínimo · ${people(plan.people)}, ${days(plan.days)}`,
+            )}
+          />
+          <ListRow
+            lead={<RowIcon icon={<BowlFoodIcon size={20} />} />}
+            figure
+            title={days(plan.days)}
+            meta={t(
+              `Comida lista para comer · ${people(plan.people)}`,
+              `Ready-to-eat food · ${people(plan.people)}`,
+              `Comida pronta para consumo · ${people(plan.people)}`,
+            )}
+          />
+        </List>
+        <Note>
           {t(
-            `Agua: 2 L por persona y día para beber, según SENAPRED (Chile). Ready.gov recomienda ${water.ready} para este caso, porque incluye higiene; con calor, lleva más.`,
-            `Water: about half a gallon (2 L) per person per day for drinking, according to SENAPRED (Chile). Ready.gov recommends ${water.ready} here, one per person per day, as it includes hygiene; in heat, carry more.`,
-            `Água: 2 L por pessoa por dia para beber, segundo o SENAPRED (Chile). O Ready.gov recomenda ${water.ready} para este caso, porque inclui higiene; no calor, leve mais.`,
+            `Agua: 2 L por persona y día para beber, según la referencia de SENAPRED (Chile). Ready.gov (EE. UU.) recomienda ${water.ready} para este caso, porque incluye higiene; con calor, lleva más.`,
+            `Water: about half a gallon (2 L) per person per day for drinking, per the SENAPRED (Chile) reference. Ready.gov (U.S.) recommends ${water.ready} here, one per person per day, as it includes hygiene; in heat, carry more.`,
+            `Água: 2 L por pessoa por dia para beber, segundo a referência do SENAPRED (Chile). O Ready.gov (EUA) recomenda ${water.ready} para este caso, porque inclui higiene; no calor, leve mais.`,
           )}
-        </p>
+        </Note>
         {plan.hazards.length > 0 && (
-          <ul className="fw-kit-tips">
-            {kitHazards
-              .filter((h) => plan.hazards.includes(h.id))
-              .map((h) => (
-                <li key={h.id}>
-                  <strong>{h.label[i]}.</strong> {h.tip[i]}
-                </li>
-              ))}
-          </ul>
+          <div className="f-prose">
+            <ul>
+              {kitHazards
+                .filter((h) => plan.hazards.includes(h.id))
+                .map((h) => (
+                  <li key={h.id}>
+                    <strong>{h.label[i]}.</strong> {h.tip[i]}
+                  </li>
+                ))}
+            </ul>
+          </div>
         )}
-      </section>
+      </Section>
 
-      <section className="fw-kit-card fw-kit-list" aria-labelledby="kit-list-title">
-        <div className="fw-kit-list-head">
-          <h2 id="kit-list-title">{t('Qué llevar', 'What to pack', 'O que levar')}</h2>
-          <label className="fw-kit-filter">
-            <input
-              type="checkbox"
-              checked={pendingOnly !== null}
-              onChange={(e) =>
-                setPendingOnly(
-                  e.target.checked
-                    ? items.filter((item) => !checked.includes(item.id)).map((item) => item.id)
-                    : null,
-                )
-              }
-            />
-            {t('Mostrar solo lo que falta', 'Show only what is missing', 'Mostrar só o que falta')}
-          </label>
-        </div>
-        <p className="fw-kit-saved">
-          {error
-            ? t(
+      <Section id="kit-list" title={t('Qué llevar', 'What to pack', 'O que levar')}>
+        <Progress
+          value={done}
+          max={items.length}
+          label={t('Elementos marcados', 'Items checked', 'Itens marcados')}
+        >
+          {done === items.length ? (
+            <>
+              <CheckCircleIcon size={20} weight="fill" aria-hidden="true" />
+              {t('Tu mochila está completa', 'Your bag is complete', 'Sua mochila está completa')}
+            </>
+          ) : (
+            t(
+              `Tu mochila: ${done} de ${items.length}`,
+              `Your bag: ${done} of ${items.length}`,
+              `Sua mochila: ${done} de ${items.length}`,
+            )
+          )}
+        </Progress>
+        <Segmented
+          label={t('Qué mostrar', 'What to show', 'O que mostrar')}
+          value={pendingOnly ? 'missing' : 'all'}
+          onChange={(view) => {
+            // Choosing the view already on screen changes nothing, as with the old checkbox.
+            if ((view === 'missing') === (pendingOnly !== null)) return;
+            setPendingOnly(
+              view === 'missing'
+                ? items.filter((item) => !checked.includes(item.id)).map((item) => item.id)
+                : null,
+            );
+          }}
+          options={[
+            { value: 'all', label: t('Todo', 'Everything', 'Tudo') },
+            {
+              value: 'missing',
+              label: t('Solo lo que falta', 'Only what is missing', 'Só o que falta'),
+            },
+          ]}
+        />
+        <div role="status">
+          {error && (
+            <Note>
+              {t(
                 'No se pudo guardar. Descarga tu lista para no perderla.',
                 'Could not save. Download your list so you do not lose it.',
                 'Não foi possível salvar. Baixe sua lista para não perdê-la.',
-              )
-            : t(
-                'Lo que marcas se guarda solo en este navegador.',
-                'What you tick is saved only in this browser.',
-                'O que você marca fica salvo só neste navegador.',
               )}
-        </p>
-        {groups.map((group) => {
-          const inGroup = items.filter((item) => item.group === group.id);
-          const groupDone = inGroup.filter((item) => checked.includes(item.id)).length;
-          const visible = pendingOnly
-            ? inGroup.filter((item) => pendingOnly.includes(item.id))
-            : inGroup;
-          return (
-            <fieldset key={group.id} className={groupDone === inGroup.length ? 'is-complete' : ''}>
-              <legend>
-                {group.title}
-                <span className="fw-kit-count">
-                  {t(
-                    `${groupDone} de ${inGroup.length}`,
-                    `${groupDone} of ${inGroup.length}`,
-                    `${groupDone} de ${inGroup.length}`,
-                  )}
-                </span>
-              </legend>
-              {visible.length === 0 && (
-                <p className="fw-kit-group-done">
-                  {t(
-                    'Todo marcado en este grupo.',
-                    'Everything checked in this group.',
-                    'Tudo marcado neste grupo.',
-                  )}
-                </p>
-              )}
-              <div className="fw-kit-items">
-                {visible.map((item) => {
-                  const Icon = itemIcons[item.id] ?? PackageIcon;
-                  return (
-                    <label className={checked.includes(item.id) ? 'is-checked' : ''} key={item.id}>
-                      <input
-                        type="checkbox"
+            </Note>
+          )}
+        </div>
+        <div className="f-stack" data-gap="lg">
+          {groups.map((group) => {
+            const inGroup = items.filter((item) => item.group === group.id);
+            const groupDone = inGroup.filter((item) => checked.includes(item.id)).length;
+            const visible = pendingOnly
+              ? inGroup.filter((item) => pendingOnly.includes(item.id))
+              : inGroup;
+            return (
+              <div
+                key={group.id}
+                className="f-stack"
+                data-gap="sm"
+                role="group"
+                aria-labelledby={`kit-group-${group.id}`}
+              >
+                {/* The count follows the title in every group, as in the old legend, so it never
+                    jumps to the other side when a long title wraps. */}
+                <h3 className="f-subhead" id={`kit-group-${group.id}`}>
+                  {group.title}{' '}
+                  <span className="f-section-aside">
+                    {t(
+                      `${groupDone}\u00a0de\u00a0${inGroup.length}`,
+                      `${groupDone}\u00a0of\u00a0${inGroup.length}`,
+                      `${groupDone}\u00a0de\u00a0${inGroup.length}`,
+                    )}
+                  </span>
+                </h3>
+                {visible.length === 0 ? (
+                  <Note>
+                    {t(
+                      'Todo marcado en este grupo.',
+                      'Everything checked in this group.',
+                      'Tudo marcado neste grupo.',
+                    )}
+                  </Note>
+                ) : (
+                  <List>
+                    {visible.map((item) => (
+                      <CheckRow
+                        key={item.id}
+                        id={`kit-item-${item.id}`}
                         checked={checked.includes(item.id)}
                         onChange={() => toggle(item.id)}
+                        title={item.title[i]}
+                        meta={itemDetail(item, lang, plan)}
                       />
-                      <Icon className="fw-kit-item-icon" size={22} aria-hidden="true" />
-                      <span>
-                        <strong>{item.title[i]}</strong>
-                        <small>{itemDetail(item, lang, plan)}</small>
-                      </span>
-                    </label>
-                  );
-                })}
+                    ))}
+                  </List>
+                )}
               </div>
-            </fieldset>
-          );
-        })}
-      </section>
+            );
+          })}
+        </div>
+        <Note>
+          {t(
+            'Revisa pilas, cargas y vencimientos antes de viajar.',
+            'Check batteries, charges and expiry dates before traveling.',
+            'Confira pilhas, cargas e datas de validade antes de viajar.',
+          )}
+        </Note>
+      </Section>
 
       <KitShopping key={country} lang={lang} country={country} checked={checked} plan={plan} />
 
-      <div className="fw-kit-actions">
-        <button ref={downloadButton} className="fw-primary" onClick={download}>
-          <DownloadSimpleIcon size={19} />
+      <div className="f-stack" data-gap="sm">
+        <Button
+          id="kit-download"
+          icon={<DownloadSimpleIcon size={20} aria-hidden="true" />}
+          onClick={download}
+        >
           {t('Descargar mi lista', 'Download my checklist', 'Baixar minha lista')}
-        </button>
+        </Button>
         {checked.length > 0 && !confirmReset && (
-          <button ref={startOverButton} className="fw-text" onClick={() => setConfirmReset(true)}>
-            {t('Empezar de nuevo', 'Start over', 'Começar de novo')}
-          </button>
+          <Actions>
+            <button type="button" ref={startOverButton} onClick={() => setConfirmReset(true)}>
+              {t('Empezar de nuevo', 'Start over', 'Começar de novo')}
+            </button>
+          </Actions>
         )}
         {confirmReset && (
-          <span
-            className="fw-kit-confirm"
-            role="group"
-            aria-label={t('Confirmar', 'Confirm', 'Confirmar')}
-          >
-            {t('¿Desmarcar toda la lista?', 'Uncheck the whole list?', 'Desmarcar a lista toda?')}
-            <button
-              ref={confirmButton}
-              className="fw-text"
-              onClick={() => {
-                try {
-                  removeLocal(kitKey);
-                  setChecked([]);
-                  setError(false);
-                } catch {
-                  setError(true);
-                }
-                setConfirmReset(false);
-                if (pendingOnly) setPendingOnly(items.map((item) => item.id));
-                focusLater(downloadButton);
-              }}
-            >
-              {t('Sí, desmarcar', 'Yes, uncheck', 'Sim, desmarcar')}
-            </button>
-            <button
-              className="fw-text"
-              onClick={() => {
-                setConfirmReset(false);
-                focusLater(startOverButton);
-              }}
-            >
-              {t('Cancelar', 'Cancel', 'Cancelar')}
-            </button>
-          </span>
+          <div className="f-prose" role="group" aria-label={t('Confirmar', 'Confirm', 'Confirmar')}>
+            <p>
+              {t('¿Desmarcar toda la lista?', 'Uncheck the whole list?', 'Desmarcar a lista toda?')}
+            </p>
+            <Actions>
+              <button
+                type="button"
+                ref={confirmButton}
+                onClick={() => {
+                  try {
+                    removeLocal(kitKey);
+                    setChecked([]);
+                    setError(false);
+                  } catch {
+                    setError(true);
+                  }
+                  setConfirmReset(false);
+                  if (pendingOnly) setPendingOnly(items.map((item) => item.id));
+                  focusDownload();
+                }}
+              >
+                {t('Sí, desmarcar', 'Yes, uncheck', 'Sim, desmarcar')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmReset(false);
+                  focusLater(startOverButton);
+                }}
+              >
+                {t('Cancelar', 'Cancel', 'Cancelar')}
+              </button>
+            </Actions>
+          </div>
         )}
       </div>
-      <p className="fw-kit-footnote">
+
+      <Note>
         {t(
-          'Revisa pilas, cargas y vencimientos antes de viajar. Marcar la lista no comprueba lo que hay en la mochila.',
-          'Check batteries, charges and expiry dates before traveling. Ticking the list does not check what is in the bag.',
-          'Confira pilhas, cargas e datas de validade antes de viajar. Marcar a lista não verifica o que há na mochila.',
-        )}
-      </p>
-      <footer>
-        <span>
-          {t(
-            'Adaptación para viajeros. Fuentes consultadas el 13 oct 2026:',
-            'Traveler adaptation. Sources checked on Oct 13, 2026:',
-            'Adaptação para viajantes. Fontes consultadas em 13 out. 2026:',
-          )}
-        </span>
-        {kitSources.map((s) => (
-          <a href={s.url} key={s.url} target="_blank" rel="noreferrer">
-            {s.name}
-            <ArrowUpRightIcon size={13} aria-hidden="true" />
-          </a>
+          'Adaptación para viajeros, con la referencia de SENAPRED (Chile) y de Ready.gov (EE. UU.). Fuentes consultadas el 13 oct 2026:',
+          'Traveler adaptation, with the SENAPRED (Chile) and Ready.gov (U.S.) references. Sources checked on Oct 13, 2026:',
+          'Adaptação para viajantes, com a referência do SENAPRED (Chile) e do Ready.gov (EUA). Fontes consultadas em 13 out. 2026:',
+        )}{' '}
+        {kitSources.map((s, n) => (
+          <span key={s.url}>
+            {n > 0 && ', '}
+            <a href={s.url} target="_blank" rel="noreferrer">
+              {s.name}
+            </a>
+          </span>
         ))}
-      </footer>
+        .
+      </Note>
+      <ScopeNote>
+        {t(
+          'Lo que marcas se guarda solo en este navegador. Marcar la lista no comprueba lo que hay en la mochila.',
+          'What you tick is saved only in this browser. Ticking the list does not check what is in the bag.',
+          'O que você marca fica salvo só neste navegador. Marcar a lista não verifica o que há na mochila.',
+        )}
+      </ScopeNote>
     </div>
   );
 }
@@ -474,84 +461,165 @@ function KitShopping({
   const list = shoppingList(checked, plan);
   const water = waterShown(plan, lang);
   return (
-    <section className="fw-kit-card fw-kit-shop" aria-labelledby="kit-shop-title">
-      <h2 id="kit-shop-title">
-        {t(
-          'Dónde comprar lo que falta',
-          'Where to buy what is missing',
-          'Onde comprar o que falta',
-        )}
-      </h2>
+    <Section
+      id="kit-shop"
+      title={t(
+        'Dónde comprar lo que falta',
+        'Where to buy what is missing',
+        'Onde comprar o que falta',
+      )}
+    >
       {list.length === 0 ? (
-        <p className="fw-kit-group-done">
-          {t(
-            'Marcaste todo lo que se compra. Revisa vencimientos y cargas antes de viajar.',
-            'Everything you can buy is checked. Review expiry dates and charges before traveling.',
-            'Você marcou tudo o que se compra. Confira validades e cargas antes de viajar.',
-          )}
-        </p>
-      ) : (
-        <>
+        <div className="f-prose">
           <p>
             {t(
-              'Lo que no marcaste, agrupado por tipo de tienda. Elige una zona y abre la búsqueda.',
-              'What you have not checked, grouped by type of shop. Choose an area and open the search.',
-              'O que você não marcou, agrupado por tipo de loja. Escolha uma área e abra a busca.',
+              'Marcaste todo lo que se compra. Revisa vencimientos y cargas antes de viajar.',
+              'Everything you can buy is checked. Review expiry dates and charges before traveling.',
+              'Você marcou tudo o que se compra. Confira validades e cargas antes de viajar.',
             )}
           </p>
-          <AreaFields state={search} lang={lang} />
-          <ul className="fw-kit-stores">
+        </div>
+      ) : (
+        <>
+          <div className="f-prose">
+            <p>
+              {t(
+                'Lo que no marcaste, agrupado por tipo de tienda. Elige una zona y abre la búsqueda.',
+                'What you have not checked, grouped by type of shop. Choose an area and open the search.',
+                'O que você não marcou, agrupado por tipo de loja. Escolha uma área e abra a busca.',
+              )}
+            </p>
+          </div>
+          <AreaChoice state={search} lang={lang} />
+          <List>
             {list.map(({ store, items }) => {
               const url = careSearchUrl(store, search.area, lang);
               const Icon = storeIcons[store] || ShoppingCartIcon;
-              return (
-                <li key={store}>
-                  <Icon size={22} aria-hidden="true" />
-                  <div>
-                    <strong>{storeLabels[store][i]}</strong>
-                    <span>
-                      {items
-                        .map((item) =>
-                          item.id === 'water'
-                            ? `${item.title[i]} (${water.minimum})`
-                            : item.title[i],
-                        )
-                        .join(', ')}
-                    </span>
-                  </div>
-                  {url ? (
-                    <a
-                      className="fw-secondary"
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={t(
-                        `Buscar ${storeLabels[store][0].toLowerCase()} cerca en Google Maps`,
-                        `Find a ${storeLabels[store][1].toLowerCase()} nearby on Google Maps`,
-                        `Buscar ${storeLabels[store][2].toLowerCase()} por perto no Google Maps`,
-                      )}
-                    >
-                      {t('Buscar cerca', 'Find nearby', 'Buscar perto')}
-                      <ArrowUpRightIcon size={15} aria-hidden="true" />
-                    </a>
-                  ) : (
-                    <span className="fw-kit-store-off">
-                      {t('Elige una zona', 'Choose an area', 'Escolha uma área')}
-                    </span>
-                  )}
-                </li>
+              const what = items
+                .map((item) =>
+                  item.id === 'water' ? `${item.title[i]} (${water.minimum})` : item.title[i],
+                )
+                .join(', ');
+              return url ? (
+                <ListRow
+                  key={store}
+                  lead={<RowIcon icon={<Icon size={20} />} />}
+                  title={
+                    <>
+                      {storeLabels[store][i]}
+                      <span className="f-visually-hidden">
+                        {t(
+                          `: buscar ${storeLabels[store][0].toLowerCase()} cerca en Google Maps`,
+                          `: find a ${storeLabels[store][1].toLowerCase()} nearby on Google Maps`,
+                          `: buscar ${storeLabels[store][2].toLowerCase()} por perto no Google Maps`,
+                        )}
+                      </span>
+                    </>
+                  }
+                  meta={what}
+                  href={url}
+                  external
+                />
+              ) : (
+                <ListRow
+                  key={store}
+                  lead={<RowIcon icon={<Icon size={20} />} />}
+                  title={storeLabels[store][i]}
+                  meta={what}
+                />
               );
             })}
-          </ul>
-          <small>
+          </List>
+          <Note>
             {t(
               'La búsqueda se abre en Google Maps con la zona o tu ubicación aproximada. Faro no la guarda. Después de un desastre, un resultado no garantiza que el lugar esté abierto ni que tenga existencias.',
               'The search opens in Google Maps with the area or your approximate location. Faro does not save it. After a disaster, a result does not guarantee the place is open or has stock.',
               'A busca abre no Google Maps com a área ou sua localização aproximada. O Faro não a salva. Depois de um desastre, um resultado não garante que o lugar esteja aberto nem que tenha estoque.',
             )}
-          </small>
+          </Note>
         </>
       )}
-    </section>
+    </Section>
+  );
+}
+
+/**
+ * Where to search: a typed place, one of the country's common areas, or rounded coordinates
+ * after an explicit tap. The same state and wording as the area picker in Ayuda (AreaPicker),
+ * drawn with design-system fields. Nothing is stored.
+ */
+function AreaChoice({ state, lang }: { state: SearchArea; lang: Lang }) {
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const { place, gps, status, area, country, countryName } = state;
+  const common = careAreas[country] ?? [];
+  return (
+    <div className="f-stack">
+      <Field
+        id="kit-area-place"
+        label={t(
+          'Ciudad, barrio o dirección',
+          'City, neighborhood or address',
+          'Cidade, bairro ou endereço',
+        )}
+        maxLength={160}
+        value={place}
+        placeholder={t(
+          'Ej.: El Cangrejo, Ciudad de Panamá',
+          'E.g. El Cangrejo, Panama City',
+          'Ex.: El Cangrejo, Cidade do Panamá',
+        )}
+        onChange={(e) => state.setPlace(e.target.value)}
+      />
+      <Button
+        variant="secondary"
+        icon={<CrosshairIcon size={20} aria-hidden="true" />}
+        // aria-disabled rather than disabled: the older screens' styles fade disabled buttons
+        // below 4.5:1; the design system draws aria-disabled with readable text.
+        aria-disabled={status === 'pending' || undefined}
+        onClick={() => status !== 'pending' && state.locate()}
+      >
+        {status === 'pending'
+          ? t('Buscando ubicación…', 'Finding location…', 'Buscando localização…')
+          : t('Usar mi ubicación', 'Use my location', 'Usar minha localização')}
+      </Button>
+      {common.length > 0 && (
+        <SelectField
+          id="kit-area-common"
+          label={t('Zonas frecuentes', 'Common areas', 'Áreas frequentes')}
+          value={!gps && common.includes(place.trim()) ? place.trim() : ''}
+          onChange={(e) => state.setPlace(e.target.value)}
+        >
+          <option value="">{t('Elige una zona', 'Choose an area', 'Escolha uma área')}</option>
+          {common.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </SelectField>
+      )}
+      <div role="status">
+        <Note>
+          {status === 'failed'
+            ? t(
+                'No se obtuvo tu ubicación. Escribe una ciudad o dirección.',
+                'Location unavailable. Enter a city or address.',
+                'Não foi possível obter sua localização. Digite uma cidade ou endereço.',
+              )
+            : gps
+              ? t(
+                  `Búsqueda alrededor de ${gps}. Tu ubicación puede estar en otro país que el seleccionado.`,
+                  `Search around ${gps}. Your location may be in a different country from the selected one.`,
+                  `Busca ao redor de ${gps}. Sua localização pode estar em um país diferente do selecionado.`,
+                )
+              : area
+                ? t(`Se buscará en ${area}.`, `Searching in ${area}.`, `Área da busca: ${area}.`)
+                : t(
+                    `Buscar en ${countryName || 'el lugar que escribas'}.`,
+                    `Search in ${countryName || 'the place you enter'}.`,
+                    `Área da busca: ${countryName || 'o lugar que você digitar'}.`,
+                  )}
+        </Note>
+      </div>
+    </div>
   );
 }

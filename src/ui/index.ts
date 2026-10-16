@@ -17,6 +17,7 @@ export {
   type Signal,
 } from './List.tsx';
 export { MapFrame } from './Map.tsx';
+export { MessagePreview, Progress } from './Message.tsx';
 export { CheckRow, Disclosure, SelectField, Tabs, TextArea } from './Form.tsx';
 export { Note, SafetyNotice, ScopeNote, StatusChip } from './Notice.tsx';
 export { BackLink, ScreenHead, Section } from './Section.tsx';

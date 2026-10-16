@@ -1,6 +1,18 @@
 import { writeLocal } from '../lib/browserStorage.ts';
-import { useRef, useState } from 'react';
-import { PhoneIcon, PlusIcon } from '@phosphor-icons/react';
+import { useState, type ComponentType } from 'react';
+import {
+  AddressBookIcon,
+  BankIcon,
+  BedIcon,
+  BriefcaseIcon,
+  CarIcon,
+  PhoneIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  UsersIcon,
+  UsersThreeIcon,
+  type IconProps,
+} from '@phosphor-icons/react';
 import {
   contactKinds,
   contactGroups,
@@ -12,7 +24,19 @@ import {
 import type { Lang } from '../lib/resources.ts';
 import { newId } from '../lib/id.ts';
 import { langIndex, pick } from '../lib/i18n.ts';
+import { Actions, Button, Field, List, ListRow, Note, RowIcon, SelectField } from '../ui/index.ts';
 const blank = { kind: 'hotel' as ContactKind, name: '', phone: '', note: '' };
+// The kind's picture starts each saved contact, so the list shares the screen's text edge.
+const kindIcons: Record<ContactKind, ComponentType<IconProps>> = {
+  family: UsersIcon,
+  hotel: BedIcon,
+  insurance: ShieldCheckIcon,
+  consulate: BankIcon,
+  work: BriefcaseIcon,
+  team: UsersThreeIcon,
+  transport: CarIcon,
+  other: AddressBookIcon,
+};
 /** Other people worth having at hand on this trip, beyond the emergency contact. */
 export default function TravelContacts({ country, lang }: { country: string; lang: Lang }) {
   const [rows, setRows] = useState(readContacts),
@@ -21,8 +45,10 @@ export default function TravelContacts({ country, lang }: { country: string; lan
     [open, setOpen] = useState(false),
     [notice, setNotice] = useState(''),
     [removed, setRemoved] = useState<TravelContact | null>(null);
-  const title = useRef<HTMLInputElement>(null),
-    t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  // The editor's first field takes focus when it opens, as before, by its id.
+  const focusName = () =>
+    requestAnimationFrame(() => document.getElementById('fw-contact-name')?.focus());
   const local = rows.filter((r) => r.country === country),
     countryName =
       country === 'WORLD'
@@ -99,7 +125,18 @@ export default function TravelContacts({ country, lang }: { country: string; lan
     setEditing(r.id);
     setOpen(true);
     setNotice('');
-    requestAnimationFrame(() => title.current?.focus());
+    focusName();
+  };
+  const remove = (r: TravelContact) => {
+    if (persist(rows.filter((v) => v.id !== r.id))) {
+      setRemoved(r);
+      if (editing === r.id) {
+        setOpen(false);
+        setEditing(null);
+        setDraft(blank);
+      }
+      setNotice(t('Contacto eliminado.', 'Contact deleted.', 'Contato excluído.'));
+    }
   };
   const missing = (Object.keys(contactKinds) as ContactKind[]).filter(
     (kind) => kind !== 'other' && !local.some((row) => row.kind === kind),
@@ -109,10 +146,11 @@ export default function TravelContacts({ country, lang }: { country: string; lan
     setEditing(null);
     setOpen(true);
     setNotice('');
-    requestAnimationFrame(() => title.current?.focus());
+    focusName();
   };
+  // Quick starts by kind, in two groups: one list of rows each, every row a "+" and the kind.
   const starterGroups = (personal: readonly ContactKind[], work: readonly ContactKind[]) => (
-    <div className="fw-contact-groups">
+    <div className="f-stack">
       {[
         { id: 'personal', label: t('Personales', 'Personal', 'Pessoais'), kinds: personal },
         {
@@ -125,33 +163,39 @@ export default function TravelContacts({ country, lang }: { country: string; lan
         .map((group) => (
           <div
             key={group.id}
-            className="fw-contact-group"
+            className="f-stack"
+            data-gap="sm"
             role="group"
             aria-labelledby={`contact-group-${group.id}`}
           >
-            <p id={`contact-group-${group.id}`} className="fw-contact-group-title">
+            <div id={`contact-group-${group.id}`} className="f-section-aside">
               {group.label}
-            </p>
-            <div className="fw-contact-starters">
-              {group.kinds.map((kind) => (
-                <button key={kind} type="button" onClick={() => startContact(kind)}>
-                  <PlusIcon size={16} aria-hidden="true" />
-                  {contactKinds[kind][langIndex(lang)]}
-                </button>
-              ))}
             </div>
+            <List>
+              {group.kinds.map((kind) => (
+                <ListRow
+                  key={kind}
+                  lead={<RowIcon icon={<PlusIcon size={20} />} />}
+                  title={contactKinds[kind][langIndex(lang)]}
+                  trail=""
+                  onClick={() => startContact(kind)}
+                />
+              ))}
+            </List>
           </div>
         ))}
     </div>
   );
   return (
-    <section
-      className="fw-trip-contacts"
-      aria-label={t('Contactos del viaje', 'Travel contacts', 'Contatos da viagem')}
-    >
-      <header>
-        <div>
-          <h2>{t('Otros contactos', 'Other contacts', 'Outros contatos')}</h2>
+    <div className="f-column">
+      <section
+        className="f-section"
+        aria-label={t('Contactos del viaje', 'Travel contacts', 'Contatos da viagem')}
+      >
+        <div className="f-prose">
+          <h2 className="f-section-title">
+            {t('Otros contactos', 'Other contacts', 'Outros contatos')}
+          </h2>
           <p>
             {t(
               `Recepción, consulado, seguro, empresa o quien quieras tener a mano en ${countryName}.`,
@@ -160,91 +204,66 @@ export default function TravelContacts({ country, lang }: { country: string; lan
             )}
           </p>
         </div>
-      </header>
-      {country === 'WORLD' ? (
-        <p>
-          {t(
-            'Selecciona un país para preparar los contactos de ese viaje.',
-            'Select a country to prepare contacts for that trip.',
-            'Selecione um país para preparar os contatos dessa viagem.',
-          )}
-        </p>
-      ) : (
-        <div className="fw-trip-kit">
-          <div className="fw-trip-directory">
-            <div className="fw-directory-heading">
-              <h3 className="fw-visually-hidden">{t('Contactos', 'Contacts', 'Contatos')}</h3>
-              <button className="fw-secondary" onClick={() => startContact(blank.kind)}>
-                <PlusIcon size={18} aria-hidden="true" />
-                {t('Añadir contacto', 'Add contact', 'Adicionar contato')}
-              </button>
-            </div>
+        {country === 'WORLD' ? (
+          <div className="f-prose">
+            <p>
+              {t(
+                'Selecciona un país para preparar los contactos de ese viaje.',
+                'Select a country to prepare contacts for that trip.',
+                'Selecione um país para preparar os contatos dessa viagem.',
+              )}
+            </p>
+          </div>
+        ) : (
+          <div className="f-stack">
+            <h3 className="f-visually-hidden">{t('Contactos', 'Contacts', 'Contatos')}</h3>
+            <Button
+              variant="secondary"
+              icon={<PlusIcon size={20} aria-hidden="true" />}
+              onClick={() => startContact(blank.kind)}
+            >
+              {t('Añadir contacto', 'Add contact', 'Adicionar contato')}
+            </Button>
             {local.length > 0 ? (
-              <ul className="fw-contact-list">
+              <List>
                 {local.map((r) => (
-                  <li key={r.id}>
-                    <div>
-                      <span>{contactKinds[r.kind][langIndex(lang)]}</span>
-                      <h3>{r.name}</h3>
-                      {r.note && <p>{r.note}</p>}
-                    </div>
-                    <a
-                      href={phoneHref(r.phone)!}
-                      aria-label={`${t('Llamar a', 'Call', 'Ligar para')} ${r.name}: ${r.phone}`}
-                    >
-                      <PhoneIcon size={17} aria-hidden="true" />
-                      {r.phone}
-                    </a>
-                    <div className="fw-contact-tools">
-                      <button onClick={() => edit(r)}>{t('Editar', 'Edit', 'Editar')}</button>
-                      <button
-                        aria-label={`${t('Eliminar', 'Delete', 'Excluir')} ${r.name}`}
-                        onClick={() => {
-                          if (persist(rows.filter((v) => v.id !== r.id))) {
-                            setRemoved(r);
-                            if (editing === r.id) {
-                              setOpen(false);
-                              setEditing(null);
-                              setDraft(blank);
-                            }
-                            setNotice(
-                              t('Contacto eliminado.', 'Contact deleted.', 'Contato excluído.'),
-                            );
-                          }
-                        }}
-                      >
-                        {t('Eliminar', 'Delete', 'Excluir')}
-                      </button>
-                    </div>
-                  </li>
+                  <ContactRow
+                    key={r.id}
+                    contact={r}
+                    lang={lang}
+                    onEdit={() => edit(r)}
+                    onDelete={() => remove(r)}
+                  />
                 ))}
-              </ul>
+              </List>
             ) : (
               !open && (
-                <div className="fw-contacts-empty">
-                  <p>
-                    {t(
-                      'Guarda a quién llamar antes de necesitarlo.',
-                      'Save the people you may need to call.',
-                      'Salve para quem ligar antes de precisar.',
-                    )}
-                  </p>
-                  <p className="fw-contact-empty-hint">
-                    {t(
-                      'Ten a mano a tu familia, tu alojamiento, tu seguro y, si viajas por trabajo, a tu equipo.',
-                      'Keep your family, accommodation, insurer and, if you travel for work, your team close at hand.',
-                      'Tenha à mão sua família, sua hospedagem, seu seguro e, se viaja a trabalho, sua equipe.',
-                    )}
-                  </p>
+                <>
+                  <div className="f-prose">
+                    <p>
+                      {t(
+                        'Guarda a quién llamar antes de necesitarlo.',
+                        'Save the people you may need to call.',
+                        'Salve para quem ligar antes de precisar.',
+                      )}
+                    </p>
+                    <p className="f-caption">
+                      {t(
+                        'Ten a mano a tu familia, tu alojamiento, tu seguro y, si viajas por trabajo, a tu equipo.',
+                        'Keep your family, accommodation, insurer and, if you travel for work, your team close at hand.',
+                        'Tenha à mão sua família, sua hospedagem, seu seguro e, se viaja a trabalho, sua equipe.',
+                      )}
+                    </p>
+                  </div>
                   {starterGroups(contactGroups.personal, contactGroups.work)}
-                </div>
+                </>
               )
             )}
             {local.length > 0 && !open && missing.length > 0 && (
-              <div className="fw-contact-suggestions">
-                <h4>
+              <div className="f-stack" data-gap="sm">
+                <h3 className="f-subhead">
                   {t('Añade para este viaje', 'Add for this trip', 'Adicione para esta viagem')}
-                </h4>
+                </h3>
                 {starterGroups(
                   contactGroups.personal.filter((k) => missing.includes(k)),
                   contactGroups.work.filter((k) => missing.includes(k)),
@@ -252,84 +271,74 @@ export default function TravelContacts({ country, lang }: { country: string; lan
               </div>
             )}
             {open && (
-              <form className="fw-contact-editor" onSubmit={save}>
-                <h3>
+              <form className="f-stack" onSubmit={save}>
+                <h3 className="f-subhead">
                   {editing
                     ? t('Editar contacto', 'Edit contact', 'Editar contato')
                     : t('Nuevo contacto', 'New contact', 'Novo contato')}
                 </h3>
-                <div className="fw-contact-grid">
-                  <label>
-                    {t('Tipo', 'Type', 'Tipo')}
-                    <select
-                      value={draft.kind}
-                      onChange={(e) => setDraft({ ...draft, kind: e.target.value as ContactKind })}
-                    >
-                      {Object.entries(contactKinds).map(([key, value]) => (
-                        <option value={key} key={key}>
-                          {value[langIndex(lang)]}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    {t('Nombre o entidad', 'Name or organization', 'Nome ou organização')}
-                    <input
-                      ref={title}
-                      name="contact-name"
-                      autoComplete="off"
-                      required
-                      maxLength={100}
-                      value={draft.name}
-                      onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    {t('Teléfono', 'Phone', 'Telefone')}
-                    <input
-                      required
-                      type="tel"
-                      name="contact-phone"
-                      autoComplete="tel"
-                      maxLength={40}
-                      placeholder={t(
-                        '+ código de país y número',
-                        '+ country code and number',
-                        '+ código do país e número',
-                      )}
-                      value={draft.phone}
-                      onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    {t(
-                      'Indicaciones · opcional',
-                      'Instructions · optional',
-                      'Instruções · opcional',
-                    )}
-                    <input
-                      name="contact-note"
-                      autoComplete="off"
-                      maxLength={300}
-                      value={draft.note}
-                      onChange={(e) => setDraft({ ...draft, note: e.target.value })}
-                    />
-                  </label>
-                </div>
-                <small>
-                  {t(
+                <SelectField
+                  id="fw-contact-kind"
+                  label={t('Tipo', 'Type', 'Tipo')}
+                  value={draft.kind}
+                  onChange={(e) => setDraft({ ...draft, kind: e.target.value as ContactKind })}
+                >
+                  {Object.entries(contactKinds).map(([key, value]) => (
+                    <option value={key} key={key}>
+                      {value[langIndex(lang)]}
+                    </option>
+                  ))}
+                </SelectField>
+                <Field
+                  id="fw-contact-name"
+                  label={t('Nombre o entidad', 'Name or organization', 'Nome ou organização')}
+                  name="contact-name"
+                  autoComplete="off"
+                  required
+                  maxLength={100}
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                />
+                <Field
+                  id="fw-contact-phone"
+                  label={t('Teléfono', 'Phone', 'Telefone')}
+                  hint={t(
                     'Incluye el código del país si llamarás desde el extranjero. Comprueba horarios y cobertura con el contacto.',
                     'Include the country code when calling from abroad. Confirm hours and coverage with the contact.',
                     'Inclua o código do país se for ligar do exterior. Confirme horários e cobertura com o contato.',
                   )}
-                </small>
-                <div className="fw-contact-editor-actions">
-                  <button className="fw-primary" type="submit">
+                  required
+                  type="tel"
+                  name="contact-phone"
+                  autoComplete="tel"
+                  maxLength={40}
+                  placeholder={t(
+                    '+ código de país y número',
+                    '+ country code and number',
+                    '+ código do país e número',
+                  )}
+                  value={draft.phone}
+                  onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
+                />
+                <Field
+                  id="fw-contact-note"
+                  label={t(
+                    'Indicaciones · opcional',
+                    'Instructions · optional',
+                    'Instruções · opcional',
+                  )}
+                  name="contact-note"
+                  autoComplete="off"
+                  maxLength={300}
+                  value={draft.note}
+                  onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+                />
+                <div className="f-chips">
+                  <Button variant="secondary" type="submit">
                     {t('Guardar contacto', 'Save contact', 'Salvar contato')}
-                  </button>
-                  <button
-                    className="fw-secondary"
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       setOpen(false);
                       setEditing(null);
@@ -338,29 +347,87 @@ export default function TravelContacts({ country, lang }: { country: string; lan
                     }}
                   >
                     {t('Cancelar', 'Cancel', 'Cancelar')}
-                  </button>
+                  </Button>
                 </div>
               </form>
             )}
           </div>
-        </div>
-      )}
-      <p role="status" className="fw-contact-notice">
-        {notice}
-      </p>
-      {removed && (
-        <button
-          className="fw-text"
-          onClick={() => {
-            if (rows.length < 30 && persist([...rows, removed])) {
-              setRemoved(null);
-              setNotice(t('Contacto restaurado.', 'Contact restored.', 'Contato restaurado.'));
-            }
-          }}
-        >
-          {t('Deshacer eliminación', 'Undo deletion', 'Desfazer exclusão')}
-        </button>
-      )}
-    </section>
+        )}
+        {/* Always present, so a screen reader announces each change. */}
+        <div role="status">{notice && <Note>{notice}</Note>}</div>
+        {removed && (
+          <Actions>
+            <button
+              type="button"
+              onClick={() => {
+                if (rows.length < 30 && persist([...rows, removed])) {
+                  setRemoved(null);
+                  setNotice(t('Contacto restaurado.', 'Contact restored.', 'Contato restaurado.'));
+                }
+              }}
+            >
+              {t('Deshacer eliminación', 'Undo deletion', 'Desfazer exclusão')}
+            </button>
+          </Actions>
+        )}
+      </section>
+    </div>
+  );
+}
+
+/**
+ * A saved contact: the row calls (its kind's icon, the name, then kind and number), and under it,
+ * at the text edge, the instructions and the two small actions to edit or delete it.
+ */
+function ContactRow({
+  contact: r,
+  lang,
+  onEdit,
+  onDelete,
+}: {
+  contact: TravelContact;
+  lang: Lang;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const Icon = kindIcons[r.kind] ?? AddressBookIcon;
+  return (
+    <li>
+      <a
+        className="f-row f-pressable"
+        data-tone="call"
+        href={phoneHref(r.phone)!}
+        aria-label={`${t('Llamar a', 'Call', 'Ligar para')} ${r.name}: ${r.phone}`}
+      >
+        <span className="f-row-lead">
+          <RowIcon icon={<Icon size={20} />} />
+        </span>
+        <span className="f-row-body">
+          <span className="f-row-title">{r.name}</span>
+          <span className="f-row-meta">
+            {contactKinds[r.kind][langIndex(lang)]} · {r.phone}
+          </span>
+        </span>
+        <span className="f-row-trail">
+          <PhoneIcon size={20} weight="fill" aria-hidden="true" />
+        </span>
+      </a>
+      <div className="f-expand-body f-prose">
+        {r.note && <p className="f-caption">{r.note}</p>}
+        <Actions>
+          <button type="button" onClick={onEdit}>
+            {t('Editar', 'Edit', 'Editar')}
+          </button>
+          <button
+            type="button"
+            aria-label={`${t('Eliminar', 'Delete', 'Excluir')} ${r.name}`}
+            onClick={onDelete}
+          >
+            {t('Eliminar', 'Delete', 'Excluir')}
+          </button>
+        </Actions>
+      </div>
+    </li>
   );
 }
