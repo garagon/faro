@@ -3,7 +3,7 @@ import { DropIcon, HurricaneIcon } from '@phosphor-icons/react';
 import { nwsEventLabels, type NwsAlert } from '../lib/nws.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import { checkedLabel } from '../lib/time.ts';
-import { failingLabel, sourceTime } from '../lib/sourceStatus.ts';
+import { lineStamp, sourceLine } from '../lib/sourceStatus.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 import { Actions, ExpandRow, List, Note, OutLink, SourceStamp, StatusIcon } from '../ui/index.ts';
 
@@ -51,6 +51,16 @@ export default function NwsPanel({
   const mainland = country === 'US';
   // Offline or older than a few polls (every 60 s), the list is the last data, said as on every tab.
   const old = !!data && !!checked && !failed && (!online || now - checked > 3 * 60000);
+  // The NWS's state in the one vocabulary: checked, no response or offline, with its time.
+  const line = sourceLine({
+    checked: data ? checked : null,
+    failed,
+    failedAt,
+    online,
+    old,
+    now,
+    lang,
+  });
   return (
     <div className="f-stack" data-gap="lg">
       <section className="f-section" aria-labelledby="fw-nws-weather-title">
@@ -61,45 +71,19 @@ export default function NwsPanel({
             'Avisos de furacão e inundação',
           )}
         </h2>
-        {failed && (
+        {line.state !== 'checked' && (
           <div role="status">
-            <SourceStamp issuer="NWS" state="error">
-              <span>
-                {failingLabel({ checked: data ? checked : null, failedAt, now, lang })}.{' '}
-                {data
-                  ? t(
-                      'Se muestran los últimos datos recibidos.',
-                      'Showing the last data received.',
-                      'Mostrando os últimos dados recebidos.',
-                    )
-                  : t(
-                      'No podemos confirmar si hay avisos.',
-                      'We cannot confirm whether alerts exist.',
-                      'Não podemos confirmar se há avisos.',
-                    )}
-              </span>
+            <SourceStamp issuer="NWS" state={lineStamp(line.state)}>
+              {line.text}
+              {/* Nothing received: the failure is never read as "no alerts". */}
+              {!data &&
+                line.state !== 'checking' &&
+                `. ${t(
+                  'No podemos confirmar si hay avisos.',
+                  'We cannot confirm whether alerts exist.',
+                  'Não podemos confirmar se há avisos.',
+                )}`}
             </SourceStamp>
-          </div>
-        )}
-        {old && (
-          <div role="status">
-            <SourceStamp issuer="NWS" state="stale">
-              <span>
-                {[
-                  t(
-                    'La consulta está desactualizada',
-                    'This check is out of date',
-                    'A consulta está desatualizada',
-                  ),
-                  sourceTime({ checked, old, now, lang }),
-                ].join(' · ')}
-              </span>
-            </SourceStamp>
-          </div>
-        )}
-        {!rows && !failed && (
-          <div className="f-prose">
-            <p>{t('Consultando el NWS…', 'Checking NWS…', 'Consultando o NWS…')}</p>
           </div>
         )}
         {rows && rows.length === 0 && !failed && (

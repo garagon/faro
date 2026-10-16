@@ -64,19 +64,70 @@ export function sourceTime(s: {
   return t(`intento ${at}`, `tried ${at}`, `tentativa ${at}`);
 }
 
-/** A failing source: "No responde · último dato 23:36", or "· intento 23:30" with no data. */
+/**
+ * The one vocabulary for a source's state, on every screen and in every language. Three states
+ * carry a time, and only the time that matters for each:
+ * - checked: "consultado 07:30", when the data shown was retrieved;
+ * - failed: "sin respuesta · intento 07:30", when Faro last tried, or "sin respuesta · último dato
+ *   07:27" while older data is still on screen (it may have changed since);
+ * - offline: "sin conexión · último dato 07:27", or "sin conexión" with nothing received.
+ * Before a first answer it is "consultando…", never shown in a warning colour. Lower case, to
+ * follow an issuer in a stamp; `capitalize` it to start a line.
+ */
+export type SourceLine = 'checked' | 'checking' | 'failed' | 'offline';
+export function sourceLine(s: {
+  /** When the data shown was retrieved; null if nothing was received. */
+  checked: number | null;
+  failed: boolean;
+  /** When the last failed attempt was made. */
+  failedAt?: number | null;
+  online: boolean;
+  /**
+   * The data on screen is no longer current although the last request did not fail: the adapter
+   * served its previous copy, or it is older than the source's polling allows.
+   */
+  old?: boolean;
+  now: number;
+  lang: Lang;
+}): { state: SourceLine; text: string } {
+  const t = (es: string, en: string, pt: string) => pick(s.lang, es, en, pt);
+  const last = s.checked ? checkedLabel(s.checked, s.now, s.lang) : '';
+  const lastData = last ? t(`último dato ${last}`, `last data ${last}`, `último dado ${last}`) : '';
+  if (!s.online)
+    return {
+      state: 'offline',
+      text: [t('sin conexión', 'offline', 'sem conexão'), lastData].filter(Boolean).join(' · '),
+    };
+  if (s.failed || (s.old && s.checked)) {
+    const tried = s.failedAt ? checkedLabel(s.failedAt, s.now, s.lang) : '';
+    const attempt = tried ? t(`intento ${tried}`, `tried ${tried}`, `tentativa ${tried}`) : '';
+    return {
+      state: 'failed',
+      text: [t('sin respuesta', 'no response', 'sem resposta'), lastData || attempt]
+        .filter(Boolean)
+        .join(' · '),
+    };
+  }
+  if (!s.checked)
+    return { state: 'checking', text: t('consultando…', 'checking…', 'consultando…') };
+  return {
+    state: 'checked',
+    text: t(`consultado ${last}`, `checked ${last}`, `consultado ${last}`),
+  };
+}
+
+/** The stamp colour for a source line: amber for a failure or old data, never while checking. */
+export const lineStamp = (state: SourceLine) =>
+  state === 'failed' ? ('error' as const) : state === 'offline' ? ('stale' as const) : undefined;
+
+/** A failing source as a line of its own: "Sin respuesta · intento 23:30". */
 export function failingLabel(s: {
   checked: number | null;
   failedAt?: number | null;
   now: number;
   lang: Lang;
 }) {
-  return [
-    pick(s.lang, 'No responde', 'Not responding', 'Não responde'),
-    sourceTime({ ...s, old: true }),
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  return capitalize(sourceLine({ ...s, failed: true, online: true }).text);
 }
 
 /** The first letter in upper case, for a time label that starts a line. */

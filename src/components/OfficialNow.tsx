@@ -9,10 +9,10 @@ import {
   Note,
   OutLink,
   Section,
+  SourceStamp,
   StatusIcon,
 } from '../ui/index.ts';
-import { checkedLabel } from '../lib/time.ts';
-import { failingLabel } from '../lib/sourceStatus.ts';
+import { capitalize, lineStamp, sourceLine } from '../lib/sourceStatus.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import {
   floodWarnings,
@@ -69,9 +69,78 @@ export type CivilFeed = {
 export const officialRowId = (kind: 'w' | 'p', id: string | number) =>
   `fw-official-${kind}-${String(id).replace(/[^\w-]/g, '_')}`;
 
+/**
+ * A national source's state in the one vocabulary (`sourceLine`), or nothing while it is current:
+ * the screen says once when Faro checked. Before a first answer it is "checking", in grey.
+ */
+export function feedLine(
+  feed: { checked: number | null; failed: boolean; failedAt?: number | null; stale: boolean },
+  online: boolean,
+  now: number,
+  lang: Lang,
+) {
+  const line = sourceLine({
+    checked: feed.checked,
+    failed: feed.failed,
+    failedAt: feed.failedAt,
+    online,
+    old: feed.stale,
+    now,
+    lang,
+  });
+  return line.state === 'checked' ? null : line;
+}
+
+/**
+ * One national warning in force, in the agency's words: its event as the title, its severity as
+ * the badge, and who issued it. The same row on Situación and Emergencia.
+ */
+export function NationalWarningRow({
+  warning: w,
+  agency,
+  lang,
+  extra,
+  onOpen,
+  href,
+}: {
+  warning: NationalWarning;
+  agency: string;
+  lang: Lang;
+  /** Added to the caption: the source's state when it is not current, or the expiry. */
+  extra?: string;
+  onOpen?: () => void;
+  href?: string;
+}) {
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const level = severityLevel[w.severity];
+  const row = {
+    lead: (
+      <StatusIcon state="listed" level={level} icon={<WarningIcon size={20} weight="bold" />} />
+    ),
+    title: <span lang="es">{readableEvent(w.event)}</span>,
+    badge: <Badge level={level}>{severityLabels[w.severity][langIndex(lang)]}</Badge>,
+    // The agency publishes in Spanish: said once in the caption, for English and Portuguese.
+    meta: [
+      t(`Aviso del ${agency}`, `${agency} warning, in Spanish`, `Aviso do ${agency}, em espanhol`),
+      extra,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  };
+  return onOpen ? (
+    <ListRow {...row} onClick={onOpen} />
+  ) : href ? (
+    <ListRow {...row} href={href} external />
+  ) : (
+    <ListRow {...row} />
+  );
+}
+
 type Props = {
   lang: Lang;
   now: number;
+  /** Offline, a source's state says so with the time of its last data. */
+  online: boolean;
   national?: NationalFeed;
   civil?: CivilFeed;
   /** The weather service's page when it has no feed Faro can read. */
@@ -92,6 +161,7 @@ type Props = {
 export default function OfficialNow({
   lang,
   now,
+  online,
   national,
   civil,
   weather,
@@ -249,33 +319,12 @@ export default function OfficialNow({
       hour: '2-digit',
       minute: '2-digit',
     }).format(n);
-  // When each source answered, or why it cannot be confirmed: shown beside its heading.
-  const checked = (when: number | null, old: boolean) =>
-    when
-      ? old
-        ? t(
-            `Último dato ${checkedLabel(when, now, lang)}`,
-            `Last data ${checkedLabel(when, now, lang)}`,
-            `Último dado ${checkedLabel(when, now, lang)}`,
-          )
-        : t(
-            `Consultado ${checkedLabel(when, now, lang)}`,
-            `Checked ${checkedLabel(when, now, lang)}`,
-            `Consultado ${checkedLabel(when, now, lang)}`,
-          )
-      : '';
   const signal = national ? nationalSignal(national) : null;
-  // A failing source says so beside its heading, with the time of its last data or attempt, even
-  // while its last warnings are still listed: they may have been lifted or raised since.
-  const nationalState = !national
-    ? ''
-    : national.failed
-      ? failingLabel({ checked: national.checked, failedAt: national.failedAt, now, lang })
-      : signal === 'offline'
-        ? t('Sin conexión', 'Offline', 'Sem conexão')
-        : signal === 'checking'
-          ? t('Consultando…', 'Checking…', 'Consultando…')
-          : checked(national.checked, national.stale || signal === 'unconfirmed');
+  // Each source's state beside its heading, in the one vocabulary, only when it is not current:
+  // failing ("Sin respuesta · intento 07:30", even while its last warnings are still listed: they
+  // may have been lifted or raised since), offline, or checking (grey). Current, nothing: the
+  // screen head says once when Faro checked.
+  const nationalLine = national ? feedLine(national, online, now, lang) : null;
   const nationalEmpty =
     signal === 'off'
       ? t('No hay avisos vigentes.', 'No warnings in force.', 'Não há avisos em vigor.')
@@ -285,27 +334,15 @@ export default function OfficialNow({
             'Could not confirm whether warnings are in force.',
             'Não foi possível confirmar se há avisos em vigor.',
           )
-        : signal === 'failed'
-          ? t(
-              'No se pudo consultar. Revisa su sitio oficial.',
-              'Could not be checked. See its official site.',
-              'Não foi possível consultar. Veja o site oficial.',
+        : signal === 'failed' || signal === 'offline'
+          ? // The state is beside the heading; this says what it means and where to look.
+            t(
+              'Faro no puede saber si hay avisos vigentes: consulta su sitio oficial.',
+              'Faro cannot tell whether warnings are in force: check its official site.',
+              'O Faro não consegue saber se há avisos em vigor: consulte o site oficial.',
             )
           : '';
-  const civilState = !civil
-    ? ''
-    : civil.failed
-      ? failingLabel({
-          checked: civil.posts ? civil.checked : null,
-          failedAt: civil.failedAt,
-          now,
-          lang,
-        })
-      : !civil.posts
-        ? civil.offline
-          ? t('Sin conexión', 'Offline', 'Sem conexão')
-          : t('Consultando…', 'Checking…', 'Consultando…')
-        : checked(civil.checked, civil.stale);
+  const civilLine = civil ? feedLine(civil, online && !civil.offline, now, lang) : null;
   // A quiet week still says when the agency last published, so silence is not read as news.
   const last = civil?.posts && posts.length === 0 ? lastPost(civil.posts, now) : null;
   const day = (n: number) =>
@@ -323,13 +360,7 @@ export default function OfficialNow({
             'Nothing published in the last 7 days.',
             'Nenhuma publicação nos últimos 7 dias.',
           )
-      : civil && !civil.posts && civil.failed
-        ? t(
-            'No se pudo consultar. Revisa su sitio oficial.',
-            'Could not be checked. See its official site.',
-            'Não foi possível consultar. Veja o site oficial.',
-          )
-        : '';
+      : '';
   const spanishNote = lang !== 'es' && (
     <Note>
       {help(
@@ -356,12 +387,13 @@ export default function OfficialNow({
                 `Avisos em vigor: ${national.agency}`,
               )}
             </h3>
-            <span
-              className="f-section-aside"
-              data-state={national.failed || national.stale ? 'stale' : undefined}
-            >
-              {nationalState}
-            </span>
+            {nationalLine && (
+              <span className="f-section-aside">
+                <SourceStamp state={lineStamp(nationalLine.state)}>
+                  {capitalize(nationalLine.text)}
+                </SourceStamp>
+              </span>
+            )}
           </div>
           {warnings.length > 0 ? (
             <>
@@ -432,7 +464,20 @@ export default function OfficialNow({
               </List>
             </>
           ) : (
-            nationalEmpty && <Note>{nationalEmpty}</Note>
+            nationalEmpty && (
+              <Note
+                more={
+                  (signal === 'failed' || signal === 'offline') &&
+                  weather && (
+                    <OutLink href={weather.url}>
+                      {new URL(weather.url).hostname.replace(/^www\./, '')}
+                    </OutLink>
+                  )
+                }
+              >
+                {nationalEmpty}
+              </Note>
+            )
           )}
         </div>
       )}
@@ -447,12 +492,13 @@ export default function OfficialNow({
                 `Comunicados: ${civil.agency}`,
               )}
             </h3>
-            <span
-              className="f-section-aside"
-              data-state={civil.failed || civil.stale ? 'stale' : undefined}
-            >
-              {civilState}
-            </span>
+            {civilLine && (
+              <span className="f-section-aside">
+                <SourceStamp state={lineStamp(civilLine.state)}>
+                  {capitalize(civilLine.text)}
+                </SourceStamp>
+              </span>
+            )}
           </div>
           {shownPosts.length > 0 ? (
             <>

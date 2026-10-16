@@ -3,11 +3,18 @@ import { useEffect, useState } from 'react';
 import { ArrowClockwiseIcon, CrosshairIcon, WavesIcon } from '@phosphor-icons/react';
 import type { Geo } from './WebMap.tsx';
 import { coastDistanceKm, decodeCoastline, type CoastLine } from '../lib/coast.ts';
-import { classifyBulletins, type TsunamiData, type BulletinState } from '../lib/tsunami.ts';
+import {
+  bulletinNotice,
+  classifyBulletins,
+  leadingNotice,
+  readablePlace,
+  type BulletinState,
+  type TsunamiData,
+} from '../lib/tsunami.ts';
 import { nwsEventLabels, type NwsAlert } from '../lib/nws.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import { checkedLabel } from '../lib/time.ts';
-import { failingLabel, sourceTime } from '../lib/sourceStatus.ts';
+import { failingLabel, lineStamp, sourceLine } from '../lib/sourceStatus.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 import { distance as formatDistance } from '../lib/units.ts';
 import {
@@ -83,7 +90,9 @@ export default function CoastalPanel({
     [coastError, setCoastError] = useState(false),
     [coastLoaded, setCoastLoaded] = useState(false),
     // Rows the person opened or closed; messages to review start open, the archive closed.
-    [toggled, setToggled] = useState<Set<string>>(() => new Set());
+    [toggled, setToggled] = useState<Set<string>>(() => new Set()),
+    // Bulletins whose product and event codes are shown ("More data").
+    [codes, setCodes] = useState<Set<string>>(() => new Set());
   useEffect(() => {
     let stop = false;
     setDistance(null);
@@ -114,13 +123,13 @@ export default function CoastalPanel({
       stop = true;
     };
   }, [geo?.lat, geo?.lng]);
-  const toggle = (id: string) =>
-    setToggled((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const flip = (id: string) => (prev: Set<string>) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    return next;
+  };
+  const toggle = (id: string) => setToggled(flip(id));
   // Only tsunami products belong here; other NWS alerts are on the situation screen.
   const nwsTsunami = nws?.data?.filter((a) => a.kind === 'tsunami') ?? null;
   const authority = destinationFor(country)?.civilProtection;
@@ -130,6 +139,9 @@ export default function CoastalPanel({
     nb(`${t('emitido', 'issued', 'emitido')} ${at(n)} · ${ageLabel(n, now, lang)}`);
   const near = geo && distance !== null && distance <= 20 + geo.accuracy / 1000;
   const rows = data ? classifyBulletins(data, now, error) : [];
+  // The message the banner and the Situación row name, with the same words and level.
+  const lead = leadingNotice(data, now, error);
+  const idx = langIndex(lang);
   const current = rows.filter((r) => r.needsReview);
   const archived = rows.filter((r) => !r.needsReview);
   const labels: Record<BulletinState, string> = {
@@ -159,6 +171,9 @@ export default function CoastalPanel({
     const { bulletin: b, state } = row;
     const id = `fw-bulletin-${b.product}-${b.eventId}-${b.issued}`.replace(/[^\w-]/g, '_');
     const open = row.needsReview !== toggled.has(id);
+    // An open message carries the same badge as the banner and the Situación row.
+    const notice = bulletinNotice(row);
+    const more = codes.has(id);
     return (
       <ExpandRow
         key={id}
@@ -167,25 +182,22 @@ export default function CoastalPanel({
         onToggle={() => toggle(id)}
         lead={
           <StatusIcon
-            state={row.needsReview || row.unresolved ? 'listed' : 'none'}
-            level={row.needsReview || row.unresolved ? 1 : undefined}
+            state={notice ? 'listed' : 'none'}
+            level={notice?.level}
             icon={<WavesIcon size={20} weight="bold" />}
           />
         }
-        title={<span lang="en">{b.place}</span>}
-        badge={
-          <Badge level={row.needsReview || row.unresolved ? 1 : undefined}>{labels[state]}</Badge>
+        // NOAA's place, readable, in English as published.
+        title={
+          <>
+            <span lang="en">{readablePlace(b.place)}</span>
+            {t(' (en inglés)', '', ' (em inglês)')}
+          </>
         }
+        badge={<Badge level={notice?.level}>{notice ? notice.label[idx] : labels[state]}</Badge>}
         // Every bulletin here is PTWC's: the issuer is in the status line above.
         meta={issued(b.issued)}
       >
-        <p>
-          {b.product} ·{' '}
-          {b.basin === 'Pacific'
-            ? t('Pacífico', 'Pacific', 'Pacífico')
-            : t('Caribe', 'Caribbean', 'Caribe')}{' '}
-          · {t('Evento', 'Event', 'Evento')} {b.eventId}
-        </p>
         {row.replacedAt && (
           <p>
             {t('Actualización posterior', 'Later update', 'Atualização posterior')}:{' '}
@@ -249,65 +261,79 @@ export default function CoastalPanel({
               'Consultar última atualização',
             )}
           </OutLink>
+          <button
+            type="button"
+            aria-expanded={more}
+            aria-controls={`${id}-codes`}
+            onClick={() => setCodes(flip(id))}
+          >
+            {t('Más datos', 'More data', 'Mais dados')}
+          </button>
         </Actions>
+        {/* NOAA's product and event codes, for anyone matching the bulletin on tsunami.gov. */}
+        <p id={`${id}-codes`} className="f-caption" hidden={!more}>
+          {t('Producto', 'Product', 'Produto')} {b.product} ·{' '}
+          {b.basin === 'Pacific'
+            ? t('Pacífico', 'Pacific', 'Pacífico')
+            : t('Caribe', 'Caribbean', 'Caribe')}{' '}
+          · {t('Evento', 'Event', 'Evento')} {b.eventId}
+          {b.place !== readablePlace(b.place) && (
+            <>
+              {' · '}
+              {t(
+                'Lugar tal como lo publica NOAA',
+                'Place as NOAA publishes it',
+                'Local como a NOAA publica',
+              )}
+              : <span lang="en">{b.place}</span>
+            </>
+          )}
+        </p>
       </ExpandRow>
     );
   };
-  // One line that answers "is there a tsunami message?", from what was received and how.
-  const statusState = error
-    ? 'failed'
-    : !data
-      ? 'checking'
-      : current.length > 0
-        ? 'review'
-        : rows.some((r) => r.unresolved)
-          ? 'unresolved'
-          : data.partial
-            ? 'partial'
-            : rows.some((r) => !r.reliable) || !online
-              ? 'old'
-              : 'none';
+  // One line that answers "is there a tsunami message?", from what was received and how. An open
+  // message leads even while NOAA is failing: its last copy is never dropped.
+  const statusState = lead
+    ? 'open'
+    : error
+      ? 'failed'
+      : !data
+        ? 'checking'
+        : data.partial
+          ? 'partial'
+          : rows.some((r) => !r.reliable) || !online
+            ? 'old'
+            : 'none';
   // The newest message, when it closes a threat: said as NOAA said it, with its time.
   const closing =
     statusState === 'none'
       ? rows.find((r) => r.recent && (r.state === 'cancelled' || r.state === 'ended'))
       : undefined;
+  const unconfirmed = t(
+    'No se puede confirmar si hay mensajes',
+    'Cannot confirm whether there are messages',
+    'Não é possível confirmar se há mensagens',
+  );
+  const openCount = rows.filter((r) => bulletinNotice(r)).length;
   const statusHeadline = {
-    failed: t(
-      'No se pudo actualizar NOAA',
-      'NOAA could not be refreshed',
-      'Não foi possível atualizar a NOAA',
-    ),
-    checking: busy
-      ? t('Consultando NOAA…', 'Checking NOAA…', 'Consultando a NOAA…')
-      : t('Sin datos de NOAA todavía', 'No NOAA data yet', 'Ainda sem dados da NOAA'),
-    review:
-      current.length === 1
+    // The same title and badge as the banner and the Situación row.
+    open:
+      openCount > 1
         ? t(
-            '1 mensaje reciente por revisar',
-            '1 recent message to review',
-            '1 mensagem recente para revisar',
+            `Tsunami · ${openCount} mensajes`,
+            `Tsunami · ${openCount} messages`,
+            `Tsunami · ${openCount} mensagens`,
           )
-        : t(
-            `${current.length} mensajes recientes por revisar`,
-            `${current.length} recent messages to review`,
-            `${current.length} mensagens recentes para revisar`,
-          ),
-    unresolved: t(
-      'Hay un mensaje de amenaza sin cierre: no se puede confirmar que terminó',
-      'A threat message has no closing message: it cannot be confirmed as over',
-      'Há uma mensagem de ameaça sem encerramento: não é possível confirmar que terminou',
-    ),
+        : 'Tsunami',
+    failed: unconfirmed,
+    checking: t('Sin datos de NOAA todavía', 'No NOAA data yet', 'Ainda sem dados da NOAA'),
     partial: t(
       'Respuesta parcial de NOAA: no se puede confirmar',
       'Partial NOAA answer: cannot be confirmed',
       'Resposta parcial da NOAA: não é possível confirmar',
     ),
-    old: t(
-      'La consulta está desactualizada',
-      'This check is out of date',
-      'A consulta está desatualizada',
-    ),
+    old: unconfirmed,
     none:
       closing?.state === 'cancelled'
         ? t(
@@ -331,15 +357,22 @@ export default function CoastalPanel({
   const signal: Signal =
     statusState === 'none'
       ? 'none'
-      : statusState === 'review' || statusState === 'unresolved'
+      : statusState === 'open'
         ? 'listed'
         : statusState === 'checking' && busy
           ? 'pending'
           : 'unknown';
-  // Failing, offline or out of date, the data is "the last data", marked as on every tab.
-  const old = error || !online || statusState === 'old';
-  const stampState =
-    statusState === 'failed' ? 'error' : old || statusState === 'partial' ? 'stale' : undefined;
+  // NOAA's state in the one vocabulary: checked, no response or offline, with its time. Polled
+  // every minute, so an answer older than a few minutes is no longer current.
+  const line = sourceLine({
+    checked: data?.fetched ?? null,
+    failed: error,
+    failedAt,
+    online,
+    old: !!data && now - data.fetched > 3 * 60000,
+    now,
+    lang,
+  });
   return (
     <div className="f-stack" data-gap="lg">
       {/* The answer first: what NOAA's products say now, when they were checked, and the limits. */}
@@ -352,22 +385,18 @@ export default function CoastalPanel({
               lead={
                 <StatusIcon
                   state={signal}
-                  level={signal === 'listed' ? 1 : undefined}
+                  level={lead?.notice.level}
                   icon={<WavesIcon size={20} weight="bold" />}
                 />
               }
               title={statusHeadline}
+              badge={lead && <Badge level={lead.notice.level}>{lead.notice.label[idx]}</Badge>}
               meta={
-                <SourceStamp issuer="NOAA/PTWC" state={stampState}>
-                  <span>
-                    {data
-                      ? sourceTime({ checked: data.fetched, old, now, lang })
-                      : busy
-                        ? t('Conectando con NOAA…', 'Connecting to NOAA…', 'Conectando com a NOAA…')
-                        : failedAt
-                          ? sourceTime({ checked: null, old: true, failedAt, now, lang })
-                          : t('Sin datos recibidos', 'No data received', 'Nenhum dado recebido')}
-                  </span>
+                <SourceStamp
+                  issuer="NOAA/PTWC"
+                  state={statusState === 'partial' ? 'stale' : lineStamp(line.state)}
+                >
+                  {line.text}
                 </SourceStamp>
               }
               trail={
@@ -399,11 +428,7 @@ export default function CoastalPanel({
       {current.length > 0 && (
         <section className="f-section" aria-labelledby="fw-tsunami-current">
           <h2 className="f-section-title" id="fw-tsunami-current">
-            {t(
-              'Mensajes recientes: verificar actualización',
-              'Recent messages: check for updates',
-              'Mensagens recentes: verificar atualização',
-            )}
+            {t('Mensajes recientes', 'Recent messages', 'Mensagens recentes')}
           </h2>
           <List>{current.map(renderBulletin)}</List>
         </section>

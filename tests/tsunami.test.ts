@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  bulletinNotice,
   classifyBulletins,
+  leadingNotice,
+  noticeLabels,
   parseTsunamiData,
+  readablePlace,
   RECENT_BULLETIN_WINDOW,
   reviveTsunami,
   type Bulletin,
@@ -151,4 +155,49 @@ test('a kept copy brings an open threat back after an offline reload, never as c
   const bad = { ...stored, bulletins: [{ ...stored.bulletins[0], url: 'https://evil.example/x' }] };
   assert.equal(reviveTsunami(bad, now), null);
   assert.equal(reviveTsunami('garbage', now), null);
+});
+
+test('one open message has one name and one level on every screen', async () => {
+  const { tsunamiStatus } = await import('../src/lib/hazards.ts');
+  const data = (bulletins: Bulletin[]) => ({ bulletins, fetched: now, partial: false });
+  // A recent threat: NOAA's message type at level 3, read by the banner, the row and the tab.
+  const threat = data([bulletin({ place: 'OFF THE COAST OF PANAMA' })]);
+  const lead = leadingNotice(threat, now)!;
+  assert.equal(lead.notice.level, 3);
+  assert.deepEqual(lead.notice.label, noticeLabels.threat);
+  const status = tsunamiStatus(threat, false, now);
+  assert.deepEqual(status.notice, lead.notice);
+  assert.equal(status.bulletin, lead.row.bulletin);
+  const [row] = classifyBulletins(threat, now);
+  assert.deepEqual(bulletinNotice(row), lead.notice);
+  // An unreadable message is one to review, at level 1; a threat leads over it.
+  const both = data([
+    bulletin({ eventId: '2', kind: 'unknown', issued: now - 1000 }),
+    bulletin({ issued: now - 5000 }),
+  ]);
+  assert.equal(leadingNotice(both, now)!.notice.level, 3);
+  assert.equal(leadingNotice(data([bulletin({ kind: 'unknown' })]), now)!.notice.level, 1);
+  // Older than the window and never closed: still named, as not closed, at level 1.
+  const unclosed = data([bulletin({ issued: now - 8 * 3600000 })]);
+  assert.deepEqual(leadingNotice(unclosed, now)!.notice.label, noticeLabels.unclosed);
+  assert.deepEqual(
+    tsunamiStatus(unclosed, false, now).notice,
+    leadingNotice(unclosed, now)!.notice,
+  );
+  // Closed, cancelled or informational: nothing to lead with.
+  assert.equal(leadingNotice(data([bulletin({ kind: 'cancelled' })]), now), undefined);
+  assert.equal(leadingNotice(null, now), undefined);
+  // A failing feed keeps the open message: it is never dropped.
+  assert.equal(leadingNotice(threat, now, true)!.notice.level, 3);
+});
+
+test('NOAA place names in capitals read in sentence case, with names kept', () => {
+  assert.equal(readablePlace('OFF THE COAST OF PANAMA'), 'Off the coast of Panama');
+  assert.equal(readablePlace('NEAR COAST OF CENTRAL PERU'), 'Near coast of central Peru');
+  assert.equal(readablePlace('SOUTH OF THE FIJI ISLANDS'), 'South of the Fiji Islands');
+  assert.equal(readablePlace('100 KM SW OF LIMA'), '100 km SW of Lima');
+  assert.equal(readablePlace('CENTRAL MID-ATLANTIC RIDGE'), 'Central Mid-Atlantic Ridge');
+  // Anything not in capitals is shown as published.
+  assert.equal(readablePlace('Off the coast of Panama'), 'Off the coast of Panama');
+  assert.equal(readablePlace(''), '');
 });

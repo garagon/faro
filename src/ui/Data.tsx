@@ -4,7 +4,10 @@ import { magnitudeBand } from '../lib/magnitude.ts';
 
 /**
  * Who said it and when, in one grammar everywhere: "IMHPA · publicado 10:15 · hace 2 h".
- * `state` stale or error colours it amber; the words must still say what happened.
+ * A source's state uses the closed vocabulary of `sourceLine` (src/lib/sourceStatus.ts):
+ * "consultado 07:30", "sin respuesta · intento 07:30", "sin conexión · último dato 07:27".
+ * `state` stale or error colours it amber; the words must still say what happened. Checking is
+ * never amber.
  */
 export function SourceStamp({
   issuer,
@@ -19,7 +22,8 @@ export function SourceStamp({
     <span className="f-stamp" data-state={state}>
       {issuer && <span>{issuer}</span>}
       {issuer && children && <span aria-hidden="true">·</span>}
-      {children}
+      {/* Wrapped, so the stamp's spacing reaches text as well as elements. */}
+      {children && <span>{children}</span>}
     </span>
   );
 }

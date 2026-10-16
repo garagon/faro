@@ -7,7 +7,7 @@ import {
   PulseIcon,
   SunIcon,
 } from '@phosphor-icons/react';
-import { failingLabel, sourceTime } from '../lib/sourceStatus.ts';
+import { lineStamp, sourceLine } from '../lib/sourceStatus.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import {
   ACTIVE_WINDOW,
@@ -86,14 +86,21 @@ export default function AlertsPanel(p: Props) {
   // Offline or older than 15 minutes, the list is the last data, said as on every tab; a failing
   // source says so with its time instead.
   const stale = !!p.data && !p.failed && (!p.online || p.now - p.data.fetched > 15 * 60000);
+  // GDACS's state in the one vocabulary: checked, no response or offline, with its time.
+  const line = sourceLine({
+    checked: p.data?.fetched ?? null,
+    failed: p.failed,
+    failedAt: p.failedAt,
+    online: p.online,
+    old: stale,
+    now: p.now,
+    lang: p.lang,
+  });
   // Under the list: a partial answer and, while current, when it was checked. The time is said
   // above when the data is old or the source failing; with nothing to add, only the issuer.
   const foot = [
     p.data?.partial && t('Respuesta parcial.', 'Partial response.', 'Resposta parcial.'),
-    p.data &&
-      !stale &&
-      !p.failed &&
-      sourceTime({ checked: p.data.fetched, old: false, now: p.now, lang: p.lang }),
+    line.state === 'checked' && line.text,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -129,59 +136,19 @@ export default function AlertsPanel(p: Props) {
             'Estimativas do GDACS (ONU e Comissão Europeia) para coordenar a ajuda internacional. Não são um aviso para você nem uma ordem de evacuação: o que fazer é indicado pelas autoridades locais.',
           )}
         </Note>
-        {p.failed && (
+        {line.state !== 'checked' && (
           <div role="status">
-            <SourceStamp issuer="GDACS" state="error">
-              <span>
-                {failingLabel({
-                  checked: p.data?.fetched ?? null,
-                  failedAt: p.failedAt,
-                  now: p.now,
-                  lang: p.lang,
-                })}
-                .{' '}
-                {p.data
-                  ? t(
-                      'Se muestran los últimos datos recibidos.',
-                      'Showing the last data received.',
-                      'Mostrando os últimos dados recebidos.',
-                    )
-                  : t(
-                      'Esto no significa que no haya alertas.',
-                      'This does not mean there are no alerts.',
-                      'Isso não significa que não haja alertas.',
-                    )}
-              </span>
+            <SourceStamp issuer="GDACS" state={lineStamp(line.state)}>
+              {line.text}
+              {/* Nothing received: the failure is never read as "no alerts". */}
+              {!p.data &&
+                line.state !== 'checking' &&
+                `. ${t(
+                  'Esto no significa que no haya alertas.',
+                  'This does not mean there are no alerts.',
+                  'Isso não significa que não haja alertas.',
+                )}`}
             </SourceStamp>
-          </div>
-        )}
-        {stale && p.data && (
-          <div role="status">
-            <SourceStamp issuer="GDACS" state="stale">
-              <span>
-                {[
-                  t(
-                    'La consulta está desactualizada',
-                    'This check is out of date',
-                    'A consulta está desatualizada',
-                  ),
-                  sourceTime({ checked: p.data.fetched, old: true, now: p.now, lang: p.lang }),
-                ].join(' · ')}
-              </span>
-            </SourceStamp>
-          </div>
-        )}
-        {!p.data && !p.failed && (
-          <div className="f-prose">
-            <p>
-              {p.online
-                ? t('Consultando GDACS…', 'Checking GDACS…', 'Consultando o GDACS…')
-                : t(
-                    'Sin conexión: no se pueden consultar las alertas.',
-                    'Offline: alerts cannot be checked.',
-                    'Sem conexão: não é possível consultar os alertas.',
-                  )}
-            </p>
           </div>
         )}
         {shown.length > 0 && (
