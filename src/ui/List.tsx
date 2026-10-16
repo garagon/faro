@@ -210,14 +210,36 @@ export function ListRow(
   );
 }
 
-/** Numbered instructions, one short imperative each, read in a hurry. */
-export function Steps({ items }: { items: readonly { id: string; text: ReactNode }[] }) {
+/**
+ * Numbered instructions, one short imperative each, read in a hurry. `lg` is the size for the
+ * emergency screen; `start` continues the numbering of a list shown in two parts.
+ */
+export function Steps({
+  items,
+  size = 'md',
+  start = 1,
+}: {
+  items: readonly { id: string; text: ReactNode }[];
+  size?: 'md' | 'lg';
+  start?: number;
+}) {
   return (
-    <ol className="grid gap-4">
+    <ol className="grid gap-4" start={start}>
       {items.map((s, i) => (
-        <li key={s.id} className="flex gap-3 text-base leading-normal">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium tabular-nums">
-            {i + 1}
+        <li
+          key={s.id}
+          className={cn(
+            'flex gap-3',
+            size === 'lg' ? 'text-lg leading-snug' : 'text-base leading-normal',
+          )}
+        >
+          <span
+            className={cn(
+              'flex shrink-0 items-center justify-center rounded-full bg-muted font-medium tabular-nums',
+              size === 'lg' ? 'size-7 text-sm' : 'size-6 text-xs',
+            )}
+          >
+            {start + i}
           </span>
           <div className="min-w-0 flex-1 text-pretty [&_.f-inline-link]:text-start [&_.f-inline-link]:font-medium [&_.f-inline-link]:underline-offset-4 [&_.f-subhead]:mb-1 [&_.f-subhead]:text-base">
             {s.text}
