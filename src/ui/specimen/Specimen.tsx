@@ -458,7 +458,10 @@ function Catalogue() {
             />
           </Block>
           <Block title="Secciones y filas de navegación">
-            <Section title={t('Ayuda', 'Help', 'Ajuda')} aside={t('Panamá', 'Panama', 'Panamá')}>
+            <Section
+              title={t('Ayuda', 'Help', 'Ajuda')}
+              aside={t('Revisado jun 2026', 'Reviewed Jun 2026', 'Revisado jun 2026')}
+            >
               <List>
                 <ListRow
                   lead={<PhoneIcon size={20} aria-hidden="true" />}

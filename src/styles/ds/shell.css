@@ -53,8 +53,10 @@
   height: 22px;
 }
 .f-header .f-brand {
-  margin-inline-end: var(--f-space-2);
+  margin-inline-end: var(--f-space-1);
 }
+/* The header's two pickers, country and language, are drawn alike: a label, a caret, no box;
+   they answer hover and press with the same fill. Emergency is the only outlined control. */
 .f-place {
   display: inline-flex;
   align-items: center;
@@ -62,7 +64,7 @@
   min-width: min(5.5em, 40%);
   min-height: var(--f-touch);
   margin: 0;
-  padding: 0 var(--f-space-1);
+  padding: 0 var(--f-space-2);
   border: 0;
   border-radius: var(--f-radius-sm);
   background: transparent;
@@ -84,13 +86,25 @@
 .f-lang:active {
   background: var(--f-color-surface-muted);
 }
+@media (hover: hover) {
+  .f-place:hover,
+  .f-lang:hover {
+    background: var(--f-color-surface-muted);
+  }
+}
+.f-caret {
+  flex: none;
+  color: var(--f-color-text-muted);
+}
 .f-header-end {
   display: flex;
   align-items: center;
   gap: var(--f-space-1);
   margin-inline-start: auto;
 }
+/* The two-letter code (the full name in the sidebar) sits over the device's own picker. */
 .f-lang {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--f-space-1);
@@ -101,24 +115,10 @@
   border: 0;
   border-radius: var(--f-radius-sm);
   background: transparent;
-  color: var(--f-color-text-muted);
-  font-size: var(--f-text-sm);
-  font-weight: var(--f-weight-bold);
-  cursor: pointer;
-}
-/* The two-letter code sits over the device's own language picker. */
-.f-lang {
-  position: relative;
-}
-/* On the phone the language reads as a control: code, caret and a fine outline. */
-.f-header .f-lang {
-  min-height: 40px;
-  padding: 0 var(--f-space-2);
-  border: 1px solid var(--f-color-border-strong);
   color: var(--f-color-text);
-}
-.f-lang-caret {
-  color: var(--f-color-text-muted);
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-medium);
+  cursor: pointer;
 }
 @container app (max-width: 899px) {
   .f-header .f-lang .f-lang-globe {
@@ -164,6 +164,13 @@
 .f-emergency[aria-current] {
   cursor: default;
 }
+@media (hover: hover) {
+  .f-emergency:not([aria-current]):hover {
+    background: var(--f-color-call-soft);
+    box-shadow: inset 0 0 0 2px var(--f-color-call-hover);
+    color: var(--f-color-call-hover);
+  }
+}
 /* The country always gets its room: the wordmark goes below 400 px, the mark below 360. */
 @container app (max-width: 399px) {
   .f-brand span {
@@ -174,9 +181,13 @@
     clip-path: inset(50%);
   }
 }
+/* Without the mark, the country's text starts at the page's text edge. */
 @container app (max-width: 359px) {
   .f-header .f-brand {
     display: none;
+  }
+  .f-header .f-place {
+    margin-inline-start: calc(-1 * var(--f-space-2));
   }
 }
 /* With large text the header keeps the country and Emergency; the mark goes and the language
@@ -185,6 +196,9 @@
   .f-header .f-lang,
   .f-header .f-brand {
     display: none;
+  }
+  .f-header .f-place {
+    margin-inline-start: calc(-1 * var(--f-space-2));
   }
 }
 
@@ -264,8 +278,19 @@
 .f-tab[aria-current] .f-tab-icon {
   background: var(--f-color-action-soft);
 }
-.f-tab:active .f-tab-icon {
+.f-tab-icon {
+  transition: background-color var(--f-press) var(--f-ease);
+}
+.f-tab:not([aria-current]):active .f-tab-icon {
   background: var(--f-color-surface-muted);
+}
+@media (hover: hover) {
+  .f-tab:not([aria-current]):hover {
+    color: var(--f-color-text);
+  }
+  .f-tab:not([aria-current]):hover .f-tab-icon {
+    background: var(--f-color-surface-muted);
+  }
 }
 
 /* Desktop frame: the sidebar holds the brand, the country, Emergency, the menu and, at its
@@ -333,8 +358,12 @@
     text-align: start;
     text-decoration: none;
     cursor: pointer;
+    transition-property: background-color, color;
+    transition-duration: var(--f-press);
+    transition-timing-function: var(--f-ease);
   }
-  .f-side-link:hover {
+  .f-side-link:hover,
+  .f-side-link:active {
     background: var(--f-color-surface-muted);
   }
   .f-side-link[aria-current] {
@@ -505,4 +534,12 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+/* With reduced motion the frame's hover and press colours change at once. */
+@media (prefers-reduced-motion: reduce) {
+  .f-tab-icon,
+  .f-side-link {
+    transition: none;
+  }
 }

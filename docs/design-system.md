@@ -46,11 +46,20 @@ is deleted, not kept "just in case"; check with a visual regression run before a
 - One row height per list: if one row has a caption, all do. Captions fit one line at 390 px in
   Spanish; numbers and their units never break ("24 h", "10 min").
 - The Emergency button in the frame always has the same outline; filled red is only the call
-  button. On the Emergency screen it is marked as the current place.
+  button. On the Emergency screen it is marked as the current place. It is the only outlined
+  control in the phone header: the country and language pickers beside it are drawn alike, a
+  label and a caret with no box.
 - Order on Situación: on a normal day the actions come first; when a warning of level 2 or more is
   in force, "What is happening" moves up under the call button.
-- Every tappable element has a 44 px target, pressed feedback and, with a mouse, hover feedback:
-  rows (links, buttons, section headers, checklist rows), chips and segments alike.
+- Every tappable element has a 44 px target, pressed feedback and, with a mouse, hover feedback,
+  changing over `--f-press`: rows (links, buttons, section headers, checklist rows), chips,
+  segments and tabs; the frame's Emergency button (call-red tint), country and language pickers
+  and menu links (muted fill); links and text buttons (`OutLink`, `.f-inline-link`, `Actions`:
+  darker green and a stronger underline).
+- One screen head everywhere (`ScreenHead`): the title, a short status at the end of its line when
+  the screen has one (Situación's check time), and a lead of one line at 390 px in Spanish, or
+  none. A lead says what the content does not (a caveat, the rule above every topic); it never
+  describes the menu. The frame names the country, so no title, section title or status repeats it.
 - A dialog or sheet is a history entry: Back closes it and leaves the screen as it was
   (`useBackToClose`; the earthquake sheet in `App.tsx`).
 - `Section` renders its `id`, so a link can open a screen at one of its parts.
@@ -94,18 +103,32 @@ a label and one caption line; state, source and time share that caption.
 | `Button`, `LinkButton`, `IconButton`                                               | One family, 44 and 56 px: primary (one per screen), secondary, ghost; `call` only for calling.                                                                                                                          |
 | `List`, `ListRow`                                                                  | Grouped rows; a row opens a screen, leaves to a link, or shows a value.                                                                                                                                                 |
 | `StatusIcon`, `RowIcon`                                                            | The 36 px circle that starts a row: a hazard icon tinted by the official level when something is listed (neutral, faded without an answer, pulsing while checking), or a neutral action icon. One text edge per screen. |
-| `Section`, `ScreenHead`, `BackLink`                                                | A title and space instead of boxes; the screen title equals its menu label.                                                                                                                                             |
+| `Section`, `ScreenHead`, `BackLink`                                                | A title and space instead of boxes. `ScreenHead`: the title (its menu label), a short status at the end of its line when the screen has one, and at most one line of lead.                                              |
 | `Badge`                                                                            | An official level in the agency's own words, beside a row title. Warnings in force are the first rows of the list, never a separate coloured box.                                                                       |
 | `SafetyNotice`, `Note`, `ScopeNote`                                                | The three tiers below.                                                                                                                                                                                                  |
 | `SourceStamp`                                                                      | Who said it and when.                                                                                                                                                                                                   |
 | `Magnitude`, `Skeleton`                                                            | Published magnitude; placeholder while the first answer arrives.                                                                                                                                                        |
-| `ChoiceChip`, `Segmented`, `Field`                                                 | Choosing, switching views, typing.                                                                                                                                                                                      |
+| `ChoiceChip`, `Segmented`, `Field`                                                 | Choosing, switching views, typing. Segments are 44 px, one variant per screen; a `block` keeps one row while the labels fit (equal, then as wide as each label), stacking only when they do not.                        |
 | `AppFrame`, `Header`, `StatusBar`, `TabBar`, `Sidebar`, `Content`                  | The frame. Phone: header, offline/stale strip, content, tabs. Desktop: sidebar with brand, country, Emergency, menu, sources, privacy and language; no top bar.                                                         |
 | `SelectField`, `TextArea`, `CheckRow`, `Combobox`                                  | Long lists on the device's picker, multi-line text, checklist rows, country search with suggestions.                                                                                                                    |
-| `Tabs`, `Disclosure`, `ExpandRow`                                                  | Sibling panels; a whole optional part of a form (its caption turns to the error colour when something inside needs fixing); a row with detail.                                                                          |
+| `Tabs`, `Disclosure`, `ExpandRow`                                                  | Sibling panels; a whole optional part of a form (its caption turns to the error colour when something inside needs fixing); a row with detail. What opens fades in.                                                     |
 | `RadioList`, `ActionBar`, `ActionRow`, `MessageText`, `MessagePreview`, `Progress` | Avisar: one choice as rows, the main action kept in view on phones (natural width on desktop), share channels, the message as it will be sent, a checklist's progress.                                                  |
-| `Sheet`, `Facts`, `Pager`, `ScrollCue`                                             | A record over the screen (earthquake, install): from the bottom on phones, centred on desktop, with Back closing it; label/value rows; page numbers; the edge cue of a tab strip that scrolls.                          |
+| `Sheet`, `Facts`, `Pager`, `ScrollCue`                                             | A record over the screen (earthquake, install): from the bottom on phones, centred on desktop (see Motion), Back closes it; label/value rows; page numbers; the edge cue of a tab strip that scrolls.                   |
 | `Figure`, `IndexNav`, `Text`                                                       | An illustration with its credit; the guide's topic list beside the text on desktop; a paragraph in the text or caption role.                                                                                            |
+
+## Motion
+
+Three durations, in `tokens.css`: `--f-press` (100 ms) for hover and press colours, `--f-move`
+(220 ms, `--f-ease`) for something arriving, `--f-leave` (160 ms, `--f-ease-exit`) for something
+leaving.
+
+- **Sheet:** on phones it slides up from the bottom edge; from 600 px it rises 8 px as it fades
+  in. It leaves faster, the same way back, and the veil fades with it. The animations hang on
+  Radix's `data-state`, which keeps the sheet mounted until the closing one ends; meanwhile the
+  sheet keeps showing its record, even if the app has already let it go.
+- **Disclosure and ExpandRow:** what opens fades in and settles 4 px down; closing is immediate.
+- **Reduced motion** (`prefers-reduced-motion`): nothing slides or scales. Sheets and opened parts
+  fade in place, and hover and press colours change at once.
 
 ## Notices and sources
 

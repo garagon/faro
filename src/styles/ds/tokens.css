@@ -139,10 +139,15 @@
   --f-z-overlay: 30;
   --f-z-toast: 40;
 
-  /* Motion */
+  /* Motion: feedback on press and hover, something arriving, something leaving (faster, and
+     accelerating out of view). With reduced motion nothing slides; it fades or changes at once. */
   --f-press: 100ms;
   --f-move: 220ms;
+  --f-leave: 160ms;
   --f-ease: cubic-bezier(0.2, 0, 0, 1);
+  --f-ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  /* Links underline more strongly under the pointer or the finger. */
+  --f-underline-hover: 2px;
 }
 
 /* Breakpoints (also in src/ui/breakpoints.ts): 600 small tablet, 900 desktop, 1200 wide. */

@@ -198,10 +198,7 @@ export default function EmergencyScreen(p: Props) {
       : t('Urgencias consulares', 'Consular emergencies', 'Emergências consulares');
   return (
     <div className="f-column" ref={root} lang={p.lang}>
-      <ScreenHead
-        title={t('Emergencia', 'Emergency', 'Emergência')}
-        aside={country ? names.of(country) : undefined}
-      />
+      <ScreenHead title={t('Emergencia', 'Emergency', 'Emergência')} />
       {choosing ? (
         <section className="f-section" aria-labelledby="fw-emergency-where">
           <h2 id="fw-emergency-where" className="f-section-title" tabIndex={-1}>
