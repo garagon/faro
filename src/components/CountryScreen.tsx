@@ -47,7 +47,8 @@ export default function CountryScreen(p: Props) {
     return n ? t(`Emergencias ${n}`, `Emergencies ${n}`, `Emergências ${n}`) : undefined;
   };
   const results = query.trim() ? matchCountries(options, query).slice(0, 12) : [];
-  const saved = p.saved.includes(p.country) ? p.saved : [p.country, ...p.saved];
+  // The country on screen is shown apart; "Saved" lists only what the person saved.
+  const others = p.saved.filter((c) => c !== p.country);
   const row = (code: string) => (
     <ListRow
       key={code}
@@ -99,8 +100,14 @@ export default function CountryScreen(p: Props) {
         </Button>
         {p.locateStatus && <Note>{p.locateStatus}</Note>}
       </div>
-      <Section id="fw-country-saved" title={t('Guardados', 'Saved', 'Salvos')}>
-        <List>{saved.map(row)}</List>
+      <Section id="fw-country-now" title={t('Ahora', 'Now', 'Agora')}>
+        <List>
+          <ListRow
+            title={name(p.country)}
+            meta={meta(p.country)}
+            trail={<CheckIcon size={18} aria-hidden="true" />}
+          />
+        </List>
         {p.country !== 'WORLD' && (
           <Button
             variant="ghost"
@@ -116,18 +123,23 @@ export default function CountryScreen(p: Props) {
           >
             {p.saved.includes(p.country)
               ? t(
-                  `Quitar ${name(p.country)} de guardados`,
-                  `Remove ${name(p.country)} from saved`,
-                  `Remover ${name(p.country)} dos salvos`,
+                  `Guardado · quitar ${name(p.country)}`,
+                  `Saved · remove ${name(p.country)}`,
+                  `Salvo · remover ${name(p.country)}`,
                 )
               : t(
-                  `Guardar ${name(p.country)}`,
-                  `Save ${name(p.country)}`,
-                  `Salvar ${name(p.country)}`,
+                  `Guardar ${name(p.country)} para volver rápido`,
+                  `Save ${name(p.country)} to come back quickly`,
+                  `Salvar ${name(p.country)} para voltar rápido`,
                 )}
           </Button>
         )}
       </Section>
+      {others.length > 0 && (
+        <Section id="fw-country-saved" title={t('Guardados', 'Saved', 'Salvos')}>
+          <List>{others.map(row)}</List>
+        </Section>
+      )}
       <Section id="fw-country-language" title={t('Idioma', 'Language', 'Idioma')}>
         <Segmented
           block

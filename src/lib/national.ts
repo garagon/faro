@@ -166,6 +166,14 @@ export function readableEvent(event: string) {
 }
 
 // CAP severity words; the agency's own event name is always shown as published.
+/** The agency's severity on Faro's three official levels; the words always come from the agency. */
+export const severityLevel: Record<CapSeverity, 1 | 2 | 3 | undefined> = {
+  Extreme: 3,
+  Severe: 2,
+  Moderate: 1,
+  Minor: 1,
+  Unknown: undefined,
+};
 export const severityLabels: Record<CapSeverity, Localized> = {
   Extreme: ['Extrema', 'Extreme', 'Extrema'],
   Severe: ['Grave', 'Severe', 'Grave'],

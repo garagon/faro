@@ -261,11 +261,7 @@ export default function EmergencyScreen(p: Props) {
           {local && (others.length > 0 || local.whatsapp) && (
             <Section
               id="fw-emergency-other"
-              title={t(
-                `Si el ${main?.number ?? ''} no entra`,
-                `If ${main?.number ?? ''} does not answer`,
-                `Se o ${main?.number ?? ''} não atender`,
-              )}
+              title={t('Otros números', 'Other numbers', 'Outros números')}
             >
               <List>
                 {others.map((n) => (
@@ -304,19 +300,6 @@ export default function EmergencyScreen(p: Props) {
               {t('revisada el', 'reviewed', 'revisada em')} {reviewDate(local.reviewedAt, p.lang)}.
             </Note>
           )}
-          <Actions>
-            {/* On a phone the embassy is below the first steps: one tap brings it up. */}
-            <button type="button" onClick={() => reveal('#fw-emergency-embassy')}>
-              {t('Ir a tu embajada', 'Go to your embassy', 'Ir para sua embaixada')}
-            </button>
-            <button type="button" onClick={() => setEditing(true)}>
-              {t(
-                '¿Estás en otro país? Cámbialo',
-                'In another country? Change it',
-                'Em outro país? Altere',
-              )}
-            </button>
-          </Actions>
         </>
       )}
 
@@ -334,9 +317,12 @@ export default function EmergencyScreen(p: Props) {
           options={emergencyKinds.map((k) => ({ value: k.id, label: k.short[idx] }))}
         />
         <Steps items={hazardSteps[kind].map(step)} />
-        <h3 className="f-subhead">
+      </section>
+
+      <section className="f-section" aria-labelledby="fw-any-emergency-title">
+        <h2 id="fw-any-emergency-title" className="f-section-title">
           {t('En cualquier emergencia', 'In any emergency', 'Em qualquer emergência')}
-        </h3>
+        </h2>
         <Steps items={generalSteps.map(step)} />
         <Note>
           {t('Fuentes', 'Sources', 'Fontes')}:{' '}
@@ -441,9 +427,12 @@ export default function EmergencyScreen(p: Props) {
         </section>
       )}
 
-      {(plan || latest) && (
-        <List>
-          {plan && (
+      {plan && (
+        <Section
+          id="fw-emergency-plan"
+          title={t('Tu punto de encuentro', 'Your meeting point', 'Seu ponto de encontro')}
+        >
+          <List>
             <ListRow
               lead={<RowIcon icon={<MapPinIcon size={20} />} />}
               title={plan.meeting}
@@ -454,12 +443,19 @@ export default function EmergencyScreen(p: Props) {
               )} · ${plan.name}`}
               onClick={p.onTrip}
             />
-          )}
-          {latest && (
+          </List>
+        </Section>
+      )}
+      {latest && (
+        <Section
+          id="fw-emergency-latest"
+          title={t('Último sismo', 'Latest earthquake', 'Último terremoto')}
+        >
+          <List>
             <ListRow
               lead={<Magnitude value={latest.mag} />}
               title={<span lang={placeLang(latest)}>{displayPlace(latest.place)}</span>}
-              meta={`${t('Último sismo', 'Latest earthquake', 'Último terremoto')} · ${p.provider} · ${ageLabel(latest.time, p.now, p.lang)}${
+              meta={`${p.provider} · ${ageLabel(latest.time, p.now, p.lang)}${
                 p.latestStaleSince
                   ? t(
                       ` · sin actualizar desde ${atLabel(p.latestStaleSince, p.now, p.lang)}`,
@@ -470,18 +466,16 @@ export default function EmergencyScreen(p: Props) {
               }`}
               onClick={() => p.onActivity()}
             />
-          )}
-        </List>
-      )}
-      {/* Right after a felt quake the list still shows an older one: said plainly. */}
-      {latest && (
-        <Note>
-          {t(
-            '¿Acabas de sentir un sismo? Puede tardar varios minutos en aparecer.',
-            'Just felt one? It can take several minutes to appear.',
-            'Acabou de sentir um tremor? Pode levar vários minutos para aparecer.',
-          )}
-        </Note>
+          </List>
+          {/* Right after a felt quake the list still shows an older one: said plainly. */}
+          <Note>
+            {t(
+              '¿Acabas de sentir un sismo? Puede tardar varios minutos en aparecer.',
+              'Just felt one? It can take several minutes to appear.',
+              'Acabou de sentir um tremor? Pode levar vários minutos para aparecer.',
+            )}
+          </Note>
+        </Section>
       )}
 
       <Section id="fw-emergency-next" title={t('Después', 'Next', 'Depois')}>

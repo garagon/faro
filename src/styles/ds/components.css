@@ -12,6 +12,12 @@
  *   legal          13 / 400        tab label      12 / 600
  */
 
+/* Text inside the app takes the colour of its role: older blanket rules on paragraphs and list
+   items (muted greys) do not reach design-system text. */
+.f-content :where(p, li, dd) {
+  color: inherit;
+}
+
 /* On touch screens every field, old screens included, uses 16 px text: smaller makes iOS zoom. */
 @media (pointer: coarse) {
   :where(input, select, textarea) {
@@ -382,7 +388,6 @@ a.f-row:active {
   display: inline-flex;
   align-items: center;
   gap: var(--f-space-1);
-  min-height: var(--f-touch);
   color: var(--f-color-action);
   font-weight: var(--f-weight-medium);
   text-decoration: underline;
@@ -393,6 +398,10 @@ a.f-row:active {
   flex-wrap: wrap;
   align-items: center;
   gap: 0 var(--f-space-4);
+}
+/* Standalone links and actions keep a 44 px target; links inside a sentence follow the text. */
+.f-actions > .f-out {
+  min-height: var(--f-touch);
 }
 .f-actions > button {
   min-height: var(--f-touch);
@@ -841,6 +850,23 @@ a.f-row:active {
 }
 
 /* Placeholder while the first answer arrives: never a failure message. */
+/* On touch screens, the map in a page says how to move it until it is tapped. */
+.f-map-hint {
+  position: absolute;
+  bottom: var(--f-space-6);
+  left: 50%;
+  z-index: 500;
+  margin: 0;
+  padding: var(--f-space-1) var(--f-space-3);
+  border-radius: var(--f-radius-full);
+  background: rgb(21 31 28 / 72%);
+  color: var(--f-white);
+  font-size: var(--f-text-sm);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 /* Bridge for the legacy map component inside the frame; goes when WebMap is migrated.
    Pins follow the one-hue magnitude scale; clusters are neutral ink. */
 .f-map > .fw-map-wrapper {

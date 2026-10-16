@@ -49,8 +49,11 @@ function Language({
 }) {
   return (
     <label className="f-lang f-pressable">
-      <GlobeSimpleIcon size={full ? 20 : 18} aria-hidden="true" />
+      <GlobeSimpleIcon className="f-lang-globe" size={full ? 20 : 18} aria-hidden="true" />
       <span aria-hidden="true">{full ? languageNames[lang] : lang.toUpperCase()}</span>
+      {!full && (
+        <CaretDownIcon className="f-lang-caret" size={12} weight="bold" aria-hidden="true" />
+      )}
       <select
         className="f-lang-select"
         aria-label={label}

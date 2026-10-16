@@ -62,12 +62,9 @@ export default function InstallFaro({ lang }: { lang: Lang }) {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button
-          className="fw-install-trigger"
-          aria-label={t('Instalar Faro', 'Install Faro', 'Instalar o Faro')}
-        >
-          <DownloadSimpleIcon size={18} aria-hidden="true" />
-          <span>{t('Instalar Faro', 'Install Faro', 'Instalar o Faro')}</span>
+        <button type="button" className="f-button f-pressable" data-variant="secondary">
+          <DownloadSimpleIcon size={20} aria-hidden="true" />
+          {t('Instalar Faro', 'Install Faro', 'Instalar o Faro')}
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>

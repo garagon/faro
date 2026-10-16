@@ -19,7 +19,7 @@ import {
   nationalSignal,
   readableEvent,
   severityLabels,
-  type CapSeverity,
+  severityLevel,
   type NationalWarning,
 } from '../lib/national.ts';
 import {
@@ -59,15 +59,6 @@ export type CivilFeed = {
   stale: boolean;
   checked: number | null;
   offline?: boolean;
-};
-
-/** The agency's severity on Faro's three official levels; the words always come from the agency. */
-const severityLevel: Record<CapSeverity, 1 | 2 | 3 | undefined> = {
-  Extreme: 3,
-  Severe: 2,
-  Moderate: 1,
-  Minor: 1,
-  Unknown: undefined,
 };
 
 /** DOM id of one row, from its source and identifier. */
@@ -328,7 +319,6 @@ export default function OfficialNow({
             'Não foi possível consultar. Veja o site oficial.',
           )
         : '';
-  // English and Portuguese readers are told once per source, not on every line.
   const spanishNote = lang !== 'es' && (
     <Note>
       {help(
@@ -343,6 +333,8 @@ export default function OfficialNow({
       id="fw-official"
       title={t('Lo oficial ahora', 'Official now', 'Informação oficial agora')}
     >
+      {/* English and Portuguese readers are told once, not under every source. */}
+      {(warnings.length > 0 || shownPosts.length > 0) && spanishNote}
       {national && (
         <div className="f-stack" data-gap="sm">
           <div className="f-section-head">
@@ -357,7 +349,6 @@ export default function OfficialNow({
           </div>
           {warnings.length > 0 ? (
             <>
-              {spanishNote}
               <List label={national.agency}>
                 {warnings.map((w) => {
                   const id = officialRowId('w', w.id);
@@ -444,7 +435,6 @@ export default function OfficialNow({
           </div>
           {shownPosts.length > 0 ? (
             <>
-              {spanishNote}
               <List label={civil.agency}>
                 {shownPosts.map((post) => {
                   const id = officialRowId('p', post.id);

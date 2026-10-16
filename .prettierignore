@@ -10,3 +10,4 @@ public/data/plates.json
 src/data/countries.json
 docs/dependencies.json
 src/data/countryBoundaries.json
+.claude/

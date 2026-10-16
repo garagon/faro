@@ -106,8 +106,18 @@
 .f-lang {
   position: relative;
 }
+/* On the phone the language reads as a control: code, caret and a fine outline. */
+.f-header .f-lang {
+  min-height: 40px;
+  padding: 0 var(--f-space-2);
+  border: 1px solid var(--f-color-border-strong);
+  color: var(--f-color-text);
+}
+.f-lang-caret {
+  color: var(--f-color-text-muted);
+}
 @container app (max-width: 899px) {
-  .f-header .f-lang svg {
+  .f-header .f-lang .f-lang-globe {
     display: none;
   }
 }
@@ -363,6 +373,11 @@
   line-height: var(--f-leading-body);
   scroll-behavior: auto;
 }
+/* Every screen starts at the same left edge; older blanket centring rules do not apply. */
+.f-page > * {
+  margin-inline: 0;
+}
+
 /* Screens not yet on the design system keep their own block flow and margins. */
 .f-page[data-legacy] {
   display: block;
@@ -391,6 +406,7 @@
 
 /* Footer: one caption block at the end of each screen. */
 .f-footer {
+  max-width: var(--f-reading);
   display: grid;
   gap: var(--f-space-1);
   padding-top: var(--f-space-4);
@@ -459,7 +475,7 @@
   align-items: start;
   gap: var(--f-space-8);
   max-width: var(--f-reading);
-  margin-inline: auto;
+  margin-inline: 0;
 }
 @container app (min-width: 1200px) {
   .f-dashboard {
@@ -484,7 +500,7 @@
   gap: var(--f-space-8);
   width: 100%;
   max-width: var(--f-reading);
-  margin-inline: auto;
+  margin-inline: 0;
 }
 .f-visually-hidden {
   position: absolute;

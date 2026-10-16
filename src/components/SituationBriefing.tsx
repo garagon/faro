@@ -8,7 +8,13 @@ import {
 } from '@phosphor-icons/react';
 import OfficialNow, { type CivilFeed, type NationalFeed } from './OfficialNow.tsx';
 import { alertLevelLabels, alertLevelShort, alertTitle } from '../lib/alerts.ts';
-import { nationalSignal } from '../lib/national.ts';
+import {
+  nationalSignal,
+  readableEvent,
+  severityLabels,
+  severityLevel,
+  type CapSeverity,
+} from '../lib/national.ts';
 import type { HazardKey, HazardStatus } from '../lib/hazards.ts';
 import type { Quake } from '../lib/domain.ts';
 import { atLabel, checkedLabel } from '../lib/time.ts';
@@ -69,7 +75,7 @@ type Props = {
   /** Civil-protection posts (Panama). */
   civil?: CivilFeed;
   /** A warning in force that mentions flooding or rising rivers: its row in "Official now". */
-  floodAdvice?: { agency: string; rowId: string };
+  floodAdvice?: { agency: string; rowId: string; event?: string; severity?: CapSeverity };
   /** A recent civil-protection post that mentions rain or flooding (it has no expiry). */
   floodNotice?: { agency: string; title: string; published: number; rowId: string };
   /** Active NHC cyclones in its basins, when the place is in them. */
@@ -159,11 +165,14 @@ export default function SituationBriefing(p: Props) {
   const floodRow = p.floodAdvice
     ? {
         rowId: p.floodAdvice.rowId,
-        status: t(
-          `${p.floodAdvice.agency} advierte posibles inundaciones`,
-          `${p.floodAdvice.agency} warns of possible flooding`,
-          `${p.floodAdvice.agency} alerta para possíveis inundações`,
-        ),
+        // The agency's own name for the warning, as in "Official now", so both rows read alike.
+        status: p.floodAdvice.event
+          ? `${p.floodAdvice.agency} · ${readableEvent(p.floodAdvice.event)}`
+          : t(
+              `${p.floodAdvice.agency} advierte posibles inundaciones`,
+              `${p.floodAdvice.agency} warns of possible flooding`,
+              `${p.floodAdvice.agency} alerta para possíveis inundações`,
+            ),
         // From a copy that is not current, the row says how old it is.
         detail:
           p.national?.stale && p.national.checked
@@ -225,6 +234,9 @@ export default function SituationBriefing(p: Props) {
         ? 'on'
         : 'off';
   type Row = { key: string; rank: number; node: ReactNode };
+  const floodLevel = p.floodAdvice
+    ? ((p.floodAdvice.severity && severityLevel[p.floodAdvice.severity]) ?? 1)
+    : undefined;
   const rows: Row[] = [];
   const quakeState: Signal =
     quakeSignal === 'on'
@@ -276,7 +288,7 @@ export default function SituationBriefing(p: Props) {
                   : q.failed && !q.count
                     ? t('La fuente no responde', 'Source not responding', 'Fonte sem resposta')
                     : q.latest
-                      ? `${t('Último', 'Latest', 'Último')} M${q.latest.mag?.toFixed(1) ?? '—'} ${ago(q.latest.time)} · ${q.count} ${t('en', 'in', 'em')} ${q.period} · ${q.provider}`
+                      ? `${t('Último', 'Latest', 'Último')} M${q.latest.mag?.toFixed(1) ?? '—'} ${ago(q.latest.time)} · ${q.count} ${t('en', 'in', 'em')} ${q.period}`
                       : [
                           t(
                             `Ninguno en ${q.period}`,
@@ -303,16 +315,20 @@ export default function SituationBriefing(p: Props) {
     if (h.key === 'flood' && floodRow) {
       rows.push({
         key: h.key,
-        rank: p.floodAdvice ? 2 : 3,
+        rank: floodLevel === 3 ? 0 : floodLevel === 2 ? 1 : floodLevel === 1 ? 2 : 3,
         node: (
           <ListRow
             key={h.key}
-            lead={
-              <StatusIcon state="listed" level={p.floodAdvice ? 1 : undefined} icon={icons.flood} />
-            }
+            lead={<StatusIcon state="listed" level={floodLevel} icon={icons.flood} />}
             title={names.flood[idx]}
             badge={
-              p.floodAdvice ? <Badge level={1}>{t('Aviso', 'Warning', 'Aviso')}</Badge> : undefined
+              p.floodAdvice ? (
+                <Badge level={floodLevel}>
+                  {p.floodAdvice.severity
+                    ? severityLabels[p.floodAdvice.severity][idx]
+                    : t('Aviso', 'Warning', 'Aviso')}
+                </Badge>
+              ) : undefined
             }
             meta={[floodRow.status, floodRow.detail].filter(Boolean).join(' · ')}
             onClick={() => reveal(floodRow.rowId)}
@@ -374,20 +390,17 @@ export default function SituationBriefing(p: Props) {
                 ? [
                     h.key === 'tsunami'
                       ? t(
-                          'Sin mensajes de amenaza de NOAA en 6 h',
-                          'No NOAA threat messages in 6 h',
-                          'Sem mensagens de ameaça da NOAA em 6 h',
+                          'Sin mensajes de amenaza en 6 h',
+                          'No threat messages in 6 h',
+                          'Sem mensagens de ameaça em 6 h',
                         )
                       : h.key === 'cyclone' && p.stormsInBasin
-                        ? t(
-                            `Ninguno con alerta para ${p.countryName} · ${p.stormsInBasin} activos en la cuenca (NHC)`,
-                            `None with an alert for ${p.countryName} · ${p.stormsInBasin} active in the basin (NHC)`,
-                            `Nenhum com alerta para ${p.countryName} · ${p.stormsInBasin} ativos na bacia (NHC)`,
-                          )
+                        ? // The basin count comes once, from the NHC note.
+                          t('Ninguno con alerta', 'None with an alert', 'Nenhum com alerta')
                         : t(
-                            'Sin alertas internacionales · GDACS',
-                            'No international alerts · GDACS',
-                            'Sem alertas internacionais · GDACS',
+                            'Sin alertas internacionales',
+                            'No international alerts',
+                            'Sem alertas internacionais',
                           ),
                     h.recent
                       ? t(
@@ -440,6 +453,17 @@ export default function SituationBriefing(p: Props) {
   const inForce = rows.filter((r) => r.rank < 3).length;
   const severe = rows.some((r) => r.rank < 2);
 
+  // The sources behind the rows, named once under the list instead of in every row.
+  const sources = new Intl.ListFormat(p.lang, { type: 'conjunction' }).format(
+    [
+      q.provider,
+      'NOAA/PTWC',
+      'GDACS',
+      p.stormsInBasin !== undefined ? 'NHC' : '',
+      p.nwsArea ? 'NWS' : '',
+      p.national?.agency ?? '',
+    ].filter(Boolean),
+  );
   const freshness =
     p.monitor.state === 'live' && p.monitor.checked
       ? t(
@@ -507,6 +531,7 @@ export default function SituationBriefing(p: Props) {
           </button>
         }
       >
+        {t('Fuentes', 'Sources', 'Fontes')}: {sources}.{' '}
         {t(
           'Faro no es un sistema de alerta temprana. Que una fuente no liste eventos no significa que no haya peligro. Sigue a las autoridades locales',
           'Faro is not an early warning system. A source listing no events does not mean there is no danger. Follow local authorities',

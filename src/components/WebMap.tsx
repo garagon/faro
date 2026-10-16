@@ -66,11 +66,17 @@ export default function WebMap({
   embassies,
   hazards = [],
   areas = [],
+  cooperative = false,
 }: {
   label?: string;
   embassies: Embassy[];
   hazards?: MapHazard[];
   areas?: MapArea[];
+  /**
+   * A map inside a scrolling page: on touch screens one finger keeps scrolling the page, and the
+   * map moves only after a tap on it (until the page is touched elsewhere).
+   */
+  cooperative?: boolean;
   events: Quake[];
   view: MapView;
   geo: Geo | null;
@@ -81,6 +87,9 @@ export default function WebMap({
   lang: Lang;
 }) {
   const [tileError, setTileError] = useState(false);
+  const touch =
+    cooperative && typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  const [active, setActive] = useState(false);
   const el = useRef<HTMLDivElement>(null),
     map = useRef<L.Map | null>(null),
     quakes = useRef<L.MarkerClusterGroup | null>(null),
@@ -97,8 +106,26 @@ export default function WebMap({
       scrollWheelZoom: false,
       worldCopyJump: true,
       maxZoom: 18,
+      dragging: !touch,
     }).setView([view.lat, view.lng], view.zoom);
     map.current = m;
+    // On a touch screen in a scrolling page, a tap hands the gestures to the map; touching the
+    // page anywhere else gives them back to scrolling.
+    let release: (() => void) | undefined;
+    if (touch) {
+      m.on('click', () => {
+        m.dragging.enable();
+        setActive(true);
+      });
+      const outside = (event: TouchEvent) => {
+        if (el.current && !el.current.contains(event.target as Node)) {
+          m.dragging.disable();
+          setActive(false);
+        }
+      };
+      document.addEventListener('touchstart', outside, { passive: true });
+      release = () => document.removeEventListener('touchstart', outside);
+    }
     quakes.current = L.markerClusterGroup({
       maxClusterRadius: 32,
       showCoverageOnHover: false,
@@ -136,6 +163,7 @@ export default function WebMap({
     const resize = new ResizeObserver(() => m.invalidateSize());
     resize.observe(el.current);
     return () => {
+      release?.();
       pins.disconnect();
       resize.disconnect();
       m.off('moveend', report);
@@ -455,6 +483,16 @@ export default function WebMap({
           )
         }
       />
+      {touch && !active && (
+        <p className="f-map-hint" aria-hidden="true">
+          {pick(
+            lang,
+            'Toca el mapa para moverlo',
+            'Tap the map to move it',
+            'Toque o mapa para movê-lo',
+          )}
+        </p>
+      )}
       {tileError && (
         <div className="fw-map-error" role="status">
           {pick(

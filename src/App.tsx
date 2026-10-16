@@ -752,7 +752,12 @@ export default function App() {
       : [];
   const firstFloodWarning = floodWarnings(nationalActive)[0];
   const floodAdvice = firstFloodWarning
-    ? { agency: national.data!.agency, rowId: officialRowId('w', firstFloodWarning.id) }
+    ? {
+        agency: national.data!.agency,
+        rowId: officialRowId('w', firstFloodWarning.id),
+        event: firstFloodWarning.event,
+        severity: firstFloodWarning.severity,
+      }
     : undefined;
   // Without a flood warning in force, a SINAPROC post from the last 48 hours that mentions
   // rain or flooding is pointed out, with its title and publication time.
@@ -1565,6 +1570,7 @@ export default function App() {
                       </a>
                       <MapFrame>
                         <WebMap
+                          cooperative
                           embassies={mappedEmbassies}
                           hazards={mapHazards}
                           areas={warningAreas}
@@ -1579,52 +1585,20 @@ export default function App() {
                         />
                       </MapFrame>
                       <div id="fw-map-foot" tabIndex={-1} className="f-stack" data-gap="sm">
-                        <Note>
-                          {[
-                            scope === 'nearby'
-                              ? `${distance(radius, lang)} ${t('cerca de ti', 'near you', 'perto de você')}`
-                              : scope === 'area'
-                                ? t('Área del mapa', 'Map area', 'Área do mapa')
-                                : countryName,
-                            t(
-                              'puntos publicados, no zonas de riesgo',
-                              'published points, not hazard zones',
-                              'pontos publicados, não zonas de risco',
-                            ),
-                            t('marcador: magnitud', 'pin: magnitude', 'marcador: magnitude'),
-                            t('círculo: cantidad', 'circle: count', 'círculo: quantidade'),
-                            t(
-                              'línea morada: placas tectónicas',
-                              'purple line: tectonic plates',
-                              'linha roxa: placas tectônicas',
-                            ),
-                            mapHazards.length > 0
-                              ? t(
-                                  'ícono redondo: alerta GDACS',
-                                  'round icon: GDACS alert',
-                                  'ícone redondo: alerta do GDACS',
-                                )
-                              : '',
-                            warningAreas.length > 0
-                              ? t(
-                                  `área sombreada: aviso de ${national.data!.agency}`,
-                                  `shaded area: ${national.data!.agency} warning`,
-                                  `área sombreada: aviso do ${national.data!.agency}`,
-                                )
-                              : '',
-                            visiblePoint
-                              ? t(
-                                  'bandera: punto personal no verificado',
-                                  'flag: unverified personal point',
-                                  'bandeira: ponto pessoal não verificado',
-                                )
-                              : '',
-                          ]
-                            .filter(Boolean)
-                            .join(' · ')}
-                        </Note>
                         {(availableEmbassy || dirty) && (
                           <div className="f-actions">
+                            {dirty && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setBounds(pending);
+                                  setScope('area');
+                                  setPage(1);
+                                }}
+                              >
+                                {t('Buscar en esta área', 'Search this area', 'Buscar nesta área')}
+                              </button>
+                            )}
                             {availableEmbassy && (
                               <button
                                 type="button"
@@ -1644,20 +1618,42 @@ export default function App() {
                                     )}
                               </button>
                             )}
-                            {dirty && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setBounds(pending);
-                                  setScope('area');
-                                  setPage(1);
-                                }}
-                              >
-                                {t('Buscar en esta área', 'Search this area', 'Buscar nesta área')}
-                              </button>
-                            )}
                           </div>
                         )}
+                        <Note>
+                          {[
+                            t(
+                              'Puntos publicados, no zonas de riesgo',
+                              'Published points, not hazard zones',
+                              'Pontos publicados, não zonas de risco',
+                            ),
+                            t('marcador: magnitud', 'pin: magnitude', 'marcador: magnitude'),
+                            t('línea morada: placas', 'purple line: plates', 'linha roxa: placas'),
+                            mapHazards.length > 0
+                              ? t(
+                                  'ícono redondo: GDACS',
+                                  'round icon: GDACS',
+                                  'ícone redondo: GDACS',
+                                )
+                              : '',
+                            warningAreas.length > 0
+                              ? t(
+                                  `sombreado: aviso de ${national.data!.agency}`,
+                                  `shaded: ${national.data!.agency} warning`,
+                                  `sombreado: aviso do ${national.data!.agency}`,
+                                )
+                              : '',
+                            visiblePoint
+                              ? t(
+                                  'bandera: punto personal no verificado',
+                                  'flag: unverified personal point',
+                                  'bandeira: ponto pessoal não verificado',
+                                )
+                              : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </Note>
                       </div>
                     </div>
                     {/* Wide screens have room for the latest earthquakes beside the hazards. */}
