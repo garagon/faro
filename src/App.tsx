@@ -10,7 +10,7 @@ import TsunamiBanner from './components/TsunamiBanner.tsx';
 import { officialRowId } from './components/OfficialNow.tsx';
 import Pagination from './components/Pagination.tsx';
 import SourcesScreen, { type SourceRow } from './components/SourcesScreen.tsx';
-import { sourceState } from './lib/sourceStatus.ts';
+import { capitalize, sourceLine, sourceState } from './lib/sourceStatus.ts';
 import { sourceSites } from './data/sourceSites.ts';
 import { paging } from './lib/paging.ts';
 import { SINAPROC_HOME, floodPosts, parseCivil, postTitle, reviveCivil } from './lib/civil.ts';
@@ -79,12 +79,19 @@ import {
   alertTypeLabels,
   parseAlerts,
 } from './lib/alerts.ts';
-import { atLabel, checkedLabel } from './lib/time.ts';
+import { checkedLabel } from './lib/time.ts';
 import { ageLabel } from './lib/feedUpdates.ts';
-import { confirmFresh, earthquakeSummary, gdacsStatus, tsunamiStatus } from './lib/hazards.ts';
+import {
+  confirmFresh,
+  earthquakeSummary,
+  gdacsStatus,
+  leadingWarnings,
+  tsunamiStatus,
+  warningTopic,
+} from './lib/hazards.ts';
 import SituationBriefing from './components/SituationBriefing.tsx';
 import { destinationFor } from './data/destinations/index.ts';
-import { classifyBulletins, parseTsunamiData, reviveTsunami } from './lib/tsunami.ts';
+import { leadingNotice, parseTsunamiData, reviveTsunami } from './lib/tsunami.ts';
 import { receivedAt } from './lib/http.ts';
 import { scrollMotion } from './lib/motion.ts';
 import { NHC_REGION, graphicsUrl, parseStorms, stormClassLabels, wind } from './lib/storms.ts';
@@ -266,7 +273,8 @@ export default function App() {
     return () => navigator.serviceWorker.removeEventListener('message', ready);
   }, []);
   // The emergency screen's hazard choice and where it opens; the guide topic it leads to.
-  const [emergencyKind, setEmergencyKind] = useState<EmergencyKind>('earthquake'),
+  // Null until the person picks one: the screen then opens on the topic of a warning in force.
+  const [emergencyKind, setEmergencyKind] = useState<EmergencyKind | null>(null),
     [emergencyStart, setEmergencyStart] = useState<'call' | 'steps'>('call'),
     [guideTopic, setGuideTopic] = useState('during');
   const openEmergency = (start: 'call' | 'steps') => {
@@ -721,14 +729,22 @@ export default function App() {
     ? alertsFor(alerts.data.events, country, regionFor(country).bounds, live.now)
     : null;
   // A "none" older than a few polling cycles, or while offline, is shown as not confirmed.
-  // The most recent NOAA threat (or unreadable) message that no later message closed.
-  const tsunamiAlert = tsunami.data
-    ? classifyBulletins(tsunami.data, live.now, tsunami.failed).find((r) => r.needsReview)?.bulletin
-    : undefined;
+  // The recent NOAA threat (or unreadable) message that no later message closed: one result,
+  // read by the banner, the Situación row and the Tsunami tab, so its words and level agree.
+  const tsunamiLead = leadingNotice(tsunami.data, live.now, tsunami.failed);
+  const tsunamiAlert = tsunamiLead?.row.needsReview ? tsunamiLead : undefined;
   // Polled every minute: older than a few cycles, offline or failing, the banner says so.
-  const tsunamiLastData =
+  const tsunamiSource =
     tsunami.data && (!live.online || tsunami.failed || live.now - tsunami.data.fetched > 3 * 60000)
-      ? tsunami.data.fetched
+      ? sourceLine({
+          checked: tsunami.data.fetched,
+          failed: tsunami.failed,
+          failedAt: tsunami.failedAt,
+          online: live.online,
+          old: true,
+          now: live.now,
+          lang,
+        })
       : undefined;
   // A failing source keeps the time of its last attempt, for the rows to say when it failed.
   const hazardStates = [
@@ -1321,11 +1337,16 @@ export default function App() {
       {!live.online && (
         <StatusBar>
           <WifiSlashIcon size={16} aria-hidden="true" />
+          {/* The one vocabulary: "Sin conexión · último dato 07:29". */}
           {live.fetched
-            ? t(
-                `Sin conexión · datos de ${atLabel(live.fetched, live.now, lang)}`,
-                `Offline · data from ${atLabel(live.fetched, live.now, lang)}`,
-                `Sem conexão · dados de ${atLabel(live.fetched, live.now, lang)}`,
+            ? capitalize(
+                sourceLine({
+                  checked: live.fetched,
+                  failed: false,
+                  online: false,
+                  now: live.now,
+                  lang,
+                }).text,
               )
             : t(
                 'Sin conexión · los números y la guía funcionan',
@@ -1503,12 +1524,37 @@ export default function App() {
                     <TsunamiBanner
                       lang={lang}
                       now={live.now}
-                      bulletin={tsunamiAlert}
-                      lastData={tsunamiLastData}
+                      bulletin={tsunamiAlert.row.bulletin}
+                      notice={tsunamiAlert.notice}
+                      source={tsunamiSource}
                       onOpen={() => openTab('tsunami')}
                     />
                   )
                 }
+                // Every source this screen reads; the failing ones are summed up in its head.
+                sources={[
+                  { name: provider, failed: live.failed },
+                  { name: 'NOAA/PTWC', failed: tsunami.failed },
+                  { name: 'GDACS', failed: alerts.failed },
+                  ...(inNhcRegion ? [{ name: 'NHC', failed: storms.failed }] : []),
+                  ...(inNws ? [{ name: 'NWS', failed: nws.failed }] : []),
+                  ...(inNational
+                    ? [
+                        {
+                          name: destinationFor(country)?.weatherAgency?.name ?? country,
+                          failed: national.failed,
+                        },
+                      ]
+                    : []),
+                  ...(inCivil ? [{ name: 'SINAPROC', failed: civil.failed }] : []),
+                ]}
+                onRetry={() => {
+                  for (const source of [live, tsunami, alerts, storms])
+                    if (source.failed) void source.refresh();
+                  if (inNws && nws.failed) void nws.refresh();
+                  if (inNational && national.failed) void national.refresh();
+                  if (inCivil && civil.failed) void civil.refresh();
+                }}
                 hazards={hazardStates}
                 notes={hazardNotes}
                 nwsArea={inNws}
@@ -1560,7 +1606,12 @@ export default function App() {
                 stormsInBasin={inNhcRegion && storms.data ? activeStorms.length : undefined}
                 nhcArea={inNhcRegion}
                 floodAdvice={floodAdvice}
-                floodNotice={floodNotice}
+                floodNotice={
+                  floodNotice && {
+                    ...floodNotice,
+                    count: civil.data ? floodPosts(civil.data.posts, live.now).length : 1,
+                  }
+                }
                 civil={
                   inCivil
                     ? {
@@ -1603,6 +1654,8 @@ export default function App() {
                         ? names.of(profile?.nationality || nationality)
                         : undefined
                     }
+                    // The tsunami banner gives the coast instruction once, above the call.
+                    coastNotice={!tsunamiAlert}
                   />
                 }
                 map={
@@ -2457,8 +2510,9 @@ export default function App() {
                   <TsunamiBanner
                     lang={lang}
                     now={live.now}
-                    bulletin={tsunamiAlert}
-                    lastData={tsunamiLastData}
+                    bulletin={tsunamiAlert.row.bulletin}
+                    notice={tsunamiAlert.notice}
+                    source={tsunamiSource}
                     onOpen={() => {
                       go('activity');
                       openTab('tsunami');
@@ -2470,7 +2524,33 @@ export default function App() {
               now={live.now}
               onCountry={changeCountry}
               onNationality={rememberNationality}
-              kind={emergencyKind}
+              // The warnings in force under the call, as on Situación.
+              warnings={
+                inNational && national.data?.country === country
+                  ? {
+                      agency: national.data.agency,
+                      items: leadingWarnings(nationalActive),
+                      checked: national.data.fetched,
+                      failed: national.failed,
+                      failedAt: national.failedAt,
+                      stale:
+                        national.data.stale || live.now - national.data.fetched > OFFICIAL_MAX_AGE,
+                      online: live.online,
+                    }
+                  : undefined
+              }
+              // Until the person picks a topic, "First minutes" opens on the one a warning in
+              // force names (flooding, a tropical storm); it says nothing about who it applies to.
+              kind={
+                emergencyKind ??
+                warningTopic(
+                  nationalActive,
+                  inNws && nws.data
+                    ? { flood: nwsCount('flood') ?? 0, tropical: nwsCount('tropical') ?? 0 }
+                    : undefined,
+                ) ??
+                'earthquake'
+              }
               onKind={setEmergencyKind}
               start={emergencyStart}
               onGuide={(kind) => {

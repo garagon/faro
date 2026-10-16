@@ -291,8 +291,9 @@
   background: var(--f-color-surface-muted);
   color: var(--f-color-text-subtle);
 }
+/* Listed without an official level: the same light circle as the other rows, darker ink only.
+   A tinted fill is kept for official levels. */
 .f-status-icon[data-state='listed'] {
-  background: var(--f-neutral-100);
   color: var(--f-color-text);
 }
 .f-status-icon[data-state='unknown'] {

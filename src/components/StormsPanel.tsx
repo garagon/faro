@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { HurricaneIcon } from '@phosphor-icons/react';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import { checkedLabel } from '../lib/time.ts';
-import { failingLabel, sourceTime } from '../lib/sourceStatus.ts';
+import { lineStamp, sourceLine } from '../lib/sourceStatus.ts';
 import {
   ADVISORY_STALE,
   advisoryUrl,
@@ -58,58 +58,32 @@ export default function StormsPanel(p: Props) {
   // Offline or older than a few polls (every 5 min), the list is the last data, said as on every
   // tab; a failing source says so with its time instead.
   const old = !!p.data && !p.failed && (!p.online || p.now - p.data.fetched > 20 * 60000);
+  // The NHC's state in the one vocabulary: checked, no response or offline, with its time.
+  const line = sourceLine({
+    checked: p.data?.fetched ?? null,
+    failed: p.failed,
+    failedAt: p.failedAt,
+    online: p.online,
+    old,
+    now: p.now,
+    lang: p.lang,
+  });
   return (
     <div className="f-stack" data-gap="lg">
       <div className="f-stack" data-gap="sm">
-        {p.failed && (
+        {line.state !== 'checked' && (
           <div role="status">
-            <SourceStamp issuer="NHC" state="error">
-              <span>
-                {failingLabel({
-                  checked: p.data?.fetched ?? null,
-                  failedAt: p.failedAt,
-                  now: p.now,
-                  lang: p.lang,
-                })}
-                .{' '}
-                {p.data
-                  ? t(
-                      'Se muestran los últimos datos recibidos.',
-                      'Showing the last data received.',
-                      'Mostrando os últimos dados recebidos.',
-                    )
-                  : t(
-                      'Esto no significa que no haya ciclones.',
-                      'This does not mean there are no cyclones.',
-                      'Isso não significa que não haja ciclones.',
-                    )}
-              </span>
+            <SourceStamp issuer="NHC" state={lineStamp(line.state)}>
+              {line.text}
+              {/* Nothing received: the failure is never read as "no cyclones". */}
+              {!p.data &&
+                line.state !== 'checking' &&
+                `. ${t(
+                  'Esto no significa que no haya ciclones.',
+                  'This does not mean there are no cyclones.',
+                  'Isso não significa que não haja ciclones.',
+                )}`}
             </SourceStamp>
-          </div>
-        )}
-        {old && p.data && (
-          <div role="status">
-            <SourceStamp issuer="NHC" state="stale">
-              <span>
-                {[
-                  t(
-                    'La consulta está desactualizada',
-                    'This check is out of date',
-                    'A consulta está desatualizada',
-                  ),
-                  sourceTime({ checked: p.data.fetched, old, now: p.now, lang: p.lang }),
-                ].join(' · ')}
-              </span>
-            </SourceStamp>
-          </div>
-        )}
-        {!p.data && !p.failed && (
-          <div className="f-prose">
-            <p>
-              {p.online
-                ? t('Consultando el NHC…', 'Checking NHC…', 'Consultando o NHC…')
-                : t('Sin conexión.', 'Offline.', 'Sem conexão.')}
-            </p>
           </div>
         )}
         {p.data && storms.length === 0 && (
@@ -205,18 +179,13 @@ export default function StormsPanel(p: Props) {
               </a>
             }
           >
-            <span>
-              {t(
-                'Atlántico, Caribe y Pacífico',
-                'Atlantic, Caribbean and Pacific',
-                'Atlântico, Caribe e Pacífico',
-              )}
-              {/* The time is said above when the data is old or the source failing. */}
-              {p.data &&
-                !old &&
-                !p.failed &&
-                ` · ${sourceTime({ checked: p.data.fetched, old, now: p.now, lang: p.lang })}`}
-            </span>
+            {t(
+              'Atlántico, Caribe y Pacífico',
+              'Atlantic, Caribbean and Pacific',
+              'Atlântico, Caribe e Pacífico',
+            )}
+            {/* The time is said above when the data is old or the source failing. */}
+            {line.state === 'checked' && ` · ${line.text}`}
           </SourceStamp>
         </div>
       </div>

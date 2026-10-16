@@ -4,6 +4,8 @@ import {
   attemptResult,
   capitalize,
   failingLabel,
+  lineStamp,
+  sourceLine,
   sourceState,
   sourceTime,
 } from '../src/lib/sourceStatus.ts';
@@ -55,14 +57,47 @@ test('the time beside a source says whether it is current, old or only an attemp
 
 test('a failing source is never read as checked, in every language', () => {
   const failing = { checked: null, failedAt: now - 30_000, now };
-  assert.match(failingLabel({ ...failing, lang: 'es' }), /^No responde · intento \d{2}:\d{2}$/);
-  assert.match(failingLabel({ ...failing, lang: 'en' }), /^Not responding · tried \d{1,2}:\d{2}/);
-  assert.match(failingLabel({ ...failing, lang: 'pt' }), /^Não responde · tentativa \d{2}:\d{2}$/);
+  assert.match(failingLabel({ ...failing, lang: 'es' }), /^Sin respuesta · intento \d{2}:\d{2}$/);
+  assert.match(failingLabel({ ...failing, lang: 'en' }), /^No response · tried \d{1,2}:\d{2}/);
+  assert.match(failingLabel({ ...failing, lang: 'pt' }), /^Sem resposta · tentativa \d{2}:\d{2}$/);
   // With earlier data, the time of that data: it may have changed since.
   assert.match(
     failingLabel({ ...failing, checked: now - 600_000, lang: 'es' }),
-    /^No responde · último dato \d{2}:\d{2}$/,
+    /^Sin respuesta · último dato \d{2}:\d{2}$/,
   );
-  assert.equal(failingLabel({ checked: null, failedAt: null, now, lang: 'es' }), 'No responde');
+  assert.equal(failingLabel({ checked: null, failedAt: null, now, lang: 'es' }), 'Sin respuesta');
   assert.equal(capitalize('último dato 23:36'), 'Último dato 23:36');
+});
+
+test('one closed vocabulary: checked, no response, offline, and checking in grey', () => {
+  const at = { now, lang: 'es' as const, online: true, failed: false };
+  const line = (s: Partial<Parameters<typeof sourceLine>[0]>) =>
+    sourceLine({ ...at, checked: now - 60_000, ...s });
+  assert.deepEqual(line({}).state, 'checked');
+  assert.match(line({}).text, /^consultado \d{2}:\d{2}$/);
+  // Before a first answer: checking, never a failure, and never amber.
+  assert.deepEqual(line({ checked: null }), { state: 'checking', text: 'consultando…' });
+  assert.equal(lineStamp('checking'), undefined);
+  assert.equal(lineStamp('checked'), undefined);
+  // Failing with nothing received: the time Faro tried.
+  const tried = line({ checked: null, failed: true, failedAt: now - 30_000 });
+  assert.equal(tried.state, 'failed');
+  assert.match(tried.text, /^sin respuesta · intento \d{2}:\d{2}$/);
+  assert.equal(lineStamp('failed'), 'error');
+  // Failing, or an old copy, with data still on screen: the time of that data.
+  assert.match(line({ failed: true, failedAt: now }).text, /^sin respuesta · último dato /);
+  assert.match(line({ old: true }).text, /^sin respuesta · último dato /);
+  // Offline: the last data, or nothing to date.
+  assert.equal(line({ online: false }).state, 'offline');
+  assert.match(line({ online: false }).text, /^sin conexión · último dato \d{2}:\d{2}$/);
+  assert.equal(line({ online: false, checked: null }).text, 'sin conexión');
+  assert.equal(lineStamp('offline'), 'stale');
+  // The same three states in English and Portuguese.
+  assert.match(line({ lang: 'en' }).text, /^checked \d{1,2}:\d{2}/);
+  assert.match(line({ lang: 'en', online: false }).text, /^offline · last data /);
+  assert.match(
+    line({ lang: 'pt', checked: null, failed: true, failedAt: now }).text,
+    /^sem resposta · tentativa /,
+  );
+  assert.match(line({ lang: 'pt', online: false }).text, /^sem conexão · último dado /);
 });

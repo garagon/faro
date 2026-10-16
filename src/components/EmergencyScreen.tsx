@@ -8,6 +8,7 @@ import {
   WavesIcon,
 } from '@phosphor-icons/react';
 import CountrySearch from './CountrySearch.tsx';
+import { NationalWarningRow, feedLine } from './OfficialNow.tsx';
 import {
   Actions,
   Button,
@@ -24,9 +25,12 @@ import {
   ScreenHead,
   Section,
   Segmented,
+  SourceStamp,
   Steps,
   Text,
 } from '../ui/index.ts';
+import { lineStamp } from '../lib/sourceStatus.ts';
+import type { NationalWarning } from '../lib/national.ts';
 import { emergencyFor } from '../lib/emergency.ts';
 import { reviewDate } from '../lib/links.ts';
 import {
@@ -54,8 +58,21 @@ type Props = {
   latest?: Quake;
   /** The earthquake data is old or failing: when it was last received. */
   latestStaleSince?: number;
-  /** An urgent official message (a recent tsunami threat), shown right after the numbers. */
+  /** An urgent official message (a recent tsunami threat), shown right under the call button. */
   alert?: ReactNode;
+  /**
+   * The national warnings in force that lead Situación (level 2–3 and the flood warning), with
+   * the state of their source, shown under the call button in the agency's words.
+   */
+  warnings?: {
+    agency: string;
+    items: NationalWarning[];
+    checked: number | null;
+    failed: boolean;
+    failedAt?: number | null;
+    stale: boolean;
+    online: boolean;
+  };
   provider: string;
   now: number;
   onCountry: (code: string) => void;
@@ -192,6 +209,34 @@ export default function EmergencyScreen(p: Props) {
     ),
   });
   const [main, ...others] = local?.numbers ?? [];
+  // The warnings in force, as rows with the agency's level: the screen changes on a bad day.
+  const warned = p.warnings && p.warnings.items.length > 0 ? p.warnings : null;
+  const warnedLine = warned ? feedLine(warned, warned.online, p.now, p.lang) : null;
+  const warnings = warned && (
+    <Section
+      id="fw-emergency-warnings"
+      title={t('Avisos vigentes', 'Warnings in force', 'Avisos em vigor')}
+      aside={
+        warnedLine && (
+          <SourceStamp issuer={warned.agency} state={lineStamp(warnedLine.state)}>
+            {warnedLine.text}
+          </SourceStamp>
+        )
+      }
+    >
+      <List label={warned.agency}>
+        {warned.items.map((w) => (
+          <NationalWarningRow
+            key={w.id}
+            warning={w}
+            agency={warned.agency}
+            lang={p.lang}
+            href={w.url || undefined}
+          />
+        ))}
+      </List>
+    </Section>
+  );
   const consularLabel = (m: { emergency?: string; phone?: string }) =>
     m.emergency === m.phone
       ? t('Oficina y urgencias', 'Office and emergencies', 'Escritório e emergências')
@@ -261,6 +306,10 @@ export default function EmergencyScreen(p: Props) {
               )}
             </Text>
           )}
+          {/* On a bad day the screen changes under the call: the tsunami message, then the
+              warnings in force. */}
+          {p.alert}
+          {warnings}
           {local && (others.length > 0 || local.whatsapp) && (
             <Section
               id="fw-emergency-other"
@@ -306,7 +355,8 @@ export default function EmergencyScreen(p: Props) {
         </>
       )}
 
-      {p.alert}
+      {choosing && p.alert}
+      {choosing && warnings}
 
       <section className="f-section" aria-labelledby="fw-first-minutes-title">
         <h2 id="fw-first-minutes-title" className="f-section-title" tabIndex={-1}>

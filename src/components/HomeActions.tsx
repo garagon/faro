@@ -14,6 +14,11 @@ type Props = {
   onEmbassy: () => void;
   /** The saved nationality, as a country name, when there is one. */
   nationalityName?: string;
+  /**
+   * The natural tsunami warning under the actions. Off while a tsunami message is on screen:
+   * its banner gives the same instruction above the call.
+   */
+  coastNotice?: boolean;
 };
 
 /** The call: the country's main number, or the way to choose a country when there is none. */
@@ -94,13 +99,15 @@ export default function HomeActions(p: Props) {
         />
       </List>
       {/* The natural warning, before any official message: the loading screen says it too. */}
-      <SafetyNotice>
-        {t(
-          'En la costa, si sentiste un sismo fuerte o largo: ve a pie a un lugar alto ya. No esperes una alerta.',
-          'On the coast, if you felt strong or long shaking: go on foot to high ground now. Do not wait for an alert.',
-          'Na costa, se você sentiu um tremor forte ou longo: vá a pé para um lugar alto já. Não espere um alerta.',
-        )}
-      </SafetyNotice>
+      {p.coastNotice !== false && (
+        <SafetyNotice>
+          {t(
+            'En la costa, si sentiste un sismo fuerte o largo: ve a pie a un lugar alto ya. No esperes una alerta.',
+            'On the coast, if you felt strong or long shaking: go on foot to high ground now. Do not wait for an alert.',
+            'Na costa, se você sentiu um tremor forte ou longo: vá a pé para um lugar alto já. Não espere um alerta.',
+          )}
+        </SafetyNotice>
+      )}
     </div>
   );
 }

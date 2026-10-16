@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { alertsFor, alertSubject, parseAlerts, type HazardAlert } from '../src/lib/alerts.ts';
 import { NWS_COUNTRIES, nwsUrl, parseNws } from '../src/lib/nws.ts';
 import { displayPhone } from '../src/lib/phone.ts';
+import type { NationalWarning } from '../src/lib/national.ts';
 import { familyLinks, familyLinksFor } from '../src/data/familyLinks.ts';
 
 const now = Date.parse('2026-10-13T12:00:00Z');
@@ -347,4 +348,51 @@ test('GDACS earthquake severity reads naturally and other text stays as publishe
     'Magnitude 7.7, depth 8 mi',
   );
   assert.equal(readableSeverity('Category 3 hurricane', 'es'), 'Category 3 hurricane');
+});
+
+test('warnings in force lead at level 2-3, and the screen opens on the topic they name', async () => {
+  const { leadingWarnings, warningTopic } = await import('../src/lib/hazards.ts');
+  const warning = (over: Partial<NationalWarning>): NationalWarning => ({
+    id: 'w',
+    event: 'AVISO SINTÉTICO',
+    headline: '',
+    severity: 'Moderate',
+    areas: '',
+    sent: now,
+    onset: null,
+    expires: now + 3600000,
+    url: '',
+    description: '',
+    instruction: '',
+    polygons: [],
+    ...over,
+  });
+  const flood = warning({ id: 'flood', event: 'LLUVIAS Y CRECIDAS DE RÍOS', severity: 'Extreme' });
+  const wind = warning({ id: 'wind', event: 'VIENTOS FUERTES Y OLEAJE', severity: 'Severe' });
+  const minor = warning({ id: 'minor', event: 'TORMENTAS ELÉCTRICAS', severity: 'Minor' });
+  // Every level 2-3 warning leads, the "Grave" one too; a minor one stays in "Official now".
+  assert.deepEqual(
+    leadingWarnings([flood, wind, minor]).map((w) => w.id),
+    ['flood', 'wind'],
+  );
+  // The first warning that mentions flooding leads at any level: it is the flood row.
+  const minorFlood = warning({
+    id: 'mf',
+    description: 'Posibles inundaciones.',
+    severity: 'Minor',
+  });
+  assert.deepEqual(
+    leadingWarnings([minor, minorFlood]).map((w) => w.id),
+    ['mf'],
+  );
+  // Only the default topic: the agency's words, most severe first.
+  assert.equal(warningTopic([flood, wind]), 'flood');
+  assert.equal(
+    warningTopic([warning({ event: 'AVISO POR TORMENTA TROPICAL', severity: 'Severe' })]),
+    'hurricane',
+  );
+  assert.equal(warningTopic([wind, minor]), undefined);
+  assert.equal(warningTopic([], { flood: 2, tropical: 0 }), 'flood');
+  assert.equal(warningTopic([], { flood: 1, tropical: 1 }), 'hurricane');
+  assert.equal(warningTopic([]), undefined);
 });
