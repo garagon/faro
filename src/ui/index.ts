@@ -5,6 +5,7 @@
 export { Button, IconButton, LinkButton } from './Button.tsx';
 export { CallButton, PhoneRow } from './Call.tsx';
 export { ChoiceChip, Chips, Field, Segmented } from './Choice.tsx';
+export { Combobox, type ComboOption } from './Combobox.tsx';
 export { Actions, Magnitude, OutLink, Skeleton, SourceStamp } from './Data.tsx';
 export {
   Badge,
@@ -20,6 +21,7 @@ export { MapFrame } from './Map.tsx';
 export { CheckRow, Disclosure, SelectField, Tabs, TextArea } from './Form.tsx';
 export { Note, SafetyNotice, ScopeNote, StatusChip } from './Notice.tsx';
 export { BackLink, ScreenHead, Section } from './Section.tsx';
+export { Text } from './Text.tsx';
 export {
   AppFrame,
   Content,

@@ -54,3 +54,5 @@
 
 @import './ds/components.css' layer(ds);
 @import './ds/shell.css' layer(ds);
+@import './ds/combobox.css' layer(ds);
+@import './ds/text.css' layer(ds);

@@ -1,40 +1,137 @@
+import { useState } from 'react';
 import { ArrowUpRightIcon } from '@phosphor-icons/react';
 import { destinationFor } from '../data/destinations/index.ts';
 import { missionsFor } from '../data/consularMissions.ts';
 import { hostOf } from '../lib/links.ts';
-import type { Lang } from '../lib/resources.ts';
-import { pick } from '../lib/i18n.ts';
+import type { Lang, Resource } from '../lib/resources.ts';
+import { langIndex, pick } from '../lib/i18n.ts';
+import {
+  Actions,
+  Disclosure,
+  ExpandRow,
+  List,
+  ListRow,
+  OutLink,
+  Section,
+  Text,
+} from '../ui/index.ts';
 
-export default function DestinationInfo({ country, lang }: { country: string; lang: Lang }) {
-  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+type Props = {
+  country: string;
+  lang: Lang;
+  /** Further official resources for this country (and worldwide ones), each opened on request. */
+  resources?: readonly Resource[];
+  /** The selected region as the app names it ("Panamá", "Todo el mundo"). */
+  regionName?: string;
+};
+
+/** The country's official agencies, what Faro covers there, and further official resources. */
+export default function DestinationInfo({ country, lang, resources = [], regionName }: Props) {
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
+    idx = langIndex(lang);
   const data = destinationFor(country);
   const name =
     country === 'WORLD' ? '' : new Intl.DisplayNames([lang], { type: 'region' }).of(country);
   const missions = missionsFor(country).filter((m) => !m.historical).length;
+  const title = t('Organismos oficiales', 'Official agencies', 'Órgãos oficiais');
+  const toggle = (id: string) => {
+    const next = new Set(open);
+    if (!next.delete(id)) next.add(id);
+    setOpen(next);
+  };
+  const more = resources.length > 0 && (
+    <div className="f-stack" data-gap="sm">
+      <h3 className="f-subhead">
+        {t(
+          'Más recursos y preparación',
+          'More resources and preparedness',
+          'Mais recursos e preparação',
+        )}
+      </h3>
+      {regionName && (
+        <Text caption>
+          {t(
+            'Recursos para la región seleccionada',
+            'Resources for the selected region',
+            'Recursos para a região selecionada',
+          )}
+          : {regionName}.{' '}
+          {t(
+            'Cambia el país en el buscador de arriba.',
+            'Change the country using the search above.',
+            'Altere o país na busca acima.',
+          )}
+        </Text>
+      )}
+      <List>
+        {resources.map((r) => {
+          const id = `fw-resource-${r.url.replace(/\W+/g, '-')}`;
+          return (
+            <ExpandRow
+              key={r.url}
+              id={id}
+              open={open.has(id)}
+              onToggle={() => toggle(id)}
+              title={r.name}
+              meta={r.category[idx]}
+            >
+              <Text>{r.description[idx]}</Text>
+              <Actions>
+                <OutLink href={r.url}>
+                  {t('Sitio oficial', 'Official website', 'Site oficial')}
+                </OutLink>
+              </Actions>
+              <Text caption>
+                {r.name === 'USGS'
+                  ? t(
+                      'Consulta automática cada 60 s',
+                      'Checked automatically every 60 s',
+                      'Consulta automática a cada 60 s',
+                    )
+                  : `${t('Datos revisados', 'Information reviewed', 'Dados revisados')}: ${new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(r.reviewedAt + 'T12:00:00Z'))}`}
+              </Text>
+            </ExpandRow>
+          );
+        })}
+        <ListRow
+          title={t('Voluntariado', 'Volunteering', 'Voluntariado')}
+          meta={t(
+            'Sin convocatorias verificadas. Consulta la disponibilidad y los requisitos con la universidad o el municipio.',
+            'No verified openings. Contact the university or municipality for availability and requirements.',
+            'Sem chamadas verificadas. Consulte a disponibilidade e os requisitos com a universidade ou o município.',
+          )}
+        />
+      </List>
+    </div>
+  );
   if (!data)
     return (
-      <section className="fw-destination-info fw-destination-missing">
-        <h2>
-          {country === 'WORLD'
-            ? t(
-                'Elige el país donde necesitas ayuda',
-                'Choose the country where you need help',
-                'Escolha o país onde você precisa de ajuda',
-              )
-            : t(
-                `Faltan datos locales para ${name}`,
-                `Local information for ${name} is not yet available`,
-                `Ainda não há dados locais: ${name}`,
-              )}
-        </h2>
-        <p>
-          {t(
-            'Puedes consultar sismos de USGS y guardar tu plan. Para teléfonos, evacuación y asistencia, consulta a la autoridad local o a recepción.',
-            'You can view USGS earthquakes and save your plan. For phone numbers, evacuation and assistance, check with local authorities or reception.',
-            'Você pode consultar os terremotos do USGS e salvar seu plano. Para telefones, evacuação e assistência, consulte a autoridade local ou a recepção.',
-          )}
-        </p>
-      </section>
+      <Section id="fw-sources" title={title}>
+        <div className="f-stack" data-gap="sm">
+          <h3 className="f-subhead">
+            {country === 'WORLD'
+              ? t(
+                  'Elige el país donde necesitas ayuda',
+                  'Choose the country where you need help',
+                  'Escolha o país onde você precisa de ajuda',
+                )
+              : t(
+                  `Faltan datos locales para ${name}`,
+                  `Local information for ${name} is not yet available`,
+                  `Ainda não há dados locais: ${name}`,
+                )}
+          </h3>
+          <Text>
+            {t(
+              'Puedes consultar sismos de USGS y guardar tu plan. Para teléfonos, evacuación y asistencia, consulta a la autoridad local o a recepción.',
+              'You can view USGS earthquakes and save your plan. For phone numbers, evacuation and assistance, check with local authorities or reception.',
+              'Você pode consultar os terremotos do USGS e salvar seu plano. Para telefones, evacuação e assistência, consulte a autoridade local ou a recepção.',
+            )}
+          </Text>
+        </div>
+        {more}
+      </Section>
     );
   const links = [
     {
@@ -63,49 +160,43 @@ export default function DestinationInfo({ country, lang }: { country: string; la
     },
   ];
   return (
-    <section className="fw-destination-info" aria-labelledby="fw-sources-title">
-      <h2 id="fw-sources-title">
-        {t(
-          `Fuentes oficiales en ${name}`,
-          `Official sources in ${name}`,
-          `Fontes oficiais · ${name}`,
-        )}
-      </h2>
-      <p>
+    <Section id="fw-sources" title={title} aside={name || undefined}>
+      <Text>
         {t(
           'Cada enlace abre el sitio del organismo. Sus publicaciones más recientes están allí.',
           'Each link opens the agency’s website, where its latest publications are.',
           'Cada link abre o site do órgão. As publicações mais recentes estão lá.',
         )}
-      </p>
-      <ul className="fw-link-rows">
+      </Text>
+      <List
+        label={t(
+          `Fuentes oficiales en ${name}`,
+          `Official sources in ${name}`,
+          `Fontes oficiais · ${name}`,
+        )}
+      >
         {links.map(
           ({ source, label }) =>
             source && (
-              <li key={source.url}>
-                <a href={source.url} target="_blank" rel="noreferrer">
-                  <span>
-                    <strong>{source.name}</strong>
-                    <span>{label}</span>
-                  </span>
-                  <small>
-                    {hostOf(source.url)}
-                    <ArrowUpRightIcon size={14} aria-hidden="true" />
-                  </small>
-                </a>
-              </li>
+              <ListRow
+                key={source.url}
+                href={source.url}
+                external
+                title={source.name}
+                meta={`${label} · ${hostOf(source.url)}`}
+                trail={<ArrowUpRightIcon size={16} aria-hidden="true" />}
+              />
             ),
         )}
-      </ul>
-      <details>
-        <summary>
-          {t(
-            'Qué información ofrece Faro aquí',
-            'What Faro covers here',
-            'O que o Faro oferece aqui',
-          )}
-        </summary>
-        <dl>
+      </List>
+      <Disclosure
+        title={t(
+          'Qué información ofrece Faro aquí',
+          'What Faro covers here',
+          'O que o Faro oferece aqui',
+        )}
+      >
+        <dl className="f-prose">
           <div>
             <dt>{t('Sismos en el mapa', 'Earthquakes on the map', 'Terremotos no mapa')}</dt>
             <dd>
@@ -133,9 +224,9 @@ export default function DestinationInfo({ country, lang }: { country: string; la
             <dd>
               {missions
                 ? t(
-                    `${missions} representaciones con ficha. Selecciona tu nacionalidad abajo.`,
-                    `${missions} missions with contact details. Select your nationality below.`,
-                    `${missions} representações com ficha. Selecione sua nacionalidade abaixo.`,
+                    `${missions} representaciones con ficha. Selecciona tu nacionalidad arriba.`,
+                    `${missions} missions with contact details. Select your nationality above.`,
+                    `${missions} representações com ficha. Selecione sua nacionalidade acima.`,
                   )
                 : t(
                     'Sin direcciones locales verificadas en Faro. Usa el directorio oficial cuando esté disponible.',
@@ -157,7 +248,8 @@ export default function DestinationInfo({ country, lang }: { country: string; la
             </dd>
           </div>
         </dl>
-      </details>
-    </section>
+      </Disclosure>
+      {more}
+    </Section>
   );
 }

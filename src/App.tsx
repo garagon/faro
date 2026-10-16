@@ -20,14 +20,12 @@ import { writeLocal, removeLocal, pruneOfficialCopies } from './lib/browserStora
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import InformationDialog from './components/InformationDialog.tsx';
 import {
-  ArrowUpRightIcon,
   CaretRightIcon,
   MapPinIcon,
   CrosshairIcon,
   BookOpenTextIcon,
   UsersThreeIcon,
   XIcon,
-  FlagIcon,
   BackpackIcon,
   InfoIcon,
   ChatCircleTextIcon,
@@ -109,7 +107,6 @@ import FamilyLinks from './components/FamilyLinks.tsx';
 import CoastalPanel from './components/CoastalPanel.tsx';
 import EmbassyPanel from './components/EmbassyPanel.tsx';
 import SafetyGuide from './components/SafetyGuide.tsx';
-import { ExternalLink } from './components/Ui.tsx';
 import TravelerStatus from './components/TravelerStatus.tsx';
 import TravelContacts from './components/TravelContacts.tsx';
 import EmergencyNumbers from './components/EmergencyNumbers.tsx';
@@ -117,6 +114,7 @@ import ResponsePanel from './components/ResponsePanel.tsx';
 import HomeActions, { HomeCall } from './components/HomeActions.tsx';
 import HomeTabs from './components/HomeTabs.tsx';
 import {
+  Actions,
   AppFrame,
   BackLink,
   Header,
@@ -125,11 +123,14 @@ import {
   Magnitude,
   MapFrame,
   Note,
+  OutLink,
+  ScopeNote,
   ScreenHead,
   Section,
   Sidebar,
   StatusBar,
   TabBar,
+  Text,
   type Tab,
 } from './ui/index.ts';
 import { responsesFor } from './data/responses.ts';
@@ -2291,7 +2292,7 @@ export default function App() {
             />
           )}
           {screen === 'help' && (
-            <>
+            <div className="f-column">
               <EmergencyNumbers country={country} lang={lang} />
               <EmbassyPanel
                 onProfile={() => setScreen('hotel')}
@@ -2308,97 +2309,53 @@ export default function App() {
                 }}
               />
               <NearbyCare key={country} country={country} lang={lang} />
-              <OfflineMap lang={lang} {...offlineArea(visiblePoint)} />
-              <DestinationInfo country={country} lang={lang} />
-              <FamilyLinks country={country} lang={lang} onStatus={() => setScreen('status')} />
+              <FamilyLinks
+                country={country}
+                lang={lang}
+                nationality={nationality}
+                onStatus={() => setScreen('status')}
+              />
               {/* Shelters: who announces them, never a list Faro cannot verify. */}
-              <div className="fw-help-summary">
-                <FlagIcon size={29} aria-hidden="true" />
-                <div>
-                  <h2>{t('Albergues', 'Shelters', 'Abrigos')}</h2>
-                  <p>
-                    {civilProtection ? (
-                      <>
-                        {t(
-                          `Los albergues abiertos los anuncia ${civilProtection.name}. Faro no los verifica; pregunta también en tu alojamiento.`,
-                          `Open shelters are announced by ${civilProtection.name}. Faro does not verify them; also ask where you are staying.`,
-                          `Quem anuncia os abrigos abertos: ${civilProtection.name}. O Faro não os verifica; pergunte também na sua hospedagem.`,
-                        )}{' '}
-                        <ExternalLink href={civilProtection.url}>
-                          {t('Sitio oficial', 'Official website', 'Site oficial')}
-                        </ExternalLink>
-                      </>
-                    ) : (
-                      t(
+              <Section id="fw-help-shelters" title={t('Albergues', 'Shelters', 'Abrigos')}>
+                <Text>
+                  {civilProtection
+                    ? t(
+                        `Los albergues abiertos los anuncia ${civilProtection.name}. Faro no los verifica; pregunta también en tu alojamiento.`,
+                        `Open shelters are announced by ${civilProtection.name}. Faro does not verify them; also ask where you are staying.`,
+                        `Quem anuncia os abrigos abertos: ${civilProtection.name}. O Faro não os verifica; pergunte também na sua hospedagem.`,
+                      )
+                    : t(
                         'Faro no tiene datos verificados de albergues aquí. Pregunta a las autoridades locales o en tu alojamiento antes de desplazarte.',
                         'Faro has no verified shelter data here. Ask local authorities or where you are staying before you travel.',
                         'O Faro não tem dados verificados de abrigos aqui. Pergunte às autoridades locais ou na sua hospedagem antes de se deslocar.',
-                      )
-                    )}
-                  </p>
-                </div>
-                <button className="fw-secondary" onClick={() => setScreen('hotel')}>
-                  {t('Preparar mi plan', 'Prepare my plan', 'Preparar meu plano')}
-                </button>
-              </div>
-              <details className="fw-local-directory">
-                <summary>
-                  {t(
-                    'Más recursos y preparación',
-                    'More resources and preparedness',
-                    'Mais recursos e preparação',
-                  )}
-                </summary>
-                <p className="fw-help-region">
-                  {t(
-                    'Recursos para la región seleccionada',
-                    'Resources for the selected region',
-                    'Recursos para a região selecionada',
-                  )}
-                  : <strong>{countryName}</strong>.{' '}
-                  {t(
-                    'Cambia el país en el buscador de arriba.',
-                    'Change the country using the search above.',
-                    'Altere o país na busca acima.',
-                  )}
-                </p>
-                <div className="fw-resource-grid">
-                  {regionResources.map((r) => (
-                    <article key={r.url} className="fw-resource">
-                      <span className="fw-eyebrow">{r.category[idx]}</span>
-                      <h2>{r.name}</h2>
-                      <p>{r.description[idx]}</p>
-                      <a href={r.url} target="_blank" rel="noreferrer">
-                        {t('Sitio oficial', 'Official website', 'Site oficial')}
-                        <ArrowUpRightIcon size={18} />
-                      </a>
-                      <small>
-                        {r.name === 'USGS'
-                          ? t(
-                              'Consulta automática cada 60 s',
-                              'Checked automatically every 60 s',
-                              'Consulta automática a cada 60 s',
-                            )
-                          : `${t('Datos revisados', 'Information reviewed', 'Dados revisados')}: ${new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(r.reviewedAt + 'T12:00:00Z'))}`}
-                      </small>
-                    </article>
-                  ))}
-                </div>
-                <div className="fw-note">
-                  <UsersThreeIcon size={24} />
-                  <div>
-                    <h3>{t('Voluntariado', 'Volunteering', 'Voluntariado')}</h3>
-                    <p>
-                      {t(
-                        'Sin convocatorias verificadas. Consulta la disponibilidad y los requisitos con la universidad o el municipio.',
-                        'No verified openings. Contact the university or municipality for availability and requirements.',
-                        'Sem chamadas verificadas. Consulte a disponibilidade e os requisitos com a universidade ou o município.',
                       )}
-                    </p>
-                  </div>
-                </div>
-              </details>
-            </>
+                </Text>
+                <Actions>
+                  {civilProtection && (
+                    <OutLink href={civilProtection.url}>
+                      {t('Sitio oficial', 'Official website', 'Site oficial')}
+                    </OutLink>
+                  )}
+                  <button type="button" onClick={() => setScreen('hotel')}>
+                    {t('Preparar mi plan', 'Prepare my plan', 'Preparar meu plano')}
+                  </button>
+                </Actions>
+              </Section>
+              <OfflineMap lang={lang} detail {...offlineArea(visiblePoint)} />
+              <DestinationInfo
+                country={country}
+                lang={lang}
+                resources={regionResources}
+                regionName={countryName}
+              />
+              <ScopeNote>
+                {t(
+                  'Faro solo enlaza a cada servicio: no llama, no busca personas ni envía tus datos. Google Maps recibe la zona o tu ubicación aproximada solo cuando tocas uno de sus enlaces.',
+                  'Faro only links to each service: it does not call, look for people or send your data. Google Maps receives the area or your approximate location only when you tap one of its links.',
+                  'O Faro só leva a cada serviço: não liga, não procura pessoas nem envia seus dados. O Google Maps recebe a área ou sua localização aproximada só quando você toca em um dos links dele.',
+                )}
+              </ScopeNote>
+            </div>
           )}
           {screen === 'hotel' && (
             <>

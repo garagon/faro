@@ -1,63 +1,70 @@
-import { ArrowUpRightIcon } from '@phosphor-icons/react';
+import { ArrowUpRightIcon, ChatCircleTextIcon } from '@phosphor-icons/react';
 import { hostOf, splitName } from '../lib/links.ts';
 import { familyLinksFor } from '../data/familyLinks.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
+import { Button, List, ListRow, Note, Section, Text } from '../ui/index.ts';
+import TravelerSupport from './TravelerSupport.tsx';
 
-type Props = { country: string; lang: Lang; onStatus: () => void };
+type Props = {
+  country: string;
+  lang: Lang;
+  onStatus: () => void;
+  /** The traveler's nationality: its foreign ministry's lines for relatives at home, if any. */
+  nationality: string;
+};
 
 /** Official reunification services. Searches happen on their sites, under their policies. */
-export default function FamilyLinks({ country, lang, onStatus }: Props) {
+export default function FamilyLinks({ country, lang, onStatus, nationality }: Props) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
     idx = langIndex(lang);
   return (
-    <section className="fw-family-links" aria-labelledby="fw-family-title">
-      <header>
-        <div>
-          <h2 id="fw-family-title">
-            {t(
-              'Encontrar o avisar a familiares',
-              'Find or reach family',
-              'Encontrar ou avisar familiares',
-            )}
-          </h2>
-          <p>
-            {t(
-              'Si puedes, avisa tú primero. Si perdiste el contacto con alguien, estos servicios oficiales ayudan a restablecerlo.',
-              'If you can, send your own update first. If you lost contact with someone, these official services help restore it.',
-              'Se puder, avise você primeiro. Se você perdeu contato com alguém, estes serviços oficiais ajudam a restabelecê-lo.',
-            )}
-          </p>
-        </div>
-        <button className="fw-secondary" onClick={onStatus}>
-          {t('Avisar cómo estoy', 'Send a status update', 'Avisar como estou')}
-        </button>
-      </header>
-      <ul className="fw-link-rows">
+    <Section
+      id="fw-help-family"
+      title={t('Para tu familia', 'For your family', 'Para sua família')}
+    >
+      <Text>
+        {t(
+          'Si puedes, avisa tú primero. Si perdiste el contacto con alguien, estos servicios oficiales ayudan a restablecerlo.',
+          'If you can, send your own update first. If you lost contact with someone, these official services help restore it.',
+          'Se puder, avise você primeiro. Se você perdeu contato com alguém, estes serviços oficiais ajudam a restabelecê-lo.',
+        )}
+      </Text>
+      <Button
+        variant="secondary"
+        icon={<ChatCircleTextIcon size={20} aria-hidden="true" />}
+        onClick={onStatus}
+      >
+        {t('Avisar cómo estoy', 'Send a status update', 'Avisar como estou')}
+      </Button>
+      <List
+        label={t(
+          'Encontrar o avisar a familiares',
+          'Find or reach family',
+          'Encontrar ou avisar familiares',
+        )}
+      >
         {familyLinksFor(country).map((l) => {
           const [agency, service] = splitName(l.name[idx]);
           return (
-            <li key={l.id}>
-              <a href={l.url[idx]} target="_blank" rel="noreferrer">
-                <span>
-                  <strong>{service ? `${service} (${agency})` : agency}</strong>
-                  <span>{l.description[idx]}</span>
-                </span>
-                <small>
-                  {hostOf(l.url[idx])}
-                  <ArrowUpRightIcon size={14} aria-hidden="true" />
-                </small>
-              </a>
-            </li>
+            <ListRow
+              key={l.id}
+              href={l.url[idx]}
+              external
+              title={service ? `${service} (${agency})` : agency}
+              meta={`${l.description[idx]} · ${hostOf(l.url[idx])}`}
+              trail={<ArrowUpRightIcon size={16} aria-hidden="true" />}
+            />
           );
         })}
-      </ul>
-      <small>
+      </List>
+      <Note>
         {t(
           'Faro no envía búsquedas ni datos a estos servicios. Cada sitio tiene su propia política de privacidad.',
           'Faro does not send searches or data to these services. Each site has its own privacy policy.',
           'O Faro não envia buscas nem dados a esses serviços. Cada site tem sua própria política de privacidade.',
         )}
-      </small>
-    </section>
+      </Note>
+      <TravelerSupport part="family" nationality={nationality} country={country} lang={lang} />
+    </Section>
   );
 }
