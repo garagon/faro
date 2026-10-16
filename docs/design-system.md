@@ -85,14 +85,14 @@ carries the meaning, never the colour alone.
 
 Geist, on shadcn's scale. Every text uses one of these roles:
 
-| Role          | Tailwind                                | Used for                                                 |
-| ------------- | --------------------------------------- | -------------------------------------------------------- |
-| Screen title  | `text-2xl font-semibold tracking-tight` | The title of a screen (the same words as its menu entry) |
-| Section title | `text-base font-semibold`               | Section titles                                           |
-| Label         | `text-sm font-medium`                   | Row titles, buttons, chips, field labels                 |
-| Text          | `text-sm`                               | Paragraphs and interface text                            |
-| Instruction   | `text-base`                             | Steps and safety notices, read in a hurry                |
-| Caption       | `text-sm text-muted-foreground`         | Row descriptions, sources and times, notes               |
+| Role          | Tailwind                                | Used for                                                                               |
+| ------------- | --------------------------------------- | -------------------------------------------------------------------------------------- |
+| Screen title  | `text-2xl font-semibold tracking-tight` | The title of a screen (the same words as its menu entry)                               |
+| Section title | `text-base font-semibold`               | Section titles                                                                         |
+| Label         | `text-sm font-medium`                   | Row titles, buttons, chips, field labels                                               |
+| Text          | `text-sm`                               | Paragraphs and interface text                                                          |
+| Instruction   | `text-base`                             | Steps and safety notices, read in a hurry (`text-lg` on Emergencia: `Steps size="lg"`) |
+| Caption       | `text-sm text-muted-foreground`         | Row descriptions, sources and times, notes                                             |
 
 Figures (phone numbers, magnitudes) are `font-semibold tabular-nums`; the magnitude in an
 earthquake's detail is the one larger figure. Map attribution and legal text are `text-xs`, tab
@@ -103,7 +103,7 @@ one caption line; state, source and time share that caption.
 
 | Component                                                                          | Use                                                                                                                                                                                                            |
 | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CallButton`                                                                       | The main emergency number: the large button in call red, at most as wide as a phone (26 rem). Once per screen.                                                                                                 |
+| `CallButton`                                                                       | The main emergency number: the large button in call red, at most as wide as a phone (26 rem). Once per screen. `size="xl"` (64 px) on Emergencia only.                                                         |
 | `PhoneRow`                                                                         | Other numbers, as list rows: the number first, who answers under it.                                                                                                                                           |
 | `Button`, `LinkButton`, `IconButton`                                               | shadcn `Button`: primary (`default`, one per screen), secondary (`outline`), ghost; `call` (`destructive`) only for calling.                                                                                   |
 | `List`, `ListRow`                                                                  | shadcn `ItemGroup` / `Item` in a card: a row opens a screen, leaves to a link, or shows a value.                                                                                                               |

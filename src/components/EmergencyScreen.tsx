@@ -1,37 +1,46 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  BookOpenTextIcon,
-  BriefcaseMedicalIcon,
+  ActivityIcon,
+  ChevronDownIcon,
+  DropletIcon,
   FlagIcon,
   MapPinIcon,
   MessageCircleIcon,
-  MessageSquareTextIcon,
-  WavesIcon,
+  WindIcon,
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 import CountrySearch from './CountrySearch.tsx';
-import { NationalWarningRow, feedLine } from './OfficialNow.tsx';
+import { feedLine } from './OfficialNow.tsx';
 import {
   Actions,
+  AlertCard,
   Button,
   CallButton,
+  HazardPicker,
   List,
   ListRow,
   Magnitude,
   Note,
+  NumberTile,
+  NumberTiles,
   OutLink,
   PhoneRow,
   RowIcon,
-  SafetyNotice,
   ScopeNote,
   ScreenHead,
   Section,
-  Segmented,
   SourceStamp,
   Steps,
   Text,
 } from '../ui/index.ts';
 import { lineStamp } from '../lib/sourceStatus.ts';
-import type { NationalWarning } from '../lib/national.ts';
+import {
+  readableEvent,
+  severityLabels,
+  severityLevel,
+  type NationalWarning,
+} from '../lib/national.ts';
 import { emergencyFor } from '../lib/emergency.ts';
 import { reviewDate } from '../lib/links.ts';
 import {
@@ -96,15 +105,33 @@ type Props = {
   onQuake: (q: Quake) => void;
 };
 
+/** The hazards of the picker, each with an icon the person can tell apart in a hurry. */
+const hazardIcon: Record<EmergencyKind, ReactNode> = {
+  earthquake: <ActivityIcon aria-hidden="true" />,
+  hurricane: <WindIcon aria-hidden="true" />,
+  flood: <DropletIcon aria-hidden="true" />,
+};
+/** How many of the chosen hazard's steps are shown before "See all N steps". */
+const FIRST_STEPS = 4;
 /**
- * The emergency screen: the call action first and largest, then the first steps, consular
- * help, the meeting point and the latest earthquake. A screen rather than a sheet, so it can be
- * scrolled, linked from anywhere and kept open while calling.
+ * A number listed with its country code ("+507 520-4426") is shown in a tile as it is dialled
+ * in the country ("520-4426"), so it fits on one line; the link keeps the full number.
+ */
+const localPart = (number: string) => number.replace(/^\+\d+\s+/, '');
+
+/**
+ * The emergency screen: the call action first and largest, the other numbers as large tiles,
+ * then what is happening and the first steps, with the rest one tap away in place; beside it
+ * (under it on a phone) consular help, the meeting point, the latest earthquake and what comes
+ * next. A screen rather than a sheet, so it can be scrolled, linked from anywhere and kept open
+ * while calling.
  */
 export default function EmergencyScreen(p: Props) {
   const { kind, onKind: setKind } = p;
   const country = p.country === 'WORLD' ? '' : p.country;
   const [editing, setEditing] = useState(false);
+  // The remaining steps of the hazard and the general ones, opened in place under the first four.
+  const [more, setMore] = useState(false);
   const choosing = editing || !country;
   const root = useRef<HTMLDivElement>(null);
   const t = (es: string, en: string, pt: string) => pick(p.lang, es, en, pt),
@@ -218,7 +245,9 @@ export default function EmergencyScreen(p: Props) {
     ),
   });
   const [main, ...others] = local?.numbers ?? [];
-  // The warnings in force, as rows with the agency's level: the screen changes on a bad day.
+  const first = hazardSteps[kind].slice(0, FIRST_STEPS);
+  const rest = hazardSteps[kind].slice(FIRST_STEPS);
+  // The warnings in force, as cards in the agency's level: the screen changes on a bad day.
   const warned = p.warnings && p.warnings.items.length > 0 ? p.warnings : null;
   const warnedLine = warned ? feedLine(warned, warned.online, p.now, p.lang) : null;
   const warnings = warned && (
@@ -233,17 +262,29 @@ export default function EmergencyScreen(p: Props) {
         )
       }
     >
-      <List label={warned.agency}>
+      <div className="grid gap-2" role="list" aria-label={warned.agency}>
         {warned.items.map((w) => (
-          <NationalWarningRow
-            key={w.id}
-            warning={w}
-            agency={warned.agency}
-            lang={p.lang}
-            href={w.url || undefined}
-          />
+          <div key={w.id} role="listitem">
+            <AlertCard
+              compact
+              // The agency's severity on Faro's levels; one it does not state is drawn as the lowest.
+              level={severityLevel[w.severity] ?? 1}
+              // The agency publishes in Spanish: said once, for English and Portuguese.
+              kicker={t(
+                `Aviso del ${warned.agency}`,
+                `${warned.agency} warning, in Spanish`,
+                `Aviso do ${warned.agency}, em espanhol`,
+              )}
+              pill={severityLabels[w.severity][idx]}
+              title={<span lang="es">{readableEvent(w.event)}</span>}
+              // Opens the agency's own page for the warning, when it gives one.
+              onClick={
+                w.url ? () => window.open(w.url, '_blank', 'noopener,noreferrer') : undefined
+              }
+            />
+          </div>
         ))}
-      </List>
+      </div>
     </Section>
   );
   const consularLabel = (m: { emergency?: string; phone?: string }) =>
@@ -299,72 +340,77 @@ export default function EmergencyScreen(p: Props) {
           </section>
         ) : (
           <>
-            {main ? (
-              <CallButton
-                number={main.number}
-                label={t(
-                  `Llamar al ${main.number}`,
-                  `Call ${main.number}`,
-                  `Ligar para ${main.number}`,
-                )}
-                note={main.label[idx]}
-              />
-            ) : (
-              <Text tabIndex={-1} data-emergency-start="">
-                {t(
-                  'No tenemos teléfonos verificados para este país. Pregunta en tu alojamiento o a la autoridad local.',
-                  'We have no verified numbers for this country. Ask where you are staying or local authorities.',
-                  'Não temos números verificados para este país. Pergunte na sua hospedagem ou às autoridades locais.',
-                )}
-              </Text>
-            )}
-            {/* On a bad day the screen changes under the call: the tsunami message, then the
+            {/* The numbers as one block: the main line, the other lines as tiles, the caveat. */}
+            <div className="grid gap-3">
+              {main ? (
+                <CallButton
+                  size="xl"
+                  number={main.number}
+                  label={t(
+                    `Llamar al ${main.number}`,
+                    `Call ${main.number}`,
+                    `Ligar para ${main.number}`,
+                  )}
+                  note={main.label[idx]}
+                />
+              ) : (
+                <Text tabIndex={-1} data-emergency-start="">
+                  {t(
+                    'No tenemos teléfonos verificados para este país. Pregunta en tu alojamiento o a la autoridad local.',
+                    'We have no verified numbers for this country. Ask where you are staying or local authorities.',
+                    'Não temos números verificados para este país. Pergunte na sua hospedagem ou às autoridades locais.',
+                  )}
+                </Text>
+              )}
+              {local && (others.length > 0 || local.whatsapp) && (
+                <div id="fw-emergency-other">
+                  <NumberTiles label={t('Otros números', 'Other numbers', 'Outros números')}>
+                    {others.map((n) => (
+                      <NumberTile
+                        key={n.number}
+                        number={localPart(n.number)}
+                        dial={n.number}
+                        name={n.label[idx]}
+                      />
+                    ))}
+                    {/* A text line for when calls do not go through but data does. */}
+                    {local.whatsapp && (
+                      <NumberTile
+                        number={localPart(local.whatsapp.number)}
+                        name={local.whatsapp.label[idx]}
+                        href={whatsappHref(local.whatsapp.number)}
+                        icon={<MessageCircleIcon aria-hidden="true" />}
+                      />
+                    )}
+                  </NumberTiles>
+                </div>
+              )}
+              {/* The country's own caveat (what to dial if 911 does not answer), the scope of the
+                numbers and their source: one muted line. */}
+              {local && (
+                <Note
+                  more={
+                    <OutLink href={local.source}>
+                      {t('Fuente oficial', 'Official source', 'Fonte oficial')}
+                    </OutLink>
+                  }
+                >
+                  {local.note && <>{local.note[idx]} </>}
+                  {t(
+                    'Para llamar dentro del país',
+                    'For calls within the country',
+                    'Para ligações dentro do país',
+                  )}
+                  {' · '}
+                  {t('revisada el', 'reviewed', 'revisada em')}{' '}
+                  {reviewDate(local.reviewedAt, p.lang)}.
+                </Note>
+              )}
+            </div>
+            {/* On a bad day the screen changes under the numbers: the tsunami message, then the
               warnings in force. */}
             {p.alert}
             {warnings}
-            {local && (others.length > 0 || local.whatsapp) && (
-              <Section
-                id="fw-emergency-other"
-                title={t('Otros números', 'Other numbers', 'Outros números')}
-              >
-                <List>
-                  {others.map((n) => (
-                    <PhoneRow key={n.number} number={n.number} name={n.label[idx]} />
-                  ))}
-                  {/* A text line for when calls do not go through but data does. */}
-                  {local.whatsapp && (
-                    <ListRow
-                      href={whatsappHref(local.whatsapp.number)}
-                      external
-                      figure
-                      title={local.whatsapp.number}
-                      meta={local.whatsapp.label[idx]}
-                      trail={<MessageCircleIcon className="size-4" aria-hidden="true" />}
-                    />
-                  )}
-                </List>
-              </Section>
-            )}
-            {/* The country's own caveat, e.g. what to dial if 911 does not answer. */}
-            {local?.note && <SafetyNotice>{local.note[idx]}</SafetyNotice>}
-            {local && (
-              <Note
-                more={
-                  <OutLink href={local.source}>
-                    {t('Fuente oficial', 'Official source', 'Fonte oficial')}
-                  </OutLink>
-                }
-              >
-                {t(
-                  'Para llamar dentro del país',
-                  'For calls within the country',
-                  'Para ligações dentro do país',
-                )}
-                {' · '}
-                {t('revisada el', 'reviewed', 'revisada em')} {reviewDate(local.reviewedAt, p.lang)}
-                .
-              </Note>
-            )}
           </>
         )}
 
@@ -380,46 +426,84 @@ export default function EmergencyScreen(p: Props) {
             className="f-section-title m-0 text-base leading-snug font-semibold"
             tabIndex={-1}
           >
-            {t('Primeros minutos', 'First minutes', 'Primeiros minutos')}
+            {t('¿Qué está pasando?', 'What is happening?', 'O que está acontecendo?')}
           </h2>
-          <Segmented
-            block
+          <HazardPicker
             label={t('Qué está pasando', 'What is happening', 'O que está acontecendo')}
             value={kind}
             onChange={setKind}
-            options={emergencyKinds.map((k) => ({ value: k.id, label: k.short[idx] }))}
+            options={emergencyKinds.map((k) => ({
+              value: k.id,
+              label: k.short[idx],
+              icon: hazardIcon[k.id],
+            }))}
           />
-          <Steps items={hazardSteps[kind].map(step)} />
-        </section>
-
-        <section
-          className="f-section @container grid gap-3"
-          aria-labelledby="fw-any-emergency-title"
-        >
-          <h2
-            id="fw-any-emergency-title"
-            className="f-section-title m-0 text-base leading-snug font-semibold"
-          >
-            {t('En cualquier emergencia', 'In any emergency', 'Em qualquer emergência')}
-          </h2>
-          <Steps items={generalSteps.map(step)} />
-          <Note>
-            {t('Fuentes', 'Sources', 'Fontes')}:{' '}
-            {sources.map((s, i) => (
-              <span key={s.url}>
-                {i > 0 && ', '}
-                <a href={s.url} target="_blank" rel="noreferrer">
-                  {s.name}
-                </a>
-              </span>
-            ))}
-            .{' '}
-            {t(
-              'Sigue siempre las instrucciones de las autoridades locales.',
-              'Always follow instructions from local authorities.',
-              'Siga sempre as instruções das autoridades locais.',
-            )}
-          </Note>
+          <div className="grid gap-4">
+            <Steps size="lg" items={first.map(step)} />
+            {/* The rest of the hazard's steps, numbered on from the first four, then the steps
+              for any emergency: one tap away, in place. The button at the end says how many
+              steps the hazard has in all, and closes the list again. */}
+            <Collapsible open={more} onOpenChange={setMore} className="grid gap-4">
+              <CollapsibleContent
+                id="fw-first-minutes-more"
+                className="grid gap-8 motion-safe:data-[state=open]:animate-in motion-safe:data-[state=open]:fade-in-0"
+              >
+                {rest.length > 0 && (
+                  <Steps size="lg" start={FIRST_STEPS + 1} items={rest.map(step)} />
+                )}
+                <section
+                  className="f-section @container grid gap-3"
+                  aria-labelledby="fw-any-emergency-title"
+                >
+                  <h2
+                    id="fw-any-emergency-title"
+                    className="f-section-title m-0 text-base leading-snug font-semibold"
+                  >
+                    {t('En cualquier emergencia', 'In any emergency', 'Em qualquer emergência')}
+                  </h2>
+                  <Steps size="lg" items={generalSteps.map(step)} />
+                  <Note>
+                    {t('Fuentes', 'Sources', 'Fontes')}:{' '}
+                    {sources.map((s, i) => (
+                      <span key={s.url}>
+                        {i > 0 && ', '}
+                        <a href={s.url} target="_blank" rel="noreferrer">
+                          {s.name}
+                        </a>
+                      </span>
+                    ))}
+                    .{' '}
+                    {t(
+                      'Sigue siempre las instrucciones de las autoridades locales.',
+                      'Always follow instructions from local authorities.',
+                      'Siga sempre as instruções das autoridades locais.',
+                    )}
+                  </Note>
+                </section>
+              </CollapsibleContent>
+              {/* Lined up with the text of the steps (the number and its gap are 2.5 rem). */}
+              <div className="ps-10">
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" aria-controls="fw-first-minutes-more">
+                    {more
+                      ? t('Ver menos', 'Show less', 'Ver menos')
+                      : t(
+                          `Ver los ${hazardSteps[kind].length} pasos`,
+                          `See all ${hazardSteps[kind].length} steps`,
+                          `Ver os ${hazardSteps[kind].length} passos`,
+                        )}
+                    <ChevronDownIcon
+                      className={cn(
+                        'transition-transform motion-reduce:transition-none',
+                        more && 'rotate-180',
+                      )}
+                      aria-hidden="true"
+                    />
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+            </Collapsible>
+          </div>
         </section>
       </div>
 
@@ -581,10 +665,10 @@ export default function EmergencyScreen(p: Props) {
           </Section>
         )}
 
+        {/* Simple rows, without icon squares: the names say what they open. */}
         <Section id="fw-emergency-next" title={t('Después', 'Next', 'Depois')}>
           <List>
             <ListRow
-              lead={<RowIcon icon={<MessageSquareTextIcon className="size-4" />} />}
               title={t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
               meta={t(
                 'Prepara un mensaje y envíalo tú',
@@ -594,7 +678,6 @@ export default function EmergencyScreen(p: Props) {
               onClick={p.onStatus}
             />
             <ListRow
-              lead={<RowIcon icon={<BriefcaseMedicalIcon className="size-4" />} />}
               title={t(
                 'Hospitales y farmacias',
                 'Hospitals and pharmacies',
@@ -604,13 +687,11 @@ export default function EmergencyScreen(p: Props) {
               onClick={p.onHelp}
             />
             <ListRow
-              lead={<RowIcon icon={<WavesIcon className="size-4" />} />}
               title={t('Boletines de tsunami', 'Tsunami bulletins', 'Boletins de tsunami')}
               meta="NOAA/PTWC"
               onClick={() => p.onActivity('tsunami')}
             />
             <ListRow
-              lead={<RowIcon icon={<BookOpenTextIcon className="size-4" />} />}
               title={t('Guía completa', 'Full guide', 'Guia completo')}
               meta={t(
                 'Sismo, tsunami, huracán y más',
