@@ -1,15 +1,17 @@
 import type { ReactNode } from 'react';
-import { PhoneIcon } from '@phosphor-icons/react';
+import { PhoneIcon } from 'lucide-react';
+import { Button as UIButton } from '@/components/ui/button';
+import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import { telHref } from '../lib/phone.ts';
-import { ListRow } from './List.tsx';
 
 /** "Emergencias" under "Call 911" adds nothing: only a note that says more is shown. */
 const generic = (note: ReactNode) =>
   typeof note === 'string' && /^(emergencias|emergencies|emergências)$/i.test(note.trim());
 
 /**
- * The call action: the large button in call red, as wide as a phone at most, the same on every
- * screen. A plain tel: link, so it works before any script and while offline.
+ * The call action: shadcn's destructive button, the only red in Faro, as wide as a phone at
+ * most (26 rem), the same on every screen. A plain tel: link, so it works before any script and
+ * while offline. `.f-call a` is the element screens focus.
  */
 export function CallButton({
   number,
@@ -23,12 +25,19 @@ export function CallButton({
   note?: ReactNode;
 }) {
   return (
-    <div className="f-call">
-      <a className="f-button f-pressable" data-variant="call" data-size="lg" href={telHref(number)}>
-        <PhoneIcon size={22} weight="fill" aria-hidden="true" />
-        {label}
-      </a>
-      {note && !generic(note) && <p className="f-call-note">{note}</p>}
+    <div className="f-call grid gap-2">
+      <UIButton
+        asChild
+        variant="destructive"
+        size="lg"
+        className="f-pressable h-auto min-h-12 w-full max-w-104 justify-self-start text-base whitespace-normal motion-reduce:transition-none"
+      >
+        <a href={telHref(number)}>
+          <PhoneIcon aria-hidden="true" />
+          {label}
+        </a>
+      </UIButton>
+      {note && !generic(note) && <p className="m-0 text-sm text-muted-foreground">{note}</p>}
     </div>
   );
 }
@@ -46,13 +55,22 @@ export function PhoneRow({
   dial?: string;
 }) {
   return (
-    <ListRow
-      href={telHref(dial ?? number)}
-      figure
-      tone="call"
-      title={number}
-      meta={name}
-      trail={<PhoneIcon size={20} weight="fill" aria-hidden="true" />}
-    />
+    <li>
+      <Item
+        asChild
+        size="sm"
+        className="f-row f-pressable w-full hover:bg-accent/50 motion-reduce:transition-none"
+      >
+        <a href={telHref(dial ?? number)}>
+          <ItemContent className="min-w-0">
+            <ItemTitle className="text-base font-semibold tabular-nums">{number}</ItemTitle>
+            <ItemDescription className="line-clamp-none">{name}</ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <PhoneIcon className="size-4 text-destructive" aria-hidden="true" />
+          </ItemActions>
+        </a>
+      </Item>
+    </li>
   );
 }

@@ -1,19 +1,49 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
+import { Button as UIButton } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 type Look = {
   /** primary: the one main action; secondary: outlined; ghost: text-like. */
   variant?: 'primary' | 'secondary' | 'ghost';
-  /** md is 44 px tall, lg 56 px. */
+  /** md is 40 px tall, lg 48 px: both keep a touch target. */
   size?: 'md' | 'lg';
   /** Full width. */
   block?: boolean;
   icon?: ReactNode;
 };
 
-const look = ({ variant = 'primary', size = 'md', block }: Look) => ({
-  'data-variant': variant,
-  'data-size': size,
+/** Faro's variants on shadcn/ui's. */
+const variants = { primary: 'default', secondary: 'outline', ghost: 'ghost' } as const;
+
+/**
+ * Unavailable stays readable: shadcn fades a disabled button to half opacity, below 4.5:1, so a
+ * disabled or aria-disabled button is drawn on the muted surface with dark grey text instead.
+ * aria-disabled keeps the button focusable and clickable (the screen says why).
+ */
+const readable = cn(
+  'disabled:border-transparent disabled:bg-muted disabled:text-neutral-600 disabled:opacity-100 disabled:shadow-none',
+  'aria-disabled:cursor-not-allowed aria-disabled:border-transparent aria-disabled:bg-muted aria-disabled:text-neutral-600 aria-disabled:shadow-none',
+  'aria-disabled:hover:bg-muted aria-disabled:hover:text-neutral-600',
+);
+
+/**
+ * The shadcn props for a Faro look. Labels wrap rather than overflow a narrow phone, so the
+ * height is a minimum. A ghost button that removes the person's data (`data-tone="error"`) takes
+ * the caution colour, never the call red.
+ */
+const look = ({ variant = 'primary', size = 'md', block }: Look, className?: string) => ({
+  variant: variants[variant],
+  size: size === 'lg' ? ('lg' as const) : ('default' as const),
   'data-block': block || undefined,
+  className: cn(
+    'f-pressable h-auto whitespace-normal',
+    size === 'lg' ? 'min-h-12 px-6 text-base' : 'min-h-10 py-2',
+    block ? 'w-full justify-self-stretch' : 'justify-self-start',
+    'data-[tone=error]:text-amber-800 data-[tone=error]:hover:text-amber-900',
+    'motion-reduce:transition-none',
+    readable,
+    className,
+  ),
 });
 
 export function Button({
@@ -27,15 +57,10 @@ export function Button({
   ...rest
 }: Look & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
-      type={type}
-      className={`f-button f-pressable ${className ?? ''}`}
-      {...look({ variant, size, block })}
-      {...rest}
-    >
+    <UIButton type={type} {...look({ variant, size, block }, className)} {...rest}>
       {icon}
       {children}
-    </button>
+    </UIButton>
   );
 }
 
@@ -51,15 +76,12 @@ export function LinkButton({
   ...rest
 }: Look & AnchorHTMLAttributes<HTMLAnchorElement> & { external?: boolean }) {
   return (
-    <a
-      className={`f-button f-pressable ${className ?? ''}`}
-      {...look({ variant, size, block })}
-      {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
-      {...rest}
-    >
-      {icon}
-      {children}
-    </a>
+    <UIButton asChild {...look({ variant, size, block }, className)}>
+      <a {...(external ? { target: '_blank', rel: 'noreferrer' } : {})} {...rest}>
+        {icon}
+        {children}
+      </a>
+    </UIButton>
   );
 }
 
@@ -72,13 +94,20 @@ export function IconButton({
   ...rest
 }: { label: string } & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
+    <UIButton
       type={type}
-      className={`f-icon-button f-pressable ${className ?? ''}`}
+      variant="ghost"
+      size="icon-lg"
+      className={cn(
+        'f-pressable motion-reduce:transition-none',
+        // Unavailable (e.g. while checking): grey, still readable, no fading.
+        'disabled:text-muted-foreground disabled:opacity-100',
+        className,
+      )}
       aria-label={label}
       {...rest}
     >
       {children}
-    </button>
+    </UIButton>
   );
 }

@@ -8,7 +8,7 @@ the same everywhere. Screens compose these pieces; they do not restyle them.
 | Part                                                                      | File                                                                                        |
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | Tokens: colour roles, type scale, spacing, radii, shadows, layers, motion | `src/styles/ds/tokens.css`                                                                  |
-| Component styles                                                          | `src/styles/ds/components.css` and one file per larger part (`sheet.css`, `compose.css`, …) |
+| Component styles                                                          | `src/styles/ds/components.css` and one file per larger part (`sheet.css`, `message.css`, …) |
 | App frame: header, tabs, sidebar, top bar, layout helpers                 | `src/styles/ds/shell.css`                                                                   |
 | React components                                                          | `src/ui/` (exported from `src/ui/index.ts`)                                                 |
 | Cascade order                                                             | `src/styles/index.css`                                                                      |

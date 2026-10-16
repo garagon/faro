@@ -308,7 +308,7 @@ export default function TravelContacts({ country, lang }: { country: string; lan
                 value={draft.note}
                 onChange={(e) => setDraft({ ...draft, note: e.target.value })}
               />
-              <div className="f-chips">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="secondary" type="submit">
                   {t('Guardar contacto', 'Save contact', 'Salvar contato')}
                 </Button>
@@ -388,7 +388,7 @@ function ContactRow({
       <div className="f-expand-body f-prose">
         {r.note && <p className="f-caption">{r.note}</p>}
         {/* Actions on this contact: buttons, not links. */}
-        <div className="f-chips">
+        <div className="flex flex-wrap gap-2">
           <Button variant="ghost" onClick={onEdit}>
             {t('Editar', 'Edit', 'Editar')}
           </Button>

@@ -1256,7 +1256,7 @@ export default function SafetyGuide({
               trail={false}
             />
           </List>
-          <span className="f-field-hint" role="status">
+          <span className="text-sm text-muted-foreground" role="status">
             {downloaded ? t('Archivo generado.', 'File generated.', 'Arquivo gerado.') : ''}
           </span>
         </div>

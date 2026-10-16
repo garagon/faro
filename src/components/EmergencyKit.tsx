@@ -177,8 +177,8 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
               </option>
             ))}
           </SelectField>
-          <div className="f-field">
-            <span className="f-field-label" aria-hidden="true">
+          <div className="grid gap-3">
+            <span className="text-sm leading-snug font-medium" aria-hidden="true">
               {t('Días', 'Days', 'Dias')}
             </span>
             <Segmented
@@ -189,8 +189,8 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
               options={kitDays.map((d) => ({ value: String(d), label: days(d) }))}
             />
           </div>
-          <div className="f-field">
-            <span className="f-field-label" aria-hidden="true">
+          <div className="grid gap-3">
+            <span className="text-sm leading-snug font-medium" aria-hidden="true">
               {t('Te preparas para', 'Preparing for', 'Você se prepara para')}
             </span>
             <Chips label={t('Te preparas para', 'Preparing for', 'Você se prepara para')}>
