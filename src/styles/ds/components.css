@@ -696,6 +696,118 @@ a.f-row:active {
   font-size: max(16px, var(--f-text-md));
 }
 
+/* Select: the device picker with Faro's caret. */
+.f-select {
+  position: relative;
+  display: block;
+}
+.f-select > .f-input {
+  padding-inline-end: var(--f-space-10);
+  appearance: none;
+  cursor: pointer;
+}
+.f-select > svg {
+  position: absolute;
+  top: 50%;
+  right: var(--f-space-3);
+  color: var(--f-color-text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.f-textarea {
+  min-height: 7.5rem;
+  padding: var(--f-space-3);
+  line-height: var(--f-leading-body);
+  resize: vertical;
+}
+.f-input::placeholder {
+  color: var(--f-color-text-muted);
+}
+.f-input:disabled {
+  background: var(--f-color-surface-muted);
+  color: var(--f-color-text-muted);
+}
+
+/* Checklist row: the whole row toggles; checked items keep their text, never struck through. */
+.f-check {
+  cursor: pointer;
+}
+.f-checkbox {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--f-color-action);
+  cursor: pointer;
+}
+.f-check:has(.f-checkbox:checked) .f-row-title {
+  color: var(--f-color-text-muted);
+}
+.f-check:has(.f-checkbox:focus-visible) {
+  outline: 3px solid var(--f-color-focus);
+  outline-offset: -3px;
+}
+
+/* Tabs: text with an underline on the selected one; scrolls sideways when it does not fit. */
+.f-tabs {
+  display: flex;
+  gap: var(--f-space-1);
+  overflow-x: auto;
+  border-bottom: var(--f-hairline);
+  scrollbar-width: none;
+}
+.f-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--f-space-2);
+  min-height: var(--f-touch);
+  margin: 0 0 -1px;
+  padding: 0 var(--f-space-3);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.f-tabs button[aria-selected='true'] {
+  border-bottom-color: var(--f-color-action);
+  color: var(--f-color-text);
+}
+.f-tabs-count {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  font-weight: var(--f-weight-regular);
+}
+
+/* Disclosure: a whole section that opens in place, drawn as one list row. */
+.f-disclosure {
+  border: var(--f-hairline);
+  border-radius: var(--f-radius-md);
+  background: var(--f-color-surface);
+}
+.f-disclosure > summary {
+  border-radius: var(--f-radius-md);
+  cursor: pointer;
+  list-style: none;
+}
+.f-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.f-disclosure[open] > summary {
+  border-bottom: var(--f-hairline);
+  border-radius: var(--f-radius-md) var(--f-radius-md) 0 0;
+}
+.f-disclosure[open] .f-expand-caret {
+  transform: rotate(180deg);
+}
+.f-disclosure-body {
+  display: grid;
+  gap: var(--f-space-4);
+  padding: var(--f-space-4);
+}
+
 /* Magnitude: a figure; colour only darkens with size. */
 .f-mag {
   display: inline-grid;
