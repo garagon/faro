@@ -4,6 +4,7 @@
  */
 export { Button, IconButton, LinkButton } from './Button.tsx';
 export { CallButton, PhoneRow } from './Call.tsx';
+export { ActionBar, ActionRow, MessageText, RadioList } from './Compose.tsx';
 export { ChoiceChip, Chips, Field, Segmented } from './Choice.tsx';
 export { Actions, Magnitude, OutLink, Skeleton, SourceStamp } from './Data.tsx';
 export {

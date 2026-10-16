@@ -9,6 +9,7 @@ import {
 } from '@phosphor-icons/react';
 import { shareLink, type ShareChannel } from '../lib/share.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
+import { ActionRow, List, Note } from '../ui/index.ts';
 
 type Props = {
   lang: Lang;
@@ -22,7 +23,7 @@ type Props = {
   allow?: () => boolean;
 };
 
-/** One row of channels used worldwide; the person chooses the recipient in each app. */
+/** One list of channels used worldwide; the person chooses the recipient in each app. */
 export default function ShareButtons({
   lang,
   text,
@@ -46,11 +47,52 @@ export default function ShareButtons({
     };
   }, []);
   const ok = () => enabled && (!allow || allow());
-  const all: { id: ShareChannel; name: string; Icon: typeof WhatsappLogoIcon }[] = [
-    { id: 'whatsapp', name: 'WhatsApp', Icon: WhatsappLogoIcon },
-    { id: 'telegram', name: 'Telegram', Icon: TelegramLogoIcon },
-    { id: 'sms', name: 'SMS', Icon: ChatCircleDotsIcon },
-    { id: 'email', name: t('Correo', 'Email', 'E-mail'), Icon: EnvelopeSimpleIcon },
+  const all: {
+    id: ShareChannel;
+    name: string;
+    meta: string;
+    Icon: typeof WhatsappLogoIcon;
+  }[] = [
+    {
+      id: 'whatsapp',
+      name: 'WhatsApp',
+      meta: t(
+        'Eliges el chat en WhatsApp',
+        'You pick the chat in WhatsApp',
+        'Escolha a conversa no WhatsApp',
+      ),
+      Icon: WhatsappLogoIcon,
+    },
+    {
+      id: 'telegram',
+      name: 'Telegram',
+      meta: t(
+        'Eliges el chat en Telegram',
+        'You pick the chat in Telegram',
+        'Escolha a conversa no Telegram',
+      ),
+      Icon: TelegramLogoIcon,
+    },
+    {
+      id: 'sms',
+      name: 'SMS',
+      meta: t(
+        'Sale con señal de llamadas',
+        'Goes out with a call signal',
+        'Sai com sinal de chamadas',
+      ),
+      Icon: ChatCircleDotsIcon,
+    },
+    {
+      id: 'email',
+      name: t('Correo', 'Email', 'E-mail'),
+      meta: t(
+        'Eliges a quién en tu correo',
+        'You pick who in your email app',
+        'Escolha para quem no e-mail',
+      ),
+      Icon: EnvelopeSimpleIcon,
+    },
   ];
   const channels = online ? all : [all[2], ...all.filter((c) => c.id !== 'sms')];
   const offlineHint = online
@@ -89,49 +131,57 @@ export default function ShareButtons({
       // Closing the share sheet is not an error worth reporting.
     }
   };
+  const status = [feedback || hint, offlineHint].filter(Boolean).join(' ');
   return (
-    <div className="fw-share">
-      <div className="fw-share-channels" role="group" aria-label={label}>
-        {channels.map(({ id, name, Icon }) =>
-          enabled ? (
-            <a
-              key={id}
-              className="fw-share-channel"
-              data-channel={id}
-              href={shareLink(id, text, subject)}
-              target={id === 'whatsapp' || id === 'telegram' ? '_blank' : undefined}
-              rel="noreferrer"
-              onClick={(e) => {
-                if (!ok()) e.preventDefault();
-              }}
-            >
-              <Icon size={20} weight={id === 'sms' || id === 'email' ? 'regular' : 'fill'} />
-              {name}
-            </a>
-          ) : (
-            <span key={id} className="fw-share-channel" data-channel={id} aria-disabled="true">
-              <Icon size={20} weight={id === 'sms' || id === 'email' ? 'regular' : 'fill'} />
-              {name}
-            </span>
-          ),
-        )}
-      </div>
-      <div className="fw-share-more">
+    <div className="f-stack" data-gap="sm">
+      <List label={label}>
+        {channels.map(({ id, name, meta, Icon }) => (
+          <ActionRow
+            key={id}
+            icon={
+              <Icon
+                size={20}
+                weight={id === 'sms' || id === 'email' ? 'regular' : 'fill'}
+                aria-hidden="true"
+              />
+            }
+            title={name}
+            meta={meta}
+            href={shareLink(id, text, subject)}
+            external={id === 'whatsapp' || id === 'telegram'}
+            disabled={!enabled}
+            onClick={(e) => {
+              if (!ok()) e.preventDefault();
+            }}
+          />
+        ))}
         {typeof navigator.share === 'function' && (
-          <button className="fw-secondary" disabled={!enabled} onClick={() => void share()}>
-            <ShareNetworkIcon size={17} aria-hidden="true" />
-            {t('Otras apps', 'Other apps', 'Outros apps')}
-          </button>
+          <ActionRow
+            icon={<ShareNetworkIcon size={20} aria-hidden="true" />}
+            title={t('Otras apps', 'Other apps', 'Outros apps')}
+            meta={t(
+              'El menú para compartir del teléfono',
+              "Your phone's share menu",
+              'O menu de compartilhar do celular',
+            )}
+            disabled={!enabled}
+            onClick={() => void share()}
+          />
         )}
-        <button className="fw-secondary" disabled={!enabled} onClick={() => void copy()}>
-          <CopyIcon size={17} aria-hidden="true" />
-          {t('Copiar texto', 'Copy text', 'Copiar texto')}
-        </button>
-      </div>
+        <ActionRow
+          icon={<CopyIcon size={20} aria-hidden="true" />}
+          title={t('Copiar texto', 'Copy text', 'Copiar texto')}
+          meta={t(
+            'Para pegarlo en cualquier chat',
+            'To paste into any chat',
+            'Para colar em qualquer conversa',
+          )}
+          disabled={!enabled}
+          onClick={() => void copy()}
+        />
+      </List>
       {/* Always present, so a screen reader announces the feedback when it appears. */}
-      <p className="fw-share-note" role="status">
-        {[feedback || hint, offlineHint].filter(Boolean).join(' ')}
-      </p>
+      <div role="status">{status && <Note>{status}</Note>}</div>
     </div>
   );
 }
