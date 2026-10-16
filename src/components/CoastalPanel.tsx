@@ -7,6 +7,7 @@ import { classifyBulletins, type TsunamiData, type BulletinState } from '../lib/
 import { nwsEventLabels, type NwsAlert } from '../lib/nws.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import { checkedLabel } from '../lib/time.ts';
+import { failingLabel, sourceTime } from '../lib/sourceStatus.ts';
 import { langIndex, pick, type Lang } from '../lib/i18n.ts';
 import { distance as formatDistance } from '../lib/units.ts';
 import {
@@ -44,6 +45,7 @@ export default function CoastalPanel({
   country,
   data,
   failed: error,
+  failedAt,
   busy,
   now,
   onRefresh,
@@ -57,6 +59,8 @@ export default function CoastalPanel({
   country: string;
   data: TsunamiData | null;
   failed: boolean;
+  /** When the last failed request was made, while NOAA is failing. */
+  failedAt?: number | null;
   busy: boolean;
   now: number;
   onRefresh: () => void;
@@ -64,7 +68,13 @@ export default function CoastalPanel({
   onLocate: () => void;
   locating: boolean;
   /** NWS alerts for a U.S. state or territory; null elsewhere. */
-  nws: { data: NwsAlert[] | null; failed: boolean } | null;
+  nws: {
+    data: NwsAlert[] | null;
+    failed: boolean;
+    /** When this device last received an answer, and when the last failed request was made. */
+    checked?: number | null;
+    failedAt?: number | null;
+  } | null;
   /** Offline, the last answer can no longer confirm "no messages". */
   online: boolean;
 }) {
@@ -326,12 +336,10 @@ export default function CoastalPanel({
         : statusState === 'checking' && busy
           ? 'pending'
           : 'unknown';
+  // Failing, offline or out of date, the data is "the last data", marked as on every tab.
+  const old = error || !online || statusState === 'old';
   const stampState =
-    statusState === 'failed'
-      ? 'error'
-      : statusState === 'old' || statusState === 'partial'
-        ? 'stale'
-        : undefined;
+    statusState === 'failed' ? 'error' : old || statusState === 'partial' ? 'stale' : undefined;
   return (
     <div className="f-stack" data-gap="lg">
       {/* The answer first: what NOAA's products say now, when they were checked, and the limits. */}
@@ -353,10 +361,12 @@ export default function CoastalPanel({
                 <SourceStamp issuer="NOAA/PTWC" state={stampState}>
                   <span>
                     {data
-                      ? `${t('consultado', 'checked', 'consultado')} ${at(data.fetched)}`
+                      ? sourceTime({ checked: data.fetched, old, now, lang })
                       : busy
                         ? t('Conectando con NOAA…', 'Connecting to NOAA…', 'Conectando com a NOAA…')
-                        : t('Sin datos recibidos', 'No data received', 'Nenhum dado recebido')}
+                        : failedAt
+                          ? sourceTime({ checked: null, old: true, failedAt, now, lang })
+                          : t('Sin datos recibidos', 'No data received', 'Nenhum dado recebido')}
                   </span>
                 </SourceStamp>
               }
@@ -506,10 +516,17 @@ export default function CoastalPanel({
             <div role="status">
               <SourceStamp issuer="NWS" state="error">
                 <span>
+                  {failingLabel({
+                    checked: nws.data ? (nws.checked ?? null) : null,
+                    failedAt: nws.failedAt,
+                    now,
+                    lang,
+                  })}
+                  .{' '}
                   {t(
-                    'No se pudo consultar el NWS. No podemos confirmar si hay avisos.',
-                    'The NWS could not be reached. We cannot confirm whether alerts exist.',
-                    'Não foi possível consultar o NWS. Não podemos confirmar se há avisos.',
+                    'No podemos confirmar si hay avisos.',
+                    'We cannot confirm whether alerts exist.',
+                    'Não podemos confirmar se há avisos.',
                   )}
                 </span>
               </SourceStamp>

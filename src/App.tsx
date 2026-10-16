@@ -79,7 +79,7 @@ import {
   alertTypeLabels,
   parseAlerts,
 } from './lib/alerts.ts';
-import { atLabel } from './lib/time.ts';
+import { atLabel, checkedLabel } from './lib/time.ts';
 import { ageLabel } from './lib/feedUpdates.ts';
 import { confirmFresh, earthquakeSummary, gdacsStatus, tsunamiStatus } from './lib/hazards.ts';
 import SituationBriefing from './components/SituationBriefing.tsx';
@@ -724,16 +724,20 @@ export default function App() {
     tsunami.data && (!live.online || tsunami.failed || live.now - tsunami.data.fetched > 3 * 60000)
       ? tsunami.data.fetched
       : undefined;
+  // A failing source keeps the time of its last attempt, for the rows to say when it failed.
   const hazardStates = [
-    confirmFresh(
-      tsunamiStatus(tsunami.data, tsunami.failed, live.now),
-      tsunami.data?.fetched,
-      live.now,
-      live.online,
-      3 * 60000,
-    ),
-    ...(['cyclone', 'flood', 'volcano'] as const).map((key) =>
-      confirmFresh(
+    {
+      ...confirmFresh(
+        tsunamiStatus(tsunami.data, tsunami.failed, live.now),
+        tsunami.data?.fetched,
+        live.now,
+        live.online,
+        3 * 60000,
+      ),
+      failedAt: tsunami.failedAt ?? undefined,
+    },
+    ...(['cyclone', 'flood', 'volcano'] as const).map((key) => ({
+      ...confirmFresh(
         // A partial GDACS answer cannot confirm "no alerts".
         gdacsStatus(key, countryAlerts, alerts.failed || !!alerts.data?.partial, live.now),
         alerts.data?.fetched,
@@ -741,7 +745,8 @@ export default function App() {
         live.online,
         20 * 60000,
       ),
-    ),
+      failedAt: alerts.failedAt ?? undefined,
+    })),
   ];
   // Active GDACS points (updated in 72 h) for cyclones, floods and volcanoes in the place.
   const kinds = { TC: 'cyclone', FL: 'flood', VO: 'volcano' } as const;
@@ -908,6 +913,19 @@ export default function App() {
       (live.generated > 0 && live.now - live.generated > 600000),
     dirty =
       Math.abs(bounds.west - pending.west) > 0.5 || Math.abs(bounds.north - pending.north) > 0.5;
+  // An empty earthquake list says one thing: offline, waiting for a first answer, the source
+  // failing with nothing received, or no records in an answer.
+  const emptyList = !live.online
+    ? 'offline'
+    : !live.fetched
+      ? live.failed
+        ? 'failed'
+        : 'checking'
+      : 'none';
+  // Other catalogues are already offered above the list for old or quiet records.
+  const alternativesAbove = live.online && (stale || !!quietSince);
+  // Filters narrower than the defaults: only then does "Reset filters" change anything.
+  const narrowed = hours < 24 || minMag > 0 || maxDepth < 800 || scope !== 'country';
   const saveCountry = () => {
     const list = savedCountries.includes(country)
       ? savedCountries.filter((x) => x !== country)
@@ -953,6 +971,7 @@ export default function App() {
                   ),
             url: sourceSites[c],
             checked: feed.fetched || null,
+            failedAt: c === catalog ? feed.failedAt : null,
             every: c === catalog ? t('cada 60 s', 'every 60 s', 'a cada 60 s') : '',
           },
           { failed: c === catalog && feed.failed, maxAge: 3 * 60000, idle: c !== catalog },
@@ -971,6 +990,7 @@ export default function App() {
               ),
               url: destinationFor(country)?.weatherAgency?.url ?? '',
               checked: nationalHere?.fetched ?? null,
+              failedAt: national.failedAt,
               every: t('cada 10 min', 'every 10 min', 'a cada 10 min'),
             },
             {
@@ -995,6 +1015,7 @@ export default function App() {
               ),
               url: SINAPROC_HOME,
               checked: civil.data?.fetched ?? null,
+              failedAt: civil.failedAt,
               every: t('cada 10 min', 'every 10 min', 'a cada 10 min'),
             },
             { failed: civil.failed, stale: civil.data?.stale, maxAge: OFFICIAL_MAX_AGE },
@@ -1014,6 +1035,7 @@ export default function App() {
               ),
               url: sourceSites.nws,
               checked: nws.at,
+              failedAt: nws.failedAt,
               every: t('cada 60 s', 'every 60 s', 'a cada 60 s'),
             },
             { failed: nws.failed, maxAge: 3 * 60000 },
@@ -1031,6 +1053,7 @@ export default function App() {
         ),
         url: sourceSites.tsunami,
         checked: tsunami.data?.fetched ?? null,
+        failedAt: tsunami.failedAt,
         every: t('cada 60 s', 'every 60 s', 'a cada 60 s'),
       },
       { failed: tsunami.failed, partial: tsunami.data?.partial, maxAge: 3 * 60000 },
@@ -1050,6 +1073,7 @@ export default function App() {
         ),
         url: sourceSites.nhc,
         checked: storms.data?.fetched ?? null,
+        failedAt: storms.failedAt,
         every: t('cada 5 min', 'every 5 min', 'a cada 5 min'),
       },
       { failed: storms.failed, maxAge: 20 * 60000 },
@@ -1065,6 +1089,7 @@ export default function App() {
         ),
         url: sourceSites.gdacs,
         checked: alerts.data?.fetched ?? null,
+        failedAt: alerts.failedAt,
         every: t('cada 5 min', 'every 5 min', 'a cada 5 min'),
       },
       { failed: alerts.failed, partial: alerts.data?.partial, maxAge: 20 * 60000 },
@@ -1436,6 +1461,7 @@ export default function App() {
                   loading: !live.fetched,
                   offline: !live.fetched && !live.online,
                   failed: live.failed,
+                  failedAt: live.failedAt,
                   staleSince: live.fetched && stale ? live.fetched : undefined,
                   quietSince,
                 }}
@@ -1451,6 +1477,7 @@ export default function App() {
                         : 'live',
                   // The time of the data itself: an old copy served during an outage keeps its age.
                   checked: live.fetched || live.checked || null,
+                  failedAt: live.failedAt,
                 }}
                 alert={
                   tsunamiAlert && (
@@ -1499,6 +1526,7 @@ export default function App() {
                             ? activeWarnings(national.data.warnings, live.now)
                             : null,
                         failed: national.failed,
+                        failedAt: national.failedAt,
                         partial: national.data?.country === country && national.data.partial,
                         checked: national.data?.country === country ? national.data.fetched : null,
                         // The adapter's previous copy during an outage never reads as "no warnings".
@@ -1511,6 +1539,7 @@ export default function App() {
                     : undefined
                 }
                 stormsInBasin={inNhcRegion && storms.data ? activeStorms.length : undefined}
+                nhcArea={inNhcRegion}
                 floodAdvice={floodAdvice}
                 floodNotice={floodNotice}
                 civil={
@@ -1519,6 +1548,7 @@ export default function App() {
                         agency: 'SINAPROC',
                         posts: civil.data?.posts ?? null,
                         failed: civil.failed,
+                        failedAt: civil.failedAt,
                         stale:
                           !live.online ||
                           !!civil.data?.stale ||
@@ -1741,10 +1771,13 @@ export default function App() {
                           catalog={catalog}
                           lang={lang}
                           now={live.now}
-                          checked={live.checked}
+                          // A copy kept from an earlier visit is the last data until a new answer.
+                          checked={live.checked || live.fetched}
                           busy={live.busy}
                           online={live.online}
                           stale={stale}
+                          failed={live.failed}
+                          failedAt={live.failedAt}
                           onRefresh={() => void live.refresh()}
                           onDetails={(q) => setDetail(q.id)}
                           onMap={showEpicentre}
@@ -1927,9 +1960,9 @@ export default function App() {
                               </Actions>
                             </div>
                           )}
-                          {/* Offline is already said by the bar above; this is for a failing
-                            source. */}
-                          {stale && live.online && (
+                          {/* Offline is already said by the bar above; this is for records from a
+                            failing or late source. Without any record, the list says it once. */}
+                          {stale && live.online && live.fetched > 0 && (
                             <div className="f-stack" data-gap="sm" role="status">
                               <SourceStamp state="stale">
                                 {t(
@@ -1937,13 +1970,10 @@ export default function App() {
                                   'No recent update. These records may be out of date.',
                                   'Não há uma atualização recente. Estes registros podem estar desatualizados.',
                                 )}{' '}
-                                {live.fetched
-                                  ? `${t('Última consulta correcta', 'Last successful check', 'Última consulta bem-sucedida')}: ${stamp(live.fetched)}.`
-                                  : t(
-                                      'Todavía no se recibieron datos.',
-                                      'No data received yet.',
-                                      'Ainda não foram recebidos dados.',
-                                    )}{' '}
+                                {`${t('Última consulta correcta', 'Last successful check', 'Última consulta bem-sucedida')}: ${stamp(live.fetched)}.`}{' '}
+                                {live.failed &&
+                                  live.failedAt &&
+                                  `${t('Último intento, sin respuesta', 'Last attempt, no answer', 'Última tentativa, sem resposta')}: ${stamp(live.failedAt)}.`}{' '}
                                 {t(
                                   'Mientras tanto, consulta otra fuente:',
                                   'Meanwhile, check another source:',
@@ -1989,38 +2019,52 @@ export default function App() {
                               </span>
                             )}
                           </div>
-                          <Segmented
-                            block
-                            label={t('Ordenar eventos', 'Sort events', 'Ordenar eventos')}
-                            value={order}
-                            onChange={setOrder}
-                            options={[
-                              {
-                                value: 'time',
-                                label: t('Más recientes', 'Most recent', 'Mais recentes'),
-                              },
-                              {
-                                value: 'magnitude',
-                                label: t('Mayor magnitud', 'Largest magnitude', 'Maior magnitude'),
-                              },
-                              ...(geo
-                                ? [
-                                    {
-                                      value: 'distance',
-                                      label: t('Más cercanos', 'Nearest', 'Mais próximos'),
-                                    },
-                                  ]
-                                : []),
-                            ]}
-                          />
+                          {/* Sorting is offered only over a list. */}
+                          {results.length > 0 && (
+                            <Segmented
+                              block
+                              label={t('Ordenar eventos', 'Sort events', 'Ordenar eventos')}
+                              value={order}
+                              onChange={setOrder}
+                              options={[
+                                {
+                                  value: 'time',
+                                  label: t('Más recientes', 'Most recent', 'Mais recentes'),
+                                },
+                                {
+                                  value: 'magnitude',
+                                  label: t(
+                                    'Mayor magnitud',
+                                    'Largest magnitude',
+                                    'Maior magnitude',
+                                  ),
+                                },
+                                ...(geo
+                                  ? [
+                                      {
+                                        value: 'distance',
+                                        label: t('Más cercanos', 'Nearest', 'Mais próximos'),
+                                      },
+                                    ]
+                                  : []),
+                              ]}
+                            />
+                          )}
                           <div role="status">
                             <Note>
+                              {/* The 100 km buffer only adds sea where the country has a coast. */}
                               {scope === 'country' && hasBorders(country)
-                                ? t(
-                                    `${countryName} y hasta 100 km mar adentro. Límites aproximados.`,
-                                    `${countryName} and up to ${distance(100, lang)} offshore. Approximate boundaries.`,
-                                    `${countryName} e até 100 km mar adentro. Limites aproximados.`,
-                                  )
+                                ? borders?.reachesSea(country)
+                                  ? t(
+                                      `${countryName} y hasta 100 km mar adentro. Límites aproximados.`,
+                                      `${countryName} and up to ${distance(100, lang)} offshore. Approximate boundaries.`,
+                                      `${countryName} e até 100 km mar adentro. Limites aproximados.`,
+                                    )
+                                  : t(
+                                      `${countryName}. Límites aproximados.`,
+                                      `${countryName}. Approximate boundaries.`,
+                                      `${countryName}. Limites aproximados.`,
+                                    )
                                 : scope === 'nearby'
                                   ? t(
                                       `Sismos a menos de ${radius} km de tu ubicación.`,
@@ -2093,15 +2137,15 @@ export default function App() {
                           ) : (
                             <div className="f-stack" data-gap="sm">
                               <h3 className="f-subhead">
-                                {!live.online
+                                {emptyList === 'offline'
                                   ? t('Sin conexión', 'Offline', 'Sem conexão')
-                                  : live.busy
+                                  : emptyList === 'checking'
                                     ? `${t('Consultando', 'Checking', 'Consultando')} ${provider}…`
-                                    : live.failed
+                                    : emptyList === 'failed'
                                       ? t(
-                                          'No pudimos consultar la fuente',
-                                          'Could not reach the source',
-                                          'Não conseguimos consultar a fonte',
+                                          `${provider} no responde`,
+                                          `${provider} is not responding`,
+                                          `${provider} não responde`,
                                         )
                                       : t(
                                           'Sin registros en esta consulta',
@@ -2111,24 +2155,35 @@ export default function App() {
                               </h3>
                               <div className="f-prose">
                                 <p>
-                                  {!live.online
+                                  {emptyList === 'offline'
                                     ? t(
                                         'Cuando vuelva la conexión, intentaremos actualizar los datos. La ayuda y tus datos guardados siguen disponibles en esta página.',
                                         'When the connection returns, we will try to update. Help and your saved data remain available on this page.',
                                         'Quando a conexão voltar, vamos tentar atualizar os dados. A ajuda e seus dados salvos continuam disponíveis nesta página.',
                                       )
-                                    : live.busy && !live.fetched
+                                    : emptyList === 'checking'
                                       ? t(
                                           'Esperando la respuesta de la fuente. Tras un sismo, los sitios oficiales pueden tardar más.',
                                           'Waiting for the source to respond. After an earthquake, official sites can be slower.',
                                           'Aguardando a resposta da fonte. Depois de um terremoto, os sites oficiais podem demorar mais.',
                                         )
-                                      : live.failed
-                                        ? t(
-                                            'La consulta falló; esto no significa que no haya sismos. Puedes reintentar o elegir otra fuente.',
-                                            'The request failed; this does not mean there are no earthquakes. Retry or choose another source.',
-                                            'A consulta falhou; isso não significa que não haja terremotos. Você pode tentar de novo ou escolher outra fonte.',
-                                          )
+                                      : emptyList === 'failed'
+                                        ? [
+                                            live.failedAt
+                                              ? t(
+                                                  `Último intento: ${checkedLabel(live.failedAt, live.now, lang)}.`,
+                                                  `Last attempt: ${checkedLabel(live.failedAt, live.now, lang)}.`,
+                                                  `Última tentativa: ${checkedLabel(live.failedAt, live.now, lang)}.`,
+                                                )
+                                              : '',
+                                            t(
+                                              'Esto no significa que no haya sismos. Reintenta o consulta otra fuente.',
+                                              'This does not mean there are no earthquakes. Retry or check another source.',
+                                              'Isso não significa que não haja terremotos. Tente de novo ou consulte outra fonte.',
+                                            ),
+                                          ]
+                                            .filter(Boolean)
+                                            .join(' ')
                                         : t(
                                             'Amplía el período o el área. La ausencia de registros no significa ausencia de peligro.',
                                             'Widen the period or area. No records does not mean no danger.',
@@ -2136,28 +2191,63 @@ export default function App() {
                                           )}
                                 </p>
                               </div>
-                              <Actions>
-                                {(live.failed || stale || quietSince) &&
-                                  live.online &&
-                                  alternatives.map((c) => (
-                                    <button key={c} type="button" onClick={() => switchCatalog(c)}>
-                                      {t('Ver', 'Use', 'Usar')} {providerNames[c]}
+                              {/* Only actions that change the answer: retry, a longer period,
+                                another catalogue, or filters back to the defaults. */}
+                              {(emptyList === 'failed' || emptyList === 'none') && (
+                                <Actions>
+                                  {emptyList === 'failed' && (
+                                    <button
+                                      type="button"
+                                      disabled={live.busy}
+                                      onClick={() => void live.refresh()}
+                                    >
+                                      {live.busy
+                                        ? t('Consultando…', 'Checking…', 'Consultando…')
+                                        : t('Reintentar', 'Retry', 'Tentar de novo')}
                                     </button>
-                                  ))}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setHours(24);
-                                    setMinMag(0);
-                                    setMaxDepth(800);
-                                    setScope('country');
-                                    setBounds(regionFor(country).bounds);
-                                    setPage(1);
-                                  }}
-                                >
-                                  {t('Restablecer filtros', 'Reset filters', 'Redefinir filtros')}
-                                </button>
-                              </Actions>
+                                  )}
+                                  {emptyList === 'none' && hours < 168 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setHours(168);
+                                        setPage(1);
+                                      }}
+                                    >
+                                      {t('Ver 7 días', 'Show 7 days', 'Ver 7 dias')}
+                                    </button>
+                                  )}
+                                  {(emptyList === 'failed' || !alternativesAbove) &&
+                                    alternatives.map((c) => (
+                                      <button
+                                        key={c}
+                                        type="button"
+                                        onClick={() => switchCatalog(c)}
+                                      >
+                                        {t('Ver', 'Use', 'Usar')} {providerNames[c]}
+                                      </button>
+                                    ))}
+                                  {emptyList === 'none' && narrowed && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setHours(24);
+                                        setMinMag(0);
+                                        setMaxDepth(800);
+                                        setScope('country');
+                                        setBounds(regionFor(country).bounds);
+                                        setPage(1);
+                                      }}
+                                    >
+                                      {t(
+                                        'Restablecer filtros',
+                                        'Reset filters',
+                                        'Redefinir filtros',
+                                      )}
+                                    </button>
+                                  )}
+                                </Actions>
+                              )}
                             </div>
                           )}
                           <Pagination
@@ -2212,13 +2302,23 @@ export default function App() {
                         country={country}
                         data={tsunami.data}
                         failed={tsunami.failed}
+                        failedAt={tsunami.failedAt}
                         busy={tsunami.busy}
                         online={live.online}
                         now={live.now}
                         onRefresh={() => void tsunami.refresh()}
                         onLocate={locate}
                         locating={geoState === 'pending'}
-                        nws={inNws ? { data: nws.data, failed: nws.failed } : null}
+                        nws={
+                          inNws
+                            ? {
+                                data: nws.data,
+                                failed: nws.failed,
+                                checked: nws.at,
+                                failedAt: nws.failedAt,
+                              }
+                            : null
+                        }
                       />
                     ),
                   },
@@ -2235,6 +2335,7 @@ export default function App() {
                               lang={lang}
                               data={storms.data}
                               failed={storms.failed}
+                              failedAt={storms.failedAt}
                               online={live.online}
                               now={live.now}
                               weather={destinationFor(country)?.weatherAgency}
@@ -2254,6 +2355,9 @@ export default function App() {
                               country={country}
                               data={nws.data}
                               failed={nws.failed}
+                              checked={nws.at}
+                              failedAt={nws.failedAt}
+                              online={live.online}
                               now={live.now}
                             />
                           ),
@@ -2272,6 +2376,7 @@ export default function App() {
                         bounds={regionFor(country).bounds}
                         data={alerts.data}
                         failed={alerts.failed}
+                        failedAt={alerts.failedAt}
                         online={live.online}
                         now={live.now}
                       />

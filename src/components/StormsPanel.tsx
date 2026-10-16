@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { HurricaneIcon } from '@phosphor-icons/react';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import { checkedLabel } from '../lib/time.ts';
+import { failingLabel, sourceTime } from '../lib/sourceStatus.ts';
 import {
   ADVISORY_STALE,
   advisoryUrl,
@@ -32,6 +33,8 @@ type Props = {
   lang: Lang;
   data: StormsSnapshot | null;
   failed: boolean;
+  /** When the last failed request was made, while the NHC is failing. */
+  failedAt?: number | null;
   online: boolean;
   now: number;
   weather?: { name: string; url: string };
@@ -52,6 +55,9 @@ export default function StormsPanel(p: Props) {
     });
   const at = (n: number) => checkedLabel(n, p.now, p.lang);
   const storms = p.data?.storms ?? [];
+  // Offline or older than a few polls (every 5 min), the list is the last data, said as on every
+  // tab; a failing source says so with its time instead.
+  const old = !!p.data && !p.failed && (!p.online || p.now - p.data.fetched > 20 * 60000);
   return (
     <div className="f-stack" data-gap="lg">
       <div className="f-stack" data-gap="sm">
@@ -59,17 +65,40 @@ export default function StormsPanel(p: Props) {
           <div role="status">
             <SourceStamp issuer="NHC" state="error">
               <span>
+                {failingLabel({
+                  checked: p.data?.fetched ?? null,
+                  failedAt: p.failedAt,
+                  now: p.now,
+                  lang: p.lang,
+                })}
+                .{' '}
                 {p.data
                   ? t(
-                      'No se pudo actualizar el NHC. Se muestran los últimos datos recibidos.',
-                      'NHC could not be refreshed. Showing the last data received.',
-                      'Não foi possível atualizar o NHC. Mostrando os últimos dados recebidos.',
+                      'Se muestran los últimos datos recibidos.',
+                      'Showing the last data received.',
+                      'Mostrando os últimos dados recebidos.',
                     )
                   : t(
-                      'No se pudo consultar el NHC. Esto no significa que no haya ciclones.',
-                      'NHC could not be reached. This does not mean there are no cyclones.',
-                      'Não foi possível consultar o NHC. Isso não significa que não haja ciclones.',
+                      'Esto no significa que no haya ciclones.',
+                      'This does not mean there are no cyclones.',
+                      'Isso não significa que não haja ciclones.',
                     )}
+              </span>
+            </SourceStamp>
+          </div>
+        )}
+        {old && p.data && (
+          <div role="status">
+            <SourceStamp issuer="NHC" state="stale">
+              <span>
+                {[
+                  t(
+                    'La consulta está desactualizada',
+                    'This check is out of date',
+                    'A consulta está desatualizada',
+                  ),
+                  sourceTime({ checked: p.data.fetched, old, now: p.now, lang: p.lang }),
+                ].join(' · ')}
               </span>
             </SourceStamp>
           </div>
@@ -182,7 +211,11 @@ export default function StormsPanel(p: Props) {
                 'Atlantic, Caribbean and Pacific',
                 'Atlântico, Caribe e Pacífico',
               )}
-              {p.data && ` · ${t('consultado', 'checked', 'consultado')} ${at(p.data.fetched)}`}
+              {/* The time is said above when the data is old or the source failing. */}
+              {p.data &&
+                !old &&
+                !p.failed &&
+                ` · ${sourceTime({ checked: p.data.fetched, old, now: p.now, lang: p.lang })}`}
             </span>
           </SourceStamp>
         </div>

@@ -19,6 +19,8 @@ export type HazardStatus = {
   top?: HazardAlert;
   /** When the source last answered, for display next to the status. */
   checked?: number;
+  /** When the last failed request to its source was made, while that source is failing. */
+  failedAt?: number;
   /** Issue time of a NOAA threat message older than the display window that nothing closed. */
   unclosed?: number;
 };

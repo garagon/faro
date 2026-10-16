@@ -3,6 +3,7 @@ import { ArrowClockwiseIcon, FunnelSimpleIcon, PulseIcon } from '@phosphor-icons
 import { displayPlace, placeLang, type Quake } from '../lib/domain.ts';
 import { type FeedUpdate } from '../lib/feedUpdates.ts';
 import { checkedLabel } from '../lib/time.ts';
+import { sourceTime } from '../lib/sourceStatus.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
 import {
   Actions,
@@ -22,10 +23,14 @@ type Props = {
   catalog: string;
   lang: Lang;
   now: number;
+  /** When the data shown was retrieved; 0 if nothing was received. */
   checked: number;
   busy: boolean;
   online: boolean;
   stale: boolean;
+  /** The last request failed, and when it was made. */
+  failed: boolean;
+  failedAt: number | null;
   onRefresh: () => void;
   onDetails: (q: Quake) => void;
   onMap: (q: Quake) => void;
@@ -50,17 +55,28 @@ export default function LiveActivity(p: Props) {
   const visible = new Set(p.events.map((q) => q.id));
   const unread = p.updates.filter((u) => visible.has(u.event.id) && !dismissed.has(key(u)));
   const fresh = unread.find((u) => p.now >= u.receivedAt && p.now - u.receivedAt < 120000);
+  // "Waiting" only while a request is on its way; a failed one says so, with its time.
+  const failing = p.online && p.failed && !p.busy;
   const state = !p.online
     ? t('Sin conexión', 'Offline', 'Sem conexão')
     : p.busy
       ? t('Consultando la fuente…', 'Checking source…', 'Consultando a fonte…')
-      : p.stale
-        ? t('Actualización pendiente', 'Update overdue', 'Atualização pendente')
-        : !p.checked
-          ? t('Conectando…', 'Connecting…', 'Conectando…')
-          : t('Actualización automática', 'Automatic updates', 'Atualização automática');
+      : failing
+        ? t('No responde', 'Not responding', 'Não responde')
+        : p.stale
+          ? t('Actualización pendiente', 'Update overdue', 'Atualização pendente')
+          : !p.checked
+            ? t('Conectando…', 'Connecting…', 'Conectando…')
+            : t('Actualización automática', 'Automatic updates', 'Atualização automática');
   const old = !p.online || p.stale;
   const clock = (time: number) => checkedLabel(time, p.now, p.lang);
+  const when = p.checked
+    ? sourceTime({ checked: p.checked, old, now: p.now, lang: p.lang })
+    : failing && p.failedAt
+      ? sourceTime({ checked: null, old: true, failedAt: p.failedAt, now: p.now, lang: p.lang })
+      : !p.online
+        ? t('sin datos', 'no data', 'sem dados')
+        : t('esperando respuesta', 'awaiting response', 'aguardando resposta');
   return (
     <section
       className="f-stack"
@@ -82,12 +98,8 @@ export default function LiveActivity(p: Props) {
           }
           title={state}
           meta={
-            <SourceStamp issuer={p.provider} state={old ? 'stale' : undefined}>
-              <span>
-                {p.checked
-                  ? `${t('consultado', 'checked', 'consultado')} ${clock(p.checked)}`
-                  : t('esperando respuesta', 'awaiting response', 'aguardando resposta')}
-              </span>
+            <SourceStamp issuer={p.provider} state={failing ? 'error' : old ? 'stale' : undefined}>
+              <span>{when}</span>
             </SourceStamp>
           }
           trail={

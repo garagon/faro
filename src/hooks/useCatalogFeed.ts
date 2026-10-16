@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CatalogSnapshot, CatalogReader } from '../catalogs/types.ts';
 import { createFeedTracker, type FeedUpdate } from '../lib/feedUpdates.ts';
+import { attemptResult, type Attempt } from '../lib/sourceStatus.ts';
 /**
  * Polls a catalog every 60 s while the tab is visible and the catalog is enabled.
  * Disabled catalogs keep their last snapshot but make no requests and do not tick.
+ * A failure keeps the snapshot and records when it was tried (`failedAt`).
  */
 export function useCatalogFeed(reader: CatalogReader, enabled = true) {
   const [feed, setFeed] = useState<CatalogSnapshot>({ events: [], generated: 0, fetched: 0 });
   const [busy, setBusy] = useState(false),
-    [failed, setFailed] = useState(false),
+    [attempt, setAttempt] = useState<Attempt>({ failed: false, failedAt: null }),
     [online, setOnline] = useState(navigator.onLine);
   const [now, setNow] = useState(Date.now()),
     [next, setNext] = useState(Date.now()),
@@ -38,12 +40,12 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
       setUpdates(tracker.current.observe(data.events, receivedAt));
       setFeed(data);
       setChecked(receivedAt);
-      setFailed(false);
+      setAttempt(attemptResult(true, receivedAt));
       ok = true;
     } catch {
       // A timeout aborts this request on purpose and still counts as a failure.
       if (mounted.current && controller.current === ac && !(ac.signal.aborted && !timedOut))
-        setFailed(true);
+        setAttempt(attemptResult(false, Date.now()));
     } finally {
       clearTimeout(timeout);
       if (controller.current === ac) {
@@ -106,5 +108,16 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
       document.removeEventListener('visibilitychange', resume);
     };
   }, [refresh, reader, enabled]);
-  return { ...feed, busy, failed, online, now, next, checked, updates, refresh };
+  return {
+    ...feed,
+    busy,
+    failed: attempt.failed,
+    failedAt: attempt.failedAt,
+    online,
+    now,
+    next,
+    checked,
+    updates,
+    refresh,
+  };
 }

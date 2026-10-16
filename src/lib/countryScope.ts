@@ -25,6 +25,21 @@ function onLand(lat: number, lng: number, polygons: Polygon[]) {
 export function hasCountryBoundary(code: string) {
   return !!countries[code];
 }
+/**
+ * Countries without a sea coast (the landlocked states, with Kosovo and the Vatican). Their
+ * 100 km buffer below meets only neighbours' land, which is excluded, so it adds no sea. Azerbaijan,
+ * Kazakhstan and Turkmenistan are not listed: their buffer reaches the Caspian Sea.
+ */
+const LANDLOCKED = new Set(
+  (
+    'AD AF AM AT BF BI BO BT BW BY CF CH CZ ET HU KG LA LI LS LU MD MK ML MN MW NE NP PY RS RW ' +
+    'SK SM SS SZ TD TJ UG UZ VA XK ZM ZW'
+  ).split(' '),
+);
+/** Whether the country view's 100 km buffer takes in sea, for the wording of its scope. */
+export function reachesSea(code: string) {
+  return hasCountryBoundary(code) && !LANDLOCKED.has(code);
+}
 /** Geographic browsing only: generalized borders + up to 100 km offshore, never a hazard zone. */
 export function inCountryScope(event: { lat: number; lng: number }, code: string) {
   if (code === 'WORLD') return true;
