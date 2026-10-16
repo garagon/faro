@@ -1,7 +1,10 @@
 # Design system
 
-Faro's interface is built from a small set of tokens and components so the same thing looks
-the same everywhere. Screens compose these pieces; they do not restyle them.
+Faro's interface is built on [shadcn/ui](https://ui.shadcn.com/) (new-york style, neutral
+theme, Tailwind CSS 4, Geist, Lucide icons). Screens use Faro's wrappers in `src/ui`, which are
+built on the shadcn components, so the same thing looks the same everywhere and screens never
+restyle them. To add a shadcn component, use its CLI (`npx shadcn@latest add <name>`); do not
+hand-write one it provides.
 
 ## Where things live
 
@@ -12,39 +15,39 @@ the same everywhere. Screens compose these pieces; they do not restyle them.
 | Faro's wrappers: the API screens use, built on the shadcn components      | `src/ui/` (exported from `src/ui/index.ts`)                                         |
 | Shared text and layout helpers used directly by screens                   | `src/styles/ds/helpers.css` (Tailwind `@apply`)                                     |
 | App frame: header, tabs, sidebar, layout helpers; sheet; map card         | Tailwind classes in `src/ui/Shell.tsx`, `Sheet.tsx`, `Map.tsx` (pins: `ds/map.css`) |
-| React components                                                          | `src/ui/` (exported from `src/ui/index.ts`)                                         |
 | Cascade order                                                             | `src/styles/index.css`                                                              |
 
 ## Cascade layers
 
-`src/styles/index.css` loads every style into three layers, in this order:
+`src/styles/index.css` loads every style into cascade layers, in this order:
 
 1. `vendor`: the map libraries' own styles.
-2. `ds-base`: tokens, the document (box sizing, the frame filling the window) and the defaults
-   inside the app frame (type, links, fields).
-3. `ds`: components, the map and the app frame, above everything else.
+2. `theme`, `base`: Tailwind's theme and preflight, and the shadcn variables (`theme.css`).
+3. `ds-base`: Faro's tokens (pointing at the shadcn variables) and the document defaults.
+4. `components`, `ds`: the few Faro styles that are not Tailwind classes: shared helpers used
+   directly by screens (`helpers.css`), map pins (`map.css`).
+5. `utilities`: Tailwind classes, last, so a class on an element always wins.
 
-A later layer always wins, whatever the selector, so design-system rules never need higher
-specificity or `!important`. The loading screen (`boot.css`) is linked from `index.html` and stays
-outside. Components set their own margins; nothing in `ds-base` resets element margins.
-
-Every screen, the sheets, the map and the crash fallback are built from `src/ui` and
-`src/styles/ds`; the older stylesheets are gone. A rule whose class no source renders any more
-is deleted, not kept "just in case"; check with a visual regression run before and after.
+The loading screen (`boot.css`) is linked from `index.html` and stays outside. A rule whose class
+no source renders any more is deleted, not kept "just in case"; check with a visual regression
+run before and after.
 
 ## Rules
 
-- No colour, size, spacing, radius or shadow literals outside `tokens.css`.
-- Selectors are one class, plus one attribute at most. Variants are data attributes
-  (`data-variant`, `data-size`, `data-level`), never per-screen overrides.
+- Colours, radii and type come from the shadcn theme (`theme.css`) through Tailwind classes or
+  Faro's tokens; no literals in components.
+- Variants are props of the wrappers (`variant`, `size`, `level`), drawn with the shadcn
+  components' own variants (`cva`), never per-screen overrides.
 - Components have no outer margin. Layouts (`f-stack`, `f-column`, `f-split`, sections) own gaps.
-- Screens without a side column use one reading column (`f-column`, 42 rem); nothing stretches
-  across a wide monitor.
+- Screens use one reading column (`f-column`, 42 rem), centred from 900 px. From 1200 px a screen
+  with a side pane (`f-two`, marked `data-side`) uses two panes: Avisar (the message beside the
+  form), the earthquake list (its map), Emergencia (embassy, latest earthquake and next steps),
+  Situación and Guía. Phones keep one column in source order.
 - No coloured side stripes or boxes inside boxes: hierarchy comes from type, space and one list
   container.
 - Breakpoints are container queries on the app frame (`.f-app`): 360, 400, 900 and 1200 px, plus
   22.5 em so large browser text never scrolls sideways.
-- One text edge per screen: every row with a leading element uses the `--f-lead` column (36 px).
+- One text edge per screen: every row with a leading element uses shadcn's `ItemMedia` (32 px).
 - One row height per list: if one row has a caption, all do. Captions fit one line at 390 px in
   Spanish; numbers and their units never break ("24 h", "10 min").
 - The Emergency button in the frame always has the same outline; filled red is only the call
@@ -53,11 +56,9 @@ is deleted, not kept "just in case"; check with a visual regression run before a
   label and a caret with no box.
 - Order on Situación: on a normal day the actions come first; when a warning of level 2 or more is
   in force, "What is happening" moves up under the call button.
-- Every tappable element has a 44 px target, pressed feedback and, with a mouse, hover feedback,
-  changing over `--f-press`: rows (links, buttons, section headers, checklist rows), chips,
-  segments and tabs; the frame's Emergency button (call-red tint), country and language pickers
-  and menu links (muted fill); links and text buttons (`OutLink`, `.f-inline-link`, `Actions`:
-  darker green and a stronger underline).
+- Every tappable element has a target of at least 40 px on phones and hover and press feedback,
+  as the shadcn components draw it (accent fill on rows and menu items, shadcn's focus ring).
+  Links inside sentences are underlined.
 - One screen head everywhere (`ScreenHead`): the title, a short status at the end of its line when
   the screen has one (Situación's check time), and a lead of one line at 390 px in Spanish, or
   none. A lead says what the content does not (a caveat, the rule above every topic); it never
@@ -73,7 +74,8 @@ is deleted, not kept "just in case"; check with a visual regression run before a
 | ------------------------------------ | ------------------------------------------------------------------------------------ |
 | Call red                             | Only for calling for help: the call button and the Emergency button.                 |
 | Level 1–3 (amber, orange, alert red) | Only official warning levels, and stale data (level 1). The level is always written. |
-| Action green                         | The brand and the main action; with a ring, "the source answered with nothing".      |
+| Primary (near-black)                 | The main action (shadcn's `primary`).                                                |
+| Green                                | Only the brand mark and "the source answered".                                       |
 | Ink and neutrals                     | Everything else.                                                                     |
 
 Magnitude uses one hue from light to dark, so a larger figure is always darker. The figure
@@ -81,42 +83,43 @@ carries the meaning, never the colour alone.
 
 ## Type
 
-Public Sans. Every text uses one of five roles:
+Geist, on shadcn's scale. Every text uses one of these roles:
 
-| Role                  | Size / weight   | Used for                                                 |
-| --------------------- | --------------- | -------------------------------------------------------- |
-| Screen title          | 28 / 700        | The title of a screen (the same words as its menu entry) |
-| Section title, figure | 18 / 700        | Section titles; phone numbers and magnitudes in lists    |
-| Label                 | 16 / 600        | Row titles, buttons, chips, field labels, safety notices |
-| Text                  | 16 / 400        | Paragraphs and steps                                     |
-| Caption               | 14 / 400, muted | Row descriptions, sources and times, notes               |
+| Role          | Tailwind                                | Used for                                                 |
+| ------------- | --------------------------------------- | -------------------------------------------------------- |
+| Screen title  | `text-2xl font-semibold tracking-tight` | The title of a screen (the same words as its menu entry) |
+| Section title | `text-base font-semibold`               | Section titles                                           |
+| Label         | `text-sm font-medium`                   | Row titles, buttons, chips, field labels                 |
+| Text          | `text-sm`                               | Paragraphs and interface text                            |
+| Instruction   | `text-base`                             | Steps and safety notices, read in a hurry                |
+| Caption       | `text-sm text-muted-foreground`         | Row descriptions, sources and times, notes               |
 
-Exceptions: 34 / 700 for the magnitude in an earthquake's detail, 13 for map attribution and
-legal text, 12 for tab labels. Figures that are compared (phone numbers, magnitudes, step
-numbers) use tabular digits; running text keeps proportional digits. A list row is always
-a label and one caption line; state, source and time share that caption.
+Figures (phone numbers, magnitudes) are `font-semibold tabular-nums`; the magnitude in an
+earthquake's detail is the one larger figure. Map attribution and legal text are `text-xs`, tab
+labels 11 px. Fields stay at 16 px on phones so they do not zoom. A list row is always a label and
+one caption line; state, source and time share that caption.
 
 ## Components
 
-| Component                                                                          | Use                                                                                                                                                                                                                     |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CallButton`                                                                       | The main emergency number: the large button in call red, at most as wide as a phone (26 rem). Once per screen.                                                                                                          |
-| `PhoneRow`                                                                         | Other numbers, as list rows: the number first, who answers under it.                                                                                                                                                    |
-| `Button`, `LinkButton`, `IconButton`                                               | One family, 44 and 56 px: primary (one per screen), secondary, ghost; `call` only for calling.                                                                                                                          |
-| `List`, `ListRow`                                                                  | Grouped rows; a row opens a screen, leaves to a link, or shows a value.                                                                                                                                                 |
-| `StatusIcon`, `RowIcon`                                                            | The 36 px circle that starts a row: a hazard icon tinted by the official level when something is listed (neutral, faded without an answer, pulsing while checking), or a neutral action icon. One text edge per screen. |
-| `Section`, `ScreenHead`, `BackLink`                                                | A title and space instead of boxes. `ScreenHead`: the title (its menu label), a short status at the end of its line when the screen has one, and at most one line of lead.                                              |
-| `Badge`                                                                            | An official level in the agency's own words, beside a row title. Warnings in force are the first rows of the list, never a separate coloured box.                                                                       |
-| `SafetyNotice`, `Note`, `ScopeNote`                                                | The three tiers below.                                                                                                                                                                                                  |
-| `SourceStamp`                                                                      | Who said it and when.                                                                                                                                                                                                   |
-| `Magnitude`, `Skeleton`                                                            | Published magnitude; placeholder while the first answer arrives.                                                                                                                                                        |
-| `ChoiceChip`, `Segmented`, `Field`                                                 | Choosing, switching views, typing. Segments are 44 px, one variant per screen; a `block` keeps one row while the labels fit (equal, then as wide as each label), stacking only when they do not.                        |
-| `AppFrame`, `Header`, `StatusBar`, `TabBar`, `Sidebar`, `Content`                  | The frame. Phone: header, offline/stale strip, content, tabs. Desktop: sidebar with brand, country, Emergency, menu, sources, privacy and language; no top bar.                                                         |
-| `SelectField`, `TextArea`, `CheckRow`, `Combobox`                                  | Long lists on the device's picker, multi-line text, checklist rows, country search with suggestions.                                                                                                                    |
-| `Tabs`, `Disclosure`, `ExpandRow`                                                  | Sibling panels; a whole optional part of a form (its caption turns to the error colour when something inside needs fixing); a row with detail. What opens fades in.                                                     |
-| `RadioList`, `ActionBar`, `ActionRow`, `MessageText`, `MessagePreview`, `Progress` | Avisar: one choice as rows, the main action kept in view on phones (natural width on desktop), share channels, the message as it will be sent, a checklist's progress.                                                  |
-| `Sheet`, `Facts`, `Pager`, `ScrollCue`                                             | A record over the screen (earthquake, install): from the bottom on phones, centred on desktop (see Motion), Back closes it; label/value rows; page numbers; the edge cue of a tab strip that scrolls.                   |
-| `Figure`, `IndexNav`, `Text`                                                       | An illustration with its credit; the guide's topic list beside the text on desktop; a paragraph in the text or caption role.                                                                                            |
+| Component                                                                          | Use                                                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CallButton`                                                                       | The main emergency number: the large button in call red, at most as wide as a phone (26 rem). Once per screen.                                                                                                 |
+| `PhoneRow`                                                                         | Other numbers, as list rows: the number first, who answers under it.                                                                                                                                           |
+| `Button`, `LinkButton`, `IconButton`                                               | shadcn `Button`: primary (`default`, one per screen), secondary (`outline`), ghost; `call` (`destructive`) only for calling.                                                                                   |
+| `List`, `ListRow`                                                                  | shadcn `ItemGroup` / `Item` in a card: a row opens a screen, leaves to a link, or shows a value.                                                                                                               |
+| `StatusIcon`, `RowIcon`                                                            | shadcn `ItemMedia` (icon): a hazard icon tinted by the official level when something is listed (neutral, faded without an answer, pulsing while checking), or a neutral action icon. One text edge per screen. |
+| `Section`, `ScreenHead`, `BackLink`                                                | A title and space instead of boxes. `ScreenHead`: the title (its menu label), a short status at the end of its line when the screen has one, and at most one line of lead.                                     |
+| `Badge`                                                                            | An official level in the agency's own words, beside a row title. Warnings in force are the first rows of the list, never a separate coloured box.                                                              |
+| `SafetyNotice`, `Note`, `ScopeNote`                                                | The three tiers below.                                                                                                                                                                                         |
+| `SourceStamp`                                                                      | Who said it and when.                                                                                                                                                                                          |
+| `Magnitude`, `Skeleton`                                                            | Published magnitude; placeholder while the first answer arrives.                                                                                                                                               |
+| `ChoiceChip`, `Segmented`, `Field`                                                 | Choosing, switching views, typing. Segments are 44 px, one variant per screen; a `block` keeps one row while the labels fit (equal, then as wide as each label), stacking only when they do not.               |
+| `AppFrame`, `Header`, `StatusBar`, `TabBar`, `Sidebar`, `Content`                  | The frame. Phone: header, offline/stale strip, content, tabs. Desktop: sidebar with brand, country, Emergency, menu, sources, privacy and language; no top bar.                                                |
+| `SelectField`, `TextArea`, `CheckRow`, `Combobox`                                  | Long lists on the device's picker, multi-line text, checklist rows, country search with suggestions.                                                                                                           |
+| `Tabs`, `Disclosure`, `ExpandRow`                                                  | Sibling panels; a whole optional part of a form (its caption turns to the error colour when something inside needs fixing); a row with detail. What opens fades in.                                            |
+| `RadioList`, `ActionBar`, `ActionRow`, `MessageText`, `MessagePreview`, `Progress` | Avisar: one choice as rows, the main action kept in view on phones (natural width on desktop), share channels, the message as it will be sent, a checklist's progress.                                         |
+| `Sheet`, `Facts`, `Pager`, `ScrollCue`                                             | A record over the screen (earthquake, install): from the bottom on phones, centred on desktop (see Motion), Back closes it; label/value rows; page numbers; the edge cue of a tab strip that scrolls.          |
+| `Figure`, `IndexNav`, `Text`                                                       | An illustration with its credit; the guide's topic list beside the text on desktop; a paragraph in the text or caption role.                                                                                   |
 
 ## Motion
 

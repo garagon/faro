@@ -59,7 +59,7 @@ export default function CountryScreen(p: Props) {
     />
   );
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8">
+    <div className="f-column">
       <div className="f-stack grid gap-2" data-gap="sm">
         <BackLink onClick={p.onBack}>{p.backLabel}</BackLink>
         <ScreenHead title={t('País', 'Country', 'País')} titleId="fw-country-title" />

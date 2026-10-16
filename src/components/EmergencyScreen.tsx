@@ -251,358 +251,377 @@ export default function EmergencyScreen(p: Props) {
       ? t('Oficina y urgencias', 'Office and emergencies', 'Escritório e emergências')
       : t('Urgencias consulares', 'Consular emergencies', 'Emergências consulares');
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8" ref={root} lang={p.lang}>
+    <div className="f-column f-two" ref={root} lang={p.lang}>
       <ScreenHead title={t('Emergencia', 'Emergency', 'Emergência')} />
-      {choosing ? (
-        <section className="f-section @container grid gap-3" aria-labelledby="fw-emergency-where">
-          <h2
-            id="fw-emergency-where"
-            className="f-section-title m-0 text-base leading-snug font-semibold"
-            tabIndex={-1}
-          >
-            {t('¿En qué país estás?', 'Which country are you in?', 'Em que país você está?')}
-          </h2>
-          <p>
-            {t(
-              'Elige el país para ver sus teléfonos de emergencia.',
-              'Choose the country to see its emergency numbers.',
-              'Escolha o país para ver os números de emergência de lá.',
-            )}
-          </p>
-          <CountrySearch
-            label={t(
-              'País donde necesitas ayuda',
-              'Country where you need help',
-              'País onde você precisa de ajuda',
-            )}
-            lang={p.lang}
-            value={country}
-            onChange={(code) => {
-              if (!code) return;
-              p.onCountry(code);
-              setEditing(false);
-            }}
-          />
-          {editing && country && (
-            <Actions>
-              <button type="button" onClick={() => setEditing(false)}>
-                {t(
-                  `Seguir en ${names.of(country)}`,
-                  `Stay in ${names.of(country)}`,
-                  `Manter ${names.of(country)}`,
-                )}
-              </button>
-            </Actions>
-          )}
-        </section>
-      ) : (
-        <>
-          {main ? (
-            <CallButton
-              number={main.number}
+      {/* Wide screens: calling and what to do, and beside it the rest (helpers.css, f-two). */}
+      <div className="f-stack" data-gap="lg">
+        {choosing ? (
+          <section className="f-section @container grid gap-3" aria-labelledby="fw-emergency-where">
+            <h2
+              id="fw-emergency-where"
+              className="f-section-title m-0 text-base leading-snug font-semibold"
+              tabIndex={-1}
+            >
+              {t('¿En qué país estás?', 'Which country are you in?', 'Em que país você está?')}
+            </h2>
+            <p>
+              {t(
+                'Elige el país para ver sus teléfonos de emergencia.',
+                'Choose the country to see its emergency numbers.',
+                'Escolha o país para ver os números de emergência de lá.',
+              )}
+            </p>
+            <CountrySearch
               label={t(
-                `Llamar al ${main.number}`,
-                `Call ${main.number}`,
-                `Ligar para ${main.number}`,
+                'País donde necesitas ayuda',
+                'Country where you need help',
+                'País onde você precisa de ajuda',
               )}
-              note={main.label[idx]}
+              lang={p.lang}
+              value={country}
+              onChange={(code) => {
+                if (!code) return;
+                p.onCountry(code);
+                setEditing(false);
+              }}
             />
-          ) : (
-            <Text tabIndex={-1} data-emergency-start="">
-              {t(
-                'No tenemos teléfonos verificados para este país. Pregunta en tu alojamiento o a la autoridad local.',
-                'We have no verified numbers for this country. Ask where you are staying or local authorities.',
-                'Não temos números verificados para este país. Pergunte na sua hospedagem ou às autoridades locais.',
-              )}
-            </Text>
-          )}
-          {/* On a bad day the screen changes under the call: the tsunami message, then the
-              warnings in force. */}
-          {p.alert}
-          {warnings}
-          {local && (others.length > 0 || local.whatsapp) && (
-            <Section
-              id="fw-emergency-other"
-              title={t('Otros números', 'Other numbers', 'Outros números')}
-            >
-              <List>
-                {others.map((n) => (
-                  <PhoneRow key={n.number} number={n.number} name={n.label[idx]} />
-                ))}
-                {/* A text line for when calls do not go through but data does. */}
-                {local.whatsapp && (
-                  <ListRow
-                    href={whatsappHref(local.whatsapp.number)}
-                    external
-                    figure
-                    title={local.whatsapp.number}
-                    meta={local.whatsapp.label[idx]}
-                    trail={<MessageCircleIcon className="size-4" aria-hidden="true" />}
-                  />
+            {editing && country && (
+              <Actions>
+                <button type="button" onClick={() => setEditing(false)}>
+                  {t(
+                    `Seguir en ${names.of(country)}`,
+                    `Stay in ${names.of(country)}`,
+                    `Manter ${names.of(country)}`,
+                  )}
+                </button>
+              </Actions>
+            )}
+          </section>
+        ) : (
+          <>
+            {main ? (
+              <CallButton
+                number={main.number}
+                label={t(
+                  `Llamar al ${main.number}`,
+                  `Call ${main.number}`,
+                  `Ligar para ${main.number}`,
                 )}
-              </List>
-            </Section>
-          )}
-          {/* The country's own caveat, e.g. what to dial if 911 does not answer. */}
-          {local?.note && <SafetyNotice>{local.note[idx]}</SafetyNotice>}
-          {local && (
-            <Note
-              more={
-                <OutLink href={local.source}>
-                  {t('Fuente oficial', 'Official source', 'Fonte oficial')}
-                </OutLink>
-              }
-            >
-              {t(
-                'Para llamar dentro del país',
-                'For calls within the country',
-                'Para ligações dentro do país',
-              )}
-              {' · '}
-              {t('revisada el', 'reviewed', 'revisada em')} {reviewDate(local.reviewedAt, p.lang)}.
-            </Note>
-          )}
-        </>
-      )}
+                note={main.label[idx]}
+              />
+            ) : (
+              <Text tabIndex={-1} data-emergency-start="">
+                {t(
+                  'No tenemos teléfonos verificados para este país. Pregunta en tu alojamiento o a la autoridad local.',
+                  'We have no verified numbers for this country. Ask where you are staying or local authorities.',
+                  'Não temos números verificados para este país. Pergunte na sua hospedagem ou às autoridades locais.',
+                )}
+              </Text>
+            )}
+            {/* On a bad day the screen changes under the call: the tsunami message, then the
+              warnings in force. */}
+            {p.alert}
+            {warnings}
+            {local && (others.length > 0 || local.whatsapp) && (
+              <Section
+                id="fw-emergency-other"
+                title={t('Otros números', 'Other numbers', 'Outros números')}
+              >
+                <List>
+                  {others.map((n) => (
+                    <PhoneRow key={n.number} number={n.number} name={n.label[idx]} />
+                  ))}
+                  {/* A text line for when calls do not go through but data does. */}
+                  {local.whatsapp && (
+                    <ListRow
+                      href={whatsappHref(local.whatsapp.number)}
+                      external
+                      figure
+                      title={local.whatsapp.number}
+                      meta={local.whatsapp.label[idx]}
+                      trail={<MessageCircleIcon className="size-4" aria-hidden="true" />}
+                    />
+                  )}
+                </List>
+              </Section>
+            )}
+            {/* The country's own caveat, e.g. what to dial if 911 does not answer. */}
+            {local?.note && <SafetyNotice>{local.note[idx]}</SafetyNotice>}
+            {local && (
+              <Note
+                more={
+                  <OutLink href={local.source}>
+                    {t('Fuente oficial', 'Official source', 'Fonte oficial')}
+                  </OutLink>
+                }
+              >
+                {t(
+                  'Para llamar dentro del país',
+                  'For calls within the country',
+                  'Para ligações dentro do país',
+                )}
+                {' · '}
+                {t('revisada el', 'reviewed', 'revisada em')} {reviewDate(local.reviewedAt, p.lang)}
+                .
+              </Note>
+            )}
+          </>
+        )}
 
-      {choosing && p.alert}
-      {choosing && warnings}
+        {choosing && p.alert}
+        {choosing && warnings}
 
-      <section className="f-section @container grid gap-3" aria-labelledby="fw-first-minutes-title">
-        <h2
-          id="fw-first-minutes-title"
-          className="f-section-title m-0 text-base leading-snug font-semibold"
-          tabIndex={-1}
+        <section
+          className="f-section @container grid gap-3"
+          aria-labelledby="fw-first-minutes-title"
         >
-          {t('Primeros minutos', 'First minutes', 'Primeiros minutos')}
-        </h2>
-        <Segmented
-          block
-          label={t('Qué está pasando', 'What is happening', 'O que está acontecendo')}
-          value={kind}
-          onChange={setKind}
-          options={emergencyKinds.map((k) => ({ value: k.id, label: k.short[idx] }))}
-        />
-        <Steps items={hazardSteps[kind].map(step)} />
-      </section>
-
-      <section className="f-section @container grid gap-3" aria-labelledby="fw-any-emergency-title">
-        <h2
-          id="fw-any-emergency-title"
-          className="f-section-title m-0 text-base leading-snug font-semibold"
-        >
-          {t('En cualquier emergencia', 'In any emergency', 'Em qualquer emergência')}
-        </h2>
-        <Steps items={generalSteps.map(step)} />
-        <Note>
-          {t('Fuentes', 'Sources', 'Fontes')}:{' '}
-          {sources.map((s, i) => (
-            <span key={s.url}>
-              {i > 0 && ', '}
-              <a href={s.url} target="_blank" rel="noreferrer">
-                {s.name}
-              </a>
-            </span>
-          ))}
-          .{' '}
-          {t(
-            'Sigue siempre las instrucciones de las autoridades locales.',
-            'Always follow instructions from local authorities.',
-            'Siga sempre as instruções das autoridades locais.',
-          )}
-        </Note>
-      </section>
-
-      {!choosing && (
-        <section className="f-section @container grid gap-3" aria-labelledby="fw-emergency-embassy">
           <h2
-            id="fw-emergency-embassy"
+            id="fw-first-minutes-title"
             className="f-section-title m-0 text-base leading-snug font-semibold"
             tabIndex={-1}
           >
-            {p.nationality
-              ? t(
-                  `Tu embajada (${names.of(p.nationality)})`,
-                  `Your embassy (${names.of(p.nationality)})`,
-                  `Sua embaixada (${names.of(p.nationality)})`,
-                )
-              : t('Tu embajada', 'Your embassy', 'Sua embaixada')}
+            {t('Primeros minutos', 'First minutes', 'Primeiros minutos')}
           </h2>
-          {!p.nationality ? (
-            // No search field on the screen used in a hurry: the nationality is chosen in Ayuda,
-            // next to the embassy directory, and kept for the next visit.
-            <List>
-              <ListRow
-                lead={<RowIcon icon={<FlagIcon className="size-4" />} />}
-                title={t(
-                  'Elige tu nacionalidad',
-                  'Choose your nationality',
-                  'Escolha sua nacionalidade',
-                )}
-                meta={t(
-                  'En Ayuda, para ver tu embajada',
-                  'In Help, to see your embassy',
-                  'Em Ajuda, para ver sua embaixada',
-                )}
-                onClick={p.onEmbassy}
-              />
-            </List>
-          ) : missions.length > 0 || support ? (
-            <>
-              <List>
-                {missions
-                  .slice(0, 2)
-                  .flatMap((m) => [
-                    ...(m.emergency
-                      ? [
-                          <PhoneRow
-                            key={`${m.id}-e`}
-                            number={displayPhone(m.emergency)}
-                            dial={m.emergency}
-                            name={`${m.name[idx]} · ${consularLabel(m)}`}
-                          />,
-                        ]
-                      : []),
-                    ...(m.phone && m.phone !== m.emergency
-                      ? [
-                          <PhoneRow
-                            key={`${m.id}-o`}
-                            number={displayPhone(m.phone)}
-                            dial={m.phone}
-                            name={`${m.name[idx]} · ${t('Oficina', 'Office', 'Escritório')} · ${missionKinds[m.kind][idx]}`}
-                          />,
-                        ]
-                      : []),
-                  ])}
-                {support?.contacts.map((c) => (
-                  <PhoneRow
-                    key={c.number}
-                    number={c.display}
-                    dial={c.number}
-                    name={`${support.agency} · ${c.scope[idx]}`}
-                  />
-                ))}
-              </List>
-              <Note>
-                {t(
-                  'Tu embajada ayuda a sus ciudadanos en el extranjero. Para un peligro inmediato, llama primero al número local.',
-                  'Your embassy helps its citizens abroad. For immediate danger, call the local number first.',
-                  'Sua embaixada ajuda os cidadãos do seu país no exterior. Em caso de perigo imediato, ligue primeiro para o número local.',
-                )}
-              </Note>
-            </>
-          ) : (
-            // A nationality without a verified phone here: said plainly, never a silent gap.
-            <>
-              <p>
-                {t(
-                  `Faro no tiene un teléfono verificado de la embajada de ${names.of(p.nationality)} en ${names.of(country)}. En Ayuda están su dirección y su sitio oficial, si los tenemos. Para un peligro inmediato, llama primero al número local.`,
-                  `Faro has no verified phone for the embassy of ${names.of(p.nationality)} in ${names.of(country)}. Help shows its address and official website, if we have them. For immediate danger, call the local number first.`,
-                  `O Faro não tem um telefone verificado da embaixada do seu país (${names.of(p.nationality)}) neste país. Em Ajuda estão o endereço e o site oficial, se os tivermos. Em caso de perigo imediato, ligue primeiro para o número local.`,
-                )}
-              </p>
-              <Button variant="secondary" onClick={p.onEmbassy}>
-                {t('Ver en Ayuda', 'See in Help', 'Ver em Ajuda')}
-              </Button>
-            </>
-          )}
+          <Segmented
+            block
+            label={t('Qué está pasando', 'What is happening', 'O que está acontecendo')}
+            value={kind}
+            onChange={setKind}
+            options={emergencyKinds.map((k) => ({ value: k.id, label: k.short[idx] }))}
+          />
+          <Steps items={hazardSteps[kind].map(step)} />
         </section>
-      )}
 
-      {plan && (
-        <Section
-          id="fw-emergency-plan"
-          title={t('Tu punto de encuentro', 'Your meeting point', 'Seu ponto de encontro')}
+        <section
+          className="f-section @container grid gap-3"
+          aria-labelledby="fw-any-emergency-title"
         >
-          <List>
-            <ListRow
-              lead={<RowIcon icon={<MapPinIcon className="size-4" />} />}
-              title={plan.meeting}
-              meta={`${t(
-                'Tu punto de encuentro, nota personal sin verificar',
-                'Your meeting point, personal note not verified',
-                'Seu ponto de encontro, nota pessoal não verificada',
-              )} · ${plan.name}`}
-              onClick={p.onTrip}
-            />
-          </List>
-        </Section>
-      )}
-      {latest && (
-        <Section
-          id="fw-emergency-latest"
-          title={t('Último sismo', 'Latest earthquake', 'Último terremoto')}
-        >
-          <List>
-            <ListRow
-              lead={<Magnitude value={latest.mag} />}
-              // Written as everywhere else (src/lib/quakeText.ts): when as the title, then where.
-              title={quakeTime(latest.time, p.now, p.lang)}
-              meta={
-                <>
-                  {latestRegion && (
-                    <>
-                      <span lang={latestRegion.lang === p.lang ? undefined : latestRegion.lang}>
-                        {latestRegion.text}
-                      </span>
-                      {' · '}
-                    </>
-                  )}
-                  {p.provider}
-                  {p.latestStaleSince &&
-                    ` · ${t('último dato', 'last data', 'último dado')} ${checkedLabel(p.latestStaleSince, p.now, p.lang)}`}
-                </>
-              }
-              onClick={() => p.onQuake(latest)}
-            />
-          </List>
-          {/* Right after a felt quake the list still shows an older one: said plainly. */}
+          <h2
+            id="fw-any-emergency-title"
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+          >
+            {t('En cualquier emergencia', 'In any emergency', 'Em qualquer emergência')}
+          </h2>
+          <Steps items={generalSteps.map(step)} />
           <Note>
+            {t('Fuentes', 'Sources', 'Fontes')}:{' '}
+            {sources.map((s, i) => (
+              <span key={s.url}>
+                {i > 0 && ', '}
+                <a href={s.url} target="_blank" rel="noreferrer">
+                  {s.name}
+                </a>
+              </span>
+            ))}
+            .{' '}
             {t(
-              '¿Acabas de sentir un sismo? Puede tardar varios minutos en aparecer.',
-              'Just felt one? It can take several minutes to appear.',
-              'Acabou de sentir um tremor? Pode levar vários minutos para aparecer.',
+              'Sigue siempre las instrucciones de las autoridades locales.',
+              'Always follow instructions from local authorities.',
+              'Siga sempre as instruções das autoridades locais.',
             )}
           </Note>
-        </Section>
-      )}
+        </section>
+      </div>
 
-      <Section id="fw-emergency-next" title={t('Después', 'Next', 'Depois')}>
-        <List>
-          <ListRow
-            lead={<RowIcon icon={<MessageSquareTextIcon className="size-4" />} />}
-            title={t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
-            meta={t(
-              'Prepara un mensaje y envíalo tú',
-              'Prepare a message, send it yourself',
-              'Prepare uma mensagem e envie',
+      <div className="f-stack" data-gap="lg" data-side="">
+        {!choosing && (
+          <section
+            className="f-section @container grid gap-3"
+            aria-labelledby="fw-emergency-embassy"
+          >
+            <h2
+              id="fw-emergency-embassy"
+              className="f-section-title m-0 text-base leading-snug font-semibold"
+              tabIndex={-1}
+            >
+              {p.nationality
+                ? t(
+                    `Tu embajada (${names.of(p.nationality)})`,
+                    `Your embassy (${names.of(p.nationality)})`,
+                    `Sua embaixada (${names.of(p.nationality)})`,
+                  )
+                : t('Tu embajada', 'Your embassy', 'Sua embaixada')}
+            </h2>
+            {!p.nationality ? (
+              // No search field on the screen used in a hurry: the nationality is chosen in Ayuda,
+              // next to the embassy directory, and kept for the next visit.
+              <List>
+                <ListRow
+                  lead={<RowIcon icon={<FlagIcon className="size-4" />} />}
+                  title={t(
+                    'Elige tu nacionalidad',
+                    'Choose your nationality',
+                    'Escolha sua nacionalidade',
+                  )}
+                  meta={t(
+                    'En Ayuda, para ver tu embajada',
+                    'In Help, to see your embassy',
+                    'Em Ajuda, para ver sua embaixada',
+                  )}
+                  onClick={p.onEmbassy}
+                />
+              </List>
+            ) : missions.length > 0 || support ? (
+              <>
+                <List>
+                  {missions
+                    .slice(0, 2)
+                    .flatMap((m) => [
+                      ...(m.emergency
+                        ? [
+                            <PhoneRow
+                              key={`${m.id}-e`}
+                              number={displayPhone(m.emergency)}
+                              dial={m.emergency}
+                              name={`${m.name[idx]} · ${consularLabel(m)}`}
+                            />,
+                          ]
+                        : []),
+                      ...(m.phone && m.phone !== m.emergency
+                        ? [
+                            <PhoneRow
+                              key={`${m.id}-o`}
+                              number={displayPhone(m.phone)}
+                              dial={m.phone}
+                              name={`${m.name[idx]} · ${t('Oficina', 'Office', 'Escritório')} · ${missionKinds[m.kind][idx]}`}
+                            />,
+                          ]
+                        : []),
+                    ])}
+                  {support?.contacts.map((c) => (
+                    <PhoneRow
+                      key={c.number}
+                      number={c.display}
+                      dial={c.number}
+                      name={`${support.agency} · ${c.scope[idx]}`}
+                    />
+                  ))}
+                </List>
+                <Note>
+                  {t(
+                    'Tu embajada ayuda a sus ciudadanos en el extranjero. Para un peligro inmediato, llama primero al número local.',
+                    'Your embassy helps its citizens abroad. For immediate danger, call the local number first.',
+                    'Sua embaixada ajuda os cidadãos do seu país no exterior. Em caso de perigo imediato, ligue primeiro para o número local.',
+                  )}
+                </Note>
+              </>
+            ) : (
+              // A nationality without a verified phone here: said plainly, never a silent gap.
+              <>
+                <p>
+                  {t(
+                    `Faro no tiene un teléfono verificado de la embajada de ${names.of(p.nationality)} en ${names.of(country)}. En Ayuda están su dirección y su sitio oficial, si los tenemos. Para un peligro inmediato, llama primero al número local.`,
+                    `Faro has no verified phone for the embassy of ${names.of(p.nationality)} in ${names.of(country)}. Help shows its address and official website, if we have them. For immediate danger, call the local number first.`,
+                    `O Faro não tem um telefone verificado da embaixada do seu país (${names.of(p.nationality)}) neste país. Em Ajuda estão o endereço e o site oficial, se os tivermos. Em caso de perigo imediato, ligue primeiro para o número local.`,
+                  )}
+                </p>
+                <Button variant="secondary" onClick={p.onEmbassy}>
+                  {t('Ver en Ayuda', 'See in Help', 'Ver em Ajuda')}
+                </Button>
+              </>
             )}
-            onClick={p.onStatus}
-          />
-          <ListRow
-            lead={<RowIcon icon={<BriefcaseMedicalIcon className="size-4" />} />}
-            title={t('Hospitales y farmacias', 'Hospitals and pharmacies', 'Hospitais e farmácias')}
-            meta={t('En Ayuda', 'In Help', 'Em Ajuda')}
-            onClick={p.onHelp}
-          />
-          <ListRow
-            lead={<RowIcon icon={<WavesIcon className="size-4" />} />}
-            title={t('Boletines de tsunami', 'Tsunami bulletins', 'Boletins de tsunami')}
-            meta="NOAA/PTWC"
-            onClick={() => p.onActivity('tsunami')}
-          />
-          <ListRow
-            lead={<RowIcon icon={<BookOpenTextIcon className="size-4" />} />}
-            title={t('Guía completa', 'Full guide', 'Guia completo')}
-            meta={t(
-              'Sismo, tsunami, huracán y más',
-              'Earthquake, tsunami, hurricane and more',
-              'Terremoto, tsunami, furacão e mais',
-            )}
-            onClick={() => p.onGuide(kind)}
-          />
-        </List>
-      </Section>
+          </section>
+        )}
+
+        {plan && (
+          <Section
+            id="fw-emergency-plan"
+            title={t('Tu punto de encuentro', 'Your meeting point', 'Seu ponto de encontro')}
+          >
+            <List>
+              <ListRow
+                lead={<RowIcon icon={<MapPinIcon className="size-4" />} />}
+                title={plan.meeting}
+                meta={`${t(
+                  'Tu punto de encuentro, nota personal sin verificar',
+                  'Your meeting point, personal note not verified',
+                  'Seu ponto de encontro, nota pessoal não verificada',
+                )} · ${plan.name}`}
+                onClick={p.onTrip}
+              />
+            </List>
+          </Section>
+        )}
+        {latest && (
+          <Section
+            id="fw-emergency-latest"
+            title={t('Último sismo', 'Latest earthquake', 'Último terremoto')}
+          >
+            <List>
+              <ListRow
+                lead={<Magnitude value={latest.mag} />}
+                // Written as everywhere else (src/lib/quakeText.ts): when as the title, then where.
+                title={quakeTime(latest.time, p.now, p.lang)}
+                meta={
+                  <>
+                    {latestRegion && (
+                      <>
+                        <span lang={latestRegion.lang === p.lang ? undefined : latestRegion.lang}>
+                          {latestRegion.text}
+                        </span>
+                        {' · '}
+                      </>
+                    )}
+                    {p.provider}
+                    {p.latestStaleSince &&
+                      ` · ${t('último dato', 'last data', 'último dado')} ${checkedLabel(p.latestStaleSince, p.now, p.lang)}`}
+                  </>
+                }
+                onClick={() => p.onQuake(latest)}
+              />
+            </List>
+            {/* Right after a felt quake the list still shows an older one: said plainly. */}
+            <Note>
+              {t(
+                '¿Acabas de sentir un sismo? Puede tardar varios minutos en aparecer.',
+                'Just felt one? It can take several minutes to appear.',
+                'Acabou de sentir um tremor? Pode levar vários minutos para aparecer.',
+              )}
+            </Note>
+          </Section>
+        )}
+
+        <Section id="fw-emergency-next" title={t('Después', 'Next', 'Depois')}>
+          <List>
+            <ListRow
+              lead={<RowIcon icon={<MessageSquareTextIcon className="size-4" />} />}
+              title={t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
+              meta={t(
+                'Prepara un mensaje y envíalo tú',
+                'Prepare a message, send it yourself',
+                'Prepare uma mensagem e envie',
+              )}
+              onClick={p.onStatus}
+            />
+            <ListRow
+              lead={<RowIcon icon={<BriefcaseMedicalIcon className="size-4" />} />}
+              title={t(
+                'Hospitales y farmacias',
+                'Hospitals and pharmacies',
+                'Hospitais e farmácias',
+              )}
+              meta={t('En Ayuda', 'In Help', 'Em Ajuda')}
+              onClick={p.onHelp}
+            />
+            <ListRow
+              lead={<RowIcon icon={<WavesIcon className="size-4" />} />}
+              title={t('Boletines de tsunami', 'Tsunami bulletins', 'Boletins de tsunami')}
+              meta="NOAA/PTWC"
+              onClick={() => p.onActivity('tsunami')}
+            />
+            <ListRow
+              lead={<RowIcon icon={<BookOpenTextIcon className="size-4" />} />}
+              title={t('Guía completa', 'Full guide', 'Guia completo')}
+              meta={t(
+                'Sismo, tsunami, huracán y más',
+                'Earthquake, tsunami, hurricane and more',
+                'Terremoto, tsunami, furacão e mais',
+              )}
+              onClick={() => p.onGuide(kind)}
+            />
+          </List>
+        </Section>
+      </div>
       <ScopeNote>
         {t(
           'Al tocar un número se abre tu teléfono. Faro no llama ni pide ayuda por ti.',

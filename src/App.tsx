@@ -336,6 +336,18 @@ export default function App() {
     [geo, setGeo] = useState<Geo | null>(null),
     [tracking, setTracking] = useState(false),
     [geoState, setGeoState] = useState<'idle' | 'pending' | 'active' | 'denied' | 'failed'>('idle');
+  // From 1200 px (the frame's wide breakpoint) the earthquake list has its map beside it;
+  // narrower, that map is not mounted, so it loads nothing.
+  const [wide, setWide] = useState(
+    () => typeof matchMedia === 'function' && matchMedia('(min-width: 1200px)').matches,
+  );
+  useEffect(() => {
+    if (typeof matchMedia !== 'function') return;
+    const query = matchMedia('(min-width: 1200px)');
+    const update = () => setWide(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
   const watch = useRef<number | null>(null),
     firstFix = useRef(true);
   const [plan, setPlan] = useState<HotelPlan | null>(readPlan);
@@ -1889,8 +1901,10 @@ export default function App() {
               />
             </>
           )}
+          {/* Wide screens: the tabs in the reading column; on Sismos, the listed earthquakes on a
+              map beside them (helpers.css, f-two). The map is mounted only when shown. */}
           {screen === 'detail' && (
-            <div className="f-column grid w-full max-w-2xl gap-8">
+            <div className="f-column f-two">
               <HomeTabs
                 label={t('Detalle por fuente', 'Detail by source', 'Detalhe por fonte')}
                 active={homeTab}
@@ -2507,6 +2521,26 @@ export default function App() {
                   },
                 ]}
               />
+              {wide && homeTab === 'quakes' && (
+                <div data-side="">
+                  <MapFrame size="tall">
+                    <WebMap
+                      cooperative
+                      embassies={[]}
+                      lang={lang}
+                      events={results}
+                      view={view}
+                      frame={mapFrame}
+                      geo={geo}
+                      point={visiblePoint}
+                      selected={detail || focused || undefined}
+                      onSelect={(q) => setDetail(q.id)}
+                      // The list keeps its own area: moving this map searches nothing.
+                      onBounds={() => {}}
+                    />
+                  </MapFrame>
+                </div>
+              )}
             </div>
           )}
           {screen === 'sources' && (
@@ -2627,7 +2661,7 @@ export default function App() {
             />
           )}
           {screen === 'help' && (
-            <div className="f-column grid w-full max-w-2xl gap-8">
+            <div className="f-column">
               <EmergencyNumbers country={country} lang={lang} />
               <EmbassyPanel
                 onProfile={() => setScreen('hotel')}
@@ -2735,7 +2769,7 @@ export default function App() {
           </div>
           {screen === 'hotel' && (
             // The rest of Viaje shares the form's reading column, so no block runs wider.
-            <div className="f-column grid w-full max-w-2xl gap-8">
+            <div className="f-column">
               <OfflineMap lang={lang} {...offlineArea(point)} />
               <TravelContacts key={country} country={country} lang={lang} />
               <EvacuationPlan country={country} lang={lang} />

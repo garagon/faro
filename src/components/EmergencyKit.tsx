@@ -154,7 +154,7 @@ export default function EmergencyKit({ lang, country }: { lang: Lang; country: s
   const download = () =>
     downloadText(kitText(lang, checked, plan), `faro-emergency-kit-${lang}.txt`);
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8">
+    <div className="f-column">
       <SafetyNotice>
         {t(
           'Si tienes que evacuar, sal sin buscar la mochila y no vuelvas por el equipaje.',

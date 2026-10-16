@@ -157,3 +157,44 @@
 .f-expand-body {
   @apply px-4 pb-4 ps-15;
 }
+
+/*
+ * Page width. A phone page is one column. From 900 px the page is one reading column, centred;
+ * from 1200 px a page with a side pane (f-two, f-split, the Situación dashboard) uses the full
+ * width. A pane inside a hidden screen (Avisar and Viaje stay mounted) does not count.
+ */
+.f-page {
+  max-width: calc(var(--f-reading) + 2rem);
+}
+@container app (min-width: 900px) {
+  .f-page {
+    max-width: calc(var(--f-reading) + 4rem);
+  }
+}
+@container app (min-width: 1200px) {
+  .f-page:has(.f-two:not([hidden] *), .f-split:not([hidden] *), .f-dashboard) {
+    max-width: 78rem;
+  }
+  /* Two panes: the reading column, and the side pane (data-side) beside the item before it (or
+     beside --f-side-span items), sticky in view while the column scrolls and scrolling on its own
+     when taller than the window. Phones keep the source order in one column. */
+  .f-two {
+    grid-template-columns: minmax(0, var(--f-reading)) minmax(20rem, 1fr);
+    align-items: start;
+    max-width: none;
+  }
+  .f-two > * {
+    grid-column: 1;
+  }
+  .f-two > [data-side] {
+    position: sticky;
+    top: var(--f-space-8);
+    grid-column: 2;
+    grid-row: span var(--f-side-span, 1);
+    max-height: calc(100dvh - 2 * var(--f-space-8));
+    margin-inline: calc(-1 * var(--f-space-2));
+    padding-inline: var(--f-space-2);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}

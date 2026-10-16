@@ -349,12 +349,12 @@ export const contentClass = cn(
   '@min-[900px]/app:col-start-2 @min-[900px]/app:row-start-2',
 );
 /**
- * The page inside it: phone padding, the reading column (42 rem); on desktop wider padding and
- * room for a side column (the screens keep their own reading column, f-column).
+ * The page inside it: phone padding; on desktop wider padding. Its width (one centred reading
+ * column, or two panes on wide screens) is in ds/helpers.css, next to the panes.
  */
 export const pageClass = cn(
-  'f-page mx-auto grid w-full max-w-2xl grid-cols-[minmax(0,1fr)] gap-8 px-4 py-6',
-  '@min-[900px]/app:max-w-[78rem] @min-[900px]/app:px-8 @min-[900px]/app:py-8',
+  'f-page mx-auto grid w-full grid-cols-[minmax(0,1fr)] gap-8 px-4 py-6',
+  '@min-[900px]/app:px-8 @min-[900px]/app:py-8',
 );
 
 /** The scrolling content region and its reading width. */

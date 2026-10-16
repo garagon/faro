@@ -141,7 +141,7 @@ export default function SourcesScreen({
       ? `${t('Próxima consulta', 'Next check', 'Próxima consulta')}: ${Math.max(0, Math.ceil((next.at - now) / 1000))}\u00a0s`
       : '';
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8">
+    <div className="f-column">
       <section
         className="f-section @container grid gap-3"
         id="fw-sources-now"

@@ -205,9 +205,13 @@ export default function TravelerStatus({
     setDirty(false);
     setFeedback('');
     // One column at every width: the preview is below the form, so bring it into view.
+    // In one column the preview is below the form, so it is brought into view. On wide screens
+    // it is the side pane, already in view beside the form: focus moves there, the page stays.
     requestAnimationFrame(() => {
-      preview.current?.focus({ preventScroll: true });
-      preview.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      const box = preview.current;
+      box?.focus({ preventScroll: true });
+      if (box && getComputedStyle(box).position !== 'sticky')
+        box.scrollIntoView({ block: 'start', behavior: 'instant' });
     });
   };
   const changed =
@@ -265,7 +269,8 @@ export default function TravelerStatus({
   };
   const notice = !!visibleRecord && ((!!prepared && (changed || expired)) || notSaved);
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8">
+    // Wide screens: the form, and beside it the message to send (helpers.css, f-two).
+    <div className="f-column f-two">
       <form
         ref={form}
         className="f-section @container grid gap-3 [&_:is(input,select,textarea,button,summary,a)]:scroll-mb-18"
@@ -716,6 +721,8 @@ export default function TravelerStatus({
 
       <section
         className="f-section @container grid gap-3"
+        data-side=""
+        style={{ '--f-side-span': 2 } as React.CSSProperties}
         ref={preview}
         tabIndex={-1}
         aria-label={t('Vista previa del mensaje', 'Message preview', 'Prévia da mensagem')}
@@ -853,86 +860,92 @@ export default function TravelerStatus({
         )}
       </section>
 
-      {history.length > 0 && (
-        <Disclosure
-          lead={<RowIcon icon={<HistoryIcon className="size-4" />} />}
-          title={`${t('Mensajes preparados', 'Prepared messages', 'Mensagens preparadas')} (${history.length})`}
-          meta={t('Guardados en este navegador', 'Saved in this browser', 'Salvas neste navegador')}
-        >
-          <Note>
-            {t(
-              'Guardados en este navegador. No indican tu situación actual.',
-              'Saved in this browser. They do not describe your current situation.',
-              'Salvas neste navegador. Não indicam sua situação atual.',
+      <div className="f-stack" data-gap="lg">
+        {history.length > 0 && (
+          <Disclosure
+            lead={<RowIcon icon={<HistoryIcon className="size-4" />} />}
+            title={`${t('Mensajes preparados', 'Prepared messages', 'Mensagens preparadas')} (${history.length})`}
+            meta={t(
+              'Guardados en este navegador',
+              'Saved in this browser',
+              'Salvas neste navegador',
             )}
-          </Note>
-          <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
-            <ul>
-              {history.map((row) => (
-                <li key={row.id}>
-                  {statusLabels[row.status][idx]}
-                  <br />
-                  <small>
-                    <time>{checkInTime(row.at, lang)}</time>
-                    {row.place && ` · ${row.place}`}
-                  </small>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {confirmClear ? (
-            <div
-              className="f-stack f-prose grid max-w-2xl gap-2 *:m-0 [&_dt]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5"
-              data-gap="sm"
-            >
-              <p>
-                {t(
-                  '¿Borrar los mensajes anteriores de este navegador?',
-                  'Delete previous messages from this browser?',
-                  'Apagar as mensagens anteriores deste navegador?',
-                )}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" onClick={clear}>
-                  {t(
-                    'Borrar mensajes anteriores',
-                    'Delete previous messages',
-                    'Apagar mensagens anteriores',
-                  )}
-                </Button>
-                <Button variant="ghost" onClick={() => setConfirmClear(false)}>
-                  {t('Cancelar', 'Cancel', 'Cancelar')}
-                </Button>
-              </div>
+          >
+            <Note>
+              {t(
+                'Guardados en este navegador. No indican tu situación actual.',
+                'Saved in this browser. They do not describe your current situation.',
+                'Salvas neste navegador. Não indicam sua situação atual.',
+              )}
+            </Note>
+            <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+              <ul>
+                {history.map((row) => (
+                  <li key={row.id}>
+                    {statusLabels[row.status][idx]}
+                    <br />
+                    <small>
+                      <time>{checkInTime(row.at, lang)}</time>
+                      {row.place && ` · ${row.place}`}
+                    </small>
+                  </li>
+                ))}
+              </ul>
             </div>
-          ) : (
-            <Button variant="ghost" data-tone="error" onClick={() => setConfirmClear(true)}>
-              {t('Borrar historial', 'Delete history', 'Apagar histórico')}
-            </Button>
-          )}
-        </Disclosure>
-      )}
-
-      <div className="f-stack grid gap-2" data-gap="sm">
-        {/* Always present, so a screen reader announces the feedback when it appears. */}
-        <div role="status">{feedback && <Note>{feedback}</Note>}</div>
-        {/* Another screen: a row that opens Emergencia at its numbers. */}
-        <List>
-          <ListRow
-            lead={<RowIcon icon={<PhoneIcon className="size-4" />} />}
-            title={t('Teléfonos de emergencia', 'Emergency numbers', 'Telefones de emergência')}
-            meta={t('En Emergencia', 'In Emergency', 'Em Emergência')}
-            onClick={onHelp}
-          />
-        </List>
-      </div>
-      <ScopeNote>
-        {t(
-          'Para un próximo contacto, acuerda una hora con alguien. Faro no avisa a otras personas automáticamente.',
-          'For a later check-in, agree on a time with someone. Faro does not notify other people automatically.',
-          'Para dar notícias depois, combine um horário com alguém. O Faro não avisa outras pessoas automaticamente.',
+            {confirmClear ? (
+              <div
+                className="f-stack f-prose grid max-w-2xl gap-2 *:m-0 [&_dt]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5"
+                data-gap="sm"
+              >
+                <p>
+                  {t(
+                    '¿Borrar los mensajes anteriores de este navegador?',
+                    'Delete previous messages from this browser?',
+                    'Apagar as mensagens anteriores deste navegador?',
+                  )}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="secondary" onClick={clear}>
+                    {t(
+                      'Borrar mensajes anteriores',
+                      'Delete previous messages',
+                      'Apagar mensagens anteriores',
+                    )}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setConfirmClear(false)}>
+                    {t('Cancelar', 'Cancel', 'Cancelar')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button variant="ghost" data-tone="error" onClick={() => setConfirmClear(true)}>
+                {t('Borrar historial', 'Delete history', 'Apagar histórico')}
+              </Button>
+            )}
+          </Disclosure>
         )}
-      </ScopeNote>
+
+        <div className="f-stack grid gap-2" data-gap="sm">
+          {/* Always present, so a screen reader announces the feedback when it appears. */}
+          <div role="status">{feedback && <Note>{feedback}</Note>}</div>
+          {/* Another screen: a row that opens Emergencia at its numbers. */}
+          <List>
+            <ListRow
+              lead={<RowIcon icon={<PhoneIcon className="size-4" />} />}
+              title={t('Teléfonos de emergencia', 'Emergency numbers', 'Telefones de emergência')}
+              meta={t('En Emergencia', 'In Emergency', 'Em Emergência')}
+              onClick={onHelp}
+            />
+          </List>
+        </div>
+        <ScopeNote>
+          {t(
+            'Para un próximo contacto, acuerda una hora con alguien. Faro no avisa a otras personas automáticamente.',
+            'For a later check-in, agree on a time with someone. Faro does not notify other people automatically.',
+            'Para dar notícias depois, combine um horário com alguém. O Faro não avisa outras pessoas automaticamente.',
+          )}
+        </ScopeNote>
+      </div>
     </div>
   );
 }

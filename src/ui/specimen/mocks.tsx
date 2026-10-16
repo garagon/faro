@@ -459,7 +459,7 @@ export function MockSituation({
   );
   return (
     <div className="f-split grid items-start gap-8 @min-[1200px]/app:grid-cols-[minmax(0,42rem)_minmax(20rem,1fr)] @min-[1200px]/app:[&>aside]:sticky @min-[1200px]/app:[&>aside]:top-8">
-      <div className="f-column grid w-full max-w-2xl gap-8">
+      <div className="f-column">
         <ScreenHead
           title={t('Situación', 'Situation', 'Situação')}
           aside={
@@ -546,7 +546,7 @@ export function MockQuakes({ lang, onBack }: { lang: Lang; onBack: () => void })
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const [view, setView] = useState<'list' | 'map'>('list');
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8">
+    <div className="f-column">
       <div className="f-stack grid gap-2" data-gap="sm">
         <BackLink onClick={onBack}>{t('Situación', 'Situation', 'Situação')}</BackLink>
         <ScreenHead
@@ -602,7 +602,7 @@ export function MockHelp({ lang, onScreen }: { lang: Lang; onScreen: (s: MockScr
     .map((n) => n.number)
     .join(' · ');
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8">
+    <div className="f-column">
       <ScreenHead title={t('Ayuda', 'Help', 'Ajuda')} />
       <List>
         <ListRow
@@ -679,7 +679,7 @@ export function MockEmergency({ lang }: { lang: Lang }) {
   const [kind, setKind] = useState<EmergencyKind>('earthquake');
   const steps = hazardSteps[kind];
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8">
+    <div className="f-column">
       <ScreenHead title={t('Emergencia', 'Emergency', 'Emergência')} />
       {main && (
         <CallButton
@@ -790,7 +790,7 @@ export function MockCountry({
     return n ? t(`Emergencias ${n}`, `Emergencies ${n}`, `Emergências ${n}`) : undefined;
   };
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8">
+    <div className="f-column">
       <div className="f-stack grid gap-2" data-gap="sm">
         <BackLink onClick={onBack}>{t('Situación', 'Situation', 'Situação')}</BackLink>
         <ScreenHead title={t('País', 'Country', 'País')} />

@@ -976,7 +976,7 @@ export default function SafetyGuide({
       : '';
   return (
     <div className="f-split grid items-start gap-8 @min-[1200px]/app:grid-cols-[minmax(0,42rem)_minmax(20rem,1fr)] @min-[1200px]/app:[&>aside]:sticky @min-[1200px]/app:[&>aside]:top-8">
-      <div className="f-column grid w-full max-w-2xl gap-8">
+      <div className="f-column">
         <div className="f-when-single @min-[1200px]/app:hidden">
           <SelectField
             id="guide-situation"
@@ -997,11 +997,7 @@ export default function SafetyGuide({
             ))}
           </SelectField>
         </div>
-        <article
-          className="f-column grid w-full max-w-2xl gap-8"
-          aria-labelledby="safety-title"
-          key={active}
-        >
+        <article className="f-column" aria-labelledby="safety-title" key={active}>
           <div className="f-stack grid gap-4">
             <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
               <h2

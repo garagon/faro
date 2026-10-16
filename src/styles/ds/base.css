@@ -47,6 +47,12 @@ button {
   color: var(--f-color-action);
   text-underline-offset: 0.18em;
 }
+/* A link inside a sentence (no component class) is underlined, so it is not told apart by colour
+   alone; Tailwind's reset removes the browser's underline. */
+.f-root :where(a:not([class])) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 .f-root :where(svg) {
   flex: none;
 }

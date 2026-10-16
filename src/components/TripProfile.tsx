@@ -346,7 +346,7 @@ export default function TripProfile(p: Props) {
   });
 
   return (
-    <div className="f-column grid w-full max-w-2xl gap-8">
+    <div className="f-column">
       <form className="f-stack grid gap-4" onSubmit={save} noValidate>
         <div className="f-stack grid gap-2" data-gap="sm">
           <Step
