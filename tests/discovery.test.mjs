@@ -7,7 +7,7 @@ test('public metadata and static facts identify the creator without claiming ear
   const schema = JSON.parse($('script[type="application/ld+json"]').text());
   assert.equal(schema.creator.url, 'https://oktsec.com');
   assert.equal(schema['@type'], 'WebApplication');
-  assert.deepEqual(schema.inLanguage, ['es', 'en']);
+  assert.deepEqual(schema.inLanguage, ['es', 'en', 'pt-BR']);
   assert.match(schema.description, /Not an early-warning/);
   assert($('meta[property="og:title"]').attr('content'));
   const about = load(await readFile('public/about.html', 'utf8'));
@@ -15,6 +15,10 @@ test('public metadata and static facts identify the creator without claiming ear
   assert(about('section[lang="es"]').length);
   assert.match(about('main').text(), /does not predict earthquakes/);
   assert.match(about('main').text(), /No predice terremotos/);
+  assert(about('section[lang="pt-BR"]').length);
+  assert.match(about('main').text(), /não prevê terremotos/);
+  const privacy = load(await readFile('public/privacy.html', 'utf8'));
+  for (const lang of ['en', 'pt-BR']) assert(privacy(`section[lang="${lang}"]`).length);
 });
 test('only original, valid PNG instruction assets are published', async () => {
   for (const lang of ['es', 'en']) {

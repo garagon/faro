@@ -1,0 +1,2 @@
+/* The base map library's styles, loaded with the map, in the vendor layer (see index.css). */
+@import 'maplibre-gl/dist/maplibre-gl.css' layer(vendor);

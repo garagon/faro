@@ -1,136 +1,399 @@
 import type { Localized } from './destinations/types.ts';
+import type { PlaceKind } from '../lib/nearbyCare.ts';
+import { langIndex, pick, type Lang } from '../lib/i18n.ts';
+import { usUnits, volume } from '../lib/units.ts';
 export type KitGroup = 'supplies' | 'tools' | 'personal';
-export type KitItem = { id: string; group: KitGroup; title: Localized; detail: Localized };
-export const kitSources = [
-  { name: 'SENAPRED · Kit de emergencia', url: 'https://www.senapred.gov.cl/kit-de-emergencia/' },
-  { name: 'SENAPRED · Familia preparada', url: 'https://senapred.cl/familia-preparada/' },
+export type KitHazard = 'earthquake' | 'hurricane' | 'flood' | 'volcano';
+export type KitItem = {
+  id: string;
+  group: KitGroup;
+  title: Localized;
+  /** The full advice, kept in the downloaded list. */
+  detail: Localized;
+  /** The same advice in one caption line, for the checklist on screen. */
+  caption: Localized;
+  /** A short name for the shopping list ("Agua", "Botiquín"); every item with a store has one. */
+  short?: Localized;
+  /** Where the item is usually bought; absent when it is prepared rather than bought. */
+  store?: PlaceKind;
+  /** Shown only when one of these hazards is selected. */
+  hazards?: KitHazard[];
+};
+// Each source keeps its own title; `lang` is the language of the page, said to other readers.
+export const kitSources: { name: string; url: string; lang: Lang }[] = [
+  {
+    name: 'SENAPRED · Kit de emergencia',
+    url: 'https://www.senapred.gov.cl/kit-de-emergencia/',
+    lang: 'es',
+  },
+  {
+    name: 'SENAPRED · Familia preparada',
+    url: 'https://senapred.cl/familia-preparada/',
+    lang: 'es',
+  },
+  { name: 'Ready.gov · Build a Kit', url: 'https://www.ready.gov/kit', lang: 'en' },
 ];
-// A traveller adaptation. Supplies for 72 hours need not all fit in one carry bag.
+export const kitHazards: { id: KitHazard; label: Localized; tip: Localized }[] = [
+  {
+    id: 'earthquake',
+    label: ['Sismo', 'Earthquake', 'Terremoto'],
+    tip: [
+      'Suma una mascarilla para el polvo después del sismo y guarda la mochila en un lugar de fácil acceso.',
+      'Add a mask for dust after the shaking and keep the bag somewhere easy to reach.',
+      'Inclua uma máscara contra a poeira depois do terremoto e guarde a mochila em um lugar de fácil acesso.',
+    ],
+  },
+  {
+    id: 'hurricane',
+    label: ['Huracán', 'Hurricane', 'Furacão'],
+    tip: [
+      'Compra con tiempo: después de un huracán podrías no conseguir medicamentos ni suministros durante días o semanas.',
+      'Buy early: after a hurricane, medication and supplies may be unavailable for days or weeks.',
+      'Compre com antecedência: depois de um furacão, talvez você não consiga remédios nem suprimentos por dias ou semanas.',
+    ],
+  },
+  {
+    id: 'flood',
+    label: ['Inundación', 'Flood', 'Inundação'],
+    tip: [
+      'Guarda documentos, medicamentos y teléfono en una bolsa impermeable, en un lugar alto.',
+      'Keep documents, medication and phone in a waterproof bag, stored up high.',
+      'Guarde documentos, remédios e celular em uma bolsa impermeável, em um lugar alto.',
+    ],
+  },
+  {
+    id: 'volcano',
+    label: ['Volcán', 'Volcano', 'Vulcão'],
+    tip: [
+      'Para la ceniza: mascarilla N95 bien ajustada y gafas protectoras.',
+      'For ash: a well-fitting N95 mask and protective goggles.',
+      'Contra as cinzas: máscara N95 bem ajustada e óculos de proteção.',
+    ],
+  },
+];
+/** SENAPRED baseline and the Ready.gov gallon, which also covers hygiene. */
+export const WATER_PER_DAY = { senapred: 2, ready: 3.8 };
+export type KitPlan = { people: number; days: number; hazards: KitHazard[] };
+export const kitPlanKey = 'faro-emergency-kit-plan-v1';
+export const kitDays = [3, 5, 7];
+export const defaultKitPlan: KitPlan = { people: 1, days: 3, hazards: [] };
+export function parseKitPlan(raw: string | null): KitPlan {
+  try {
+    const value = JSON.parse(raw || 'null') as Partial<KitPlan> | null;
+    if (!value || typeof value !== 'object') return defaultKitPlan;
+    const people =
+      Number.isInteger(value.people) && value.people! >= 1 && value.people! <= 12
+        ? value.people!
+        : 1;
+    const days = kitDays.includes(value.days as number) ? (value.days as number) : 3;
+    const hazards = Array.isArray(value.hazards)
+      ? kitHazards.map((h) => h.id).filter((id) => value.hazards!.includes(id))
+      : [];
+    return { people, days, hazards };
+  } catch {
+    return defaultKitPlan;
+  }
+}
+export function waterLitres(plan: Pick<KitPlan, 'people' | 'days'>) {
+  return {
+    minimum: plan.people * plan.days * WATER_PER_DAY.senapred,
+    ready: Math.ceil(plan.people * plan.days * WATER_PER_DAY.ready),
+  };
+}
+/** The same amounts as shown: liters, or U.S. gallons in English. */
+export function waterShown(plan: Pick<KitPlan, 'people' | 'days'>, lang: Lang) {
+  const { minimum, ready } = waterLitres(plan);
+  return {
+    minimum: volume(minimum, lang),
+    // Ready.gov counts whole gallons: one per person per day.
+    ready: usUnits(lang) ? `${plan.people * plan.days} gal` : volume(ready, lang),
+  };
+}
+/** Items that apply to the selected hazards; with no plan, every item. */
+export function kitItemsFor(plan?: Pick<KitPlan, 'hazards'>) {
+  return kitItems.filter(
+    (item) => !item.hazards || !plan || item.hazards.some((h) => plan.hazards.includes(h)),
+  );
+}
+// A traveler adaptation. Supplies for 72 hours need not all fit in one carry bag.
 export const kitItems: KitItem[] = [
   {
     id: 'water',
+    store: 'supermarket',
     group: 'supplies',
-    title: ['Agua potable', 'Drinking water'],
+    title: ['Agua potable', 'Drinking water', 'Água potável'],
     detail: [
-      'Referencia SENAPRED: 2 litros por persona y día; 6 litros para 3 días. Adapta la reserva al clima y a tus necesidades.',
-      'SENAPRED baseline: 2 litres per person per day; 6 litres for 3 days. Adapt supplies to the climate and your needs.',
+      'Referencia de SENAPRED (Chile) para beber: 2 litros por persona y día; 6 litros para 3 días. Con calor o para higiene, lleva más.',
+      'SENAPRED (Chile) drinking baseline: about half a gallon (2 liters) per person per day; 1.6 gallons for 3 days. In heat or for hygiene, carry more.',
+      'Referência do SENAPRED (Chile) para beber: 2 litros por pessoa por dia; 6 litros para 3 dias. No calor ou para higiene, leve mais.',
     ],
+    // On screen the caption carries the person's own amount (itemCaption).
+    caption: [
+      '2 L por día para beber; con calor, más',
+      'Half a gallon a day; more in heat',
+      '2 L por dia para beber; no calor, mais',
+    ],
+    short: ['agua', 'water', 'água'],
   },
   {
     id: 'food',
+    store: 'supermarket',
     group: 'supplies',
-    title: ['Comida sin cocinar', 'Ready-to-eat food'],
+    title: ['Comida sin cocinar', 'Ready-to-eat food', 'Comida pronta para consumo'],
     detail: [
       'Para 3 días. Considera alergias y un abrelatas si hace falta.',
       'For 3 days. Consider allergies and a can opener if needed.',
+      'Para 3 dias. Leve em conta alergias e um abridor de latas, se precisar.',
     ],
+    caption: [
+      'Para 3 días, según tus alergias',
+      'For 3 days, safe for your allergies',
+      'Para 3 dias, conforme suas alergias',
+    ],
+    short: ['comida', 'food', 'comida'],
   },
   {
     id: 'medicine',
+    store: 'pharmacy',
     group: 'supplies',
-    title: ['Medicamentos y recetas', 'Medication and prescriptions'],
+    title: ['Medicamentos y recetas', 'Medication and prescriptions', 'Remédios e receitas'],
     detail: [
       'Los de uso habitual, con sus indicaciones de conservación.',
       'Your regular medication, with its storage instructions.',
+      'Os de uso habitual, com as instruções de armazenamento.',
     ],
+    caption: [
+      'Los de siempre y cómo conservarlos',
+      'Your usual ones and how to store them',
+      'Os de sempre e como guardá-los',
+    ],
+    short: ['medicamentos', 'medication', 'remédios'],
   },
   {
     id: 'firstaid',
+    store: 'pharmacy',
     group: 'supplies',
-    title: ['Botiquín', 'First-aid kit'],
+    title: ['Botiquín', 'First-aid kit', 'Kit de primeiros socorros'],
     detail: [
       'Gasas, apósitos, vendas y guantes; revisa las fechas de vencimiento.',
       'Gauze, dressings, bandages and gloves; check expiry dates.',
+      'Gaze, curativos, ataduras e luvas; confira as datas de validade.',
     ],
+    caption: [
+      'Gasas, vendas y guantes, sin vencer',
+      'Gauze, bandages, gloves, in date',
+      'Gaze, ataduras e luvas, na validade',
+    ],
+    short: ['botiquín', 'first-aid kit', 'kit de socorros'],
   },
   {
     id: 'light',
+    store: 'hardware',
     group: 'tools',
-    title: ['Linterna y pilas', 'Flashlight and batteries'],
+    title: ['Linterna y pilas', 'Flashlight and batteries', 'Lanterna e pilhas'],
     detail: [
       'Prueba la luz y guarda pilas de repuesto.',
       'Test the light and pack spare batteries.',
+      'Teste a lanterna e guarde pilhas de reserva.',
     ],
+    caption: [
+      'Pruébala y lleva pilas de repuesto',
+      'Test it and pack spare batteries',
+      'Teste e leve pilhas de reserva',
+    ],
+    short: ['linterna', 'flashlight', 'lanterna'],
   },
   {
     id: 'radio',
+    store: 'electronics',
     group: 'tools',
-    title: ['Radio portátil', 'Portable radio'],
+    title: ['Radio portátil', 'Portable radio', 'Rádio portátil'],
     detail: [
       'A pilas o con carga manual, para avisos sin internet.',
       'Battery-powered or hand-crank, for updates without internet.',
+      'A pilha ou à manivela, para avisos sem internet.',
     ],
+    caption: [
+      'A pilas o manivela, sin internet',
+      'Battery or crank, no internet needed',
+      'A pilha ou manivela, sem internet',
+    ],
+    short: ['radio', 'radio', 'rádio'],
   },
   {
     id: 'power',
+    store: 'electronics',
     group: 'tools',
-    title: ['Teléfono, cable y batería externa', 'Phone, cable and power bank'],
+    title: [
+      'Teléfono, cable y batería externa',
+      'Phone, cable and power bank',
+      'Celular, cabo e carregador portátil',
+    ],
     detail: [
       'Mantén la batería externa cargada. Adaptación de Faro para viajeros.',
-      'Keep the power bank charged. Faro addition for travellers.',
+      'Keep the power bank charged. Faro addition for travelers.',
+      'Mantenha o carregador portátil carregado. Adaptação do Faro para viajantes.',
     ],
+    caption: [
+      'Con la batería externa cargada',
+      'With the power bank charged',
+      'Com o carregador portátil carregado',
+    ],
+    short: ['batería externa', 'power bank', 'carregador portátil'],
   },
   {
     id: 'whistle',
+    store: 'hardware',
     group: 'tools',
-    title: ['Silbato', 'Whistle'],
+    title: ['Silbato', 'Whistle', 'Apito'],
     detail: [
       'Para llamar la atención sin depender del teléfono.',
       'To attract attention without relying on your phone.',
+      'Para chamar a atenção sem depender do celular.',
     ],
+    caption: [
+      'Para pedir ayuda sin el teléfono',
+      'To call for help without a phone',
+      'Para pedir ajuda sem o celular',
+    ],
+    short: ['silbato', 'whistle', 'apito'],
   },
   {
     id: 'documents',
+    store: 'copies',
     group: 'personal',
-    title: ['Documentos y contactos', 'Documents and contacts'],
+    title: ['Documentos y contactos', 'Documents and contacts', 'Documentos e contatos'],
     detail: [
       'Copias de identidad, seguro, recetas y teléfonos en una funda impermeable.',
       'Copies of ID, insurance, prescriptions and phone numbers in a waterproof pouch.',
+      'Cópias do documento de identidade, seguro, receitas e telefones em uma capa impermeável.',
     ],
+    caption: [
+      'Copias, en una funda impermeable',
+      'Copies, in a waterproof pouch',
+      'Cópias, em uma capa impermeável',
+    ],
+    short: ['copias', 'copies', 'cópias'],
   },
   {
     id: 'plan',
+    store: 'copies',
     group: 'personal',
-    title: ['Plan de evacuación en papel', 'Printed evacuation plan'],
+    title: [
+      'Plan de evacuación en papel',
+      'Printed evacuation plan',
+      'Plano de evacuação impresso',
+    ],
     detail: [
       'Salida del alojamiento, punto acordado y contacto familiar.',
       'Accommodation exit, agreed meeting point and family contact.',
+      'Saída da hospedagem, ponto de encontro combinado e contato da família.',
     ],
+    caption: [
+      'Salida, punto de encuentro y contacto',
+      'Exit, meeting point and contact',
+      'Saída, ponto de encontro e contato',
+    ],
+    short: ['plan impreso', 'printed plan', 'plano impresso'],
   },
   {
     id: 'cash',
+    store: 'atm',
     group: 'personal',
-    title: ['Efectivo y llaves', 'Cash and keys'],
+    title: ['Efectivo y llaves', 'Cash and keys', 'Dinheiro e chaves'],
     detail: [
       'Billetes pequeños y copia de las llaves que necesites.',
       'Small notes and copies of keys you need.',
+      'Notas pequenas e cópias das chaves de que você precisa.',
     ],
+    caption: [
+      'Billetes pequeños y llaves de repuesto',
+      'Small notes and spare keys',
+      'Notas pequenas e chaves extras',
+    ],
+    short: ['efectivo', 'cash', 'dinheiro'],
   },
   {
     id: 'clothes',
     group: 'personal',
-    title: ['Ropa, calzado y abrigo', 'Clothes, shoes and warmth'],
+    title: ['Ropa, calzado y abrigo', 'Clothes, shoes and warmth', 'Roupa, calçado e agasalho'],
     detail: [
       'Muda seca, zapatos resistentes y manta, según el clima.',
       'Dry clothes, sturdy shoes and a blanket, suited to the climate.',
+      'Muda de roupa seca, sapatos resistentes e cobertor, conforme o clima.',
+    ],
+    caption: [
+      'Muda seca, zapatos firmes y manta',
+      'Dry clothes, sturdy shoes, blanket',
+      'Roupa seca, sapato firme e cobertor',
     ],
   },
   {
     id: 'hygiene',
+    store: 'supermarket',
     group: 'personal',
-    title: ['Higiene', 'Hygiene'],
+    title: ['Higiene', 'Hygiene', 'Higiene'],
     detail: [
       'Papel, jabón o gel, bolsas de basura y productos de higiene menstrual.',
-      'Tissues, soap or sanitiser, waste bags and menstrual products.',
+      'Tissues, soap or sanitizer, waste bags and menstrual products.',
+      'Papel, sabonete ou álcool em gel, sacos de lixo e produtos de higiene menstrual.',
     ],
+    caption: [
+      'Jabón, papel y productos menstruales',
+      'Soap, tissues and menstrual products',
+      'Sabonete, papel e itens menstruais',
+    ],
+    short: ['higiene', 'hygiene', 'higiene'],
+  },
+  {
+    id: 'mask',
+    group: 'supplies',
+    store: 'pharmacy',
+    hazards: ['earthquake', 'volcano'],
+    title: ['Mascarilla N95 y gafas', 'N95 mask and goggles', 'Máscara N95 e óculos'],
+    detail: [
+      'Para ceniza volcánica o polvo después de un sismo. Debe quedar bien ajustada.',
+      'For volcanic ash or dust after an earthquake. It must fit well.',
+      'Para cinza vulcânica ou poeira depois de um terremoto. Ela deve ficar bem ajustada.',
+    ],
+    caption: [
+      'Para ceniza o polvo; bien ajustada',
+      'For ash or dust; it must fit well',
+      'Para cinza ou poeira; bem ajustada',
+    ],
+    short: ['mascarilla', 'mask', 'máscara'],
+  },
+  {
+    id: 'drybag',
+    group: 'personal',
+    store: 'hardware',
+    hazards: ['hurricane', 'flood'],
+    title: ['Bolsa impermeable', 'Waterproof bag', 'Bolsa impermeável'],
+    detail: [
+      'Para documentos, medicamentos y teléfono si llueve o hay agua.',
+      'For documents, medication and phone in rain or flood water.',
+      'Para documentos, remédios e celular se chover ou houver água.',
+    ],
+    caption: [
+      'Para documentos, medicinas y teléfono',
+      'For documents, medication and phone',
+      'Para documentos, remédios e celular',
+    ],
+    short: ['bolsa impermeable', 'waterproof bag', 'bolsa impermeável'],
   },
   {
     id: 'access',
     group: 'personal',
-    title: ['Necesidades de tu grupo', 'Your group’s needs'],
+    title: ['Necesidades de tu grupo', 'Your group’s needs', 'Necessidades do seu grupo'],
     detail: [
       'Lentes, ayudas técnicas, insumos para bebés y mascotas, según corresponda.',
       'Glasses, assistive supplies, baby and pet supplies, as applicable.',
+      'Óculos, recursos de acessibilidade, itens para bebês e animais de estimação, conforme o caso.',
+    ],
+    caption: [
+      'Lentes, ayudas, bebés y mascotas',
+      'Glasses, aids, baby and pet items',
+      'Óculos, apoios, bebês e animais',
     ],
   },
 ];
@@ -152,16 +415,128 @@ export function parseKit(raw: string | null): string[] {
     return [];
   }
 }
-export function kitText(lang: 'es' | 'en', checked: string[]) {
-  const i = lang === 'es' ? 0 : 1;
+export const storeLabels: Record<PlaceKind, Localized> = {
+  supermarket: ['Supermercado', 'Supermarket', 'Supermercado'],
+  pharmacy: ['Farmacia', 'Pharmacy', 'Farmácia'],
+  hardware: ['Ferretería', 'Hardware store', 'Loja de ferragens'],
+  electronics: ['Electrónica', 'Electronics store', 'Loja de eletrônicos'],
+  copies: ['Papelería o centro de copias', 'Print and copy shop', 'Papelaria ou copiadora'],
+  atm: ['Cajero automático', 'ATM', 'Caixa eletrônico'],
+  hospital: ['Hospital', 'Hospital', 'Hospital'],
+};
+/** Unchecked items that can be bought, grouped by the kind of place that usually sells them. */
+export function shoppingList(checked: string[], plan?: Pick<KitPlan, 'hazards'>) {
+  const groups = new Map<PlaceKind, KitItem[]>();
+  for (const item of kitItemsFor(plan))
+    if (item.store && !checked.includes(item.id))
+      groups.set(item.store, [...(groups.get(item.store) || []), item]);
+  return [...groups].map(([store, items]) => ({ store, items }));
+}
+export function planSummary(lang: Lang, plan: KitPlan) {
+  const { minimum, ready } = waterShown(plan, lang);
+  const one = plan.people === 1;
+  const people = `${plan.people} ${pick(lang, one ? 'persona' : 'personas', one ? 'person' : 'people', one ? 'pessoa' : 'pessoas')}`;
+  return pick(
+    lang,
+    `Para ${people} y ${plan.days} días. Agua: al menos ${minimum} (SENAPRED, 2 L por persona y día). Ready.gov recomienda ${ready}, para beber e higiene.`,
+    `For ${people} and ${plan.days} days. Water: at least ${minimum} (SENAPRED, about half a gallon per person per day). Ready.gov recommends ${ready}, for drinking and hygiene.`,
+    `Para ${people} e ${plan.days} dias. Água: pelo menos ${minimum} (SENAPRED, 2 L por pessoa por dia). O Ready.gov recomenda ${ready}, para beber e para higiene.`,
+  );
+}
+/** An item's line, with water and food sized to the person's plan when there is one. */
+export function itemDetail(item: KitItem, lang: Lang, plan?: KitPlan) {
+  if (plan && item.id === 'water') {
+    const { minimum } = waterShown(plan, lang);
+    return pick(
+      lang,
+      `${minimum} para tu reserva. Adapta la cantidad al clima y a tus necesidades.`,
+      `${minimum} for your supplies. Adapt the amount to the climate and your needs.`,
+      `${minimum} para seus suprimentos. Ajuste a quantidade ao clima e às suas necessidades.`,
+    );
+  }
+  if (plan && item.id === 'food')
+    return pick(
+      lang,
+      `Para ${plan.days} días. Considera alergias y un abrelatas si hace falta.`,
+      `For ${plan.days} days. Consider allergies and a can opener if needed.`,
+      `Para ${plan.days} dias. Leve em conta alergias e um abridor de latas, se precisar.`,
+    );
+  return item.detail[langIndex(lang)];
+}
+/**
+ * An item's caption on screen: one line, with water and food sized to the plan. The full advice
+ * stays in the downloaded list (itemDetail).
+ */
+export function itemCaption(item: KitItem, lang: Lang, plan: KitPlan) {
+  if (item.id === 'water')
+    return pick(
+      lang,
+      `${waterShown(plan, lang).minimum} para beber; con calor, más`,
+      `${waterShown(plan, lang).minimum} to drink; more in heat`,
+      `${waterShown(plan, lang).minimum} para beber; no calor, mais`,
+    );
+  if (item.id === 'food')
+    return pick(
+      lang,
+      `Para ${plan.days}\u00a0días, según tus alergias`,
+      `For ${plan.days}\u00a0days, safe for your allergies`,
+      `Para ${plan.days}\u00a0dias, conforme suas alergias`,
+    );
+  return item.caption[langIndex(lang)];
+}
+
+/** What to buy in one shop, in a caption line: "Agua (6 L), comida, higiene". */
+export function shopCaption(items: readonly KitItem[], lang: Lang, plan: KitPlan) {
+  const i = langIndex(lang);
+  const text = items
+    .map((item) => {
+      const name = item.short?.[i] ?? item.title[i].toLowerCase();
+      return item.id === 'water' ? `${name} (${waterShown(plan, lang).minimum})` : name;
+    })
+    .join(', ');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+export function kitText(lang: Lang, checked: string[], plan?: KitPlan) {
+  const i = langIndex(lang);
+  const shopping = plan ? shoppingList(checked, plan) : [];
   return [
-    lang === 'es' ? 'FARO · MOCHILA DE EMERGENCIA' : 'FARO · EMERGENCY KIT',
-    lang === 'es'
-      ? 'Prepara reservas para 72 horas. Lleva una mochila que puedas cargar. No retrases una evacuación para buscarla.'
-      : 'Prepare supplies for 72 hours. Keep your carry bag manageable. Do not delay evacuation to collect it.',
-    ...kitItems.map(
-      (item) => `${checked.includes(item.id) ? '[x]' : '[ ]'} ${item.title[i]} — ${item.detail[i]}`,
+    pick(
+      lang,
+      'FARO · MOCHILA DE EMERGENCIA',
+      'FARO · EMERGENCY KIT',
+      'FARO · MOCHILA DE EMERGÊNCIA',
     ),
+    pick(
+      lang,
+      `Prepara reservas para ${plan?.days ?? 3} días. Lleva una mochila que puedas cargar. No retrases una evacuación para buscarla.`,
+      `Prepare supplies for ${plan?.days ?? 3} days. Keep your carry bag manageable. Do not delay evacuation to collect it.`,
+      `Prepare suprimentos para ${plan?.days ?? 3} dias. Tenha uma mochila que você consiga carregar. Não atrase uma evacuação para buscá-la.`,
+    ),
+    ...(plan ? [planSummary(lang, plan)] : []),
+    ...(plan?.hazards.length
+      ? kitHazards
+          .filter((h) => plan.hazards.includes(h.id))
+          .map((h) => `${h.label[i]}: ${h.tip[i]}`)
+      : []),
+    ...kitItemsFor(plan).map(
+      (item) =>
+        `${checked.includes(item.id) ? '[x]' : '[ ]'} ${item.title[i]} — ${itemDetail(item, lang, plan)}`,
+    ),
+    ...(shopping.length
+      ? [
+          pick(
+            lang,
+            'Dónde comprar lo que falta',
+            'Where to buy what is missing',
+            'Onde comprar o que falta',
+          ),
+          ...shopping.map(
+            ({ store, items }) =>
+              `${storeLabels[store][i]}: ${items.map((item) => item.title[i]).join(', ')}`,
+          ),
+        ]
+      : []),
     ...kitSources.map((s) => `${s.name}: ${s.url}`),
   ].join('\n\n');
 }

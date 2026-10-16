@@ -3,6 +3,7 @@ import { emergencyFor } from './emergency.ts';
 import type { Preferences } from './preferences.ts';
 import type { HotelPlan, Lang } from './resources.ts';
 import { contactKinds, type TravelContact } from './tripData.ts';
+import { langIndex, pick } from './i18n.ts';
 
 export type CardLine = { label: string; value: string };
 export function cardLines(
@@ -11,59 +12,99 @@ export function cardLines(
   contacts: TravelContact[],
   plan: HotelPlan | null,
   profile: Preferences | null,
+  /**
+   * The text card (fichaText). When given, the image carries the same facts — nationality,
+   * emergency contact, health if chosen, insurance, stay and dates — instead of a shorter list.
+   */
+  ficha?: string,
 ): CardLine[] {
-  const t = (es: string, en: string) => (lang === 'es' ? es : en);
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const localPlan = plan?.country === country ? plan : null;
   const emergency = emergencyFor(country);
+  const main = emergency?.numbers[0]?.number;
+  const fromFicha: CardLine[] = (ficha ?? '')
+    .split('\n')
+    .slice(1)
+    .map((line) => line.trim())
+    // The numbers are listed below with their labels.
+    .filter((line) => line && !(main && line.includes(`: ${main}`)))
+    .map((line) => {
+      const at = line.indexOf(': ');
+      return at > 0 && at < 48
+        ? { label: line.slice(0, at), value: line.slice(at + 2) }
+        : { label: '', value: line };
+    });
   return [
-    ...(profile?.name ? [{ label: t('Viajero', 'Traveler'), value: profile.name }] : []),
-    ...(profile?.phone ? [{ label: t('Mi teléfono', 'My phone'), value: profile.phone }] : []),
-    ...(profile?.email ? [{ label: t('Mi correo', 'My email'), value: profile.email }] : []),
+    ...fromFicha,
+    ...(!ficha && profile?.name
+      ? [{ label: t('Viajero', 'Traveler', 'Viajante'), value: profile.name }]
+      : []),
+    ...(!ficha && profile?.phone
+      ? [{ label: t('Mi teléfono', 'My phone', 'Meu telefone'), value: profile.phone }]
+      : []),
+    ...(!ficha && profile?.email
+      ? [{ label: t('Mi correo', 'My email', 'Meu e-mail'), value: profile.email }]
+      : []),
     ...(emergency?.numbers.map((n) => ({
-      label: n.label[lang === 'es' ? 0 : 1],
+      label: n.label[langIndex(lang)],
       value: n.number,
     })) ?? []),
     ...(emergency
       ? [
           {
-            label: t('Fuente · llamadas dentro del país', 'Source · calls within the country'),
+            label: t(
+              'Fuente · llamadas dentro del país',
+              'Source · calls within the country',
+              'Fonte · ligações dentro do país',
+            ),
             value: emergency.source,
           },
         ]
       : [
           {
-            label: t('Emergencias', 'Emergencies'),
+            label: t('Emergencias', 'Emergencies', 'Emergência'),
             value: t(
               'Sin teléfonos verificados para este destino.',
               'No verified numbers for this destination.',
+              'Sem telefones verificados para este destino.',
             ),
           },
         ]),
-    ...(localPlan?.name
-      ? [{ label: t('Alojamiento', 'Accommodation'), value: localPlan.name }]
+    ...(!ficha && localPlan?.name
+      ? [{ label: t('Alojamiento', 'Accommodation', 'Hospedagem'), value: localPlan.name }]
       : []),
-    ...(localPlan?.meeting
+    ...(!ficha && localPlan?.meeting
       ? [
           {
-            label: t('Punto acordado con recepción', 'Meeting point agreed with reception'),
+            label: t(
+              'Mi punto de encuentro (nota personal)',
+              'My meeting point (personal note)',
+              'Meu ponto de encontro (anotação pessoal)',
+            ),
             value: localPlan.meeting,
           },
         ]
       : []),
     ...(localPlan?.notes
-      ? [{ label: t('Instrucciones guardadas', 'Saved instructions'), value: localPlan.notes }]
+      ? [
+          {
+            label: t('Instrucciones guardadas', 'Saved instructions', 'Instruções salvas'),
+            value: localPlan.notes,
+          },
+        ]
       : []),
     ...contacts
       .filter((c) => c.country === country)
       .map((c) => ({
-        label: contactKinds[c.kind][lang === 'es' ? 0 : 1],
+        label: contactKinds[c.kind][langIndex(lang)],
         value: [c.name, c.phone, c.note].filter(Boolean).join('\n'),
       })),
     {
-      label: t('Plan personal', 'Personal plan'),
+      label: t('Plan personal', 'Personal plan', 'Plano pessoal'),
       value: t(
         'Confirma el punto y la ruta con recepción. Esta ficha no acredita un refugio ni indica tu estado actual.',
         'Confirm the meeting point and route with reception. This card does not certify a shelter or show your current status.',
+        'Confirme o ponto e a rota com a recepção. Esta ficha não certifica um abrigo nem indica seu status atual.',
       ),
     },
   ];
@@ -71,6 +112,7 @@ export function cardLines(
 
 // All text is drawn locally. No external fonts, images, URLs or personal-data requests.
 export async function downloadCardImage(country: string, lang: Lang, lines: CardLine[]) {
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas unavailable');
@@ -115,7 +157,7 @@ export async function downloadCardImage(country: string, lang: Lang, lines: Card
   ctx.font = 'bold 44px Arial';
   ctx.fillText('Faro', inset, 86);
   ctx.font = '26px Arial';
-  ctx.fillText(lang === 'es' ? 'FICHA DEL VIAJE' : 'TRAVEL CARD', inset, 140);
+  ctx.fillText(t('FICHA DEL VIAJE', 'TRAVEL CARD', 'FICHA DA VIAGEM'), inset, 140);
   ctx.font = 'bold 42px Arial';
   ctx.fillText(
     new Intl.DisplayNames([lang], { type: 'region' }).of(country) || country,
@@ -147,11 +189,13 @@ export async function downloadCardImage(country: string, lang: Lang, lines: Card
   const date = new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' }).format(
     new Date(),
   );
-  ctx.fillText(`${lang === 'es' ? 'Copia creada' : 'Copy created'}: ${date}`, inset, height - 82);
+  ctx.fillText(`${t('Copia creada', 'Copy created', 'Cópia criada')}: ${date}`, inset, height - 82);
   ctx.fillText(
-    lang === 'es'
-      ? 'Datos personales · Guarda esta imagen de forma privada.'
-      : 'Personal data · Keep this image private.',
+    t(
+      'Datos personales · Guarda esta imagen de forma privada.',
+      'Personal data · Keep this image private.',
+      'Dados pessoais · Guarde esta imagem de forma privada.',
+    ),
     inset,
     height - 40,
   );

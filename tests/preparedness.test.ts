@@ -1,7 +1,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseKit, kitItems, kitText } from '../src/data/emergencyKit.ts';
+import {
+  parseKit,
+  parseKitPlan,
+  kitItems,
+  kitItemsFor,
+  kitText,
+  shoppingList,
+  waterLitres,
+  waterShown,
+  planSummary,
+} from '../src/data/emergencyKit.ts';
 import { careSearchUrl, careCoordinates } from '../src/lib/nearbyCare.ts';
+import { langIndex } from '../src/lib/i18n.ts';
 import {
   consularMissions,
   missionsFor,
@@ -15,10 +26,10 @@ test('checklist storage rejects invalid JSON, unrecognized IDs and duplicates', 
   assert.deepEqual(parseKit('["water","water",null,"private-note",42,"food"]'), ['water', 'food']);
   assert.equal(new Set(kitItems.map((i) => i.id)).size, kitItems.length);
 });
-test('downloadable kit includes all items, explicit checked state and source links in both languages', () => {
-  for (const lang of ['es', 'en'] as const) {
+test('downloadable kit includes all items, explicit checked state and source links in every language', () => {
+  for (const lang of ['es', 'en', 'pt'] as const) {
     const result = kitText(lang, ['water']);
-    for (const item of kitItems) assert.ok(result.includes(item.title[lang === 'es' ? 0 : 1]));
+    for (const item of kitItems) assert.ok(result.includes(item.title[langIndex(lang)]));
     assert.equal((result.match(/\[x\]/g) || []).length, 1);
     assert.ok(result.includes('https://www.senapred.gov.cl/kit-de-emergencia/'));
   }
@@ -88,4 +99,57 @@ test('uncertain office moves are not offered as directions or map pins', () => {
 test('historic directions are blocked independently of the publication year', () => {
   const record = { ...missionsFor('PA', 'CA')[0], historical: true, sourceDate: '2025-07' };
   assert.equal(missionDirections(record, 'driving'), null);
+});
+test('kit plan storage accepts only known values and falls back to one person for three days', () => {
+  assert.deepEqual(parseKitPlan(null), { people: 1, days: 3, hazards: [] });
+  assert.deepEqual(parseKitPlan('{bad'), { people: 1, days: 3, hazards: [] });
+  assert.deepEqual(
+    parseKitPlan('{"people":40,"days":4,"hazards":["flood","meteor","flood","volcano"]}'),
+    { people: 1, days: 3, hazards: ['flood', 'volcano'] },
+  );
+  assert.deepEqual(parseKitPlan('{"people":3,"days":7,"hazards":[]}'), {
+    people: 3,
+    days: 7,
+    hazards: [],
+  });
+});
+test('water uses the SENAPRED baseline and the Ready.gov gallon, rounded up', () => {
+  assert.deepEqual(waterLitres({ people: 1, days: 3 }), { minimum: 6, ready: 12 });
+  assert.deepEqual(waterLitres({ people: 2, days: 3 }), { minimum: 12, ready: 23 });
+});
+test('English shows the water in U.S. gallons, never less than the liters', () => {
+  assert.deepEqual(waterShown({ people: 1, days: 3 }, 'es'), { minimum: '6 L', ready: '12 L' });
+  assert.deepEqual(waterShown({ people: 1, days: 3 }, 'en'), {
+    minimum: '1.6 gal',
+    ready: '3 gal',
+  });
+  assert.deepEqual(waterShown({ people: 2, days: 7 }, 'en'), {
+    minimum: '7.4 gal',
+    ready: '14 gal',
+  });
+  const summary = planSummary('en', { people: 1, days: 3, hazards: [] });
+  assert.ok(summary.includes('1.6 gal') && summary.includes('3 gal') && !/\d L\b/.test(summary));
+  assert.ok(!planSummary('pt', { people: 1, days: 3, hazards: [] }).includes('gal'));
+});
+test('hazard items appear only for their hazards and missing items group by shop', () => {
+  const base = kitItemsFor({ hazards: [] }).map((item) => item.id);
+  assert.ok(!base.includes('mask') && !base.includes('drybag'));
+  assert.ok(kitItemsFor({ hazards: ['volcano'] }).some((item) => item.id === 'mask'));
+  assert.ok(kitItemsFor({ hazards: ['flood'] }).some((item) => item.id === 'drybag'));
+  const all = kitItems.map((item) => item.id);
+  assert.deepEqual(shoppingList(all, { hazards: ['volcano', 'flood'] }), []);
+  const shops = shoppingList(['water'], { hazards: [] });
+  const supermarket = shops.find((s) => s.store === 'supermarket')!;
+  assert.ok(!supermarket.items.some((item) => item.id === 'water'));
+  assert.ok(supermarket.items.some((item) => item.id === 'food'));
+  assert.ok(!shops.some((s) => s.items.some((item) => !item.store)));
+  const text = kitText('es', ['water'], { people: 2, days: 3, hazards: ['volcano'] });
+  assert.ok(text.includes('al menos 12 L'));
+  assert.ok(text.includes('Farmacia: Medicamentos y recetas'));
+  assert.ok(!text.includes('Bolsa impermeable'));
+});
+test('shop searches use the same encoded query as health searches', () => {
+  const url = new URL(careSearchUrl('hardware', 'Test Town', 'es')!);
+  assert.equal(url.searchParams.get('query'), 'ferreterías cerca de Test Town');
+  assert.equal(careSearchUrl('atm', '', 'en'), null);
 });

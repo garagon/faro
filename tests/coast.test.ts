@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { coastDistanceKm, segmentDistanceKm } from '../src/lib/coast.ts';
+import { coastDistanceKm, decodeCoastline, segmentDistanceKm } from '../src/lib/coast.ts';
 import { embassies, directionsUrl } from '../src/lib/embassies.ts';
 test('coast distance handles segment interiors, endpoints, degenerate segments and dateline', () => {
   assert.ok(segmentDistanceKm([0, 1], [-1, 0], [1, 0]) > 110);
@@ -12,12 +12,21 @@ test('coast distance handles segment interiors, endpoints, degenerate segments a
   assert.equal(coastDistanceKm(0, 0, []), null);
 });
 test('global dataset finds coast near Panama City, without falsely treating inland as safe', () => {
-  const d = JSON.parse(
-    readFileSync(new URL('../public/data/coastline.json', import.meta.url), 'utf8'),
+  const lines = decodeCoastline(
+    JSON.parse(readFileSync(new URL('../public/data/coastline.json', import.meta.url), 'utf8')),
   );
-  const distance = coastDistanceKm(8.98, -79.51, d.lines);
+  const distance = coastDistanceKm(8.98, -79.51, lines);
   assert.ok(distance !== null && distance < 10);
-  const inland = coastDistanceKm(39, -98, d.lines);
+  const inland = coastDistanceKm(39, -98, lines);
+  // The compact grid decodes back to coordinates; an unknown format fails instead of reading as no coast.
+  assert.deepEqual(decodeCoastline({ format: 'delta-1e-3', lines: [[1000, -2000, 1, 1]] }), [
+    [
+      [1, -2],
+      [1.001, -1.999],
+    ],
+  ]);
+  assert.throws(() => decodeCoastline({ format: 'other', lines: [] }));
+  assert.throws(() => decodeCoastline({ format: 'delta-1e-3', lines: [[1, 2, 3]] }));
   assert.ok(inland !== null && inland > 500);
 });
 test('embassy route contains destination and selected mode, never user location', () => {

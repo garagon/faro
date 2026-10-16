@@ -1,0 +1,484 @@
+import { useState, type ReactNode } from 'react';
+import {
+  ActivityIcon,
+  CloudLightningIcon,
+  EarthIcon,
+  MegaphoneIcon,
+  WavesIcon,
+  WindIcon,
+} from 'lucide-react';
+import { checkedLabel } from '../lib/time.ts';
+import { capitalize, sourceTime, type SourceState } from '../lib/sourceStatus.ts';
+import type { FeedUpdate } from '../lib/feedUpdates.ts';
+import { displayPlace, placeLang, type Quake } from '../lib/domain.ts';
+import { pick, type Lang } from '../lib/i18n.ts';
+import { caption, keepSeparators } from '../lib/caption.ts';
+import { reviewDate } from '../lib/links.ts';
+import { helpReviewRange } from '../lib/reviews.ts';
+import { MagnitudeScale } from './MagnitudeLegend.tsx';
+import {
+  Actions,
+  Badge,
+  ExpandRow,
+  List,
+  ListRow,
+  Magnitude,
+  Note,
+  OutLink,
+  ScopeNote,
+  SourceStamp,
+  StatusIcon,
+  Text,
+  type Signal,
+} from '../ui/index.ts';
+
+export type SourceRow = {
+  id: string;
+  name: string;
+  /** What it gives Faro for the place being viewed, in the interface language. */
+  covers: string;
+  url: string;
+  state: SourceState;
+  checked: number | null;
+  /** When the last failed request was made, while the source is failing. */
+  failedAt: number | null;
+  /** How often Faro asks while the page is open. */
+  every: string;
+};
+
+type Props = {
+  lang: Lang;
+  now: number;
+  /** The country being viewed, for the review dates of what Ayuda lists there. */
+  country?: string;
+  countryName: string;
+  rows: SourceRow[];
+  /** When Faro asks the selected earthquake catalogue again (its row id), while it is polling. */
+  next?: { id: string; at: number };
+  /** Earthquakes received since Faro was opened that match the earthquake filters. */
+  updates?: {
+    items: FeedUpdate[];
+    provider: string;
+    /** When the catalogue's data was retrieved; 0 if never. */
+    fetched: number;
+    onDetails: (q: Quake) => void;
+  };
+};
+
+const icons: Record<string, ReactNode> = {
+  IGC: <ActivityIcon className="size-4" />,
+  EMSC: <ActivityIcon className="size-4" />,
+  USGS: <ActivityIcon className="size-4" />,
+  national: <CloudLightningIcon className="size-4" />,
+  sinaproc: <MegaphoneIcon className="size-4" />,
+  nws: <CloudLightningIcon className="size-4" />,
+  tsunami: <WavesIcon className="size-4" />,
+  nhc: <WindIcon className="size-4" />,
+  gdacs: <EarthIcon className="size-4" />,
+};
+// A source that cannot confirm its data is shown with the stale-data level, never as calm.
+const signals: Record<SourceState, Signal> = {
+  ok: 'none',
+  partial: 'unknown',
+  stale: 'unknown',
+  failed: 'unknown',
+  offline: 'unknown',
+  checking: 'pending',
+  // Not polled now (another catalogue is selected): a static neutral icon, not a pending one.
+  idle: 'none',
+};
+const problem = (s: SourceState) =>
+  s === 'partial' || s === 'stale' || s === 'failed' || s === 'offline';
+
+/**
+ * Sources and updates: the state of every official source for the place being viewed (did it
+ * answer, when, how often), the earthquakes received meanwhile, then what each one publishes and
+ * how to read dates, coverage and magnitude. Other screens link to its sections by id.
+ */
+export default function SourcesScreen({
+  lang,
+  now,
+  country,
+  countryName,
+  rows,
+  next,
+  updates,
+}: Props) {
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const label: Record<SourceState, string> = {
+    ok: t('Respondió', 'Responding', 'Respondeu'),
+    partial: t('Respuesta parcial', 'Partial answer', 'Resposta parcial'),
+    stale: t('Dato viejo', 'Old data', 'Dado antigo'),
+    failed: t('No responde', 'Not responding', 'Não responde'),
+    checking: t('Consultando…', 'Checking…', 'Consultando…'),
+    offline: t('Sin conexión', 'Offline', 'Sem conexão'),
+    idle: t('Se consulta al elegirla', 'Checked when selected', 'Consultada ao selecionar'),
+  };
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  const toggle = (id: string) => {
+    const next = new Set(open);
+    if (!next.delete(id)) next.add(id);
+    setOpen(next);
+  };
+  // When its data is from and, for a failing source, when Faro last tried it.
+  const when = (r: SourceRow) =>
+    capitalize(
+      caption(
+        sourceTime({
+          checked: r.checked,
+          old: r.state !== 'ok' && r.state !== 'partial',
+          now,
+          lang,
+        }),
+        r.state === 'failed' &&
+          sourceTime({ checked: null, old: true, failedAt: r.failedAt, now, lang }),
+      ),
+    );
+  // What Ayuda lists here was checked by hand: said once here, not on each row.
+  const reviewed = country ? helpReviewRange(country) : null;
+  const countdown = (r: SourceRow) =>
+    next?.id === r.id
+      ? `${t('Próxima consulta', 'Next check', 'Próxima consulta')}: ${Math.max(0, Math.ceil((next.at - now) / 1000))}\u00a0s`
+      : '';
+  return (
+    <div className="f-column">
+      <section
+        className="f-section @container grid gap-3"
+        id="fw-sources-now"
+        aria-labelledby="fw-sources-now-title"
+      >
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-sources-now-title"
+        >
+          {t(
+            `Estado de las fuentes para ${countryName}`,
+            `Source status for ${countryName}`,
+            `Status das fontes: ${countryName}`,
+          )}
+        </h2>
+        {/* Each row: the source, its state and one caption line with the time of its data.
+            What it covers here, how often Faro asks and its site open under the row. */}
+        <List label={t('Fuentes', 'Sources', 'Fontes')}>
+          {rows.map((r) => {
+            const id = `fw-source-${r.id}`;
+            const often = [
+              r.every &&
+                t(
+                  `Faro la consulta ${r.every}`,
+                  `Faro checks it ${r.every}`,
+                  `O Faro a consulta ${r.every}`,
+                ),
+              countdown(r),
+            ]
+              .filter(Boolean)
+              .join('. ');
+            return (
+              <ExpandRow
+                key={r.id}
+                id={id}
+                open={open.has(id)}
+                onToggle={() => toggle(id)}
+                lead={
+                  <StatusIcon
+                    state={signals[r.state]}
+                    level={problem(r.state) ? 1 : undefined}
+                    icon={icons[r.id] ?? <EarthIcon className="size-4" />}
+                  />
+                }
+                title={keepSeparators(r.name)}
+                badge={<Badge level={problem(r.state) ? 1 : undefined}>{label[r.state]}</Badge>}
+                // Never asked yet (another catalogue is selected): what it would give instead.
+                meta={when(r) || keepSeparators(r.covers)}
+              >
+                <Text>{r.covers}.</Text>
+                {often && <Text caption>{often}.</Text>}
+                {r.url && (
+                  <Actions>
+                    <OutLink href={r.url}>
+                      {t('Sitio oficial', 'Official website', 'Site oficial')}
+                    </OutLink>
+                  </Actions>
+                )}
+              </ExpandRow>
+            );
+          })}
+        </List>
+        <Note>
+          {t(
+            'Faro consulta cada fuente solo mientras la página está abierta. Si una no responde, sus datos se muestran como no confirmados, nunca como “sin alertas”.',
+            'Faro checks each source only while the page is open. If one does not respond, its data is shown as not confirmed, never as “no alerts”.',
+            'O Faro consulta cada fonte só enquanto a página está aberta. Se uma não responde, seus dados aparecem como não confirmados, nunca como “sem alertas”.',
+          )}
+        </Note>
+      </section>
+
+      {updates && (
+        <section
+          className="f-section @container grid gap-3"
+          id="fw-sources-updates"
+          aria-labelledby="fw-sources-updates-title"
+        >
+          <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2
+              className="f-section-title m-0 text-base leading-snug font-semibold"
+              id="fw-sources-updates-title"
+            >
+              {t('Cambios recibidos', 'Updates received', 'Mudanças recebidas')}
+            </h2>
+            <span className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900">
+              {updates.provider}
+            </span>
+          </div>
+          <Note>
+            {t(
+              'Cada sismo aparece cuando la fuente lo publica.',
+              'Each earthquake appears once the source publishes it.',
+              'Cada terremoto aparece quando a fonte o publica.',
+            )}{' '}
+            {t(
+              'Recibidas desde que abriste Faro y que coinciden con tus filtros. La primera carga no cuenta como novedad. Hasta 50 por fuente.',
+              'Received since opening Faro and matching your filters. The initial load is not an update. Up to 50 per source.',
+              'Recebidas desde que você abriu o Faro e que coincidem com seus filtros. O primeiro carregamento não conta como novidade. Até 50 por fonte.',
+            )}
+          </Note>
+          {updates.items.length ? (
+            <List label={t('Cambios recibidos', 'Updates received', 'Mudanças recebidas')}>
+              {updates.items.map((u) => (
+                <ListRow
+                  key={u.event.id}
+                  lead={
+                    <>
+                      <Magnitude value={u.event.mag} />
+                      <span className="sr-only">{t('Magnitud', 'Magnitude', 'Magnitude')}</span>
+                    </>
+                  }
+                  title={<span lang={placeLang(u.event)}>{displayPlace(u.event.place)}</span>}
+                  meta={caption(
+                    `${t('Sismo', 'Earthquake', 'Terremoto')}: ${checkedLabel(u.event.time, now, lang)}`,
+                    `${t('Recibido', 'Received', 'Recebido')}: ${checkedLabel(u.receivedAt, now, lang)}`,
+                  )}
+                  onClick={() => updates.onDetails(u.event)}
+                />
+              ))}
+            </List>
+          ) : (
+            <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+              <p>
+                {t(
+                  'Todavía no se recibieron otros eventos para esta vista.',
+                  'No additional events received for this view yet.',
+                  'Ainda não foram recebidos outros eventos para esta tela.',
+                )}
+              </p>
+            </div>
+          )}
+          {updates.fetched > 0 && (
+            <div>
+              <SourceStamp issuer={updates.provider}>
+                <span>
+                  {t(
+                    'Datos obtenidos de la fuente',
+                    'Data retrieved from source',
+                    'Dados obtidos da fonte',
+                  )}
+                  : {checkedLabel(updates.fetched, now, lang)}
+                </span>
+              </SourceStamp>
+            </div>
+          )}
+        </section>
+      )}
+
+      <section
+        className="f-section @container grid gap-3"
+        id="fw-sources-what"
+        aria-labelledby="fw-sources-what-title"
+      >
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-sources-what-title"
+        >
+          {t('Qué publica cada fuente', 'What each source publishes', 'O que cada fonte publica')}
+        </h2>
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+          <dl>
+            <div>
+              <dt>IGC · Universidad de Panamá</dt>
+              <dd>
+                {t(
+                  'Listado oficial de sismos de Panamá. Las horas corresponden a Panamá (UTC−5). No publica fecha de generación ni identifica réplicas.',
+                  'Official earthquake listing for Panama. Times use Panama time (UTC−5). It does not publish a generation time or identify aftershocks.',
+                  'Lista oficial de terremotos do Panamá. Os horários são do Panamá (UTC−5). Não publica a hora de geração nem identifica réplicas.',
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>EMSC</dt>
+              <dd>
+                {t(
+                  'Centro Sismológico Euromediterráneo. Catálogo mundial M2.5+ de los últimos 7 días que reúne soluciones de redes nacionales e indica qué agencia publicó cada una. Útil si la fuente nacional no responde. Datos de EMSC-CSEM SeismicPortal bajo licencia CC BY 4.0, adaptados al formato de Faro.',
+                  'Euro-Mediterranean Seismological Centre. Worldwide M2.5+ catalog for the last 7 days that gathers solutions from national networks and credits each agency. Useful when the national source does not respond. Data from EMSC-CSEM SeismicPortal under CC BY 4.0, adapted to Faro’s format.',
+                  'Centro Sismológico Euro-Mediterrâneo. Catálogo mundial M2.5+ dos últimos 7 dias que reúne soluções de redes nacionais e indica qual agência publicou cada uma. Útil se a fonte nacional não responde. Dados do EMSC-CSEM SeismicPortal sob licença CC BY 4.0, adaptados ao formato do Faro.',
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>USGS</dt>
+              <dd>
+                {t(
+                  'Catálogo mundial. Puede tardar varios minutos en publicar y no incluye todos los sismos pequeños fuera de sus redes. En sismos relevantes añade la alerta PAGER, la intensidad estimada y los reportes «¿Lo sentiste?».',
+                  'Worldwide catalog. It can take several minutes to publish and does not include every small earthquake outside its networks. For significant events it adds PAGER alerts, estimated intensity and "Did You Feel It?" reports.',
+                  'Catálogo mundial. Pode levar vários minutos para publicar e não inclui todos os terremotos pequenos fora de suas redes. Em terremotos relevantes, acrescenta o alerta PAGER, a intensidade estimada e os relatos “Você sentiu?”.',
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>
+                {t(
+                  'Servicios meteorológicos nacionales',
+                  'National weather services',
+                  'Serviços meteorológicos nacionais',
+                )}
+              </dt>
+              <dd>
+                {t(
+                  'Avisos vigentes de los servicios con canal de alertas (IMHPA, IMN, INDOMET, INAMHI, SMN), con sus indicaciones y el área que cubren, tal como se publican.',
+                  'Warnings in force from services with an alert feed (IMHPA, IMN, INDOMET, INAMHI, SMN), with their instructions and the area they cover, as published.',
+                  'Avisos em vigor dos serviços com canal de alertas (IMHPA, IMN, INDOMET, INAMHI, SMN), com suas orientações e a área que cobrem, como foram publicados.',
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>SINAPROC</dt>
+              <dd>
+                {t(
+                  'Protección Civil de Panamá: comunicados, avisos de prevención y reportes, con su hora de publicación. No tienen vencimiento; los simulacros no se muestran.',
+                  "Panama's civil protection agency: communiqués, prevention notices and reports, with their publication time. They have no expiry; drills are not shown.",
+                  'Proteção Civil do Panamá: comunicados, avisos de prevenção e relatórios, com o horário de publicação. Não têm vencimento; os simulados não são mostrados.',
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>{t('NOAA, GDACS y NWS', 'NOAA, GDACS and NWS', 'NOAA, GDACS e NWS')}</dt>
+              <dd>
+                {t(
+                  'Boletines de tsunami de NOAA/PTWC, ciclones activos del Centro Nacional de Huracanes, alertas de GDACS (ONU y Comisión Europea) y, para EE. UU., alertas del Servicio Meteorológico Nacional. Cada uno conserva su fecha y su fuente; ninguno se combina con otro.',
+                  'NOAA/PTWC tsunami bulletins, active cyclones from the National Hurricane Center, GDACS alerts (UN and European Commission) and, for U.S. areas, National Weather Service alerts. Each keeps its own date and source; none is merged with another.',
+                  'Boletins de tsunami da NOAA/PTWC, ciclones ativos do Centro Nacional de Furacões, alertas do GDACS (ONU e Comissão Europeia) e, para os EUA, alertas do Serviço Meteorológico Nacional. Cada um mantém sua data e sua fonte; nenhum é combinado com outro.',
+                )}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      {reviewed && (
+        <section
+          className="f-section @container grid gap-3"
+          id="fw-sources-help"
+          aria-labelledby="fw-sources-help-title"
+        >
+          <h2
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+            id="fw-sources-help-title"
+          >
+            {t(
+              'Teléfonos y enlaces de Ayuda',
+              'Help numbers and links',
+              'Telefones e links de Ajuda',
+            )}
+          </h2>
+          <Text>
+            {t(
+              'Faro revisa a mano los teléfonos, las oficinas y los enlaces de Ayuda; no se consultan en vivo.',
+              'Faro checks the numbers, offices and links in Help by hand; they are not checked live.',
+              'O Faro revisa à mão os telefones, as representações e os links de Ajuda; eles não são consultados ao vivo.',
+            )}{' '}
+            {reviewed.from === reviewed.to
+              ? t(
+                  `Revisión para ${countryName}: ${reviewDate(reviewed.to, lang)}.`,
+                  `Reviewed for ${countryName}: ${reviewDate(reviewed.to, lang)}.`,
+                  `Revisão (${countryName}): ${reviewDate(reviewed.to, lang)}.`,
+                )
+              : t(
+                  `Revisión para ${countryName}: entre el ${reviewDate(reviewed.from, lang)} y el ${reviewDate(reviewed.to, lang)}.`,
+                  `Reviewed for ${countryName}: between ${reviewDate(reviewed.from, lang)} and ${reviewDate(reviewed.to, lang)}.`,
+                  `Revisão (${countryName}): entre ${reviewDate(reviewed.from, lang)} e ${reviewDate(reviewed.to, lang)}.`,
+                )}
+          </Text>
+        </section>
+      )}
+
+      <section
+        className="f-section @container grid gap-3"
+        id="fw-sources-read"
+        aria-labelledby="fw-sources-read-title"
+      >
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-sources-read-title"
+          tabIndex={-1}
+        >
+          {t(
+            'Cómo leer las fechas y la cobertura',
+            'Reading dates and coverage',
+            'Como ler as datas e a cobertura',
+          )}
+        </h2>
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+          <p>
+            {t(
+              'La hora de un sismo es cuando ocurrió; «consultado» es cuando Faro recibió los datos. IGC, EMSC y USGS se muestran por separado para no contar dos veces el mismo sismo.',
+              'An earthquake time is when it happened; “checked” is when Faro received the data. IGC, EMSC and USGS are shown separately so the same earthquake is not counted twice.',
+              'O horário de um terremoto é quando ele ocorreu; “consultado” é quando o Faro recebeu os dados. IGC, EMSC e USGS aparecem separados para não contar duas vezes o mesmo terremoto.',
+            )}
+          </p>
+          <p>
+            {t(
+              'La región de un país incluye un área a su alrededor y puede abarcar países vecinos. No hay notificaciones en segundo plano: los datos se actualizan con la página abierta.',
+              'A country region includes an area around it and may cover neighboring countries. There are no background notifications: data updates while the page is open.',
+              'A região de um país inclui uma área ao seu redor e pode abranger países vizinhos. Não há notificações em segundo plano: os dados são atualizados com a página aberta.',
+            )}
+          </p>
+        </div>
+        <MagnitudeScale lang={lang} />
+      </section>
+
+      <section
+        className="f-section @container grid gap-3"
+        id="fw-sources-maps"
+        aria-labelledby="fw-sources-maps-title"
+      >
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-sources-maps-title"
+        >
+          {t('Datos del mapa y licencias', 'Map data and licenses', 'Dados do mapa e licenças')}
+        </h2>
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+          <p>
+            {t(
+              'Países: datos derivados de world-countries, bajo ODbL-1.0. Costa: Natural Earth, dominio público. Mapa base: OpenFreeMap © OpenMapTiles, datos de los colaboradores de OpenStreetMap. Límites de placas: PB2002 (Bird, 2003), versión de Hugo Ahlenius (Nordpil), bajo ODC-By 1.0.',
+              'Countries: data derived from world-countries, under ODbL-1.0. Coastline: Natural Earth, public domain. Base map: OpenFreeMap © OpenMapTiles, data from OpenStreetMap contributors. Plate boundaries: PB2002 (Bird, 2003), as converted by Hugo Ahlenius (Nordpil), under ODC-By 1.0.',
+              'Países: dados derivados de world-countries, sob ODbL-1.0. Costa: Natural Earth, domínio público. Mapa base: OpenFreeMap © OpenMapTiles, dados dos colaboradores do OpenStreetMap. Limites de placas: PB2002 (Bird, 2003), versão de Hugo Ahlenius (Nordpil), sob ODC-By 1.0.',
+            )}
+          </p>
+        </div>
+        <Actions>
+          <OutLink href="https://github.com/mledoze/countries">world-countries</OutLink>
+          <OutLink href="https://opendatacommons.org/licenses/odbl/1-0/">ODbL-1.0</OutLink>
+          <OutLink href="/about.html">{t('Acerca de Faro', 'About Faro', 'Sobre o Faro')}</OutLink>
+        </Actions>
+      </section>
+      {/* Location and privacy: the screen's one scope note, at the end. */}
+      <ScopeNote>
+        {t(
+          'La ubicación requiere tu permiso y no se guarda automáticamente. El mapa carga sus imágenes al abrirse: OpenFreeMap recibe tu IP y el área que miras. Tus datos del viaje se guardan solo en este navegador.',
+          'Location requires your permission and is not saved automatically. The map loads its images when shown: OpenFreeMap receives your IP and the area you view. Your trip data is stored only in this browser.',
+          'A localização requer sua permissão e não é salva automaticamente. O mapa carrega suas imagens ao ser exibido: o OpenFreeMap recebe seu IP e a área que você vê. Os dados da sua viagem ficam salvos só neste navegador.',
+        )}
+      </ScopeNote>
+    </div>
+  );
+}

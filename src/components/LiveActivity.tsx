@@ -1,210 +1,167 @@
-import { magnitudeBand } from '../lib/magnitude.ts';
-import { useState } from 'react';
-import { ArrowClockwiseIcon, ArrowUpRightIcon, MapPinIcon, XIcon } from '@phosphor-icons/react';
-import { displayPlace, type Quake } from '../lib/domain.ts';
-import { ageLabel, type FeedUpdate } from '../lib/feedUpdates.ts';
+import { useState, type ReactNode } from 'react';
+import { ActivityIcon, FunnelIcon, RotateCwIcon } from 'lucide-react';
+import { displayPlace, placeLang, type Quake } from '../lib/domain.ts';
+import { type FeedUpdate } from '../lib/feedUpdates.ts';
+import { checkedLabel } from '../lib/time.ts';
+import { lineStamp, sourceLine } from '../lib/sourceStatus.ts';
+import { pick, type Lang } from '../lib/i18n.ts';
+import {
+  Actions,
+  ExpandRow,
+  IconButton,
+  List,
+  ListRow,
+  Magnitude,
+  RowIcon,
+  SourceStamp,
+  StatusIcon,
+} from '../ui/index.ts';
 type Props = {
   events: Quake[];
   updates: FeedUpdate[];
   provider: string;
   catalog: string;
-  lang: 'es' | 'en';
+  lang: Lang;
   now: number;
-  next: number;
+  /** When the data shown was retrieved; 0 if nothing was received. */
   checked: number;
-  fetched: number;
   busy: boolean;
   online: boolean;
   stale: boolean;
-  formatTime: (time: number) => string;
+  /** The last request failed, and when it was made. */
+  failed: boolean;
+  failedAt: number | null;
   onRefresh: () => void;
   onDetails: (q: Quake) => void;
   onMap: (q: Quake) => void;
+  /** Opens the list of changes received since Faro was opened (on the Sources screen). */
+  onHistory: () => void;
+  /** The filters: one caption line that sums them up, and the fields shown when opened. */
+  filters: { summary: ReactNode; content: ReactNode };
+  /** What is wrong with the data, when something is (old answer, quiet catalogue). */
+  children?: ReactNode;
 };
+
+/**
+ * The head of the earthquake list: whether the catalogue is being checked and when it last
+ * answered, the filters, and an earthquake received a moment ago. The latest and largest
+ * earthquakes are on Situación; polling and the changes received are on the Sources screen.
+ */
 export default function LiveActivity(p: Props) {
-  const t = (es: string, en: string) => (p.lang === 'es' ? es : en);
+  const t = (es: string, en: string, pt: string) => pick(p.lang, es, en, pt);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set()),
-    [history, setHistory] = useState(false);
+    [filtersOpen, setFiltersOpen] = useState(false);
   const key = (u: FeedUpdate) => `${p.catalog}:${u.event.id}`;
   const visible = new Set(p.events.map((q) => q.id));
-  const updates = p.updates.filter((u) => visible.has(u.event.id));
-  const unread = updates.filter((u) => !dismissed.has(key(u)));
-  const latest = p.events.reduce<Quake | undefined>(
-    (a, q) => (!a || q.time > a.time ? q : a),
-    undefined,
-  );
+  const unread = p.updates.filter((u) => visible.has(u.event.id) && !dismissed.has(key(u)));
   const fresh = unread.find((u) => p.now >= u.receivedAt && p.now - u.receivedAt < 120000);
+  // What the list is doing, and the catalogue's state in the one vocabulary beside it: checked,
+  // no response or offline, with its time. The title never repeats the state's words.
+  const failing = p.online && p.failed && !p.busy;
   const state = !p.online
-    ? t('Sin conexión', 'Offline')
-    : p.busy
-      ? t('Consultando la fuente…', 'Checking source…')
-      : p.stale
-        ? t('Actualización pendiente', 'Update overdue')
-        : !p.checked
-          ? t('Conectando…', 'Connecting…')
-          : t('Actualización automática', 'Automatic updates');
-  const clock = (time: number) =>
-    new Intl.DateTimeFormat(p.lang, { timeStyle: 'medium' }).format(time);
+    ? t('Actualización en pausa', 'Updates paused', 'Atualização em pausa')
+    : failing || p.stale
+      ? t('Actualización pendiente', 'Update overdue', 'Atualização pendente')
+      : t('Actualización automática', 'Automatic updates', 'Atualização automática');
+  const old = !p.online || p.stale;
+  const clock = (time: number) => checkedLabel(time, p.now, p.lang);
+  const line = sourceLine({
+    checked: p.checked || null,
+    failed: p.failed,
+    failedAt: p.failedAt,
+    online: p.online,
+    // Polled every minute: an answer older than two is no longer current.
+    old: !!p.checked && p.now - p.checked > 120000,
+    now: p.now,
+    lang: p.lang,
+  });
   return (
     <section
-      className="fw-monitor"
-      aria-label={t('Últimos eventos y actualizaciones', 'Latest events and updates')}
+      className="f-stack grid gap-2"
+      data-gap="sm"
+      aria-label={t(
+        'Últimos eventos y actualizaciones',
+        'Latest events and updates',
+        'Últimos eventos e atualizações',
+      )}
     >
-      <div className="fw-monitor-connection">
-        <div>
-          <span
-            className={`fw-connection-dot ${!p.online || p.stale || !p.checked ? 'paused' : ''}`}
-          />
-          <strong>{state}</strong>
-          <span>{p.provider}</span>
-        </div>
-        <div className="fw-monitor-check">
-          <span>
-            {p.checked
-              ? `${t('Consultado', 'Checked')} ${clock(p.checked)}`
-              : t('Esperando respuesta', 'Awaiting response')}
-            {p.online && !p.busy && p.checked > 0 && (
-              <>
-                {' '}
-                · {t('Próxima consulta', 'Next check')}:{' '}
-                {Math.max(0, Math.ceil((p.next - p.now) / 1000))} s
-              </>
-            )}
-          </span>
-          <button disabled={p.busy || !p.online} onClick={p.onRefresh}>
-            <ArrowClockwiseIcon size={16} />
-            {p.busy ? t('Consultando…', 'Checking…') : t('Actualizar', 'Refresh')}
-          </button>
-        </div>
-      </div>
-      {latest && (
-        <div className="fw-latest-event">
-          <div className={`fw-latest-magnitude fw-mag-band-${magnitudeBand(latest.mag)}`}>
-            <strong>{latest.mag?.toFixed(1) ?? '—'}</strong>
-            <span>{t('Magnitud', 'Magnitude')}</span>
-          </div>
-          <div className="fw-latest-place">
-            <span className="fw-latest-kicker">
-              {t('Último sismo en el área', 'Latest earthquake in this area')}
-            </span>
-            <h2>{displayPlace(latest.place)}</h2>
-            <p>
-              <time
-                dateTime={new Date(latest.time).toISOString()}
-                title={p.formatTime(latest.time)}
-              >
-                {ageLabel(latest.time, p.now, p.lang)}
-              </time>{' '}
-              · {p.formatTime(latest.time)}
-            </p>
-            <span>
-              {latest.depth.toFixed(0)} km {t('de profundidad', 'deep')} ·{' '}
-              {latest.reviewed
-                ? t('Revisado por la fuente', 'Reviewed by source')
-                : t('Preliminar', 'Preliminary')}
-            </span>
-          </div>
-          <div className="fw-latest-actions">
-            <button onClick={() => p.onMap(latest)}>
-              <MapPinIcon size={17} />
-              {t('Ver epicentro', 'View epicentre')}
-            </button>
-            <button onClick={() => p.onDetails(latest)}>
-              {t('Detalle del sismo', 'Earthquake details')}
-              <ArrowUpRightIcon size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      <List>
+        <ListRow
+          lead={
+            <StatusIcon
+              state={old ? 'unknown' : p.busy || !p.checked ? 'pending' : 'listed'}
+              level={old ? 1 : undefined}
+              icon={<ActivityIcon className="size-4" />}
+            />
+          }
+          title={state}
+          meta={
+            <SourceStamp issuer={p.provider} state={lineStamp(line.state)}>
+              {line.text}
+            </SourceStamp>
+          }
+          trail={
+            <IconButton
+              label={
+                p.busy
+                  ? t('Consultando…', 'Checking…', 'Consultando…')
+                  : t('Actualizar', 'Refresh', 'Atualizar')
+              }
+              disabled={p.busy || !p.online}
+              onClick={p.onRefresh}
+            >
+              <RotateCwIcon className="size-4" aria-hidden="true" />
+            </IconButton>
+          }
+        />
+        <ExpandRow
+          id="fw-quake-filters"
+          open={filtersOpen}
+          onToggle={() => setFiltersOpen((v) => !v)}
+          lead={<RowIcon icon={<FunnelIcon className="size-4" />} />}
+          title={t('Filtros', 'Filters', 'Filtros')}
+          meta={p.filters.summary}
+        >
+          {p.filters.content}
+        </ExpandRow>
+      </List>
+      {p.children}
       {fresh && (
-        <div className="fw-arrival">
-          <div className="fw-arrival-content">
-            <p role="status">
-              <strong>
-                {t('Recibido', 'Received')} {clock(fresh.receivedAt)} · {t('Magnitud', 'Magnitude')}{' '}
-                {fresh.event.mag?.toFixed(1) ?? '—'}
-              </strong>{' '}
-              — {displayPlace(fresh.event.place)}
-              <span>
-                {t('Hora del sismo', 'Earthquake time')}: {p.formatTime(fresh.event.time)} ·{' '}
-                {p.provider}
-              </span>
-            </p>
-            <div className="fw-arrival-actions">
-              <button onClick={() => p.onDetails(fresh.event)}>
-                {t('Ver detalle', 'View details')} <ArrowUpRightIcon size={15} />
-              </button>
-              <button onClick={() => p.onMap(fresh.event)}>
-                {t('Ver epicentro', 'View epicentre')} <MapPinIcon size={15} />
-              </button>
-            </div>
-          </div>
-          <button
-            className="fw-arrival-dismiss"
-            aria-label={t('Descartar esta novedad', 'Dismiss this update')}
-            onClick={() => setDismissed((prev) => new Set([...prev, key(fresh)]))}
-          >
-            <XIcon size={18} />
-          </button>
-          {unread.length > 1 && (
-            <button className="fw-arrival-more" onClick={() => setHistory(true)}>
-              {t('Otras novedades en esta vista', 'Other updates in this view')}:{' '}
-              {unread.length - 1}
+        <div className="f-stack grid gap-2" data-gap="sm" role="status">
+          <List label={t('Recibido', 'Received', 'Recebido')}>
+            <ListRow
+              lead={
+                <>
+                  <Magnitude value={fresh.event.mag} />
+                  <span className="sr-only">{t('Magnitud', 'Magnitude', 'Magnitude')}</span>
+                </>
+              }
+              title={<span lang={placeLang(fresh.event)}>{displayPlace(fresh.event.place)}</span>}
+              meta={`${t('Recibido', 'Received', 'Recebido')} ${clock(fresh.receivedAt)} · ${t('Hora del sismo', 'Earthquake time', 'Horário do terremoto')}: ${clock(fresh.event.time)} · ${p.provider}`}
+              onClick={() => p.onDetails(fresh.event)}
+            />
+          </List>
+          <Actions>
+            <button type="button" onClick={() => p.onMap(fresh.event)}>
+              {t('Ver epicentro', 'View epicenter', 'Ver epicentro')}
             </button>
-          )}
-        </div>
-      )}
-      <div className="fw-monitor-foot">
-        <span>
-          {t(
-            'Cada sismo aparece cuando la fuente lo publica.',
-            'Each earthquake appears once the source publishes it.',
-          )}
-        </span>
-        <button aria-expanded={history} onClick={() => setHistory((v) => !v)}>
-          {t('Cambios recibidos', 'Updates received')} <b>{updates.length}</b>{' '}
-          <span aria-hidden="true">{history ? '−' : '+'}</span>
-        </button>
-      </div>
-      {history && (
-        <div className="fw-update-history">
-          <p>
-            {t(
-              'Recibidas desde que abriste Faro y que coinciden con tus filtros. La primera carga no cuenta como novedad. Hasta 50 por fuente.',
-              'Received since opening Faro and matching your filters. The initial load is not an update. Up to 50 per source.',
-            )}
-          </p>
-          {updates.length ? (
-            updates.map((u) => (
-              <button key={key(u)} onClick={() => p.onDetails(u.event)}>
-                <strong className={`fw-update-mag fw-mag-band-${magnitudeBand(u.event.mag)}`}>
-                  {u.event.mag?.toFixed(1) ?? '—'}
-                  <small>{t('Magnitud', 'Magnitude')}</small>
-                </strong>
-                <span>
-                  <b>{displayPlace(u.event.place)}</b>
-                  <small>
-                    {t('Sismo', 'Earthquake')}: {p.formatTime(u.event.time)} ·{' '}
-                    {t('Recibido', 'Received')}: {clock(u.receivedAt)}
-                  </small>
-                </span>
-                <ArrowUpRightIcon size={17} />
+            <button
+              type="button"
+              onClick={() => setDismissed((prev) => new Set([...prev, key(fresh)]))}
+            >
+              {t('Descartar esta novedad', 'Dismiss this update', 'Descartar esta novidade')}
+            </button>
+            {unread.length > 1 && (
+              <button type="button" onClick={p.onHistory}>
+                {t(
+                  'Otras novedades en esta vista',
+                  'Other updates in this view',
+                  'Outras novidades nesta tela',
+                )}
+                : {unread.length - 1}
               </button>
-            ))
-          ) : (
-            <p>
-              {t(
-                'Todavía no se recibieron otros eventos para esta vista.',
-                'No additional events received for this view yet.',
-              )}
-            </p>
-          )}
-          {p.fetched > 0 && (
-            <small>
-              {t('Datos obtenidos de la fuente', 'Data retrieved from source')}:{' '}
-              {p.formatTime(p.fetched)}
-            </small>
-          )}
+            )}
+          </Actions>
         </div>
       )}
     </section>

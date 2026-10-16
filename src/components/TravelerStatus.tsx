@@ -9,12 +9,34 @@ import { removeLocal } from '../lib/browserStorage.ts';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { recentLocation, statusLocation, type LocationFix } from '../lib/statusLocation.ts';
 import {
-  CheckCircleIcon,
   ArrowRightIcon,
-  WarningCircleIcon,
-  CopyIcon,
-  ShareNetworkIcon,
-} from '@phosphor-icons/react';
+  CircleAlertIcon,
+  CircleCheckIcon,
+  HistoryIcon,
+  ListPlusIcon,
+  PhoneIcon,
+} from 'lucide-react';
+import ShareButtons from './ShareButtons.tsx';
+import {
+  ActionBar,
+  Button,
+  CallButton,
+  ChoiceChip,
+  Chips,
+  Disclosure,
+  Field,
+  List,
+  ListRow,
+  MessageText,
+  Note,
+  RadioList,
+  RowIcon,
+  SafetyNotice,
+  ScopeNote,
+  SelectField,
+  TextArea,
+} from '../ui/index.ts';
+import { emergencyFor } from '../lib/emergency.ts';
 import {
   checkInMessage,
   checkInTime,
@@ -32,7 +54,11 @@ import type { Preferences } from '../lib/preferences.ts';
 import { displayPlace, type Quake } from '../lib/domain.ts';
 import type { HotelPlan, Lang } from '../lib/resources.ts';
 import { prepareCheckIn } from '../lib/prepareCheckIn.ts';
+import { newId } from '../lib/id.ts';
+import { langIndex, pick } from '../lib/i18n.ts';
 type Props = {
+  /** Country the person is in, for the local emergency number. */
+  country: string;
   location: LocationFix | null;
   profile: Preferences | null;
   plan: HotelPlan | null;
@@ -42,6 +68,8 @@ type Props = {
   onHistory: (rows: CheckIn[]) => void;
   now: number;
   onHelp: () => void;
+  /** Land-border lookup, available once the borders have loaded. */
+  countryAt?: (point: { lat: number; lng: number }) => string | null;
 };
 export default function TravelerStatus({
   location,
@@ -53,10 +81,13 @@ export default function TravelerStatus({
   onHistory,
   now,
   onHelp,
+  country,
+  countryAt,
 }: Props) {
   const preview = useRef<HTMLElement>(null),
     form = useRef<HTMLFormElement>(null);
-  const t = (es: string, en: string) => (lang === 'es' ? es : en);
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const localNumber = emergencyFor(country)?.numbers[0];
   const [prepared, setPrepared] = useState<CheckIn | null>(null),
     [preparedLanguage, setPreparedLanguage] = useState<Lang | null>(null),
     [notSaved, setNotSaved] = useState(false);
@@ -67,7 +98,8 @@ export default function TravelerStatus({
     [contact, setContact] = useState(history[0]?.contact || ''),
     [minutes, setMinutes] = useState(0),
     [feedback, setFeedback] = useState('');
-  const [context, setContext] = useState<MessageContext>('earthquake'),
+  // No reason is preselected: the message names an event only when the person chooses it.
+  const [context, setContext] = useState<MessageContext | ''>(''),
     [destination, setDestination] = useState(''),
     [companions, setCompanions] = useState(''),
     [needs, setNeeds] = useState(''),
@@ -81,9 +113,9 @@ export default function TravelerStatus({
   const outputLang = messageLanguage || lang;
   const locationIsRecent = recentLocation(location, now);
   const suggestedLocation = useMemo(
-    () => statusLocation(location, profile?.destination, now),
+    () => statusLocation(location, profile?.destination, now, countryAt),
     // Recalculate the country only when the fix, saved trip or freshness changes.
-    [location, profile?.destination, locationIsRecent],
+    [location, profile?.destination, locationIsRecent, countryAt],
   );
   const countryName = suggestedLocation
     ? new Intl.DisplayNames([lang], { type: 'region' }).of(suggestedLocation.country) ||
@@ -99,7 +131,7 @@ export default function TravelerStatus({
     contact: contact.trim(),
     at,
     nextAt: minutes ? at + minutes * 60000 : null,
-    context,
+    context: context || undefined,
     phone: includePhone ? profile?.phone || '' : '',
     email: includeEmail ? profile?.email || '' : '',
     destination: status === 'moving' ? destination.trim() : '',
@@ -112,9 +144,12 @@ export default function TravelerStatus({
         : null,
   });
   const [dirty, setDirty] = useState(false),
-    [confirmClear, setConfirmClear] = useState(false);
+    [confirmClear, setConfirmClear] = useState(false),
+    // Only the message language changed since the review: said as such, not as "your changes".
+    [languageOnly, setLanguageOnly] = useState(false);
   const change = () => {
     setDirty(true);
+    setLanguageOnly(false);
     setFeedback('');
   };
   const quickFields = (): QuickFields => ({ status, context, connection, note, needs, companions });
@@ -148,16 +183,20 @@ export default function TravelerStatus({
     // Only language changes trigger this; the form values are read at that moment.
   }, [outputLang]);
   const review = () => {
-    form.current
-      ?.querySelector<HTMLInputElement>('input[type=radio]:checked, input[type=radio]')
-      ?.focus({ preventScroll: true });
+    // The chosen status, or the first one when none is chosen yet (the radios are buttons).
+    (
+      form.current?.querySelector<HTMLElement>(
+        '[role=radiogroup] [role=radio][aria-checked=true]',
+      ) ?? form.current?.querySelector<HTMLElement>('[role=radiogroup] [role=radio]')
+    )?.focus({ preventScroll: true });
     form.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
   };
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     if (!status) return;
+    setLanguageOnly(false);
     const at = Date.now();
-    const row = { ...makeRecord(at), id: crypto.randomUUID() };
+    const row = { ...makeRecord(at), id: newId() };
     const result = prepareCheckIn(row, history);
     setPrepared(row);
     setPreparedLanguage(outputLang);
@@ -165,10 +204,14 @@ export default function TravelerStatus({
     if (result.persisted) onHistory(result.rows);
     setDirty(false);
     setFeedback('');
+    // One column at every width: the preview is below the form, so bring it into view.
+    // In one column the preview is below the form, so it is brought into view. On wide screens
+    // it is the side pane, already in view beside the form: focus moves there, the page stays.
     requestAnimationFrame(() => {
-      preview.current?.focus({ preventScroll: true });
-      if (window.matchMedia('(max-width:960px)').matches)
-        preview.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      const box = preview.current;
+      box?.focus({ preventScroll: true });
+      if (box && getComputedStyle(box).position !== 'sticky')
+        box.scrollIntoView({ block: 'start', behavior: 'instant' });
     });
   };
   const changed =
@@ -184,155 +227,185 @@ export default function TravelerStatus({
   const currentTime = Math.max(now, Date.now());
   const shareAllowed = canShareCheckIn(prepared, changed, currentTime);
   const expired = !!prepared && !canShareCheckIn(prepared, false, currentTime);
-  const copy = async () => {
-    if (!canShareCheckIn(prepared, changed, Date.now())) return;
-    try {
-      await navigator.clipboard.writeText(message);
-      setFeedback(
-        t(
-          'Copiado. Pégalo en la conversación que elijas.',
-          'Copied. Paste it into your chosen conversation.',
-        ),
-      );
-    } catch {
-      setFeedback(
-        t(
-          'No se pudo copiar. Selecciona el texto del mensaje para copiarlo manualmente.',
-          'Could not copy. Select the message text to copy it manually.',
-        ),
-      );
-    }
-  };
-  const share = async () => {
-    if (!canShareCheckIn(prepared, changed, Date.now())) return;
-    try {
-      await navigator.share({ text: message });
-      setFeedback(
-        t(
-          'Se abrió la opción de compartir. Comprueba el envío en la app que elegiste.',
-          'Sharing opened. Check the message in the app you chose.',
-        ),
-      );
-    } catch (e) {
-      setFeedback(
-        e instanceof Error && e.name === 'AbortError'
-          ? t(
-              'No compartiste el mensaje. Puedes intentarlo de nuevo.',
-              'You did not share the message. You can try again.',
-            )
-          : t(
-              'No se pudo abrir la app. Usa Copiar mensaje.',
-              'Could not open sharing. Use Copy message.',
-            ),
-      );
-    }
-  };
   const clear = () => {
     try {
       removeLocal('faro-checkins-v1');
       onHistory([]);
       setConfirmClear(false);
-      setFeedback(t('Historial borrado de este navegador.', 'History deleted from this browser.'));
+      setFeedback(
+        t(
+          'Historial borrado de este navegador.',
+          'History deleted from this browser.',
+          'Histórico apagado deste navegador.',
+        ),
+      );
     } catch {
-      setFeedback(t('No se pudo borrar el historial.', 'Could not delete history.'));
+      setFeedback(
+        t(
+          'No se pudo borrar el historial.',
+          'Could not delete history.',
+          'Não foi possível apagar o histórico.',
+        ),
+      );
     }
   };
+  const idx = langIndex(lang);
+  const statusMeta = {
+    ok: t(
+      'Un mensaje breve para tranquilizar',
+      'A short message to reassure others',
+      'Mensagem curta para tranquilizar',
+    ),
+    moving: t(
+      'Puedes decir a dónde vas',
+      "You can say where you're heading",
+      'Você pode dizer para onde vai',
+    ),
+    help: t(
+      'Di qué necesitas y dónde estás',
+      'Say where and what you need',
+      'Diga do que precisa e onde está',
+    ),
+  };
+  const notice = !!visibleRecord && ((!!prepared && (changed || expired)) || notSaved);
   return (
-    <div className="fw-traveler">
-      <form ref={form} className="fw-checkin-form" onSubmit={save} onChange={change}>
-        <header>
-          <p className="fw-message-steps">
-            {t('1. Completar · 2. Revisar · 3. Compartir', '1. Fill in · 2. Review · 3. Share')}
-          </p>
-          <h2>{t('¿Cómo estás ahora?', 'How are you now?')}</h2>
+    // Wide screens: the form, and beside it the message to send (helpers.css, f-two).
+    <div className="f-column f-two">
+      <form
+        ref={form}
+        className="f-section @container grid gap-3 [&_:is(input,select,textarea,button,summary,a)]:scroll-mb-18"
+        aria-labelledby="fw-status-title"
+        onSubmit={save}
+        onChange={change}
+      >
+        <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h2
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+            id="fw-status-title"
+          >
+            {t('¿Cómo estás?', 'How are you?', 'Como você está?')}
+          </h2>
+        </div>
+        <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
           <p>
             {t(
-              'Empieza con un mensaje listo o elige tu estado. Todo se puede editar.',
-              'Start with a ready message or choose your status. Everything stays editable.',
+              'Elige una opción. Verás el mensaje completo y podrás editarlo antes de enviarlo.',
+              'Choose an option. You will see the full message and can edit it before sending.',
+              'Escolha uma opção. Você verá a mensagem completa e poderá editá-la antes de enviar.',
             )}
           </p>
-        </header>
-        <div
-          className="fw-quick-messages"
-          role="group"
-          aria-label={t('Mensajes listos', 'Ready messages')}
-        >
-          <span className="fw-quick-title">{t('Mensajes listos', 'Ready messages')}</span>
-          <div>
-            {quickMessages.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                data-status={m.status}
-                aria-pressed={quick === m.id}
-                onClick={() => applyQuick(m.id)}
-              >
-                {m.label[lang === 'es' ? 0 : 1]}
-              </button>
-            ))}
-          </div>
         </div>
-        <fieldset>
-          <legend className="fw-sr">{t('Tu estado ahora', 'Your status now')}</legend>
-          <div className="fw-status-options">
-            {(['ok', 'moving', 'help'] as const).map((s, i) => {
-              const Icon = [CheckCircleIcon, ArrowRightIcon, WarningCircleIcon][i];
-              return (
-                <label key={s} data-status={s} className={status === s ? 'selected' : ''}>
-                  <input
-                    type="radio"
-                    required
-                    name="personal-status"
-                    value={s}
-                    checked={status === s}
-                    onChange={() => {
-                      setStatus(s);
-                      setQuick('');
-                    }}
-                  />
-                  <Icon size={20} />
-                  <span>{statusLabels[s][lang === 'es' ? 0 : 1]}</span>
-                  <span className="fw-radio-indicator" aria-hidden="true" />
-                </label>
-              );
+        <div className="f-stack grid gap-4">
+          <RadioList
+            name="personal-status"
+            legend={t('Tu estado ahora', 'Your status now', 'Seu status agora')}
+            required
+            value={status}
+            onChange={(s) => {
+              setStatus(s);
+              setQuick('');
+            }}
+            options={(['ok', 'moving', 'help'] as const).map((s, i) => {
+              const Icon = [CircleCheckIcon, ArrowRightIcon, CircleAlertIcon][i];
+              return {
+                value: s,
+                title: statusLabels[s][idx],
+                meta: statusMeta[s],
+                icon: <Icon className="size-4" />,
+              };
             })}
-          </div>
-        </fieldset>
-        {status === 'help' && (
-          <div className="fw-status-help">
-            <button type="button" className="fw-secondary" onClick={onHelp}>
-              {t('Ver teléfonos de emergencia', 'View emergency numbers')}
-            </button>
-            <p>
-              {t(
-                'Este mensaje se lo envías a tus contactos; no solicita rescate.',
-                'This message goes to your contacts; it does not request rescue.',
+          />
+          {status === 'help' && (
+            <>
+              <SafetyNotice>
+                {t(
+                  '¿Peligro inmediato? Llama primero a emergencias. Este mensaje solo llega a quien tú elijas; no pide rescate.',
+                  'In immediate danger? Call emergency services first. This message only reaches the people you choose; it does not request rescue.',
+                  'Em perigo imediato? Ligue primeiro para os serviços de emergência. Esta mensagem só chega a quem você escolher; ela não pede resgate.',
+                )}
+              </SafetyNotice>
+              {localNumber ? (
+                <CallButton
+                  number={localNumber.number}
+                  label={t(
+                    `Llamar al ${localNumber.number}`,
+                    `Call ${localNumber.number}`,
+                    `Ligar para ${localNumber.number}`,
+                  )}
+                  note={localNumber.label[idx]}
+                />
+              ) : (
+                <Button variant="secondary" onClick={onHelp}>
+                  {t(
+                    'Ver números de emergencia',
+                    'See emergency numbers',
+                    'Ver números de emergência',
+                  )}
+                </Button>
               )}
-            </p>
-          </div>
-        )}
-        <div className="fw-message-fields">
-          <label>
-            {t('Dónde estás ahora', 'Where you are now')}
-            <input
-              maxLength={160}
-              placeholder={t(
-                'Hotel, barrio o punto de encuentro',
-                'Hotel, neighborhood or meeting point',
-              )}
-              value={place}
-              onChange={(e) => setPlace(e.target.value)}
-            />
-          </label>
+            </>
+          )}
+          {/* Status first; a ready message is a shortcut that fills the form, never in the way. */}
+          <SelectField
+            id="fw-status-quick"
+            label={t('Usar un mensaje listo', 'Use a ready message', 'Usar uma mensagem pronta')}
+            hint={t(
+              'Opcional. Puedes cambiar todo después.',
+              'Optional. You can change everything afterwards.',
+              'Opcional. Você pode mudar tudo depois.',
+            )}
+            value={quick}
+            onChange={(e) => applyQuick(e.target.value)}
+          >
+            <option value="" disabled>
+              {t('Elige uno', 'Choose one', 'Escolha uma')}
+            </option>
+            {quickMessages.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label[idx]}
+              </option>
+            ))}
+          </SelectField>
+          <Field
+            id="fw-status-place"
+            label={t('Dónde estás ahora', 'Where you are now', 'Onde você está agora')}
+            maxLength={160}
+            // Short enough to show whole in a 320 px field.
+            placeholder={t(
+              'Hotel o punto de encuentro',
+              'Hotel or meeting point',
+              'Hotel ou ponto de encontro',
+            )}
+            value={place}
+            onChange={(e) => setPlace(e.target.value)}
+            aria-describedby={status === 'help' && !place.trim() ? 'fw-place-missing' : undefined}
+          />
+          {/* A help request without a place leaves family and the embassy unable to find you. */}
+          {status === 'help' && !place.trim() && (
+            <div id="fw-place-missing">
+              <SafetyNotice>
+                {t(
+                  'Pides ayuda: escribe dónde estás para que puedan encontrarte.',
+                  'You are asking for help: add where you are so you can be found.',
+                  'Você está pedindo ajuda: escreva onde está para que possam encontrar você.',
+                )}
+              </SafetyNotice>
+            </div>
+          )}
           {(countryName || hotel?.name) && (
+            // Actions that fill the field: buttons, not links.
             <div
-              className="fw-place-suggestions"
+              className="flex flex-wrap gap-2"
               role="group"
-              aria-label={t('Añadir un lugar al mensaje', 'Add a place to the message')}
+              aria-label={t(
+                'Añadir un lugar al mensaje',
+                'Add a place to the message',
+                'Adicionar um local à mensagem',
+              )}
             >
               {countryName && (
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     setPlace(countryName);
                     change();
@@ -342,212 +415,127 @@ export default function TravelerStatus({
                     ? t(
                         'Usar país según ubicación (aprox.):',
                         'Use country from location (approx.):',
+                        'Usar país pela localização (aprox.):',
                       )
-                    : t('Usar destino guardado:', 'Use saved destination:')}{' '}
+                    : t(
+                        'Usar destino guardado:',
+                        'Use saved destination:',
+                        'Usar destino salvo:',
+                      )}{' '}
                   {countryName}
-                </button>
+                </Button>
               )}
               {hotel?.name && (
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     setPlace(`${hotel.name}, ${countryName}`);
                     change();
                   }}
                 >
-                  {t('Usar hotel guardado:', 'Use saved hotel:')} {hotel.name}
-                </button>
+                  {t('Usar hotel guardado:', 'Use saved hotel:', 'Usar hotel salvo:')} {hotel.name}
+                </Button>
               )}
             </div>
           )}
           {location && !suggestedLocation && (
-            <p className="fw-location-hint">
+            <Note>
               {t(
                 'No se pudo determinar el país con una ubicación reciente. Escribe dónde estás.',
                 'Could not determine the country from a recent location. Enter where you are.',
+                'Não foi possível identificar o país com uma localização recente. Escreva onde você está.',
               )}
-            </p>
+            </Note>
           )}
           {status === 'moving' && (
-            <label>
-              {t('A dónde vas', 'Where you are heading')}
-              <input
-                maxLength={160}
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                placeholder={t('Nombre del lugar o dirección', 'Place name or address')}
-              />
-            </label>
+            <Field
+              id="fw-status-destination"
+              label={t('A dónde vas', 'Where you are heading', 'Para onde você vai')}
+              maxLength={160}
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              placeholder={t(
+                'Nombre del lugar o dirección',
+                'Place name or address',
+                'Nome do local ou endereço',
+              )}
+            />
           )}
           {status === 'help' && (
-            <div className="fw-help-request">
-              <div
-                className="fw-needs-presets"
-                role="group"
-                aria-label={t('Opciones de ayuda', 'Help suggestions')}
-              >
+            <>
+              <TextArea
+                id="fw-status-needs"
+                label={t('Qué ayuda necesitas', 'What help you need', 'De que ajuda você precisa')}
+                maxLength={300}
+                rows={2}
+                value={needs}
+                onChange={(e) => {
+                  setNeeds(e.target.value);
+                  setQuick('');
+                }}
+                placeholder={t(
+                  'Por ejemplo: necesito que contacten a mi seguro de viaje',
+                  'For example: please contact my travel insurer',
+                  'Por exemplo: preciso que entrem em contato com meu seguro viagem',
+                )}
+              />
+              {/* Choices that fill the field: chips, pressed when the field holds their text. */}
+              <Chips label={t('Opciones de ayuda', 'Help suggestions', 'Opções de ajuda')}>
                 {helpTemplates.map((template) => (
-                  <button
+                  <ChoiceChip
                     key={template.id}
-                    type="button"
-                    aria-pressed={needs === template.text[lang === 'es' ? 0 : 1]}
+                    pressed={needs === template.text[idx]}
                     onClick={() => {
-                      setNeeds(template.text[lang === 'es' ? 0 : 1]);
+                      setNeeds(template.text[idx]);
                       setQuick('');
                       change();
                     }}
                   >
-                    {template.label[lang === 'es' ? 0 : 1]}
-                  </button>
+                    {template.label[idx]}
+                  </ChoiceChip>
                 ))}
-              </div>
-              <label>
-                {t('Qué ayuda necesitas', 'What help you need')}
-                <textarea
-                  maxLength={300}
-                  rows={2}
-                  value={needs}
-                  onChange={(e) => {
-                    setNeeds(e.target.value);
-                    setQuick('');
-                  }}
-                  placeholder={t(
-                    'Por ejemplo: necesito que contacten a mi seguro de viaje',
-                    'For example: please contact my travel insurer',
-                  )}
-                />
-              </label>
-            </div>
+              </Chips>
+            </>
           )}
-        </div>
-        <details className="fw-checkin-optional">
-          <summary>{t('Más detalles · opcional', 'More details · optional')}</summary>
-          <div className="fw-message-fields">
-            <label>
-              {t('Motivo del mensaje', 'Reason for your message')}
-              <select
-                value={context}
-                onChange={(e) => setContext(e.target.value as MessageContext)}
-              >
-                {Object.entries(contextLabels).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label[lang === 'es' ? 0 : 1]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="fw-context-pair">
-              <label>
-                {t('Puedes contactarme', 'Reaching me')}
-                <select
-                  value={connection}
-                  onChange={(e) => setConnection(e.target.value as Connection | '')}
-                >
-                  <option value="">{t('Sin indicar', 'Not specified')}</option>
-                  {Object.entries(connectionLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label[lang === 'es' ? 0 : 1]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                {t('Volveré a avisar', "I'll check in again")}
-                <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
-                  <option value={0}>{t('Sin acordar una hora', 'No time agreed')}</option>
-                  {[15, 30, 60, 120].map((v) => (
-                    <option key={v} value={v}>
-                      {t('En', 'In')} {v} min
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            {minutes > 0 && (
-              <small>
-                {t(
-                  'Es un compromiso en tu mensaje. El recordatorio aparece con Faro abierto.',
-                  'This is a commitment in your message. The reminder appears while Faro is open.',
-                )}
-              </small>
+          <Disclosure
+            lead={<RowIcon icon={<ListPlusIcon className="size-4" />} />}
+            title={t(
+              'Más detalles (opcional)',
+              'More details (optional)',
+              'Mais detalhes (opcional)',
             )}
-          </div>
-          {(profile?.phone || profile?.email) && (
-            <fieldset className="fw-contact-inclusion">
-              <legend>{t('Incluir cómo contactarme', 'Include how to reach me')}</legend>
-              {profile.phone && (
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={includePhone}
-                    onChange={(e) => setIncludePhone(e.target.checked)}
-                  />
-                  {t('Mi teléfono', 'My phone')} · {profile.phone}
-                </label>
-              )}
-              {profile.email && (
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={includeEmail}
-                    onChange={(e) => setIncludeEmail(e.target.checked)}
-                  />
-                  {t('Mi correo', 'My email')} · {profile.email}
-                </label>
-              )}
-            </fieldset>
-          )}
-          <div className="fw-checkin-fields">
-            <label>
-              {t('Tu nombre', 'Your name')}
-              <input
-                autoComplete="given-name"
-                maxLength={80}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </label>
-            <label>
-              {t('Con quién estás', 'Who you are with')}
-              <input
-                maxLength={160}
-                value={companions}
-                onChange={(e) => {
-                  setCompanions(e.target.value);
-                  setQuick('');
-                }}
-                placeholder={t('Mis compañeros de trabajo', 'My colleagues')}
-              />
-            </label>
-          </div>
-          <label>
-            {t('Algo más que quieras contar', 'Anything else to add')}
-            <textarea
-              maxLength={600}
-              rows={2}
-              value={note}
-              onChange={(e) => {
-                setNote(e.target.value);
-                setQuick('');
-              }}
-            />
-          </label>
-          <label>
-            {t('Si no respondo, contacten a…', 'If I do not reply, contact…')}
-            <input
-              maxLength={300}
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-              placeholder={t(
-                'Nombre y teléfono de un contacto alternativo',
-                'Name and phone number of an alternative contact',
-              )}
-            />
-          </label>
-          {context === 'earthquake' && (
-            <label>
-              {t('Añadir un reporte oficial', 'Add an official report')}
-              <select
+            meta={t(
+              'Motivo, contacto, nombre y más',
+              'Reason, contact, name and more',
+              'Motivo, contato, nome e mais',
+            )}
+          >
+            <SelectField
+              id="fw-status-reason"
+              label={t('Por qué escribes', 'Why you are writing', 'Por que você está escrevendo')}
+              value={context}
+              onChange={(e) => setContext(e.target.value as MessageContext | '')}
+            >
+              <option value="">{t('Sin indicar', 'Not specified', 'Não informado')}</option>
+              {(Object.keys(contextLabels) as MessageContext[]).map((value) => (
+                <option key={value} value={value}>
+                  {contextLabels[value][idx]}
+                </option>
+              ))}
+            </SelectField>
+            {context === 'earthquake' && (
+              <SelectField
+                id="fw-status-event"
+                label={t(
+                  'Añadir un reporte oficial',
+                  'Add an official report',
+                  'Adicionar um registro oficial',
+                )}
+                hint={t(
+                  'Reportes de la vista actual del mapa. Elige solo el que quieras mencionar; no indica cómo te afectó.',
+                  'Reports from the current map view. Choose only the one you want to mention; it does not show how you were affected.',
+                  'Registros da área visível do mapa. Escolha só o que quiser mencionar; ele não indica como isso afetou você.',
+                )}
                 value={event?.id || ''}
                 onChange={(e) => {
                   const selected = events.find((item) => item.id === e.target.value);
@@ -564,7 +552,9 @@ export default function TravelerStatus({
                   );
                 }}
               >
-                <option value="">{t('Sin adjuntar un reporte', 'No report attached')}</option>
+                <option value="">
+                  {t('Sin adjuntar un reporte', 'No report attached', 'Sem registro anexado')}
+                </option>
                 {event && !events.some((item) => item.id === event.id) && (
                   <option value={event.id}>
                     M {event.mag ?? '—'} · {displayPlace(event.place)}
@@ -576,221 +566,386 @@ export default function TravelerStatus({
                     {checkInTime(item.time, lang)}
                   </option>
                 ))}
-              </select>
-              <small>
+              </SelectField>
+            )}
+            <SelectField
+              id="fw-status-connection"
+              label={t('Puedes contactarme', 'Reaching me', 'Como falar comigo')}
+              value={connection}
+              onChange={(e) => setConnection(e.target.value as Connection | '')}
+            >
+              <option value="">{t('Sin indicar', 'Not specified', 'Não informado')}</option>
+              {Object.entries(connectionLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label[idx]}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
+              id="fw-status-minutes"
+              label={t('Volveré a avisar', "I'll check in again", 'Volto a dar notícias')}
+              value={minutes}
+              onChange={(e) => setMinutes(Number(e.target.value))}
+            >
+              <option value={0}>
+                {t('Sin acordar una hora', 'No time agreed', 'Sem horário combinado')}
+              </option>
+              {[15, 30, 60, 120].map((v) => (
+                <option key={v} value={v}>
+                  {t('En', 'In', 'Em')} {v} min
+                </option>
+              ))}
+            </SelectField>
+            {minutes > 0 && (
+              <Note>
                 {t(
-                  'Reportes de la vista actual del mapa. Elige solo el que quieras mencionar; no indica cómo te afectó.',
-                  'Reports from the current map view. Choose only the one you want to mention; it does not show how you were affected.',
+                  'Es un compromiso en tu mensaje. El recordatorio aparece con Faro abierto.',
+                  'This is a commitment in your message. The reminder appears while Faro is open.',
+                  'É um compromisso na sua mensagem. O lembrete aparece com o Faro aberto.',
                 )}
-              </small>
-            </label>
-          )}
-        </details>
-        <button type="submit" className="fw-primary" disabled={!status}>
-          {t('Revisar mensaje', 'Review message')}
-          <ArrowRightIcon size={17} />
-        </button>
-        <small className="fw-checkin-privacy">
+              </Note>
+            )}
+            {(profile?.phone || profile?.email) && (
+              <div className="grid gap-3">
+                <span className="text-sm leading-snug font-medium" aria-hidden="true">
+                  {t(
+                    'Incluir cómo contactarme',
+                    'Include how to reach me',
+                    'Incluir como falar comigo',
+                  )}
+                </span>
+                <Chips
+                  label={t(
+                    'Incluir cómo contactarme',
+                    'Include how to reach me',
+                    'Incluir como falar comigo',
+                  )}
+                >
+                  {profile.phone && (
+                    <ChoiceChip
+                      pressed={includePhone}
+                      onClick={() => {
+                        setIncludePhone(!includePhone);
+                        change();
+                      }}
+                    >
+                      {t('Mi teléfono', 'My phone', 'Meu telefone')} · {profile.phone}
+                    </ChoiceChip>
+                  )}
+                  {profile.email && (
+                    <ChoiceChip
+                      pressed={includeEmail}
+                      onClick={() => {
+                        setIncludeEmail(!includeEmail);
+                        change();
+                      }}
+                    >
+                      {t('Mi correo', 'My email', 'Meu e-mail')} · {profile.email}
+                    </ChoiceChip>
+                  )}
+                </Chips>
+              </div>
+            )}
+            <Field
+              id="fw-status-name"
+              label={t('Tu nombre', 'Your name', 'Seu nome')}
+              autoComplete="given-name"
+              maxLength={80}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <Field
+              id="fw-status-companions"
+              label={t('Con quién estás', 'Who you are with', 'Com quem você está')}
+              maxLength={160}
+              value={companions}
+              onChange={(e) => {
+                setCompanions(e.target.value);
+                setQuick('');
+              }}
+              placeholder={t(
+                'Mis compañeros de trabajo',
+                'My colleagues',
+                'Meus colegas de trabalho',
+              )}
+            />
+            <TextArea
+              id="fw-status-note"
+              label={t(
+                'Algo más que quieras contar',
+                'Anything else to add',
+                'Algo mais que queira contar',
+              )}
+              maxLength={600}
+              rows={2}
+              value={note}
+              onChange={(e) => {
+                setNote(e.target.value);
+                setQuick('');
+              }}
+            />
+            <Field
+              id="fw-status-contact"
+              label={t(
+                'Si no respondo, contacten a…',
+                'If I do not reply, contact…',
+                'Se eu não responder, falem com…',
+              )}
+              maxLength={300}
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              // Too long for a placeholder on a phone: said above the field instead.
+              hint={t(
+                'Nombre y teléfono de un contacto alternativo',
+                'Name and phone number of an alternative contact',
+                'Nome e telefone de um contato alternativo',
+              )}
+            />
+          </Disclosure>
+        </div>
+        {/* The one main action, above the bottom tabs while the form is on screen. */}
+        <ActionBar>
+          <Button type="submit" block disabled={!status}>
+            {t('Revisar mensaje', 'Review message', 'Revisar mensagem')}
+            <ArrowRightIcon className="size-4" aria-hidden="true" />
+          </Button>
+        </ActionBar>
+        <Note>
           {t(
             'Revisa el texto y después elige cómo compartirlo.',
             'Review the text, then choose how to share it.',
+            'Revise o texto e depois escolha como compartilhá-lo.',
           )}
-        </small>
+        </Note>
       </form>
-      <aside className="fw-checkin-aside">
-        <section
-          className={`fw-message-preview ${visibleRecord ? 'has-message' : 'is-empty'}`}
-          ref={preview}
-          tabIndex={-1}
-          aria-label={t('Vista previa del mensaje', 'Message preview')}
+
+      <section
+        className="f-section @container grid gap-3"
+        data-side=""
+        style={{ '--f-side-span': 2 } as React.CSSProperties}
+        ref={preview}
+        tabIndex={-1}
+        aria-label={t('Vista previa del mensaje', 'Message preview', 'Prévia da mensagem')}
+      >
+        <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h2 className="f-section-title m-0 text-base leading-snug font-semibold">
+            {t('Tu mensaje', 'Your message', 'Sua mensagem')}
+          </h2>
+          <span className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900">
+            {shareAllowed
+              ? t('Listo para compartir', 'Ready to share', 'Pronta para compartilhar')
+              : t('Borrador', 'Draft', 'Rascunho')}
+          </span>
+        </div>
+        <SelectField
+          id="fw-status-language"
+          label={t('Idioma del mensaje', 'Message language', 'Idioma da mensagem')}
+          value={outputLang}
+          onChange={(e) => {
+            setMessageLanguage(e.target.value as Lang);
+            change();
+            setLanguageOnly(true);
+          }}
         >
-          <header>
-            <div className="fw-preview-title">
-              <h2>{t('Tu mensaje', 'Your message')}</h2>
-              <span className={`fw-draft-badge ${shareAllowed ? 'ready' : ''}`}>
-                {shareAllowed
-                  ? t('Listo para compartir', 'Ready to share')
-                  : t('Borrador', 'Draft')}
-              </span>
-            </div>
-            <label className="fw-output-language">
-              {t('Idioma del mensaje', 'Message language')}
-              <select
-                value={outputLang}
-                onChange={(e) => {
-                  setMessageLanguage(e.target.value as Lang);
-                  change();
-                }}
-              >
-                <option value="es">Español</option>
-                <option value="en">English</option>
-              </select>
-            </label>
-            {outputLang !== lang && (
-              <p className="fw-language-note">
-                {t(
-                  'Los nombres y detalles se mantienen como los escribiste.',
-                  'Names and details stay in the language you entered.',
-                )}
-              </p>
+          <option value="es">Español</option>
+          <option value="en">English</option>
+          <option value="pt">Português</option>
+        </SelectField>
+        {outputLang !== lang && (
+          <Note>
+            {t(
+              'Los nombres y detalles se mantienen como los escribiste.',
+              'Names and details stay in the language you entered.',
+              'Nomes e detalhes ficam no idioma em que você escreveu.',
             )}
-          </header>
-          {visibleRecord ? (
-            <>
-              {((prepared && (changed || expired)) || notSaved) && (
-                <div className="fw-message-notice" role="status">
-                  <p>
-                    {changed
+          </Note>
+        )}
+        {visibleRecord ? (
+          <>
+            {notice && (
+              <div className="f-stack grid gap-2" data-gap="sm" role="status">
+                <Note>
+                  {changed && languageOnly
+                    ? t(
+                        'Cambiaste el idioma del mensaje. Revísalo de nuevo antes de compartir.',
+                        'You changed the message language. Review it again before sharing.',
+                        'Você mudou o idioma da mensagem. Revise de novo antes de compartilhar.',
+                      )
+                    : changed
                       ? t(
                           'La vista previa incluye tus cambios. Confirma el mensaje antes de compartir.',
                           'The preview includes your changes. Confirm the message before sharing.',
+                          'A prévia inclui suas alterações. Confirme a mensagem antes de compartilhar.',
                         )
                       : expired
                         ? t(
                             'Revisa cómo estás antes de volver a compartir este mensaje.',
                             'Review how you are before sharing this message again.',
+                            'Revise como você está antes de compartilhar esta mensagem de novo.',
                           )
                         : t(
                             'No se pudo guardar. Puedes compartirlo ahora; se perderá al cerrar o recargar Faro.',
                             'Could not save. You can share it now; it will be lost if you close or reload Faro.',
+                            'Não foi possível salvar. Você pode compartilhá-la agora; ela será perdida se você fechar ou recarregar o Faro.',
                           )}
-                  </p>
-                  {(changed || expired) && (
-                    <button onClick={review}>{t('Revisar mi estado', 'Review my status')}</button>
-                  )}
-                </div>
-              )}
-              {prepared && !changed && (
-                <button className="fw-edit-message" onClick={review}>
-                  {t('Editar datos', 'Edit details')}
-                </button>
-              )}
-              <div
-                className="fw-message-body"
-                role="region"
-                aria-label={t('Mensaje para compartir', 'Message to share')}
-              >
-                {message.split('\n\n').map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
+                </Note>
+                {(changed || expired) && (
+                  <Button variant="secondary" onClick={review}>
+                    {t('Revisar mi estado', 'Review my status', 'Revisar meu status')}
+                  </Button>
+                )}
               </div>
-              {!prepared && (
-                <p className="fw-draft-hint">
-                  {t(
-                    'Pulsa «Revisar mensaje» antes de compartir.',
-                    'Select “Review message” before sharing.',
-                  )}
+            )}
+            <MessageText
+              label={t('Mensaje para compartir', 'Message to share', 'Mensagem para compartilhar')}
+            >
+              {message.split('\n\n').map((paragraph, index, all) => (
+                <p key={index}>
+                  {index > 0 && index === all.length - 1 ? <small>{paragraph}</small> : paragraph}
                 </p>
-              )}
-              <div
-                className="fw-share-actions"
-                role="group"
-                aria-label={t('Compartir mensaje preparado', 'Share prepared message')}
-              >
-                <button className="fw-primary" disabled={!shareAllowed} onClick={() => void copy()}>
-                  <CopyIcon size={17} />
-                  {t('Copiar', 'Copy')}
-                </button>
-                {typeof navigator.share === 'function' && (
-                  <button
-                    className="fw-secondary"
-                    disabled={!shareAllowed}
-                    onClick={() => void share()}
-                  >
-                    <ShareNetworkIcon size={17} />
-                    {t('Compartir', 'Share')}
-                  </button>
-                )}
-                {shareAllowed && (
-                  <a
-                    href={`https://wa.me/?text=${encodeURIComponent(message)}`}
-                    onClick={(e) => {
-                      if (!canShareCheckIn(prepared, changed, Date.now())) e.preventDefault();
-                    }}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    WhatsApp ↗
-                  </a>
+              ))}
+            </MessageText>
+            {prepared && !changed && (
+              <Button variant="secondary" onClick={review}>
+                {t('Editar datos', 'Edit details', 'Editar dados')}
+              </Button>
+            )}
+            {/* On a phone the form's review button is far above; this one is next to sharing. */}
+            {!prepared && (
+              <div className="f-stack grid gap-2" data-gap="sm">
+                <Note>
+                  {t(
+                    'Revisa el mensaje antes de compartir.',
+                    'Review the message before sharing.',
+                    'Revise a mensagem antes de compartilhar.',
+                  )}
+                </Note>
+                {status && (
+                  <Button variant="secondary" onClick={() => form.current?.requestSubmit()}>
+                    {t('Revisar mensaje', 'Review message', 'Revisar mensagem')}
+                  </Button>
                 )}
               </div>
-              <small>
-                {t(
-                  'Elige el contacto en tu app y confirma el envío allí. No se adjunta tu GPS.',
-                  'Choose a contact in your app and confirm sending there. Your GPS is not attached.',
-                )}
-              </small>
-            </>
-          ) : (
-            <div className="fw-preview-empty">
-              <p>
-                {t(
-                  'Elige cómo estás. Verás el mensaje completo aquí mientras añades información.',
-                  'Choose how you are. Your full message will appear here as you add details.',
-                )}
-              </p>
-            </div>
-          )}
-        </section>
-        {feedback && (
-          <p className="fw-share-feedback" role="status">
-            {feedback}
-          </p>
-        )}
-        {history.length > 0 && (
-          <details className="fw-checkin-history">
-            <summary>
-              {t('Mensajes anteriores', 'Previous messages')} ({history.length})
-            </summary>
+            )}
+            <ShareButtons
+              lang={lang}
+              text={message}
+              subject={t('Cómo estoy', 'How I am', 'Como estou')}
+              enabled={shareAllowed}
+              allow={() => canShareCheckIn(prepared, changed, Date.now())}
+              label={t(
+                'Compartir mensaje preparado',
+                'Share prepared message',
+                'Compartilhar mensagem preparada',
+              )}
+            />
+            <Note>
+              {t(
+                'Elige el contacto en tu app y confirma el envío allí. No se adjunta tu GPS.',
+                'Choose a contact in your app and confirm sending there. Your GPS is not attached.',
+                'Escolha o contato no seu app e confirme o envio lá. Seu GPS não é anexado.',
+              )}
+            </Note>
+          </>
+        ) : (
+          <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
             <p>
+              {t(
+                'Elige cómo estás. Verás el mensaje completo aquí mientras añades información.',
+                'Choose how you are. Your full message will appear here as you add details.',
+                'Escolha como você está. A mensagem completa aparecerá aqui conforme você adiciona informações.',
+              )}
+            </p>
+          </div>
+        )}
+      </section>
+
+      <div className="f-stack" data-gap="lg">
+        {history.length > 0 && (
+          <Disclosure
+            lead={<RowIcon icon={<HistoryIcon className="size-4" />} />}
+            title={`${t('Mensajes preparados', 'Prepared messages', 'Mensagens preparadas')} (${history.length})`}
+            meta={t(
+              'Guardados en este navegador',
+              'Saved in this browser',
+              'Salvas neste navegador',
+            )}
+          >
+            <Note>
               {t(
                 'Guardados en este navegador. No indican tu situación actual.',
                 'Saved in this browser. They do not describe your current situation.',
+                'Salvas neste navegador. Não indicam sua situação atual.',
               )}
-            </p>
-            <ol>
-              {history.map((row) => (
-                <li key={row.id}>
-                  <strong>{statusLabels[row.status][lang === 'es' ? 0 : 1]}</strong>
-                  <time>{checkInTime(row.at, lang)}</time>
-                  {row.place && <span>{row.place}</span>}
-                </li>
-              ))}
-            </ol>
+            </Note>
+            <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+              <ul>
+                {history.map((row) => (
+                  <li key={row.id}>
+                    {statusLabels[row.status][idx]}
+                    <br />
+                    <small>
+                      <time>{checkInTime(row.at, lang)}</time>
+                      {row.place && ` · ${row.place}`}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            </div>
             {confirmClear ? (
-              <div className="fw-history-confirm">
+              <div
+                className="f-stack f-prose grid max-w-2xl gap-2 *:m-0 [&_dt]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5"
+                data-gap="sm"
+              >
                 <p>
                   {t(
                     '¿Borrar los mensajes anteriores de este navegador?',
                     'Delete previous messages from this browser?',
+                    'Apagar as mensagens anteriores deste navegador?',
                   )}
                 </p>
-                <button className="fw-secondary" onClick={clear}>
-                  {t('Borrar mensajes anteriores', 'Delete previous messages')}
-                </button>
-                <button className="fw-text" onClick={() => setConfirmClear(false)}>
-                  {t('Cancelar', 'Cancel')}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="secondary" onClick={clear}>
+                    {t(
+                      'Borrar mensajes anteriores',
+                      'Delete previous messages',
+                      'Apagar mensagens anteriores',
+                    )}
+                  </Button>
+                  <Button variant="ghost" onClick={() => setConfirmClear(false)}>
+                    {t('Cancelar', 'Cancel', 'Cancelar')}
+                  </Button>
+                </div>
               </div>
             ) : (
-              <button className="fw-text" onClick={() => setConfirmClear(true)}>
-                {t('Borrar historial', 'Delete history')}
-              </button>
+              <Button variant="ghost" data-tone="error" onClick={() => setConfirmClear(true)}>
+                {t('Borrar historial', 'Delete history', 'Apagar histórico')}
+              </Button>
             )}
-          </details>
+          </Disclosure>
         )}
-        <div className="fw-followup-note">
-          <button className="fw-text" onClick={onHelp}>
-            {t('Ver teléfonos de emergencia', 'View emergency numbers')} →
-          </button>
-          <p>
-            {t(
-              'Para un próximo contacto, acuerda una hora con alguien. Faro no avisa a otras personas automáticamente.',
-              'For a later check-in, agree on a time with someone. Faro does not notify other people automatically.',
-            )}
-          </p>
+
+        <div className="f-stack grid gap-2" data-gap="sm">
+          {/* Always present, so a screen reader announces the feedback when it appears. */}
+          <div role="status">{feedback && <Note>{feedback}</Note>}</div>
+          {/* Another screen: a row that opens Emergencia at its numbers. */}
+          <List>
+            <ListRow
+              lead={<RowIcon icon={<PhoneIcon className="size-4" />} />}
+              title={t('Teléfonos de emergencia', 'Emergency numbers', 'Telefones de emergência')}
+              meta={t('En Emergencia', 'In Emergency', 'Em Emergência')}
+              onClick={onHelp}
+            />
+          </List>
         </div>
-      </aside>
+        <ScopeNote>
+          {t(
+            'Para un próximo contacto, acuerda una hora con alguien. Faro no avisa a otras personas automáticamente.',
+            'For a later check-in, agree on a time with someone. Faro does not notify other people automatically.',
+            'Para dar notícias depois, combine um horário com alguém. O Faro não avisa outras pessoas automaticamente.',
+          )}
+        </ScopeNote>
+      </div>
     </div>
   );
 }

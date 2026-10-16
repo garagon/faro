@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { checkInDue, checkInMessage, validCheckIn, type CheckIn } from '../src/lib/traveler.ts';
+import { langIndex, pick } from '../src/lib/i18n.ts';
 const row: CheckIn = {
   id: 'test',
   name: 'Alex',
@@ -31,6 +32,24 @@ test('shared message preserves original timestamp, explicit time zone and self-r
   assert.match(en, /Updated:/);
   assert.equal(checkInMessage(row, 'es', 'America/Panama'), es);
   assert.doesNotMatch(es, /maps|latitude|longitude|https/);
+});
+test('even a bare "I\'m OK" says the person will write again', () => {
+  const bare: CheckIn = {
+    ...row,
+    status: 'ok',
+    name: '',
+    place: '',
+    note: '',
+    contact: '',
+    nextAt: null,
+  };
+  assert.match(
+    checkInMessage(bare, 'en', 'UTC'),
+    /^I'm OK\.\n\nI'll write again when I can\.\n\nUpdated:/,
+  );
+  assert.match(checkInMessage(bare, 'es', 'UTC'), /Volveré a escribir cuando pueda\./);
+  // Asking for help ends with the request to reply instead.
+  assert.doesNotMatch(checkInMessage({ ...bare, status: 'help' }, 'en', 'UTC'), /write again/);
 });
 test('stored check-ins reject corrupt states and impossible deadlines', () => {
   assert.ok(validCheckIn(row));
@@ -120,12 +139,15 @@ test('contextual updates explain location, reachability and the next check-in in
   const en = checkInMessage(contextual, 'en', 'America/Panama');
   assert.match(es, /por el sismo/);
   assert.match(es, /Me dirijo a Punto de prueba/);
-  assert.match(es, /poca batería/);
-  assert.match(es, /confirmen que recibieron/);
+  assert.match(es, /poca batería: puede que no responda/);
+  // Standard closing: how to reply without congesting the network, not a demand to confirm.
+  assert.match(es, /respondan con un mensaje de texto\. No hace falta llamar/);
+  assert.match(es, /Volveré a escribir/);
   assert.match(en, /about the earthquake/);
   assert.match(en, /heading to Punto de prueba/);
-  assert.match(en, /battery is low/);
-  assert.match(en, /Please let me know/);
+  assert.match(en, /battery is low, so I may not reply/);
+  assert.match(en, /reply by text\. No need to call/);
+  assert.doesNotMatch(en, /let me know you received/);
   assert.match(en, /GMT-5/);
 });
 
@@ -137,7 +159,7 @@ test('changing status cannot leak an earlier destination or help request into th
     destination: 'Private old destination',
     needs: 'Private old help request',
   };
-  for (const lang of ['es', 'en'] as const) {
+  for (const lang of ['es', 'en', 'pt'] as const) {
     const message = checkInMessage(contextual, lang);
     assert.doesNotMatch(message, /Private old/);
     assert.doesNotMatch(message, /sismo|earthquake|evacuation/);
@@ -154,9 +176,8 @@ test('only an explicitly attached event is included and its occurrence time is p
   };
   const attached: CheckIn = { ...row, context: 'earthquake', event };
   const es = checkInMessage(attached, 'es', 'America/Panama');
-  assert.match(es, /Reporte de referencia: IGC · M 4.2 · Lugar de prueba/);
+  assert.match(es, /Como referencia, el sismo según IGC: magnitud 4.2, Lugar de prueba, /);
   assert.match(es, /09:00/);
-  assert.match(es, /no una medida de cómo me afectó/);
   assert.doesNotMatch(
     checkInMessage({ ...attached, event: null }, 'es'),
     /IGC|M 4.2|Lugar de prueba/,
@@ -215,8 +236,8 @@ test('a message contains contact channels only when explicitly included in its r
 test('help templates are explicit, compact and do not duplicate sentence endings', async () => {
   const { helpTemplates } = await import('../src/lib/messageTemplates.ts');
   for (const template of helpTemplates)
-    for (const lang of ['es', 'en'] as const) {
-      const needs = template.text[lang === 'es' ? 0 : 1];
+    for (const lang of ['es', 'en', 'pt'] as const) {
+      const needs = template.text[langIndex(lang)];
       const message = checkInMessage(
         { ...row, context: 'earthquake', status: 'help', needs, place: 'Hotel de prueba.' },
         lang,
@@ -224,8 +245,15 @@ test('help templates are explicit, compact and do not duplicate sentence endings
       );
       assert(message.includes(needs));
       assert.doesNotMatch(message, /\.\.|Necesito: Necesito|I need: I need/);
-      assert.match(message, lang === 'es' ? /respondan para coordinar/ : /reply so we can arrange/);
-      assert(message.split('\n\n')[0].includes(lang === 'es' ? 'sismo' : 'earthquake'));
+      assert.match(
+        message,
+        [
+          /Respondan apenas lo vean para coordinar/,
+          /as soon as you see this so we can arrange/,
+          /Respondam assim que virem esta mensagem para combinarmos/,
+        ][langIndex(lang)],
+      );
+      assert(message.split('\n\n')[0].includes(pick(lang, 'sismo', 'earthquake', 'terremoto')));
       assert.doesNotMatch(message, /GPS|https|rescate solicitado|rescue dispatched/);
     }
 });

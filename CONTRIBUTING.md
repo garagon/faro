@@ -4,10 +4,11 @@ Small, focused pull requests are welcome. Read [architecture](docs/architecture.
 
 1. Use Node.js 24 LTS, install with `npm ci`, and run `npm run dev`.
 2. Keep source in the existing component, hook, library and style directories. Type external data as `unknown` and validate before use.
-3. Update Spanish and English together. Keep instructions short and usable under stress.
+3. Update Spanish, English and Brazilian Portuguese together (`t(es, en, pt)` and `Localized` tuples; the type checker flags a missing language). Keep instructions short and usable under stress. Show distances, depths, water and wind through `src/lib/units.ts`: English uses U.S. units (miles, feet, gallons, mph), Spanish and Portuguese metric; official texts keep their published units.
 4. Add meaningful regression tests for behavior changes. Use synthetic people, contacts, locations and events. Never record or attach a traveler's real browser storage, GPS, messages, screenshots or network captures.
-5. Run `npm run check`, `npm run build` and `npm audit`. For UI changes also inspect narrow mobile and desktop layouts, keyboard navigation, errors and empty states.
-6. Describe the user-visible change, its validation and remaining limitations. Do not include machine paths or confidential logs.
+5. Build interface changes from the design system ([docs/design-system.md](docs/design-system.md)): compose `src/ui` components and tokens; do not add colour or size literals or per-screen overrides.
+6. Run `npm run check`, `npm run build` and `npm audit`. For UI changes also inspect narrow mobile and desktop layouts, keyboard navigation, errors and empty states.
+7. Describe the user-visible change, its validation and remaining limitations. Do not include machine paths or confidential logs.
 
 ## Safety-sensitive changes
 

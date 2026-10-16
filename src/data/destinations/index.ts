@@ -8,8 +8,28 @@ import mx from './mx.ts';
 import pe from './pe.ts';
 import ec from './ec.ts';
 import cr from './cr.ts';
+import gt from './gt.ts';
+import sv from './sv.ts';
+import hn from './hn.ts';
+import ni from './ni.ts';
+import dom from './do.ts';
 
-export const destinations: readonly Destination[] = [pa, cl, co, ar, us, mx, pe, ec, cr];
+export const destinations: readonly Destination[] = [
+  pa,
+  cl,
+  co,
+  ar,
+  us,
+  mx,
+  pe,
+  ec,
+  cr,
+  gt,
+  sv,
+  hn,
+  ni,
+  dom,
+];
 const byCode = new Map(destinations.map((destination) => [destination.code, destination]));
 export function destinationFor(code: string): Destination | undefined {
   return byCode.get(code);

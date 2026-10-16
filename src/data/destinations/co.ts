@@ -8,7 +8,7 @@ export default {
     numbers: [
       {
         number: '123',
-        label: ['Emergencias', 'Emergencies'],
+        label: ['Emergencias', 'Emergencies', 'Emergências'],
       },
     ],
     reviewedAt: '2026-10-11',
@@ -17,6 +17,11 @@ export default {
     name: 'UNGRD',
     url: 'https://portal.gestiondelriesgo.gov.co/',
     reviewedAt: '2026-10-12',
+  },
+  weatherAgency: {
+    name: 'IDEAM',
+    url: 'https://www.ideam.gov.co/nuestra-entidad/servicio-de-pronosticos-y-alertas',
+    reviewedAt: '2026-10-13',
   },
   seismicAgency: {
     name: 'Servicio Geológico Colombiano',
@@ -35,7 +40,7 @@ export default {
       lng: -74,
       zoom: 5,
     },
-    scope: ['Colombia y alrededores', 'Colombia and surrounding area'],
+    scope: ['Colombia y alrededores', 'Colombia and surrounding area', 'Colômbia e arredores'],
   },
   resources: [],
 } satisfies Destination;

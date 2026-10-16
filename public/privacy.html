@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Faro · Privacidad y condiciones de uso</title>
+    <meta
+      name="description"
+      content="Qué datos guarda Faro, a quién llegan y en qué condiciones se usa. Privacy and terms of use, in Spanish, English and Portuguese."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="icon" href="/faro-mark.svg" />
+    <link rel="stylesheet" href="/pages.css" />
+  </head>
+  <body class="page-privacy">
+    <main>
+      <nav aria-label="Navegación · Navigation">
+        <a href="/">Abrir Faro · Open Faro</a><a href="#english" lang="en">Read in English</a
+        ><a href="#portugues" lang="pt-BR">Ler em português</a
+        ><a href="/about.html">Acerca de Faro · About</a>
+      </nav>
+
+      <h1>Privacidad y condiciones de uso</h1>
+      <p>
+        Faro es una herramienta gratuita y de código abierto creada por
+        <a href="https://oktsec.com">Oktsec</a>. Esta página explica qué datos guarda, a quién
+        llegan y en qué condiciones se usa. Revisada el 14 de octubre de 2026.
+      </p>
+
+      <h2>Lo que queda en tu dispositivo</h2>
+      <p>
+        No hay cuentas ni analítica. Lo que escribes se guarda solo en este navegador
+        (<code>localStorage</code>) y no se envía a ningún servidor de Faro:
+      </p>
+      <ul>
+        <li>
+          Tu viaje y perfil (<code>faro-preferences-v1</code>): idioma, destino, nacionalidad y, si
+          los agregas, nombre, teléfono y correo.
+        </li>
+        <li>
+          Tu ficha (<code>faro-emergency-info-v1</code>): contacto de emergencia, salud, seguro y
+          alojamiento, todo opcional.
+        </li>
+        <li>
+          Tu plan (<code>faro-hotel-v1</code>): alojamiento, punto de encuentro y, solo si los
+          guardas, sus coordenadas.
+        </li>
+        <li>
+          Tus contactos (<code>faro-contacts-v1</code>) y los mensajes que preparaste
+          (<code>faro-checkins-v1</code>).
+        </li>
+        <li>
+          Tu mochila (<code>faro-emergency-kit-v1</code>, <code>faro-emergency-kit-plan-v1</code>),
+          los países guardados (<code>faro-zones-v1</code>), el idioma elegido
+          (<code>faro-lang</code>) y si cerraste la tarjeta de nacionalidad
+          (<code>faro-setup-card-v1</code>).
+        </li>
+        <li>
+          Datos públicos para abrir sin conexión: la última copia de los sismos
+          (<code>faro-igc-v1</code>, <code>faro-emsc-v1</code>, <code>faro-usgs-v1</code>), de los
+          avisos meteorológicos (<code>faro-national-&lt;país&gt;</code>), de SINAPROC
+          (<code>faro-sinaproc</code>) y de los boletines de tsunami de NOAA
+          (<code>faro-tsunami</code>). Se muestran como datos viejos, con su hora, y se borran
+          después de una semana.
+        </li>
+      </ul>
+      <p>
+        No están cifrados. Puedes borrarlos desde Mi viaje y Mi estado, o borrando los datos del
+        sitio en tu navegador. La navegación privada puede borrarlos al cerrarla.
+      </p>
+
+      <h2>Lo que sale de tu dispositivo, y a quién</h2>
+      <ul>
+        <li>
+          <strong>El servidor de Faro</strong> consulta las fuentes oficiales por ti (IGC, EMSC,
+          NOAA, GDACS, IMHPA, SINAPROC y otras). Solo recibe el código del país que miras. Faro no
+          guarda registros propios de las visitas; el proveedor que aloja el sitio puede registrar
+          tu dirección IP y la hora de cada solicitud según su política.
+        </li>
+        <li>
+          <strong>USGS</strong> recibe directamente la consulta del catálogo de sismos, y el
+          <strong>Servicio Meteorológico de EE. UU.</strong> la de avisos, solo si miras una zona de
+          EE. UU.
+        </li>
+        <li>
+          <strong>OpenFreeMap</strong> (mapa con datos de OpenStreetMap) recibe tu IP y la zona del
+          mapa que miras, para dibujarlo. Su servicio puede pasar por Cloudflare.
+        </li>
+        <li>
+          <strong>Google Maps</strong>, solo si tocas una búsqueda (hospitales, farmacias, tiendas,
+          cómo llegar) o «Abrir … en Google Maps» para el mapa sin conexión: recibe la zona
+          (redondeada a cerca de 1 km) o tu ubicación aproximada. La descarga del mapa la hace la
+          app de Google Maps; Faro no descarga ni guarda mapas.
+        </li>
+        <li>
+          <strong>Google Translate</strong>, solo si tocas un enlace de traducción de un texto
+          oficial: recibe ese texto oficial público o la dirección de esa página.
+        </li>
+        <li>
+          <strong>WhatsApp, Telegram, SMS o correo</strong>, solo si tocas compartir: el texto
+          completo del mensaje va dentro del enlace a esa aplicación, incluido lo que hayas puesto
+          (nombre, ubicación, teléfono o salud, si lo elegiste). El WhatsApp de SINAPROC (Panamá)
+          solo abre un chat con ese número; Faro no escribe ni envía nada.
+        </li>
+        <li>
+          <strong>Tu ubicación</strong> se usa solo con tu permiso y en la memoria del navegador.
+          «Mi ubicación» la lee una vez y calcula el país en tu dispositivo; no la guarda ni la
+          envía.
+        </li>
+      </ul>
+
+      <h2>Condiciones de uso</h2>
+      <ul>
+        <li>
+          Faro es informativo. No es un sistema de alerta temprana, no llama ni pide ayuda por ti y
+          no envía rescatistas. En una emergencia, llama al número local y sigue a las autoridades.
+        </li>
+        <li>
+          Los datos vienen de fuentes oficiales y pueden llegar tarde, estar incompletos o fallar.
+          Faro muestra la hora y la fuente de cada dato, y nunca interpreta que una zona es segura.
+        </li>
+        <li>
+          Los números de emergencia y las embajadas se revisan a mano y tienen fecha de revisión.
+          Pueden cambiar: confírmalos con la fuente oficial enlazada.
+        </li>
+        <li>
+          Se ofrece tal cual, sin garantía de disponibilidad ni de exactitud. El código es abierto
+          bajo la licencia Apache 2.0; cada fuente de datos conserva su propia licencia y atribución
+          (por ejemplo, OpenStreetMap bajo ODbL y EMSC bajo CC BY 4.0).
+        </li>
+        <li>
+          Si un número, un enlace o un dato está mal, avísanos por
+          <a href="https://oktsec.com">oktsec.com</a> o en el
+          <a href="https://github.com/garagon/faro/issues">repositorio del proyecto</a>.
+        </li>
+      </ul>
+
+      <section id="english" lang="en">
+        <h2>Privacy and terms of use</h2>
+        <p>
+          Faro is a free, open-source tool created by <a href="https://oktsec.com">Oktsec</a>. This
+          page explains what it stores, who receives what, and the terms of use. Reviewed on October
+          14, 2026.
+        </p>
+        <h3>What stays on your device</h3>
+        <p>
+          There are no accounts and no analytics. What you enter is kept only in this browser
+          (<code>localStorage</code>) and is not sent to any Faro server: your trip and profile
+          (<code>faro-preferences-v1</code>), your card (<code>faro-emergency-info-v1</code>), your
+          plan (<code>faro-hotel-v1</code>), contacts (<code>faro-contacts-v1</code>), prepared
+          messages (<code>faro-checkins-v1</code>), the go bag (<code>faro-emergency-kit-v1</code>,
+          <code>faro-emergency-kit-plan-v1</code>), saved countries (<code>faro-zones-v1</code>),
+          the chosen language (<code>faro-lang</code>) and the setup card choice
+          (<code>faro-setup-card-v1</code>). Public data is also kept so Faro opens offline, always
+          shown as old data with its time: earthquakes (<code>faro-igc-v1</code>,
+          <code>faro-emsc-v1</code>, <code>faro-usgs-v1</code>), weather warnings
+          (<code>faro-national-&lt;country&gt;</code>), SINAPROC posts (<code>faro-sinaproc</code>)
+          and NOAA tsunami bulletins (<code>faro-tsunami</code>), deleted after a week. Nothing is
+          encrypted. Delete it from My trip and My status, or by clearing site data.
+        </p>
+        <h3>What leaves your device, and to whom</h3>
+        <ul>
+          <li>
+            Faro's server reads the official sources for you and receives only the country code you
+            are viewing. Faro keeps no visit logs of its own; the hosting provider may log your IP
+            address and the time of each request under its own policy.
+          </li>
+          <li>
+            USGS receives the earthquake catalogue request directly, and the U.S. National Weather
+            Service receives alert requests only while you view a U.S. area.
+          </li>
+          <li>
+            OpenFreeMap (a map built from OpenStreetMap data) receives your IP and the map area you
+            view; its service may go through Cloudflare.
+          </li>
+          <li>
+            Google Maps, only when you tap a search or "Open … in Google Maps" for the offline map:
+            the area (rounded to about 0.6 mi, or 1 km) or your approximate location. The Google
+            Maps app does the download; Faro does not download or store maps.
+          </li>
+          <li>
+            Google Translate, only when you tap a translate link: that public official text or page
+            address.
+          </li>
+          <li>
+            WhatsApp, Telegram, SMS or email, only when you tap share: the whole message travels in
+            the link, including anything you added (name, location, phone or health, if chosen).
+            SINAPROC's WhatsApp line (Panama) only opens a chat with that number; Faro writes and
+            sends nothing.
+          </li>
+          <li>
+            Your location is used only with your permission, in the browser's memory. "My location"
+            reads it once and works out the country on your device; it is neither kept nor sent.
+          </li>
+        </ul>
+        <h3>Terms of use</h3>
+        <ul>
+          <li>
+            Faro is informational. It is not an early warning system, it does not call or request
+            help for you and it does not dispatch responders. In an emergency, call the local number
+            and follow local authorities.
+          </li>
+          <li>
+            Data comes from official sources and can be late, incomplete or unavailable. Faro shows
+            each item's time and source and never concludes that an area is safe.
+          </li>
+          <li>
+            Emergency numbers and embassies are reviewed by hand and show their review date. They
+            can change: confirm them with the linked official source.
+          </li>
+          <li>
+            Provided as is, without warranty of availability or accuracy. The code is open source
+            under the Apache 2.0 licence; each data source keeps its own licence and attribution
+            (for example, OpenStreetMap under ODbL and EMSC under CC BY 4.0).
+          </li>
+          <li>
+            If a number, link or fact is wrong, tell us through
+            <a href="https://oktsec.com">oktsec.com</a> or the
+            <a href="https://github.com/garagon/faro/issues">project repository</a>.
+          </li>
+        </ul>
+      </section>
+
+      <section id="portugues" lang="pt-BR">
+        <h2>Privacidade e condições de uso</h2>
+        <p>
+          O Faro é uma ferramenta gratuita e de código aberto criada pela
+          <a href="https://oktsec.com">Oktsec</a>. Esta página explica o que ele guarda, quem recebe
+          o quê e as condições de uso. Revisada em 14 de outubro de 2026.
+        </p>
+        <h3>O que fica no seu dispositivo</h3>
+        <p>
+          Não há contas nem análise de uso. O que você escreve fica só neste navegador
+          (<code>localStorage</code>) e não é enviado a nenhum servidor do Faro: sua viagem e perfil
+          (<code>faro-preferences-v1</code>), sua ficha (<code>faro-emergency-info-v1</code>), seu
+          plano (<code>faro-hotel-v1</code>), contatos (<code>faro-contacts-v1</code>), mensagens
+          preparadas (<code>faro-checkins-v1</code>), a mochila (<code>faro-emergency-kit-v1</code>,
+          <code>faro-emergency-kit-plan-v1</code>), países salvos (<code>faro-zones-v1</code>), o
+          idioma escolhido (<code>faro-lang</code>) e a escolha do cartão de nacionalidade
+          (<code>faro-setup-card-v1</code>). Dados públicos também ficam guardados para o Faro abrir
+          off-line, sempre mostrados como dados antigos, com o horário: terremotos
+          (<code>faro-igc-v1</code>, <code>faro-emsc-v1</code>, <code>faro-usgs-v1</code>), avisos
+          meteorológicos (<code>faro-national-&lt;país&gt;</code>), publicações da SINAPROC
+          (<code>faro-sinaproc</code>) e boletins de tsunami da NOAA (<code>faro-tsunami</code>),
+          apagados depois de uma semana. Nada é criptografado. Apague tudo em Minha viagem e Meu
+          status, ou limpando os dados do site no navegador.
+        </p>
+        <h3>O que sai do seu dispositivo, e para quem</h3>
+        <ul>
+          <li>
+            O servidor do Faro consulta as fontes oficiais por você e recebe só o código do país que
+            você está vendo. O Faro não guarda registros próprios das visitas; o provedor que
+            hospeda o site pode registrar seu endereço IP e o horário de cada solicitação conforme a
+            própria política.
+          </li>
+          <li>
+            O USGS recebe diretamente a consulta do catálogo de terremotos, e o Serviço
+            Meteorológico Nacional dos EUA recebe a de avisos só quando você vê uma área dos EUA.
+          </li>
+          <li>
+            O OpenFreeMap (mapa com dados do OpenStreetMap) recebe seu IP e a área do mapa que você
+            vê; o serviço pode passar pela Cloudflare.
+          </li>
+          <li>
+            O Google Maps, só quando você toca em uma busca ou em "Abrir … no Google Maps" para o
+            mapa off-line: recebe a área (arredondada a cerca de 1 km) ou sua localização
+            aproximada. O download do mapa é feito pelo app Google Maps; o Faro não baixa nem guarda
+            mapas.
+          </li>
+          <li>
+            O Google Tradutor, só quando você toca em um link de tradução: recebe esse texto oficial
+            público ou o endereço da página.
+          </li>
+          <li>
+            WhatsApp, Telegram, SMS ou e-mail, só quando você toca em compartilhar: a mensagem
+            inteira vai dentro do link, incluindo o que você adicionou (nome, localização, telefone
+            ou saúde, se escolheu). O WhatsApp do SINAPROC (Panamá) só abre uma conversa com esse
+            número; o Faro não escreve nem envia nada.
+          </li>
+          <li>
+            Sua localização é usada só com sua permissão, na memória do navegador. "Minha
+            localização" a lê uma vez e calcula o país no seu dispositivo; não a guarda nem a envia.
+          </li>
+        </ul>
+        <h3>Condições de uso</h3>
+        <ul>
+          <li>
+            O Faro é informativo. Não é um sistema de alerta antecipado, não liga nem pede ajuda por
+            você e não envia equipes de resgate. Em uma emergência, ligue para o número local e siga
+            as autoridades.
+          </li>
+          <li>
+            Os dados vêm de fontes oficiais e podem atrasar, estar incompletos ou falhar. O Faro
+            mostra o horário e a fonte de cada dado e nunca conclui que uma área é segura.
+          </li>
+          <li>
+            Os números de emergência e as embaixadas são revisados manualmente e mostram a data de
+            revisão. Podem mudar: confirme na fonte oficial indicada.
+          </li>
+          <li>
+            Oferecido como está, sem garantia de disponibilidade ou exatidão. O código é aberto sob
+            a licença Apache 2.0; cada fonte de dados mantém sua própria licença e atribuição (por
+            exemplo, OpenStreetMap sob ODbL e EMSC sob CC BY 4.0).
+          </li>
+          <li>
+            Se um número, link ou dado estiver errado, avise pelo
+            <a href="https://oktsec.com">oktsec.com</a> ou no
+            <a href="https://github.com/garagon/faro/issues">repositório do projeto</a>.
+          </li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

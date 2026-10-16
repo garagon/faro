@@ -32,9 +32,15 @@ test('resource directory contains official https sources, not fabricated shelter
   for (const r of resources) {
     assert.equal(new URL(r.url).protocol, 'https:');
     assert.equal('lat' in r, false);
-    assert.equal(r.description.length, 2);
+    assert.equal(r.description.length, 3);
   }
   assert.ok(resources.some((r) => r.url.includes('utp.ac.pa')));
   assert.ok(resources.some((r) => r.url.includes('mupa.gob.pa')));
-  assert.ok(!resources.some((r) => /cruzroja/i.test(r.url)));
+  // A national Red Cross society may be linked as an institution, never as a confirmed shelter
+  // or service. Panama's listing was not verified and stays out.
+  for (const r of resources.filter((r) => /cruzroja/i.test(r.url))) {
+    assert.match(r.description[0], /No confirma/);
+    assert.match(r.description[1], /does not confirm/);
+  }
+  assert.ok(!resources.some((r) => r.country === 'PA' && /cruzroja/i.test(r.url)));
 });

@@ -1,0 +1,67 @@
+/*
+ * The document and the defaults for everything inside the app frame: type, links and fields.
+ * Components set what they need in the `ds` layer above this one.
+ */
+:root {
+  background: var(--f-color-surface);
+  color: var(--f-color-text);
+  font-family: var(--f-font);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+/* The frame scrolls inside its content region, never the page; nothing forces a minimum width,
+   so a zoomed narrow phone still fits the emergency button. */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+body {
+  overflow: hidden;
+}
+button {
+  cursor: pointer;
+}
+.f-root {
+  font-family: var(--f-font);
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-regular);
+  line-height: var(--f-leading-body);
+  color: var(--f-color-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.f-root :where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+}
+.f-root :where(a) {
+  color: var(--f-color-action);
+  text-underline-offset: 0.18em;
+}
+/* A link inside a sentence (no component class) is underlined, so it is not told apart by colour
+   alone; Tailwind's reset removes the browser's underline. */
+.f-root :where(a:not([class])) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.f-root :where(svg) {
+  flex: none;
+}
+/* Read by screen readers, not shown: Tailwind's sr-only, for markup that still carries this name. */
+.f-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

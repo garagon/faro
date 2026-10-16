@@ -1,0 +1,58 @@
+/* Shared style for the static pages (about, privacy). In a file, not inline, so the site can
+   send a Content-Security-Policy without 'unsafe-inline'. */
+body {
+  margin: 0;
+  background: #f5f7f4;
+  color: #183d38;
+  font:
+    17px/1.65 system-ui,
+    sans-serif;
+}
+main {
+  max-width: 780px;
+  margin: auto;
+  padding: 40px 24px;
+}
+a {
+  color: #205f50;
+  text-underline-offset: 3px;
+}
+nav {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+h1 {
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.15;
+  letter-spacing: -1px;
+}
+h2 {
+  margin-top: 40px;
+  line-height: 1.25;
+}
+h3 {
+  font-size: 19px;
+  margin-bottom: 4px;
+}
+section {
+  border-top: 1px solid #ccd8d2;
+  margin-top: 32px;
+}
+li {
+  margin-bottom: 8px;
+}
+.page-about p {
+  margin-top: 8px;
+}
+.page-about footer {
+  border-top: 1px solid #ccd8d2;
+  padding-top: 24px;
+  margin-top: 40px;
+}
+.page-privacy h1 {
+  font-size: clamp(30px, 5vw, 42px);
+}
+.page-privacy code {
+  font-size: 15px;
+}

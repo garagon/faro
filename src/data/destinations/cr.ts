@@ -2,21 +2,25 @@ import type { Destination } from './types.ts';
 export default {
   code: 'CR',
   emergency: {
-    source:
-      'https://diccionariousual.poder-judicial.go.cr/index.php/diccionario/sistema-de-emergencias-9-1-1',
-    agency: 'Poder Judicial de Costa Rica',
+    source: 'https://www.911.go.cr/',
+    agency: 'Sistema de Emergencias 9-1-1',
     numbers: [
       {
         number: '911',
-        label: ['Emergencias', 'Emergencies'],
+        label: ['Emergencias', 'Emergencies', 'Emergências'],
       },
     ],
-    reviewedAt: '2026-10-12',
+    reviewedAt: '2026-10-14',
   },
   civilProtection: {
     name: 'Comisión Nacional de Emergencias',
     url: 'https://www.cne.go.cr/',
     reviewedAt: '2026-10-12',
+  },
+  weatherAgency: {
+    name: 'IMN',
+    url: 'https://www.imn.ac.cr/web/imn/avisos-meteorologicos',
+    reviewedAt: '2026-10-13',
   },
   seismicAgency: {
     name: 'Red Sismológica Nacional · Universidad de Costa Rica',
@@ -35,7 +39,11 @@ export default {
       lng: -84,
       zoom: 6,
     },
-    scope: ['Costa Rica y alrededores', 'Costa Rica and surrounding area'],
+    scope: [
+      'Costa Rica y alrededores',
+      'Costa Rica and surrounding area',
+      'Costa Rica e arredores',
+    ],
   },
   resources: [],
 } satisfies Destination;

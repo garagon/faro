@@ -7,7 +7,7 @@ export default {
     numbers: [
       {
         number: '911',
-        label: ['Emergencias · ECU 911', 'Emergencies · ECU 911'],
+        label: ['Emergencias · ECU 911', 'Emergencies · ECU 911', 'Emergências · ECU 911'],
       },
     ],
     reviewedAt: '2026-10-12',
@@ -16,6 +16,11 @@ export default {
     name: 'Secretaría Nacional de Gestión de Riesgos',
     url: 'https://www.gestionderiesgos.gob.ec/',
     reviewedAt: '2026-10-12',
+  },
+  weatherAgency: {
+    name: 'INAMHI',
+    url: 'https://servicios.inamhi.gob.ec/alertas/',
+    reviewedAt: '2026-10-13',
   },
   seismicAgency: {
     name: 'Instituto Geofísico · Escuela Politécnica Nacional',
@@ -34,7 +39,11 @@ export default {
       lng: -82,
       zoom: 5,
     },
-    scope: ['Ecuador, Galápagos y alrededores', 'Ecuador, Galapagos and surrounding area'],
+    scope: [
+      'Ecuador, Galápagos y alrededores',
+      'Ecuador, Galapagos and surrounding area',
+      'Equador, Galápagos e arredores',
+    ],
   },
   resources: [],
 } satisfies Destination;

@@ -1,0 +1,170 @@
+/*
+ * Faro design tokens. The palette, radius and typeface are shadcn/ui's (theme.css: neutral,
+ * Geist); these names give them Faro's roles, so components and screens never write values.
+ *
+ * Colour roles have one meaning each:
+ * - red is only for calling for help (shadcn's destructive);
+ * - amber, orange and the alert red are only for official warning levels and stale data;
+ * - near-black (shadcn's primary) is the main action; green only says "answered / up to date";
+ * - everything else is neutrals.
+ */
+:root {
+  /* Primitives */
+  --f-white: #ffffff;
+  --f-neutral-25: #f7f8f7;
+  --f-neutral-50: #f0f2f1;
+  --f-neutral-100: #e3e7e5;
+  --f-neutral-200: #d1d7d4;
+  --f-neutral-400: #8b9692;
+  --f-neutral-600: #55615d;
+  --f-neutral-700: #3d4845;
+  --f-neutral-900: #151f1c;
+  --f-green-50: #edf6f2;
+  --f-green-100: #d3e9df;
+  --f-green-600: #1f7a62;
+  --f-green-700: #16634f;
+  --f-green-800: #114d3e;
+  --f-green-900: #0c3a2f;
+  --f-red-50: #fef3f2;
+  --f-red-700: #b42318;
+  --f-red-800: #912018;
+  --f-amber-50: #fffaeb;
+  --f-amber-400: #f5b33d;
+  --f-amber-800: #8a4b06;
+  --f-orange-50: #fff4ed;
+  --f-orange-500: #e8620c;
+  --f-orange-800: #8f350a;
+  --f-alert-50: #fdf2f1;
+  --f-alert-600: #c9302c;
+  --f-alert-800: #8c1d1a;
+  --f-blue-600: #1f5fd1;
+
+  /* Semantic colours, on the shadcn/ui variables */
+  --f-color-page: var(--background);
+  --f-color-surface: var(--card);
+  --f-color-surface-muted: var(--muted);
+  --f-color-text: var(--foreground);
+  --f-color-text-muted: var(--muted-foreground);
+  --f-color-text-subtle: oklch(0.371 0 0);
+  --f-color-border: var(--border);
+  --f-color-border-strong: oklch(0.87 0 0);
+  --f-color-action: var(--primary);
+  --f-color-action-hover: oklch(0.205 0 0 / 90%);
+  --f-color-action-soft: var(--accent);
+  --f-color-on-action: var(--primary-foreground);
+  --f-color-brand: var(--foreground);
+  --f-color-ok: var(--f-green-600);
+  --f-color-call: var(--destructive);
+  --f-color-call-hover: oklch(0.505 0.213 27.518);
+  --f-color-call-soft: oklch(0.971 0.013 17.38);
+  /* A focus ring that reads on white and on the grey sidebar (4.6:1). */
+  --f-color-focus: oklch(0.556 0 0);
+  /* Official warning levels (and stale data, which uses the first). */
+  --f-color-level-1: var(--f-amber-400);
+  --f-color-level-1-soft: var(--f-amber-50);
+  --f-color-level-1-text: var(--f-amber-800);
+  --f-color-level-2: var(--f-orange-500);
+  --f-color-level-2-soft: var(--f-orange-50);
+  --f-color-level-2-text: var(--f-orange-800);
+  --f-color-level-3: var(--f-alert-600);
+  --f-color-level-3-soft: var(--f-alert-50);
+  --f-color-level-3-text: var(--f-alert-800);
+  /* Magnitude: one hue from light to dark, so a larger number is always darker. Every step
+     keeps 4.5:1 or more against white, as text and behind white pin labels. */
+  --f-mag-1: #5b7090;
+  --f-mag-2: #4a6385;
+  --f-mag-3: #3a5479;
+  --f-mag-4: #2c4569;
+  --f-mag-5: #142a4b;
+
+  /* Type: Geist, on shadcn's scale. Roles are listed in components.css. Sizes in rem follow the
+     reader's settings; fields stay at 16 px so phones do not zoom. */
+  --f-font: var(--font-sans);
+  --f-text-nav: 0.6875rem; /* 11: bottom tab labels only, under their icon */
+  --f-text-xs: 0.75rem; /* 12: map attribution and legal only */
+  --f-text-sm: 0.875rem; /* 14: captions: descriptions, sources, notes */
+  --f-text-md: 0.875rem; /* 14: row titles, buttons, body (shadcn's text-sm) */
+  --f-text-body: 1rem; /* 16: instructions and steps, read in a hurry */
+  --f-text-lg: 1rem; /* 16: section titles, figures */
+  --f-text-2xl: 1.5rem; /* 24: screen titles */
+  --f-text-3xl: 1.875rem; /* 30: the one exception, the magnitude in an earthquake's detail */
+  --f-leading-tight: 1.2;
+  --f-leading-snug: 1.375;
+  --f-leading-body: 1.5;
+  --f-weight-regular: 400;
+  --f-weight-medium: 500;
+  --f-weight-bold: 600;
+  --f-tracking-title: -0.025em;
+
+  /* Space: a 4 px grid. */
+  --f-space-1: 0.25rem;
+  --f-space-2: 0.5rem;
+  --f-space-3: 0.75rem;
+  --f-space-4: 1rem;
+  --f-space-5: 1.25rem;
+  --f-space-6: 1.5rem;
+  --f-space-8: 2rem;
+  --f-space-10: 2.5rem;
+  --f-space-12: 3rem;
+
+  /* Shape and depth */
+  --f-radius-sm: calc(var(--radius) - 2px);
+  --f-radius-md: calc(var(--radius) + 4px);
+  --f-radius-full: 999px;
+  --f-hairline: 1px solid var(--f-color-border);
+  --f-shadow-raised: 0 1px 2px 0 rgb(0 0 0 / 5%);
+  --f-shadow-overlay: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -4px rgb(0 0 0 / 10%);
+  /* Map pins sit on any background: a soft shadow under them, a halo around the selected one. */
+  --f-pin-shadow: drop-shadow(0 1px 2px rgb(0 0 0 / 20%));
+  --f-pin-shadow-selected: drop-shadow(0 0 2px #172d39) drop-shadow(0 0 5px #ffffff);
+  --f-pin-shadow-box: 0 2px 6px rgb(0 0 0 / 20%);
+
+  /* Map: the ground before tiles load, and the two points that are not data (an embassy, the
+     person's own meeting point). Neither may look like a warning level. The plate boundaries
+     are context in a muted purple; the person's location is blue, as on any phone map. */
+  --f-map-ground: #dce6e2;
+  --f-map-embassy: #295e88;
+  --f-map-personal: #6c568c;
+  --f-map-plates: #8a4fb8;
+  --f-map-you: #226b9c;
+  --f-map-you-area: #367aaa;
+  --f-map-halo: rgb(21 31 28 / 14%);
+  --f-map-hint: rgb(21 31 28 / 72%);
+  /* The map's height on a phone (the card grows with its legend), and the tall side map. */
+  --f-map-height: 240px;
+  --f-map-tall: 520px;
+  /* Legend keys: a small swatch per kind of mark, and the stroke of lines and outlines. */
+  --f-map-key: 1rem;
+  --f-map-key-radius: 4px;
+  --f-map-line: 2px;
+
+  /* Sizes */
+  --f-touch: 44px;
+  /* The leading column of a list row (icon circle or magnitude): one text edge per screen. */
+  --f-lead: 36px;
+  --f-control-md: 2.5rem;
+  --f-control-lg: 3rem;
+  --f-header: 56px;
+  --f-tabbar: 60px;
+  --f-reading: 42rem;
+  /* The call button: as wide as a phone screen at most, on every device. */
+  --f-call-width: 26rem;
+
+  /* Layers */
+  --f-z-sticky: 10;
+  --f-z-nav: 20;
+  --f-z-overlay: 30;
+  --f-z-toast: 40;
+
+  /* Motion: feedback on press and hover, something arriving, something leaving (faster, and
+     accelerating out of view). With reduced motion nothing slides; it fades or changes at once. */
+  --f-press: 100ms;
+  --f-move: 220ms;
+  --f-leave: 160ms;
+  --f-ease: cubic-bezier(0.2, 0, 0, 1);
+  --f-ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  /* Links underline more strongly under the pointer or the finger. */
+  --f-underline-hover: 2px;
+}
+
+/* Breakpoints (also in src/ui/breakpoints.ts): 600 small tablet, 900 desktop, 1200 wide. */

@@ -13,7 +13,8 @@ for (const [path, pkg] of Object.entries(lock.packages)) {
   try {
     const entries = await readdir(join(root, path));
     for (const file of entries
-      .filter((n) => /^(license|licence|copying|notice)(\.[\w-]+)?$/i.test(n))
+      // Also names like MIT-LICENCE.txt (leaflet.markercluster) or LICENSE-MIT.
+      .filter((n) => /^([\w]+-)?(license|licence|copying|notice)([.-][\w-]+)*$/i.test(n))
       .sort()) {
       notices.push(
         `===== ${name}@${pkg.version} (${file}) =====\n\n${await readFile(join(root, path, file), 'utf8')}`,

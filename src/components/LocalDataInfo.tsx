@@ -1,55 +1,106 @@
-import { LockSimpleIcon } from '@phosphor-icons/react';
-export default function LocalDataInfo({ lang }: { lang: 'es' | 'en' }) {
-  const t = (es: string, en: string) => (lang === 'es' ? es : en);
+import { useState } from 'react';
+import { flushSync } from 'react-dom';
+import { pick, type Lang } from '../lib/i18n.ts';
+import { Button, ScopeNote, Text } from '../ui/index.ts';
+
+/**
+ * Removes everything Faro keeps in this browser (every `faro-` key: profile, health, stay,
+ * contacts, messages, go bag, saved countries, language and the public data copies), then
+ * reloads so no screen keeps a copy in memory. The offline application copy has no personal data.
+ */
+function forgetEverything() {
+  const keys: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith('faro-')) keys.push(key);
+  }
+  for (const key of keys) localStorage.removeItem(key);
+  return keys.every((key) => localStorage.getItem(key) === null);
+}
+
+/**
+ * The last words of Viaje: one place to delete everything Faro saved here, and the screen's one
+ * scope note, which says where the data stays and links to the privacy page for the details
+ * (location, connections to other services, sharing). Each section can still delete its own part.
+ */
+export default function LocalDataInfo({ lang }: { lang: Lang }) {
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const [confirm, setConfirm] = useState(false),
+    [failed, setFailed] = useState(false);
+  // The button gives way to the confirmation and back; focus follows, as in the form above.
+  const ask = (open: boolean) => {
+    flushSync(() => setConfirm(open));
+    document.getElementById(open ? 'local-delete-confirm' : 'local-delete')?.focus();
+  };
   return (
-    <details className="fw-local-data">
-      <summary>
-        <LockSimpleIcon size={18} />
-        <span>{t('Tus datos quedan en este navegador', 'Your data stays in this browser')}</span>
-      </summary>
-      <div>
-        <p>
+    <div className="f-stack grid gap-4">
+      {!confirm ? (
+        <Button variant="ghost" data-tone="error" id="local-delete" onClick={() => ask(true)}>
+          {/* "In this browser" is the scope note's first words, just below. */}
           {t(
-            'Faro guarda aquí tu perfil, contactos, plan del hotel y actualizaciones de estado. Se recuperan al volver a abrir el sitio en este mismo navegador. No se envían a un servidor ni se sincronizan con otros dispositivos.',
-            'Faro stores your profile, contacts, hotel plan and status updates here. They are restored when you reopen the site in this same browser. They are not sent to a server or synced to other devices.',
+            'Borrar todo lo que guardó Faro',
+            'Delete everything Faro saved',
+            'Apagar tudo o que o Faro salvou',
           )}
-        </p>
-        <p>
+        </Button>
+      ) : (
+        <div
+          className="f-stack grid gap-2"
+          data-gap="sm"
+          role="group"
+          aria-label={t('Confirmar', 'Confirm', 'Confirmar')}
+        >
+          <Text>
+            {t(
+              '¿Borrar perfil, salud, alojamiento, contactos, mensajes, mochila y países guardados? No se puede deshacer.',
+              'Delete profile, health, stay, contacts, messages, go bag and saved countries? This cannot be undone.',
+              'Apagar perfil, saúde, hospedagem, contatos, mensagens, mochila e países salvos? Não é possível desfazer.',
+            )}
+          </Text>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              id="local-delete-confirm"
+              onClick={() => {
+                try {
+                  if (forgetEverything()) location.reload();
+                  else setFailed(true);
+                } catch {
+                  setFailed(true);
+                }
+              }}
+            >
+              {t('Sí, borrar todo', 'Yes, delete everything', 'Sim, apagar tudo')}
+            </Button>
+            <Button variant="ghost" onClick={() => ask(false)}>
+              {t('Cancelar', 'Cancel', 'Cancelar')}
+            </Button>
+          </div>
+        </div>
+      )}
+      {failed && (
+        <Text role="alert">
           {t(
-            'En computadora y teléfono funciona igual; cada navegador conserva su propia copia. Al borrar los datos del sitio se pierde esa copia. En navegación privada puede borrarse al cerrar la sesión. Puedes descargar la ficha de tu viaje para conservarla.',
-            'It works the same on desktop and phone; each browser keeps its own copy. Clearing site data removes that copy. Private browsing may erase it when the session ends. You can download your trip sheet to keep a copy.',
+            'El navegador no permitió borrar todo. Borra los datos del sitio desde la configuración del navegador.',
+            'The browser did not allow deleting everything. Clear site data from the browser settings.',
+            'O navegador não permitiu apagar tudo. Apague os dados do site nas configurações do navegador.',
           )}
-        </p>
-        <dl>
-          <div>
-            <dt>{t('Ubicación', 'Location')}</dt>
-            <dd>
-              {t(
-                'Se usa con tu permiso para calcular distancias en el dispositivo. No se guarda automáticamente.',
-                'Used with your permission to calculate distances on your device. It is not saved automatically.',
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt>{t('Conexiones externas', 'External connections')}</dt>
-            <dd>
-              {t(
-                'Los catálogos sísmicos necesitan internet, pero no reciben tus datos del viaje. El mapa se carga automáticamente al abrir su vista. OpenStreetMap recibe tu IP y el área que consultas.',
-                'Earthquake catalogs need internet but do not receive your trip data. The map loads automatically when its view opens. OpenStreetMap receives your IP and the area you view.',
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt>{t('Compartir', 'Sharing')}</dt>
-            <dd>
-              {t(
-                'Solo al elegir compartir, copiar o abrir una ruta, el texto o el destino pasa a la aplicación que elijas. Puedes borrar los datos desde cada sección.',
-                'Only when you choose to share, copy or open directions does the text or destination pass to the app you choose. You can delete saved data in each section.',
-              )}
-            </dd>
-          </div>
-        </dl>
-      </div>
-    </details>
+        </Text>
+      )}
+      <ScopeNote>
+        {t(
+          'Se guarda solo en este navegador, sin cuenta. Faro no envía nada por ti.',
+          'Stored only in this browser, with no account. Faro never sends anything for you.',
+          'Fica salvo só neste navegador, sem conta. O Faro não envia nada por você.',
+        )}{' '}
+        <a href="/privacy.html">
+          {t(
+            'Qué se guarda y a quién llega',
+            'What is stored and who receives what',
+            'O que é guardado e quem recebe o quê',
+          )}
+        </a>
+      </ScopeNote>
+    </div>
   );
 }

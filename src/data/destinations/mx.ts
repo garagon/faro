@@ -8,7 +8,7 @@ export default {
     numbers: [
       {
         number: '911',
-        label: ['Emergencias', 'Emergencies'],
+        label: ['Emergencias', 'Emergencies', 'Emergências'],
       },
     ],
     reviewedAt: '2026-10-12',
@@ -17,6 +17,11 @@ export default {
     name: 'Coordinación Nacional de Protección Civil',
     url: 'https://www.gob.mx/sspc/acciones-y-programas/coordinacion-nacional-de-proteccion-civil-357857',
     reviewedAt: '2026-10-12',
+  },
+  weatherAgency: {
+    name: 'SMN · CONAGUA',
+    url: 'https://smn.conagua.gob.mx/es/',
+    reviewedAt: '2026-10-13',
   },
   seismicAgency: {
     name: 'Servicio Sismológico Nacional · UNAM',
@@ -35,7 +40,7 @@ export default {
       lng: -102,
       zoom: 5,
     },
-    scope: ['México y alrededores', 'Mexico and surrounding area'],
+    scope: ['México y alrededores', 'Mexico and surrounding area', 'México e arredores'],
   },
   resources: [],
 } satisfies Destination;

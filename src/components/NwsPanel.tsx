@@ -1,0 +1,191 @@
+import { useState } from 'react';
+import { DropletIcon, WindIcon } from 'lucide-react';
+import { nwsEventLabels, type NwsAlert } from '../lib/nws.ts';
+import { ageLabel } from '../lib/feedUpdates.ts';
+import { checkedLabel } from '../lib/time.ts';
+import { lineStamp, sourceLine } from '../lib/sourceStatus.ts';
+import { langIndex, pick, type Lang } from '../lib/i18n.ts';
+import { Actions, ExpandRow, List, Note, OutLink, SourceStamp, StatusIcon } from '../ui/index.ts';
+
+// Numbers stay with their units at a line break ("hace 2 h", "13 oct").
+const nb = (text: string) => text.replace(/(\d) (?=\S)/g, '$1\u00a0');
+
+type Props = {
+  lang: Lang;
+  country: string;
+  data: NwsAlert[] | null;
+  failed: boolean;
+  /** When this device last received an answer, and when the last failed request was made. */
+  checked?: number | null;
+  failedAt?: number | null;
+  /** Offline, the list is the last data received. */
+  online?: boolean;
+  /** For "issued 12:36 · 10 min ago". */
+  now: number;
+};
+
+/** NWS hurricane, tropical storm and flood products for U.S. areas, listed as published. */
+export default function NwsPanel({
+  lang,
+  country,
+  data,
+  failed,
+  checked = null,
+  failedAt,
+  online = true,
+  now,
+}: Props) {
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
+    idx = langIndex(lang);
+  // Every alert starts open; the person can close the ones they have read.
+  const [closed, setClosed] = useState<Set<string>>(() => new Set());
+  const toggle = (id: string) =>
+    setClosed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const rows = data?.filter((a) => a.kind !== 'tsunami') ?? null;
+  const at = (n: number) => checkedLabel(n, now, lang);
+  const mainland = country === 'US';
+  // Offline or older than a few polls (every 60 s), the list is the last data, said as on every tab.
+  const old = !!data && !!checked && !failed && (!online || now - checked > 3 * 60000);
+  // The NWS's state in the one vocabulary: checked, no response or offline, with its time.
+  const line = sourceLine({
+    checked: data ? checked : null,
+    failed,
+    failedAt,
+    online,
+    old,
+    now,
+    lang,
+  });
+  return (
+    <div className="f-stack grid gap-8" data-gap="lg">
+      <section className="f-section @container grid gap-3" aria-labelledby="fw-nws-weather-title">
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-nws-weather-title"
+        >
+          {t(
+            'Avisos de huracán e inundación',
+            'Hurricane and flood alerts',
+            'Avisos de furacão e inundação',
+          )}
+        </h2>
+        {line.state !== 'checked' && (
+          <div role="status">
+            <SourceStamp issuer="NWS" state={lineStamp(line.state)}>
+              {line.text}
+              {/* Nothing received: the failure is never read as "no alerts". */}
+              {!data &&
+                line.state !== 'checking' &&
+                `. ${t(
+                  'No podemos confirmar si hay avisos.',
+                  'We cannot confirm whether alerts exist.',
+                  'Não podemos confirmar se há avisos.',
+                )}`}
+            </SourceStamp>
+          </div>
+        )}
+        {rows && rows.length === 0 && !failed && (
+          <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
+            <p>
+              {t(
+                'El NWS no lista avisos de este tipo activos.',
+                'The NWS lists no active alerts of this kind.',
+                'O NWS não lista avisos ativos deste tipo.',
+              )}
+            </p>
+          </div>
+        )}
+        {rows && rows.length > 0 && (
+          <List label="NWS">
+            {rows.slice(0, 8).map((a) => {
+              const id = `fw-nws-${a.id}`.replace(/[^\w-]/g, '_');
+              return (
+                <ExpandRow
+                  key={id}
+                  id={id}
+                  open={!closed.has(id)}
+                  onToggle={() => toggle(id)}
+                  // An alert in force; its name says which (warning, watch, advisory).
+                  lead={
+                    <StatusIcon
+                      state="listed"
+                      level={a.emergency ? 3 : 1}
+                      icon={
+                        a.kind === 'tropical' ? (
+                          <WindIcon className="size-4" />
+                        ) : (
+                          <DropletIcon className="size-4" />
+                        )
+                      }
+                    />
+                  }
+                  // A flash flood warning tagged catastrophic is, in NWS's words, an emergency:
+                  // that is its name here, with the alert red of the icon.
+                  title={
+                    a.emergency
+                      ? t(
+                          'Emergencia por inundación repentina',
+                          'Flash flood emergency',
+                          'Emergência por inundação repentina',
+                        )
+                      : nwsEventLabels[a.event][idx]
+                  }
+                  meta={nb(
+                    `${a.sender} · ${t('emitido', 'issued', 'emitido')} ${at(a.sent)} · ${ageLabel(a.sent, now, lang)}`,
+                  )}
+                >
+                  {a.emergency && <p>{nwsEventLabels[a.event][idx]}</p>}
+                  <p lang="en">{a.area}</p>
+                  {a.expires && (
+                    <p>
+                      {t('Hasta', 'Until', 'Até')} {at(a.expires)}
+                    </p>
+                  )}
+                  <Actions>
+                    <OutLink
+                      href={
+                        a.kind === 'tropical'
+                          ? 'https://www.nhc.noaa.gov/'
+                          : 'https://www.weather.gov/alerts'
+                      }
+                    >
+                      {t('Ver en la fuente', 'View at source', 'Ver na fonte')}
+                    </OutLink>
+                  </Actions>
+                </ExpandRow>
+              );
+            })}
+          </List>
+        )}
+        <Note
+          more={
+            <span>
+              {t('Fuente', 'Source', 'Fonte')}:{' '}
+              <a href="https://www.weather.gov/alerts" target="_blank" rel="noreferrer">
+                NOAA, National Weather Service
+              </a>
+              .
+            </span>
+          }
+        >
+          {mainland
+            ? t(
+                'En EE. UU. continental se muestran avisos tropicales y de inundación repentina; los avisos locales de inundación están en weather.gov. Que no aparezca un aviso no significa que no haya riesgo.',
+                'For the U.S. mainland, tropical and flash flood warnings are shown; local flood products are on weather.gov. No alert listed does not mean there is no risk.',
+                'Nos EUA continentais, aparecem avisos tropicais e de inundação repentina; os avisos locais de inundação estão em weather.gov. Nenhum aviso na lista não significa que não haja risco.',
+              )
+            : t(
+                'Avisos del NWS para este territorio; revisa las zonas indicadas en cada uno.',
+                'NWS alerts for this territory; check the areas listed in each one.',
+                'Avisos do NWS para este território; confira as áreas indicadas em cada um.',
+              )}
+        </Note>
+      </section>
+    </div>
+  );
+}

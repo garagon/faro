@@ -2,7 +2,7 @@
 
 Read README.md, CONTRIBUTING.md and PRIVACY.md before editing. This is a responsive React/TypeScript web app with same-origin Node adapters for official sources.
 
-- Preserve Spanish and English, narrow mobile layouts, keyboard access and readable emergency wording.
+- Preserve Spanish, English and Brazilian Portuguese, narrow mobile layouts, keyboard access and readable emergency wording.
 - Keep personal data in browser storage. Do not add analytics, account sync, personal-data endpoints or automatic sharing without an explicit product decision.
 - Never infer safety, aftershock relationships, tsunami applicability or shelter certification from incomplete data. Preserve source timestamps and visible failure states.
 - Map tiles load automatically in the visible map. Keep attribution, browser caching and a valid origin Referer; do not prefetch regions, strip Referer or evade provider blocks.

@@ -25,6 +25,21 @@ function onLand(lat: number, lng: number, polygons: Polygon[]) {
 export function hasCountryBoundary(code: string) {
   return !!countries[code];
 }
+/**
+ * Countries without a sea coast (the landlocked states, with Kosovo and the Vatican). Their
+ * 100 km buffer below meets only neighbours' land, which is excluded, so it adds no sea. Azerbaijan,
+ * Kazakhstan and Turkmenistan are not listed: their buffer reaches the Caspian Sea.
+ */
+const LANDLOCKED = new Set(
+  (
+    'AD AF AM AT BF BI BO BT BW BY CF CH CZ ET HU KG LA LI LS LU MD MK ML MN MW NE NP PY RS RW ' +
+    'SK SM SS SZ TD TJ UG UZ VA XK ZM ZW'
+  ).split(' '),
+);
+/** Whether the country view's 100 km buffer takes in sea, for the wording of its scope. */
+export function reachesSea(code: string) {
+  return hasCountryBoundary(code) && !LANDLOCKED.has(code);
+}
 /** Geographic browsing only: generalized borders + up to 100 km offshore, never a hazard zone. */
 export function inCountryScope(event: { lat: number; lng: number }, code: string) {
   if (code === 'WORLD') return true;
@@ -40,6 +55,39 @@ export function inCountryScope(event: { lat: number; lng: number }, code: string
   return !Object.entries(countries).some(
     ([other, land]) => other !== code && onLand(lat, lng, land),
   );
+}
+
+/**
+ * The box around a country's land, for the map's first view: its main islands and mainland,
+ * without small far-off islands (Easter Island, the Galápagos). A country that would still span
+ * more than a continent's width (the United States with Alaska) is framed on its largest part.
+ */
+export function countryBounds(
+  code: string,
+): { south: number; north: number; west: number; east: number } | null {
+  const polygons = countries[code];
+  if (!polygons?.length) return null;
+  const boxes = polygons.map(([outer]) => {
+    const lngs = outer.map((p) => p[0]),
+      lats = outer.map((p) => p[1]);
+    return {
+      south: Math.min(...lats),
+      north: Math.max(...lats),
+      west: Math.min(...lngs),
+      east: Math.max(...lngs),
+    };
+  });
+  type Box = (typeof boxes)[number];
+  const size = (b: Box) => (b.east - b.west) * (b.north - b.south);
+  const largest = boxes.reduce((a, b) => (size(b) > size(a) ? b : a));
+  const main = boxes.filter((b) => size(b) >= size(largest) * 0.05);
+  const all = {
+    south: Math.min(...main.map((b) => b.south)),
+    north: Math.max(...main.map((b) => b.north)),
+    west: Math.min(...main.map((b) => b.west)),
+    east: Math.max(...main.map((b) => b.east)),
+  };
+  return all.east - all.west <= 60 && all.north - all.south <= 50 ? all : largest;
 }
 
 /** Approximate country on land only. Offshore browsing buffers are not a person's location. */

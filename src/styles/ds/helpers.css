@@ -1,0 +1,201 @@
+/*
+ * Text and layout helpers that screens put on their own markup, in shadcn's type roles (Tailwind
+ * through @apply). The wrappers in src/ui draw the same roles with Tailwind classes:
+ *   screen title  text-2xl semibold, tight     section title  text-base semibold
+ *   subhead       text-sm medium               body           text-sm
+ *   caption       text-sm muted                figure         semibold, tabular
+ */
+
+/* Sections: a title and space, not a box. A container, so what is inside can follow its width. */
+.f-section {
+  @apply grid gap-3;
+  container-type: inline-size;
+}
+.f-section-head {
+  @apply flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1;
+}
+.f-section-title {
+  @apply m-0 text-base leading-snug font-semibold;
+}
+.f-section-aside {
+  @apply text-sm text-muted-foreground;
+}
+.f-section-aside[data-state='stale'] {
+  @apply text-amber-800;
+}
+.f-subhead {
+  @apply m-0 text-sm leading-snug font-medium;
+}
+.f-caption {
+  @apply text-sm text-muted-foreground;
+}
+
+/* Prose inside a section or an opened row: text roles only, measured spacing. */
+.f-prose {
+  @apply grid max-w-[42rem] gap-3 text-sm leading-relaxed text-pretty;
+
+  & > * {
+    @apply m-0;
+  }
+  & :where(h3) {
+    @apply text-sm font-medium;
+  }
+  & :where(ul) {
+    @apply grid list-disc gap-2 ps-5;
+  }
+  & :where(dl) {
+    @apply grid gap-3;
+  }
+  & :where(dd) {
+    @apply m-0;
+  }
+  & :where(dt) {
+    @apply font-medium;
+  }
+  & :where(small, .f-caption) {
+    @apply text-sm text-muted-foreground;
+  }
+}
+
+.f-visually-hidden {
+  @apply sr-only;
+}
+
+/* Layout: a stack of blocks, and a single reading column that never stretches on wide screens. */
+.f-stack {
+  @apply grid gap-4;
+}
+.f-stack[data-gap='sm'] {
+  @apply gap-2;
+}
+.f-stack[data-gap='lg'] {
+  @apply gap-8;
+}
+/* minmax(0, 1fr): a wide child (a tab strip that scrolls) never widens the column. */
+.f-column {
+  @apply mx-0 grid w-full max-w-[42rem] grid-cols-[minmax(0,1fr)] gap-8;
+}
+
+/* Faro's own scene drawings (the guide): the width of their column, never cropped. */
+.f-illustration {
+  @apply block h-auto w-full;
+}
+
+/* A magnitude: a figure whose colour only darkens with size (the magnitude ramp tokens). Used by
+   Magnitude and by the legend that explains the ramp. */
+.f-mag {
+  @apply font-semibold tabular-nums;
+  color: var(--f-mag-1);
+}
+.f-mag[data-band='2'] {
+  color: var(--f-mag-2);
+}
+.f-mag[data-band='3'] {
+  color: var(--f-mag-3);
+}
+.f-mag[data-band='4'] {
+  color: var(--f-mag-4);
+}
+.f-mag[data-band='5'] {
+  color: var(--f-mag-5);
+}
+
+/* A row of small actions or items, wrapping as needed (Actions, and the magnitude legend). */
+.f-actions {
+  @apply flex flex-wrap items-center gap-x-4 gap-y-1;
+}
+
+/*
+ * Rows still drawn with the older markup by components outside the lists (CheckRow, Disclosure,
+ * RadioList, ActionRow and the trip contacts), until they move to Item: the look of ListRow.
+ * Keyed on the older parts, so the f-row and f-list hooks carry nothing on Item rows.
+ */
+:where(ul.f-list) {
+  @apply m-0 list-none overflow-hidden rounded-xl border bg-card p-0 shadow-xs;
+
+  & > li + li {
+    @apply border-t;
+  }
+}
+.f-row:has(> .f-row-body) {
+  @apply flex w-full items-center gap-3 border border-transparent bg-transparent px-4 py-3 text-start text-sm text-foreground no-underline transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:ring-inset;
+}
+:is(a, button, label, summary).f-row:has(> .f-row-body) {
+  @apply cursor-pointer hover:bg-accent/50 active:bg-accent/70;
+}
+.f-row-lead {
+  @apply flex shrink-0 items-center justify-center;
+}
+.f-row-lead:empty {
+  @apply hidden;
+}
+.f-row-body {
+  @apply flex min-w-0 flex-1 flex-col gap-1;
+}
+.f-row-title {
+  @apply flex flex-wrap items-center gap-2 leading-snug font-medium;
+}
+.f-row-meta {
+  @apply leading-normal text-pretty text-muted-foreground;
+}
+.f-row-meta[data-state='error'] {
+  @apply text-amber-800;
+}
+.f-row-trail {
+  @apply flex items-center gap-2 text-muted-foreground;
+
+  & svg {
+    @apply size-4;
+  }
+}
+.f-row[data-tone='call'] .f-row-trail {
+  @apply text-destructive;
+}
+.f-expand-caret {
+  @apply transition-transform duration-200 motion-reduce:transition-none;
+}
+/* What sits under an older row (a saved contact's note and actions), at the row's text edge. */
+.f-expand-body {
+  @apply px-4 pb-4 ps-15;
+}
+
+/*
+ * Page width. A phone page is one column. From 900 px the page is one reading column, centred;
+ * from 1200 px a page with a side pane (f-two, f-split, the Situación dashboard) uses the full
+ * width. A pane inside a hidden screen (Avisar and Viaje stay mounted) does not count.
+ */
+.f-page {
+  max-width: calc(var(--f-reading) + 2rem);
+}
+@container app (min-width: 900px) {
+  .f-page {
+    max-width: calc(var(--f-reading) + 4rem);
+  }
+}
+@container app (min-width: 1200px) {
+  .f-page:has(.f-two:not([hidden] *), .f-split:not([hidden] *), .f-dashboard) {
+    max-width: 78rem;
+  }
+  /* Two panes: the reading column, and the side pane (data-side) beside the item before it (or
+     beside --f-side-span items), sticky in view while the column scrolls and scrolling on its own
+     when taller than the window. Phones keep the source order in one column. */
+  .f-two {
+    grid-template-columns: minmax(0, var(--f-reading)) minmax(20rem, 1fr);
+    align-items: start;
+    max-width: none;
+  }
+  .f-two > * {
+    grid-column: 1;
+  }
+  .f-two > [data-side] {
+    position: sticky;
+    top: var(--f-space-8);
+    grid-column: 2;
+    grid-row: span var(--f-side-span, 1);
+    max-height: calc(100dvh - 2 * var(--f-space-8));
+    margin-inline: calc(-1 * var(--f-space-2));
+    padding-inline: var(--f-space-2);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}

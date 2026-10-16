@@ -10,6 +10,8 @@ const excludedDirectories = new Set([
   'artifacts',
   'test-results',
   'playwright-report',
+  // Local coding-agent state and worktrees: never part of the published source.
+  '.claude',
 ]);
 const rootFiles = new Set([
   'README.md',
@@ -26,6 +28,8 @@ const rootFiles = new Set([
   'index.html',
   'vite.config.ts',
   'tsconfig.json',
+  // shadcn/ui CLI settings (where components go, the theme file).
+  'components.json',
   'eslint.config.js',
   '.gitignore',
   '.gitattributes',
@@ -43,12 +47,16 @@ export function isPublicFile(path) {
     /^\.github\/[\w./-]+\.(yml|yaml|md)$/.test(path) ||
     [
       'public/faro-mark.svg',
+      'public/og-image.png',
       'public/manifest.webmanifest',
       'public/icons/icon-192.png',
       'public/icons/icon-512.png',
       'public/icons/apple-touch-icon.png',
       'public/data/coastline.json',
+      'public/data/plates.json',
       'public/about.html',
+      'public/privacy.html',
+      'public/pages.css',
       'public/robots.txt',
       'public/llms.txt',
       'public/illustrations/drop-cover-hold-es.png',

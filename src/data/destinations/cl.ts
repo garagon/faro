@@ -7,15 +7,15 @@ export default {
     numbers: [
       {
         number: '131',
-        label: ['Ambulancia', 'Ambulance'],
+        label: ['Ambulancia', 'Ambulance', 'Ambulância'],
       },
       {
         number: '132',
-        label: ['Bomberos', 'Fire department'],
+        label: ['Bomberos', 'Fire department', 'Bombeiros'],
       },
       {
         number: '133',
-        label: ['Carabineros', 'Police'],
+        label: ['Carabineros', 'Police', 'Polícia (Carabineros)'],
       },
     ],
     reviewedAt: '2026-10-11',
@@ -24,6 +24,11 @@ export default {
     name: 'SENAPRED',
     url: 'https://www.senapred.gov.cl/',
     reviewedAt: '2026-10-12',
+  },
+  weatherAgency: {
+    name: 'Dirección Meteorológica de Chile',
+    url: 'https://archivos.meteochile.gob.cl/portaldmc/AAA/aaa_mapa.php',
+    reviewedAt: '2026-10-13',
   },
   seismicAgency: {
     name: 'Centro Sismológico Nacional · Universidad de Chile',
@@ -45,25 +50,32 @@ export default {
     scope: [
       'Chile continental y alrededores. Para islas, desplaza el mapa.',
       'Mainland Chile and surrounding area. Pan the map for islands.',
+      'Chile continental e arredores. Para as ilhas, mova o mapa.',
     ],
   },
   resources: [
     {
       name: 'SENAPRED · Chile Preparado',
-      category: ['Protección civil · mapas oficiales', 'Civil protection · official maps'],
+      category: [
+        'Protección civil · mapas oficiales',
+        'Civil protection · official maps',
+        'Proteção civil · mapas oficiais',
+      ],
       description: [
         'Consulta amenazas, planos de evacuación y puntos de encuentro para localidades de Chile.',
         'Consult hazards, evacuation maps and assembly points for locations in Chile.',
+        'Consulte ameaças, mapas de evacuação e pontos de encontro para localidades do Chile.',
       ],
       url: 'https://www.senapred.cl/visor-preparado/',
       reviewedAt: '2026-10-11',
     },
     {
       name: 'SENAPRED · Planos de evacuación',
-      category: ['Evacuación por tsunami', 'Tsunami evacuation'],
+      category: ['Evacuación por tsunami', 'Tsunami evacuation', 'Evacuação por tsunami'],
       description: [
         'Planos oficiales por localidad. Comprueba la versión y sigue las indicaciones locales.',
         'Official local maps. Check the version and follow local instructions.',
+        'Mapas oficiais por localidade. Confira a versão e siga as orientações locais.',
       ],
       url: 'https://senapred.cl/planos-de-evacuacion/',
       reviewedAt: '2026-10-11',

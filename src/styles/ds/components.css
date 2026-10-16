@@ -1,0 +1,111 @@
+/*
+ * Faro components. Every rule reads tokens (tokens.css); no colour, size or spacing literals.
+ * Selectors stay at one class plus an attribute at most: variants are data attributes, never
+ * per-screen overrides. Components have no outer margin; layouts own the gaps.
+ *
+ * Type roles. Nothing else is allowed:
+ *   screen title   28 / 700        section title  18 / 700
+ *   figure         18 / 700 (phone numbers, magnitudes in lists; tabular)
+ *   label          16 / 600 (row titles, buttons, chips, field labels)
+   exception      34 / 700 for the magnitude in an earthquake's detail only
+ *   body           16 / 400        caption        14 / 400, muted (descriptions, sources, notes)
+ *   legal          13 / 400        tab label      12 / 600
+ */
+
+/* One focus ring everywhere. It lives in this layer (not the base) so the older screens' own
+   rings, in the legacy layer, cannot replace it. Headings and regions receive focus from the app
+   when a screen changes: no ring for that. */
+.f-root :where(:focus-visible) {
+  outline: 3px solid var(--f-color-focus);
+  outline-offset: 2px;
+}
+.f-root :where([tabindex='-1']:focus) {
+  outline: none;
+}
+
+/* Text inside the app takes the colour of its role: older blanket rules on paragraphs and list
+   items (muted greys) do not reach design-system text. */
+.f-content :where(p, li, dd) {
+  color: inherit;
+}
+
+/* On touch screens every field, old screens included, uses 16 px text: smaller makes iOS zoom. */
+@media (pointer: coarse) {
+  :where(input, select, textarea) {
+    font-size: max(16px, 1rem);
+  }
+}
+
+/* A button that reads as a link inside a sentence. */
+.f-inline-link {
+  display: inline;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--f-color-action);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+/* Links and text buttons answer the pointer and the finger: darker, stronger underline. */
+.f-inline-link {
+  transition-property: color, text-decoration-color, text-decoration-thickness;
+  transition-duration: var(--f-press);
+  transition-timing-function: var(--f-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.f-inline-link:active {
+  color: var(--f-color-action-hover);
+  text-decoration-thickness: var(--f-underline-hover);
+}
+@media (hover: hover) {
+  .f-inline-link:hover {
+    color: var(--f-color-action-hover);
+    text-decoration-thickness: var(--f-underline-hover);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .f-inline-link {
+    transition: none;
+  }
+}
+
+/* Motion shared by the components: arriving (fade and settle), and plain fades. */
+@keyframes f-reveal {
+  from {
+    opacity: 0;
+    translate: 0 calc(-1 * var(--f-space-1));
+  }
+}
+@keyframes f-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes f-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* High-contrast (forced colours) mode drops backgrounds and tints, which is how Faro marks the
+   chosen hazard, the current screen and the pressed option: an outline says it instead. */
+@media (forced-colors: active) {
+  .f-root
+    :is(
+      [aria-current='page'],
+      [aria-current='true'],
+      [aria-pressed='true'],
+      [aria-checked='true'],
+      [aria-selected='true']
+    ) {
+    outline: 3px solid Highlight;
+    outline-offset: -3px;
+  }
+  .f-root :is(button, a) svg {
+    color: inherit;
+  }
+}

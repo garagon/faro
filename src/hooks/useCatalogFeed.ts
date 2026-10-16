@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CatalogSnapshot, CatalogReader } from '../catalogs/types.ts';
 import { createFeedTracker, type FeedUpdate } from '../lib/feedUpdates.ts';
+import { attemptResult, type Attempt } from '../lib/sourceStatus.ts';
 /**
  * Polls a catalog every 60 s while the tab is visible and the catalog is enabled.
  * Disabled catalogs keep their last snapshot but make no requests and do not tick.
+ * A failure keeps the snapshot and records when it was tried (`failedAt`).
  */
 export function useCatalogFeed(reader: CatalogReader, enabled = true) {
   const [feed, setFeed] = useState<CatalogSnapshot>({ events: [], generated: 0, fetched: 0 });
   const [busy, setBusy] = useState(false),
-    [failed, setFailed] = useState(false),
+    [attempt, setAttempt] = useState<Attempt>({ failed: false, failedAt: null }),
     [online, setOnline] = useState(navigator.onLine);
   const [now, setNow] = useState(Date.now()),
     [next, setNext] = useState(Date.now()),
@@ -30,6 +32,7 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
     }, 20000);
     // A request is stale once a newer one started or the effect was cleaned up.
     const current = () => mounted.current && controller.current === ac && !ac.signal.aborted;
+    let ok = false;
     try {
       const data = await reader.read(ac.signal);
       if (!current()) return;
@@ -37,11 +40,12 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
       setUpdates(tracker.current.observe(data.events, receivedAt));
       setFeed(data);
       setChecked(receivedAt);
-      setFailed(false);
+      setAttempt(attemptResult(true, receivedAt));
+      ok = true;
     } catch {
       // A timeout aborts this request on purpose and still counts as a failure.
       if (mounted.current && controller.current === ac && !(ac.signal.aborted && !timedOut))
-        setFailed(true);
+        setAttempt(attemptResult(false, Date.now()));
     } finally {
       clearTimeout(timeout);
       if (controller.current === ac) {
@@ -50,7 +54,8 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
           setBusy(false);
           const finished = Date.now();
           setNow(finished);
-          due.current = finished + 60000;
+          // After a failure, try again sooner: a slow answer may already be waiting on the server.
+          due.current = finished + (ok ? 60000 : 15000);
           setNext(due.current);
         }
       }
@@ -76,6 +81,8 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
       if (Date.now() >= due.current) void refresh();
     }, 0);
     const tick = setInterval(() => {
+      // A hidden tab does not re-render every second; coming back refreshes the clock and data.
+      if (document.visibilityState !== 'visible') return;
       const time = Date.now();
       setNow(time);
       if (time >= due.current && document.visibilityState === 'visible' && navigator.onLine)
@@ -83,6 +90,7 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
     }, 1000);
     const resume = () => {
       setOnline(navigator.onLine);
+      setNow(Date.now());
       if (navigator.onLine && document.visibilityState === 'visible') void refresh();
     };
     window.addEventListener('online', resume);
@@ -100,5 +108,16 @@ export function useCatalogFeed(reader: CatalogReader, enabled = true) {
       document.removeEventListener('visibilitychange', resume);
     };
   }, [refresh, reader, enabled]);
-  return { ...feed, busy, failed, online, now, next, checked, updates, refresh };
+  return {
+    ...feed,
+    busy,
+    failed: attempt.failed,
+    failedAt: attempt.failedAt,
+    online,
+    now,
+    next,
+    checked,
+    updates,
+    refresh,
+  };
 }

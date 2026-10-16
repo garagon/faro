@@ -8,4 +8,9 @@ export const careAreas: Partial<Record<string, readonly string[]>> = {
   CL: ['Santiago', 'Valparaíso', 'Concepción', 'Antofagasta'],
   AR: ['Buenos Aires', 'Mendoza', 'Córdoba', 'San Juan'],
   MX: ['Ciudad de México', 'Guadalajara', 'Oaxaca', 'Acapulco'],
+  GT: ['Ciudad de Guatemala', 'Antigua Guatemala', 'Quetzaltenango', 'Panajachel', 'Flores'],
+  SV: ['San Salvador', 'Santa Ana', 'San Miguel', 'La Libertad', 'Suchitoto'],
+  NI: ['Managua', 'Granada', 'León', 'San Juan del Sur', 'Masaya'],
+  HN: ['Tegucigalpa', 'San Pedro Sula', 'La Ceiba', 'Roatán', 'Copán Ruinas'],
+  DO: ['Santo Domingo', 'Santiago de los Caballeros', 'Punta Cana', 'Puerto Plata', 'La Romana'],
 };

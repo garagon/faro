@@ -7,15 +7,15 @@ export default {
     numbers: [
       {
         number: '911',
-        label: ['Emergencias', 'Emergencies'],
+        label: ['Emergencias', 'Emergencies', 'Emergências'],
       },
       {
         number: '100',
-        label: ['Bomberos', 'Fire department'],
+        label: ['Bomberos', 'Fire department', 'Bombeiros'],
       },
       {
         number: '103',
-        label: ['Defensa Civil', 'Civil defence'],
+        label: ['Defensa Civil', 'Civil defense', 'Defesa Civil'],
       },
     ],
     reviewedAt: '2026-10-11',
@@ -42,7 +42,11 @@ export default {
       lng: -64,
       zoom: 4,
     },
-    scope: ['Argentina continental y alrededores', 'Mainland Argentina and surrounding area'],
+    scope: [
+      'Argentina continental y alrededores',
+      'Mainland Argentina and surrounding area',
+      'Argentina continental e arredores',
+    ],
   },
   resources: [],
 } satisfies Destination;
