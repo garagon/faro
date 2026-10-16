@@ -3,6 +3,7 @@ import { ArrowUpRightIcon } from '@phosphor-icons/react';
 import { destinationFor } from '../data/destinations/index.ts';
 import { missionsFor } from '../data/consularMissions.ts';
 import { hostOf } from '../lib/links.ts';
+import { caption, keepSeparators } from '../lib/caption.ts';
 import type { Lang, Resource } from '../lib/resources.ts';
 import { langIndex, pick } from '../lib/i18n.ts';
 import {
@@ -23,10 +24,18 @@ type Props = {
   resources?: readonly Resource[];
   /** The selected region as the app names it ("Panamá", "Todo el mundo"). */
   regionName?: string;
+  /** Opens the País screen, where the country is changed. */
+  onCountry?: () => void;
 };
 
 /** The country's official agencies, what Faro covers there, and further official resources. */
-export default function DestinationInfo({ country, lang, resources = [], regionName }: Props) {
+export default function DestinationInfo({
+  country,
+  lang,
+  resources = [],
+  regionName,
+  onCountry,
+}: Props) {
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
     idx = langIndex(lang);
@@ -51,16 +60,16 @@ export default function DestinationInfo({ country, lang, resources = [], regionN
       </h3>
       {regionName && (
         <Text caption>
-          {t(
-            'Recursos para la región seleccionada',
-            'Resources for the selected region',
-            'Recursos para a região selecionada',
-          )}
-          : {regionName}.{' '}
-          {t(
-            'Cambia el país en el buscador de arriba.',
-            'Change the country using the search above.',
-            'Altere o país na busca acima.',
+          {t('Región', 'Region', 'Região')}: {regionName}.
+          {onCountry && (
+            <>
+              {' '}
+              {t('Cambia el país en', 'Change the country in', 'Altere o país em')}{' '}
+              <button type="button" className="f-inline-link" onClick={onCountry}>
+                {t('País', 'Country', 'País')}
+              </button>
+              .
+            </>
           )}
         </Text>
       )}
@@ -73,35 +82,19 @@ export default function DestinationInfo({ country, lang, resources = [], regionN
               id={id}
               open={open.has(id)}
               onToggle={() => toggle(id)}
-              title={r.name}
-              meta={r.category[idx]}
+              title={keepSeparators(r.name)}
+              meta={keepSeparators(r.category[idx])}
             >
+              {/* When each link was last reviewed is said on Fuentes, not on the row. */}
               <Text>{r.description[idx]}</Text>
               <Actions>
                 <OutLink href={r.url}>
                   {t('Sitio oficial', 'Official website', 'Site oficial')}
                 </OutLink>
               </Actions>
-              <Text caption>
-                {r.name === 'USGS'
-                  ? t(
-                      'Consulta automática cada 60 s',
-                      'Checked automatically every 60 s',
-                      'Consulta automática a cada 60 s',
-                    )
-                  : `${t('Datos revisados', 'Information reviewed', 'Dados revisados')}: ${new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(r.reviewedAt + 'T12:00:00Z'))}`}
-              </Text>
             </ExpandRow>
           );
         })}
-        <ListRow
-          title={t('Voluntariado', 'Volunteering', 'Voluntariado')}
-          meta={t(
-            'Sin convocatorias verificadas. Consulta la disponibilidad y los requisitos con la universidad o el municipio.',
-            'No verified openings. Contact the university or municipality for availability and requirements.',
-            'Sem chamadas verificadas. Consulte a disponibilidade e os requisitos com a universidade ou o município.',
-          )}
-        />
       </List>
     </div>
   );
@@ -134,25 +127,18 @@ export default function DestinationInfo({ country, lang, resources = [], regionN
       </Section>
     );
   const links = [
+    // One caption line each: what the agency publishes, then the site that opens.
     {
       source: data.civilProtection,
       label: t('Avisos y recomendaciones', 'Notices and guidance', 'Avisos e recomendações'),
     },
     {
       source: data.weatherAgency,
-      label: t(
-        'Avisos meteorológicos e hidrológicos',
-        'Weather and flood warnings',
-        'Avisos meteorológicos e hidrológicos',
-      ),
+      label: t('Avisos del tiempo', 'Weather warnings', 'Avisos do tempo'),
     },
     {
       source: data.seismicAgency,
-      label: t(
-        'Reportes de la red sísmica nacional',
-        'National earthquake reports',
-        'Relatórios da rede sísmica nacional',
-      ),
+      label: t('Sismos', 'Earthquakes', 'Terremotos'),
     },
     {
       source: data.evacuation,
@@ -182,8 +168,8 @@ export default function DestinationInfo({ country, lang, resources = [], regionN
                 key={source.url}
                 href={source.url}
                 external
-                title={source.name}
-                meta={`${label} · ${hostOf(source.url)}`}
+                title={keepSeparators(source.name)}
+                meta={caption(label, hostOf(source.url))}
                 trail={<ArrowUpRightIcon size={16} aria-hidden="true" />}
               />
             ),

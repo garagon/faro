@@ -186,10 +186,12 @@ export default function InstallFaro({ lang }: { lang: Lang }) {
         />
         <Steps items={steps.map((text, n) => ({ id: `${platform}-${n}`, text }))} />
         <ScopeNote>
+          {/* The same words as the footer: the app opens from its stored copy once it has opened
+              with a connection (src/sw.ts); new data always needs internet. */}
           {t(
-            'Necesitas internet para abrir Faro y actualizar las fuentes. Instalarlo no activa alertas cuando está cerrado. Los datos de tu viaje no se sincronizan; comprueba tu perfil al abrirlo desde el icono.',
-            'You need internet to open Faro and refresh sources. Installing does not enable alerts while it is closed. Trip data does not sync; check your profile when opening from the icon.',
-            'Você precisa de internet para abrir o Faro e atualizar as fontes. Instalar não ativa alertas quando ele está fechado. Os dados da viagem não são sincronizados; confira seu perfil ao abrir pelo ícone.',
+            'La primera vez necesita internet; después, Faro abre sin conexión. Los datos nuevos necesitan internet. Instalarlo no activa alertas cuando está cerrado. Los datos de tu viaje no se sincronizan; comprueba tu perfil al abrirlo desde el icono.',
+            'The first time it needs internet; after that, Faro opens offline. New data needs internet. Installing does not enable alerts while it is closed. Trip data does not sync; check your profile when opening from the icon.',
+            'Na primeira vez precisa de internet; depois, o Faro abre sem conexão. Dados novos precisam de internet. Instalar não ativa alertas quando ele está fechado. Os dados da viagem não são sincronizados; confira seu perfil ao abrir pelo ícone.',
           )}
         </ScopeNote>
       </Sheet>

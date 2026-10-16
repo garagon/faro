@@ -26,7 +26,6 @@ import { displayPhone } from '../lib/phone.ts';
 import type { Geo } from './WebMap.tsx';
 import { pick, type Lang } from '../lib/i18n.ts';
 import {
-  Actions,
   Button,
   CheckRow,
   Disclosure,
@@ -37,6 +36,7 @@ import {
   RowIcon,
   Section,
   SelectField,
+  Text,
   TextArea,
 } from '../ui/index.ts';
 
@@ -122,8 +122,6 @@ export default function TripProfile(p: Props) {
   // The coordinates are a rarely used part of the stay section: closed until asked for.
   const [coordinatesOpen, setCoordinatesOpen] = useState(false);
   const destinationField = useRef<HTMLDivElement>(null);
-  const deleteButton = useRef<HTMLButtonElement>(null);
-  const confirmButton = useRef<HTMLButtonElement>(null);
   const statusRegion = useRef<HTMLDivElement>(null);
   const set = (patch: Partial<Fields>) => {
     setEdits((e) => ({ ...e, fields: { ...e.fields, ...patch } }));
@@ -135,6 +133,11 @@ export default function TripProfile(p: Props) {
   };
   const toggleStep = (n: number, open: boolean) =>
     setOpenSteps((s) => (open ? (s.includes(n) ? s : [...s, n]) : s.filter((x) => x !== n)));
+  // From the empty card: open "Tus datos" and put the cursor in its first field.
+  const completeDetails = () => {
+    flushSync(() => toggleStep(1, true));
+    document.getElementById('trip-name')?.focus();
+  };
 
   const labels = {
     destination: t('País donde estás', 'Country you are in', 'País onde você está'),
@@ -470,9 +473,9 @@ export default function TripProfile(p: Props) {
             title={t('Salud', 'Health', 'Saúde')}
             summary={summary.health}
             empty={t(
-              'Alergias, medicamentos, grupo sanguíneo',
+              'Alergias, medicinas, grupo sanguíneo',
               'Allergies, medication, blood type',
-              'Alergias, medicamentos, tipo sanguíneo',
+              'Alergias, remédios, tipo sanguíneo',
             )}
           >
             <div className="f-prose">
@@ -548,7 +551,7 @@ export default function TripProfile(p: Props) {
             empty={t(
               'Aseguradora, póliza y asistencia 24\u00a0h',
               'Insurer, policy and 24-hour assistance',
-              'Seguradora, apólice e assistência 24\u00a0h',
+              'Seguradora, apólice, assistência 24\u00a0h',
             )}
           >
             <Field
@@ -585,7 +588,7 @@ export default function TripProfile(p: Props) {
             empty={t(
               'Dónde te alojas y punto de encuentro',
               'Where you stay and meeting point',
-              'Onde você se hospeda e ponto de encontro',
+              'Hospedagem e ponto de encontro',
             )}
           >
             <Field
@@ -702,20 +705,16 @@ export default function TripProfile(p: Props) {
                   onChange={(e) => set({ lng: e.target.value })}
                 />
                 {p.geo && (
-                  <Actions>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        set({ lat: p.geo!.lat.toFixed(6), lng: p.geo!.lng.toFixed(6) })
-                      }
-                    >
-                      {t(
-                        'Estoy en el punto acordado: usar mi ubicación',
-                        'I am at the agreed point: use my location',
-                        'Estou no ponto combinado: usar minha localização',
-                      )}
-                    </button>
-                  </Actions>
+                  <Button
+                    variant="secondary"
+                    onClick={() => set({ lat: p.geo!.lat.toFixed(6), lng: p.geo!.lng.toFixed(6) })}
+                  >
+                    {t(
+                      'Estoy en el punto acordado: usar mi ubicación',
+                      'I am at the agreed point: use my location',
+                      'Estou no ponto combinado: usar minha localização',
+                    )}
+                  </Button>
                 )}
               </div>
             </div>
@@ -771,101 +770,111 @@ export default function TripProfile(p: Props) {
               </Note>
             )}
           </div>
-          {!confirmDelete ? (
-            <Actions>
-              <button
-                type="button"
-                ref={deleteButton}
+        </div>
+        {/* Deleting is the form's last control, apart from Guardar, as a ghost button in the
+            error colour (data-tone), with a confirmation in place. */}
+        {!confirmDelete ? (
+          <Button
+            variant="ghost"
+            data-tone="error"
+            id="trip-delete"
+            onClick={() => {
+              // The button gives way to the confirmation: focus moves to its first choice.
+              flushSync(() => setConfirmDelete(true));
+              document.getElementById('trip-delete-confirm')?.focus();
+            }}
+          >
+            {t('Borrar mis datos', 'Delete my details', 'Apagar meus dados')}
+          </Button>
+        ) : (
+          <div
+            className="f-stack"
+            data-gap="sm"
+            role="group"
+            aria-label={t('Confirmar', 'Confirm', 'Confirmar')}
+          >
+            <Text>
+              {t(
+                '¿Borrar perfil, salud, seguro y alojamiento?',
+                'Delete profile, health, insurance and stay?',
+                'Apagar perfil, saúde, seguro e hospedagem?',
+              )}
+            </Text>
+            <div className="f-chips">
+              <Button variant="secondary" id="trip-delete-confirm" onClick={deleteAll}>
+                {t('Sí, borrar', 'Yes, delete', 'Sim, apagar')}
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
-                  // The button gives way to the confirmation: focus moves to its first choice.
-                  flushSync(() => setConfirmDelete(true));
-                  confirmButton.current?.focus();
+                  flushSync(() => setConfirmDelete(false));
+                  document.getElementById('trip-delete')?.focus();
                 }}
               >
-                {t('Borrar mis datos', 'Delete my details', 'Apagar meus dados')}
-              </button>
-            </Actions>
-          ) : (
-            <div
-              className="f-prose"
-              role="group"
-              aria-label={t('Confirmar', 'Confirm', 'Confirmar')}
-            >
-              <p>
-                {t(
-                  '¿Borrar perfil, salud, seguro y alojamiento?',
-                  'Delete profile, health, insurance and stay?',
-                  'Apagar perfil, saúde, seguro e hospedagem?',
-                )}
-              </p>
-              <Actions>
-                <button type="button" ref={confirmButton} onClick={deleteAll}>
-                  {t('Sí, borrar', 'Yes, delete', 'Sim, apagar')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    flushSync(() => setConfirmDelete(false));
-                    deleteButton.current?.focus();
-                  }}
-                >
-                  {t('Cancelar', 'Cancel', 'Cancelar')}
-                </button>
-              </Actions>
+                {t('Cancelar', 'Cancel', 'Cancelar')}
+              </Button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </form>
 
       <Section id="fw-ficha" title={t('Tu ficha', 'Your card', 'Sua ficha')}>
-        <div className="f-prose">
-          <p>
-            {t(
-              'Envíala a tu familia, a tu empresa o a quien te atienda. Tú eliges la app y el destinatario.',
-              'Send it to family, your employer or whoever helps you. You choose the app and recipient.',
-              'Envie para sua família, sua empresa ou quem atender você. Você escolhe o app e o destinatário.',
-            )}
-          </p>
-        </div>
-        <MessagePreview
-          live
-          text={filled ? card : ''}
-          empty={t(
-            'Completa tus datos y aparecerán aquí, listos para enviar.',
-            'Fill in your details and they will appear here, ready to send.',
-            'Preencha seus dados e eles aparecerão aqui, prontos para enviar.',
-          )}
-        />
-        <ShareButtons
-          lang={p.lang}
-          text={card}
-          subject={t('Mi ficha de emergencia', 'My emergency card', 'Minha ficha de emergência')}
-          enabled={filled}
-          label={t('Enviar mi ficha', 'Send my card', 'Enviar minha ficha')}
-          hint={
-            filled
-              ? t(
-                  'Se envía lo que ves arriba. Revísalo antes de enviarlo.',
-                  'What you see above is what gets sent. Check it before sending.',
-                  'É enviado o que você vê acima. Confira antes de enviar.',
-                )
-              : undefined
-          }
-        />
-        <Button
-          variant="secondary"
-          icon={<DownloadSimpleIcon size={20} aria-hidden="true" />}
-          // aria-disabled rather than disabled: the older screens' styles fade disabled buttons
-          // below 4.5:1; the design system draws aria-disabled with readable text.
-          aria-disabled={(!p.profile && !p.plan) || undefined}
-          onClick={() => (p.profile || p.plan) && void saveImage()}
-        >
-          {t(
-            'Guardar como imagen para el teléfono',
-            'Save as an image for your phone',
-            'Salvar como imagem para o celular',
-          )}
-        </Button>
+        {/* Without details there is nothing to send: one line and the way to start, instead of
+            channels that do nothing. The channels and the image appear with the first detail. */}
+        {filled ? (
+          <>
+            <div className="f-prose">
+              <p>
+                {t(
+                  'Envíala a tu familia, a tu empresa o a quien te atienda. Tú eliges la app y el destinatario.',
+                  'Send it to family, your employer or whoever helps you. You choose the app and recipient.',
+                  'Envie para sua família, sua empresa ou quem atender você. Você escolhe o app e o destinatário.',
+                )}
+              </p>
+            </div>
+            <MessagePreview live text={card} empty="" />
+            <ShareButtons
+              lang={p.lang}
+              text={card}
+              subject={t(
+                'Mi ficha de emergencia',
+                'My emergency card',
+                'Minha ficha de emergência',
+              )}
+              label={t('Enviar mi ficha', 'Send my card', 'Enviar minha ficha')}
+              hint={t(
+                'Se envía lo que ves arriba. Revísalo antes de enviarlo.',
+                'What you see above is what gets sent. Check it before sending.',
+                'É enviado o que você vê acima. Confira antes de enviar.',
+              )}
+            />
+            {/* The image carries the same text as the preview above. */}
+            <Button
+              variant="secondary"
+              icon={<DownloadSimpleIcon size={20} aria-hidden="true" />}
+              onClick={() => void saveImage()}
+            >
+              {t(
+                'Guardar como imagen para el teléfono',
+                'Save as an image for your phone',
+                'Salvar como imagem para o celular',
+              )}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Text>
+              {t(
+                'Tu ficha aparecerá aquí, lista para enviar.',
+                'Your card will appear here, ready to send.',
+                'Sua ficha aparecerá aqui, pronta para enviar.',
+              )}
+            </Text>
+            <Button variant="secondary" onClick={completeDetails}>
+              {t('Completar tus datos', 'Fill in your details', 'Preencher seus dados')}
+            </Button>
+          </>
+        )}
         <div role="status">{imageNote && <Note>{imageNote}</Note>}</div>
       </Section>
     </div>

@@ -4,6 +4,7 @@ export type FamilyLink = {
   id: string;
   /** "Agency · service", in each language. */
   name: Localized;
+  /** One caption line before the site's name: what the service does, in a few words. */
   description: Localized;
   url: Localized;
   reviewedAt: string;
@@ -20,11 +21,7 @@ export const familyLinks: readonly FamilyLink[] = [
       'ICRC · Restoring Family Links',
       'CICV · Restabelecimento de Laços Familiares',
     ],
-    description: [
-      'Servicio gratuito del CICR y las Sociedades Nacionales para quienes perdieron contacto con familiares por un conflicto o desastre.',
-      'Free ICRC service, with National Societies, for people who lost contact with family in a conflict or disaster.',
-      'Serviço gratuito do CICV e das Sociedades Nacionais para quem perdeu contato com familiares por causa de um conflito ou desastre.',
-    ],
+    description: ['Busca a familiares', 'Find family members', 'Busque familiares'],
     // The service site has no Portuguese version; the ICRC's Portuguese page explains it and
     // links to its Central Tracing Agency and online tracing.
     url: [
@@ -42,9 +39,9 @@ export const familyLinks: readonly FamilyLink[] = [
       'IFRC · Diretório das Sociedades Nacionais',
     ],
     description: [
-      'Contacto y sitio web de la Cruz Roja o la Media Luna Roja de cada país. No confirma servicios disponibles.',
-      'Contact details and website of the Red Cross or Red Crescent in each country. It does not confirm available services.',
-      'Contato e site da Cruz Vermelha ou do Crescente Vermelho de cada país. Não confirma serviços disponíveis.',
+      'Cruz Roja de cada país',
+      'Red Cross in each country',
+      'Cruz Vermelha de cada país',
     ],
     url: [
       'https://www.ifrc.org/national-societies-directory',
@@ -61,9 +58,9 @@ export const familyLinks: readonly FamilyLink[] = [
       'Cruz Vermelha Americana · Contatar e localizar entes queridos',
     ],
     description: [
-      'Ayuda para localizar a seres queridos tras un desastre en EE. UU. y sus territorios, según sus criterios.',
-      'Help locating loved ones after a disaster in the U.S. and its territories, subject to its criteria.',
-      'Ajuda para localizar entes queridos após um desastre nos EUA e em seus territórios, conforme os critérios da organização.',
+      'Tras un desastre en EE.\u00a0UU.',
+      'After a disaster in the U.S.',
+      'Após um desastre nos EUA',
     ],
     url: [
       'https://www.redcross.org/get-help/disaster-relief-and-recovery-services/contact-and-locate-loved-ones.html',

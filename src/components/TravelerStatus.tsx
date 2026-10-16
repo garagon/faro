@@ -13,18 +13,20 @@ import {
   CheckCircleIcon,
   ClockCounterClockwiseIcon,
   ListPlusIcon,
+  PhoneIcon,
   WarningCircleIcon,
 } from '@phosphor-icons/react';
 import ShareButtons from './ShareButtons.tsx';
 import {
   ActionBar,
-  Actions,
   Button,
   CallButton,
   ChoiceChip,
   Chips,
   Disclosure,
   Field,
+  List,
+  ListRow,
   MessageText,
   Note,
   RadioList,
@@ -382,7 +384,9 @@ export default function TravelerStatus({
             </div>
           )}
           {(countryName || hotel?.name) && (
+            // Actions that fill the field: buttons, not links.
             <div
+              className="f-chips"
               role="group"
               aria-label={t(
                 'Añadir un lugar al mensaje',
@@ -390,42 +394,39 @@ export default function TravelerStatus({
                 'Adicionar um local à mensagem',
               )}
             >
-              <Actions>
-                {countryName && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPlace(countryName);
-                      change();
-                    }}
-                  >
-                    {suggestedLocation?.source === 'location'
-                      ? t(
-                          'Usar país según ubicación (aprox.):',
-                          'Use country from location (approx.):',
-                          'Usar país pela localização (aprox.):',
-                        )
-                      : t(
-                          'Usar destino guardado:',
-                          'Use saved destination:',
-                          'Usar destino salvo:',
-                        )}{' '}
-                    {countryName}
-                  </button>
-                )}
-                {hotel?.name && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPlace(`${hotel.name}, ${countryName}`);
-                      change();
-                    }}
-                  >
-                    {t('Usar hotel guardado:', 'Use saved hotel:', 'Usar hotel salvo:')}{' '}
-                    {hotel.name}
-                  </button>
-                )}
-              </Actions>
+              {countryName && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setPlace(countryName);
+                    change();
+                  }}
+                >
+                  {suggestedLocation?.source === 'location'
+                    ? t(
+                        'Usar país según ubicación (aprox.):',
+                        'Use country from location (approx.):',
+                        'Usar país pela localização (aprox.):',
+                      )
+                    : t(
+                        'Usar destino guardado:',
+                        'Use saved destination:',
+                        'Usar destino salvo:',
+                      )}{' '}
+                  {countryName}
+                </Button>
+              )}
+              {hotel?.name && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setPlace(`${hotel.name}, ${countryName}`);
+                    change();
+                  }}
+                >
+                  {t('Usar hotel guardado:', 'Use saved hotel:', 'Usar hotel salvo:')} {hotel.name}
+                </Button>
+              )}
             </div>
           )}
           {location && !suggestedLocation && (
@@ -469,27 +470,22 @@ export default function TravelerStatus({
                   'Por exemplo: preciso que entrem em contato com meu seguro viagem',
                 )}
               />
-              <div
-                role="group"
-                aria-label={t('Opciones de ayuda', 'Help suggestions', 'Opções de ajuda')}
-              >
-                <Actions>
-                  {helpTemplates.map((template) => (
-                    <button
-                      key={template.id}
-                      type="button"
-                      aria-pressed={needs === template.text[idx]}
-                      onClick={() => {
-                        setNeeds(template.text[idx]);
-                        setQuick('');
-                        change();
-                      }}
-                    >
-                      {template.label[idx]}
-                    </button>
-                  ))}
-                </Actions>
-              </div>
+              {/* Choices that fill the field: chips, pressed when the field holds their text. */}
+              <Chips label={t('Opciones de ayuda', 'Help suggestions', 'Opções de ajuda')}>
+                {helpTemplates.map((template) => (
+                  <ChoiceChip
+                    key={template.id}
+                    pressed={needs === template.text[idx]}
+                    onClick={() => {
+                      setNeeds(template.text[idx]);
+                      setQuick('');
+                      change();
+                    }}
+                  >
+                    {template.label[idx]}
+                  </ChoiceChip>
+                ))}
+              </Chips>
             </>
           )}
           <Disclosure
@@ -781,11 +777,9 @@ export default function TravelerStatus({
                           )}
                 </Note>
                 {(changed || expired) && (
-                  <Actions>
-                    <button type="button" onClick={review}>
-                      {t('Revisar mi estado', 'Review my status', 'Revisar meu status')}
-                    </button>
-                  </Actions>
+                  <Button variant="secondary" onClick={review}>
+                    {t('Revisar mi estado', 'Review my status', 'Revisar meu status')}
+                  </Button>
                 )}
               </div>
             )}
@@ -799,11 +793,9 @@ export default function TravelerStatus({
               ))}
             </MessageText>
             {prepared && !changed && (
-              <Actions>
-                <button type="button" onClick={review}>
-                  {t('Editar datos', 'Edit details', 'Editar dados')}
-                </button>
-              </Actions>
+              <Button variant="secondary" onClick={review}>
+                {t('Editar datos', 'Edit details', 'Editar dados')}
+              </Button>
             )}
             {/* On a phone the form's review button is far above; this one is next to sharing. */}
             {!prepared && (
@@ -816,11 +808,9 @@ export default function TravelerStatus({
                   )}
                 </Note>
                 {status && (
-                  <Actions>
-                    <button type="button" onClick={() => form.current?.requestSubmit()}>
-                      {t('Revisar mensaje', 'Review message', 'Revisar mensagem')}
-                    </button>
-                  </Actions>
+                  <Button variant="secondary" onClick={() => form.current?.requestSubmit()}>
+                    {t('Revisar mensaje', 'Review message', 'Revisar mensagem')}
+                  </Button>
                 )}
               </div>
             )}
@@ -893,25 +883,23 @@ export default function TravelerStatus({
                   'Apagar as mensagens anteriores deste navegador?',
                 )}
               </p>
-              <Button variant="secondary" onClick={clear}>
-                {t(
-                  'Borrar mensajes anteriores',
-                  'Delete previous messages',
-                  'Apagar mensagens anteriores',
-                )}
-              </Button>
-              <Actions>
-                <button type="button" onClick={() => setConfirmClear(false)}>
+              <div className="f-chips">
+                <Button variant="secondary" onClick={clear}>
+                  {t(
+                    'Borrar mensajes anteriores',
+                    'Delete previous messages',
+                    'Apagar mensagens anteriores',
+                  )}
+                </Button>
+                <Button variant="ghost" onClick={() => setConfirmClear(false)}>
                   {t('Cancelar', 'Cancel', 'Cancelar')}
-                </button>
-              </Actions>
+                </Button>
+              </div>
             </div>
           ) : (
-            <Actions>
-              <button type="button" onClick={() => setConfirmClear(true)}>
-                {t('Borrar historial', 'Delete history', 'Apagar histórico')}
-              </button>
-            </Actions>
+            <Button variant="ghost" data-tone="error" onClick={() => setConfirmClear(true)}>
+              {t('Borrar historial', 'Delete history', 'Apagar histórico')}
+            </Button>
           )}
         </Disclosure>
       )}
@@ -919,15 +907,15 @@ export default function TravelerStatus({
       <div className="f-stack" data-gap="sm">
         {/* Always present, so a screen reader announces the feedback when it appears. */}
         <div role="status">{feedback && <Note>{feedback}</Note>}</div>
-        <Actions>
-          <button type="button" onClick={onHelp}>
-            {t(
-              'Ver teléfonos de emergencia',
-              'View emergency numbers',
-              'Ver telefones de emergência',
-            )}
-          </button>
-        </Actions>
+        {/* Another screen: a row that opens Emergencia at its numbers. */}
+        <List>
+          <ListRow
+            lead={<RowIcon icon={<PhoneIcon size={20} />} />}
+            title={t('Teléfonos de emergencia', 'Emergency numbers', 'Telefones de emergência')}
+            meta={t('En Emergencia', 'In Emergency', 'Em Emergência')}
+            onClick={onHelp}
+          />
+        </List>
       </div>
       <ScopeNote>
         {t(

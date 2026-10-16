@@ -421,28 +421,24 @@ export const destinationConsularDirectories: Record<
   string,
   { name: string | Localized; url: string; note?: Localized }[]
 > = {
+  // Each note is one caption line: what the link holds, said without dates of Faro's review.
   PA: [
     {
       name: [
-        'Unión Europea · embajadas y consulados honorarios',
-        'European Union · embassies and honorary consulates',
-        'União Europeia · embaixadas e consulados honorários',
+        'Unión Europea · protección consular',
+        'European Union · consular protection',
+        'União Europeia · proteção consular',
       ],
       url: euProtection,
-      note: [
-        'Incluye enlace al listado de octubre de 2024. No confirma atención actual.',
-        'Links to the October 2024 list. Does not confirm current services.',
-        'Inclui link para a lista de outubro de 2024. Não confirma o atendimento atual.',
-      ],
+      // The page links to the EU states' contact list of October 2024: a dated list.
+      note: ['Listado de oct. 2024', 'October 2024 list', 'Lista de out. 2024'],
     },
     {
-      name: 'Cancillería de Panamá · cuerpo diplomático',
-      url: 'https://mire.gob.pa/cuerpo-diplomatico-2/',
-      note: [
-        'El PDF enlazado por la Cancillería devolvió un error al revisarlo el 12 oct 2026. Consulta al organismo si sigue sin abrir.',
-        'The ministry’s linked PDF returned an error when checked Oct 12, 2026. Contact the ministry if it still fails.',
-        'O PDF indicado pela Chancelaria deu erro quando foi verificado em 12 de outubro de 2026. Consulte o órgão se continuar sem abrir.',
-      ],
+      // The ministry's diplomatic-corps page only links a PDF that no longer opens (checked
+      // 16 Oct 2026), so Faro points to the ministry's home page instead of a broken list.
+      name: ['Cancillería de Panamá', 'Panama Foreign Ministry', 'Chancelaria do Panamá'],
+      url: 'https://mire.gob.pa/',
+      note: ['Consulta su sitio', 'Check its website', 'Consulte o site'],
     },
   ],
   CL: [

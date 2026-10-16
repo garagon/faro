@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
-  ArrowUpRightIcon,
   CloudLightningIcon,
   GlobeHemisphereWestIcon,
   HurricaneIcon,
@@ -13,17 +12,23 @@ import { capitalize, sourceTime, type SourceState } from '../lib/sourceStatus.ts
 import type { FeedUpdate } from '../lib/feedUpdates.ts';
 import { displayPlace, placeLang, type Quake } from '../lib/domain.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
+import { caption, keepSeparators } from '../lib/caption.ts';
+import { reviewDate } from '../lib/links.ts';
+import { helpReviewRange } from '../lib/reviews.ts';
 import { MagnitudeScale } from './MagnitudeLegend.tsx';
 import {
   Actions,
   Badge,
+  ExpandRow,
   List,
   ListRow,
   Magnitude,
   Note,
   OutLink,
+  ScopeNote,
   SourceStamp,
   StatusIcon,
+  Text,
   type Signal,
 } from '../ui/index.ts';
 
@@ -44,6 +49,8 @@ export type SourceRow = {
 type Props = {
   lang: Lang;
   now: number;
+  /** The country being viewed, for the review dates of what Ayuda lists there. */
+  country?: string;
   countryName: string;
   rows: SourceRow[];
   /** When Faro asks the selected earthquake catalogue again (its row id), while it is polling. */
@@ -88,7 +95,15 @@ const problem = (s: SourceState) =>
  * answer, when, how often), the earthquakes received meanwhile, then what each one publishes and
  * how to read dates, coverage and magnitude. Other screens link to its sections by id.
  */
-export default function SourcesScreen({ lang, now, countryName, rows, next, updates }: Props) {
+export default function SourcesScreen({
+  lang,
+  now,
+  country,
+  countryName,
+  rows,
+  next,
+  updates,
+}: Props) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   const label: Record<SourceState, string> = {
     ok: t('Respondió', 'Responding', 'Respondeu'),
@@ -99,23 +114,28 @@ export default function SourcesScreen({ lang, now, countryName, rows, next, upda
     offline: t('Sin conexión', 'Offline', 'Sem conexão'),
     idle: t('Se consulta al elegirla', 'Checked when selected', 'Consultada ao selecionar'),
   };
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  const toggle = (id: string) => {
+    const next = new Set(open);
+    if (!next.delete(id)) next.add(id);
+    setOpen(next);
+  };
   // When its data is from and, for a failing source, when Faro last tried it.
   const when = (r: SourceRow) =>
     capitalize(
-      [
+      caption(
         sourceTime({
           checked: r.checked,
           old: r.state !== 'ok' && r.state !== 'partial',
           now,
           lang,
         }),
-        r.state === 'failed'
-          ? sourceTime({ checked: null, old: true, failedAt: r.failedAt, now, lang })
-          : '',
-      ]
-        .filter(Boolean)
-        .join(' · '),
+        r.state === 'failed' &&
+          sourceTime({ checked: null, old: true, failedAt: r.failedAt, now, lang }),
+      ),
     );
+  // What Ayuda lists here was checked by hand: said once here, not on each row.
+  const reviewed = country ? helpReviewRange(country) : null;
   const countdown = (r: SourceRow) =>
     next?.id === r.id
       ? `${t('Próxima consulta', 'Next check', 'Próxima consulta')}: ${Math.max(0, Math.ceil((next.at - now) / 1000))}\u00a0s`
@@ -130,31 +150,50 @@ export default function SourcesScreen({ lang, now, countryName, rows, next, upda
             `Status das fontes: ${countryName}`,
           )}
         </h2>
+        {/* Each row: the source, its state and one caption line with the time of its data.
+            What it covers here, how often Faro asks and its site open under the row. */}
         <List label={t('Fuentes', 'Sources', 'Fontes')}>
           {rows.map((r) => {
-            const row = {
-              lead: (
-                <StatusIcon
-                  state={signals[r.state]}
-                  level={problem(r.state) ? 1 : undefined}
-                  icon={icons[r.id] ?? <GlobeHemisphereWestIcon size={20} weight="bold" />}
-                />
-              ),
-              title: r.name,
-              badge: <Badge level={problem(r.state) ? 1 : undefined}>{label[r.state]}</Badge>,
-              meta: [r.covers, when(r), r.every, countdown(r)].filter(Boolean).join(' · '),
-            };
-            // The row leaves to the agency's own site, when there is one.
-            return r.url ? (
-              <ListRow
+            const id = `fw-source-${r.id}`;
+            const often = [
+              r.every &&
+                t(
+                  `Faro la consulta ${r.every}`,
+                  `Faro checks it ${r.every}`,
+                  `O Faro a consulta ${r.every}`,
+                ),
+              countdown(r),
+            ]
+              .filter(Boolean)
+              .join('. ');
+            return (
+              <ExpandRow
                 key={r.id}
-                {...row}
-                href={r.url}
-                external
-                trail={<ArrowUpRightIcon size={16} aria-hidden="true" />}
-              />
-            ) : (
-              <ListRow key={r.id} {...row} />
+                id={id}
+                open={open.has(id)}
+                onToggle={() => toggle(id)}
+                lead={
+                  <StatusIcon
+                    state={signals[r.state]}
+                    level={problem(r.state) ? 1 : undefined}
+                    icon={icons[r.id] ?? <GlobeHemisphereWestIcon size={20} weight="bold" />}
+                  />
+                }
+                title={keepSeparators(r.name)}
+                badge={<Badge level={problem(r.state) ? 1 : undefined}>{label[r.state]}</Badge>}
+                // Never asked yet (another catalogue is selected): what it would give instead.
+                meta={when(r) || keepSeparators(r.covers)}
+              >
+                <Text>{r.covers}.</Text>
+                {often && <Text caption>{often}.</Text>}
+                {r.url && (
+                  <Actions>
+                    <OutLink href={r.url}>
+                      {t('Sitio oficial', 'Official website', 'Site oficial')}
+                    </OutLink>
+                  </Actions>
+                )}
+              </ExpandRow>
             );
           })}
         </List>
@@ -205,7 +244,10 @@ export default function SourcesScreen({ lang, now, countryName, rows, next, upda
                     </>
                   }
                   title={<span lang={placeLang(u.event)}>{displayPlace(u.event.place)}</span>}
-                  meta={`${t('Sismo', 'Earthquake', 'Terremoto')}: ${checkedLabel(u.event.time, now, lang)} · ${t('Recibido', 'Received', 'Recebido')}: ${checkedLabel(u.receivedAt, now, lang)}`}
+                  meta={caption(
+                    `${t('Sismo', 'Earthquake', 'Terremoto')}: ${checkedLabel(u.event.time, now, lang)}`,
+                    `${t('Recibido', 'Received', 'Recebido')}: ${checkedLabel(u.receivedAt, now, lang)}`,
+                  )}
                   onClick={() => updates.onDetails(u.event)}
                 />
               ))}
@@ -314,6 +356,36 @@ export default function SourcesScreen({ lang, now, countryName, rows, next, upda
         </div>
       </section>
 
+      {reviewed && (
+        <section className="f-section" id="fw-sources-help" aria-labelledby="fw-sources-help-title">
+          <h2 className="f-section-title" id="fw-sources-help-title">
+            {t(
+              'Teléfonos y enlaces de Ayuda',
+              'Help numbers and links',
+              'Telefones e links de Ajuda',
+            )}
+          </h2>
+          <Text>
+            {t(
+              'Faro revisa a mano los teléfonos, las oficinas y los enlaces de Ayuda; no se consultan en vivo.',
+              'Faro checks the numbers, offices and links in Help by hand; they are not checked live.',
+              'O Faro revisa à mão os telefones, as representações e os links de Ajuda; eles não são consultados ao vivo.',
+            )}{' '}
+            {reviewed.from === reviewed.to
+              ? t(
+                  `Revisión para ${countryName}: ${reviewDate(reviewed.to, lang)}.`,
+                  `Reviewed for ${countryName}: ${reviewDate(reviewed.to, lang)}.`,
+                  `Revisão (${countryName}): ${reviewDate(reviewed.to, lang)}.`,
+                )
+              : t(
+                  `Revisión para ${countryName}: entre el ${reviewDate(reviewed.from, lang)} y el ${reviewDate(reviewed.to, lang)}.`,
+                  `Reviewed for ${countryName}: between ${reviewDate(reviewed.from, lang)} and ${reviewDate(reviewed.to, lang)}.`,
+                  `Revisão (${countryName}): entre ${reviewDate(reviewed.from, lang)} e ${reviewDate(reviewed.to, lang)}.`,
+                )}
+          </Text>
+        </section>
+      )}
+
       <section className="f-section" id="fw-sources-read" aria-labelledby="fw-sources-read-title">
         <h2 className="f-section-title" id="fw-sources-read-title" tabIndex={-1}>
           {t(
@@ -341,25 +413,6 @@ export default function SourcesScreen({ lang, now, countryName, rows, next, upda
         <MagnitudeScale lang={lang} />
       </section>
 
-      <section
-        className="f-section"
-        id="fw-sources-privacy"
-        aria-labelledby="fw-sources-privacy-title"
-      >
-        <h2 className="f-section-title" id="fw-sources-privacy-title">
-          {t('Ubicación y privacidad', 'Location and privacy', 'Localização e privacidade')}
-        </h2>
-        <div className="f-prose">
-          <p>
-            {t(
-              'La ubicación requiere tu permiso y no se guarda automáticamente. El mapa carga sus imágenes al abrirse: OpenFreeMap recibe tu IP y el área que miras. Tus datos del viaje se guardan solo en este navegador.',
-              'Location requires your permission and is not saved automatically. The map loads its images when shown: OpenFreeMap receives your IP and the area you view. Your trip data is stored only in this browser.',
-              'A localização requer sua permissão e não é salva automaticamente. O mapa carrega suas imagens ao ser exibido: o OpenFreeMap recebe seu IP e a área que você vê. Os dados da sua viagem ficam salvos só neste navegador.',
-            )}
-          </p>
-        </div>
-      </section>
-
       <section className="f-section" id="fw-sources-maps" aria-labelledby="fw-sources-maps-title">
         <h2 className="f-section-title" id="fw-sources-maps-title">
           {t('Datos del mapa y licencias', 'Map data and licenses', 'Dados do mapa e licenças')}
@@ -379,6 +432,14 @@ export default function SourcesScreen({ lang, now, countryName, rows, next, upda
           <OutLink href="/about.html">{t('Acerca de Faro', 'About Faro', 'Sobre o Faro')}</OutLink>
         </Actions>
       </section>
+      {/* Location and privacy: the screen's one scope note, at the end. */}
+      <ScopeNote>
+        {t(
+          'La ubicación requiere tu permiso y no se guarda automáticamente. El mapa carga sus imágenes al abrirse: OpenFreeMap recibe tu IP y el área que miras. Tus datos del viaje se guardan solo en este navegador.',
+          'Location requires your permission and is not saved automatically. The map loads its images when shown: OpenFreeMap receives your IP and the area you view. Your trip data is stored only in this browser.',
+          'A localização requer sua permissão e não é salva automaticamente. O mapa carrega suas imagens ao ser exibido: o OpenFreeMap recebe seu IP e a área que você vê. Os dados da sua viagem ficam salvos só neste navegador.',
+        )}
+      </ScopeNote>
     </div>
   );
 }

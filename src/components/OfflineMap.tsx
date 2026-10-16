@@ -1,7 +1,17 @@
-import { MapTrifoldIcon } from '@phosphor-icons/react';
+import { ListNumbersIcon, MapTrifoldIcon } from '@phosphor-icons/react';
 import { pick, type Lang } from '../lib/i18n.ts';
 import { googleMapsArea, offlineMapsHelp } from '../lib/offlineMap.ts';
-import { Disclosure, LinkButton, Note, OutLink, Section, Steps, Text } from '../ui/index.ts';
+import {
+  Actions,
+  Disclosure,
+  LinkButton,
+  Note,
+  OutLink,
+  RowIcon,
+  Section,
+  Steps,
+  Text,
+} from '../ui/index.ts';
 
 type Props = {
   lang: Lang;
@@ -47,19 +57,19 @@ export default function OfflineMap({ lang, view, around, detail = false }: Props
           },
         ]}
       />
-      <Note
-        more={
-          <OutLink href={offlineMapsHelp(lang)}>
-            {t('Ayuda de Google', 'Google help', 'Ajuda do Google')}
-          </OutLink>
-        }
-      >
+      {/* The app's limits, as Google documents them: text to read, with the source after it. */}
+      <Text>
         {t(
           'Hazlo con wifi. Sin conexión no hay indicaciones a pie, en bicicleta ni en transporte público; en auto, solo si toda la ruta está en la zona guardada. El mapa caduca si no se actualiza y en algunos países no se puede descargar.',
           'Do it on Wi-Fi. Offline there are no walking, cycling or transit directions; driving works only if the whole route is in the saved area. The map expires unless updated, and some countries cannot be downloaded.',
           'Faça isso no Wi-Fi. Off-line não há rotas a pé, de bicicleta nem de transporte público; de carro, só se toda a rota estiver na área salva. O mapa expira se não for atualizado, e em alguns países não é possível baixar.',
         )}
-      </Note>
+      </Text>
+      <Actions>
+        <OutLink href={offlineMapsHelp(lang)}>
+          {t('Ayuda de Google', 'Google help', 'Ajuda do Google')}
+        </OutLink>
+      </Actions>
     </>
   );
   return (
@@ -95,10 +105,20 @@ export default function OfflineMap({ lang, view, around, detail = false }: Props
                 'Abrir a área do mapa no Google Maps',
               )}
       </LinkButton>
+      {/* What the third party receives, in one line next to its button. */}
+      <Note>
+        {t(
+          'Google recibe solo la zona; Faro no guarda mapas.',
+          'Google gets only the area; Faro stores no maps.',
+          'O Google recebe a área; o Faro não guarda mapas.',
+        )}
+      </Note>
       {detail ? (
         howTo
       ) : (
+        // Viaje starts every row with an icon, so this one shares the same text edge.
         <Disclosure
+          lead={<RowIcon icon={<ListNumbersIcon size={20} />} />}
           title={t(
             'Cómo guardarla y sus límites',
             'How to save it and its limits',
@@ -108,13 +128,6 @@ export default function OfflineMap({ lang, view, around, detail = false }: Props
           {howTo}
         </Disclosure>
       )}
-      <Note>
-        {t(
-          'Google recibe solo la zona que abres. Faro no descarga ni guarda mapas.',
-          'Google receives only the area you open. Faro does not download or store maps.',
-          'O Google recebe só a área que você abre. O Faro não baixa nem guarda mapas.',
-        )}
-      </Note>
     </Section>
   );
 }
