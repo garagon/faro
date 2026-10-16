@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { BookmarkSimpleIcon, CheckIcon, CrosshairIcon } from '@phosphor-icons/react';
+import { BookmarkIcon, CheckIcon, CrosshairIcon } from 'lucide-react';
 import { countryOptions, matchCountries } from '../lib/countryMatch.ts';
 import { emergencyFor } from '../lib/emergency.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
@@ -54,17 +54,17 @@ export default function CountryScreen(p: Props) {
       key={code}
       title={name(code)}
       meta={meta(code)}
-      trail={code === p.country ? <CheckIcon size={18} aria-hidden="true" /> : undefined}
+      trail={code === p.country ? <CheckIcon className="size-4" aria-hidden="true" /> : undefined}
       onClick={() => p.onChoose(code)}
     />
   );
   return (
-    <div className="f-column">
-      <div className="f-stack" data-gap="sm">
+    <div className="f-column grid w-full max-w-2xl gap-8">
+      <div className="f-stack grid gap-2" data-gap="sm">
         <BackLink onClick={p.onBack}>{p.backLabel}</BackLink>
         <ScreenHead title={t('País', 'Country', 'País')} titleId="fw-country-title" />
       </div>
-      <div className="f-stack">
+      <div className="f-stack grid gap-4">
         <Field
           id="fw-country-query"
           label={t('Buscar un país', 'Search for a country', 'Buscar um país')}
@@ -101,7 +101,7 @@ export default function CountryScreen(p: Props) {
           ))}
         <Button
           variant="secondary"
-          icon={<CrosshairIcon size={20} aria-hidden="true" />}
+          icon={<CrosshairIcon className="size-4" aria-hidden="true" />}
           onClick={p.onLocate}
           disabled={p.locating}
         >
@@ -116,19 +116,13 @@ export default function CountryScreen(p: Props) {
           <ListRow
             title={name(p.country)}
             meta={meta(p.country)}
-            trail={<CheckIcon size={18} aria-hidden="true" />}
+            trail={<CheckIcon className="size-4" aria-hidden="true" />}
           />
         </List>
         {p.country !== 'WORLD' && (
           <Button
             variant="ghost"
-            icon={
-              <BookmarkSimpleIcon
-                size={18}
-                weight={p.saved.includes(p.country) ? 'fill' : 'regular'}
-                aria-hidden="true"
-              />
-            }
+            icon={<BookmarkIcon className="size-4" aria-hidden="true" />}
             aria-pressed={p.saved.includes(p.country)}
             onClick={p.onToggleSave}
           >

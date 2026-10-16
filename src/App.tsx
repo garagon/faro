@@ -19,19 +19,19 @@ import { writeLocal, removeLocal, pruneOfficialCopies } from './lib/browserStora
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import InformationDialog from './components/InformationDialog.tsx';
 import {
-  CrosshairIcon,
-  MagnifyingGlassIcon,
-  BookOpenTextIcon,
-  UsersThreeIcon,
-  ClockCounterClockwiseIcon,
+  ActivityIcon,
   BackpackIcon,
-  ChatCircleTextIcon,
-  WifiSlashIcon,
-  PulseIcon,
-  SuitcaseRollingIcon,
+  BookOpenTextIcon,
+  CrosshairIcon,
   DatabaseIcon,
+  HistoryIcon,
+  LuggageIcon,
+  MessageSquareTextIcon,
+  SearchIcon,
   ShieldCheckIcon,
-} from '@phosphor-icons/react';
+  UsersIcon,
+  WifiOffIcon,
+} from 'lucide-react';
 import { distanceKm, filterEvents, type CatalogId, type Quake, type Bounds } from './lib/domain.ts';
 import { useLiveFeed } from './hooks/useLiveFeed.ts';
 import LiveActivity from './components/LiveActivity.tsx';
@@ -137,8 +137,17 @@ import {
   StatusBar,
   TabBar,
   Text,
+  contentClass,
+  pageClass,
+  sideLinkClass,
+  skipLinkClass,
   type Tab,
 } from './ui/index.ts';
+import { Button as UiButton } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+/** A button that reads as a link inside a sentence (Fuentes, Detener ubicación). */
+const inlineLink =
+  'f-inline-link inline cursor-pointer rounded-sm border-0 bg-transparent p-0 font-medium text-foreground underline underline-offset-4 outline-none hover:decoration-2 focus-visible:ring-[3px] focus-visible:ring-ring/50';
 import { responsesFor } from './data/responses.ts';
 import { readCheckIns, checkInDue } from './lib/traveler.ts';
 import { type Embassy } from './lib/embassies.ts';
@@ -1243,11 +1252,11 @@ export default function App() {
   }, [pageTitle]);
   // One word per destination; each screen's title is the same word.
   const nav: readonly Tab<Screen>[] = [
-    { id: 'activity', label: t('Situación', 'Situation', 'Situação'), Icon: PulseIcon },
-    { id: 'help', label: t('Ayuda', 'Help', 'Ajuda'), Icon: UsersThreeIcon },
-    { id: 'status', label: t('Avisar', 'Check in', 'Avisar'), Icon: ChatCircleTextIcon },
+    { id: 'activity', label: t('Situación', 'Situation', 'Situação'), Icon: ActivityIcon },
+    { id: 'help', label: t('Ayuda', 'Help', 'Ajuda'), Icon: UsersIcon },
+    { id: 'status', label: t('Avisar', 'Check in', 'Avisar'), Icon: MessageSquareTextIcon },
     { id: 'kit', label: t('Mochila', 'Go bag', 'Mochila'), Icon: BackpackIcon },
-    { id: 'hotel', label: t('Viaje', 'Trip', 'Viagem'), Icon: SuitcaseRollingIcon },
+    { id: 'hotel', label: t('Viaje', 'Trip', 'Viagem'), Icon: LuggageIcon },
     { id: 'guide', label: t('Guía', 'Guide', 'Guia'), Icon: BookOpenTextIcon },
   ];
   // The detail pages belong to Situación; the country screen to wherever it was opened from.
@@ -1305,7 +1314,7 @@ export default function App() {
       : undefined;
   return (
     <AppFrame>
-      <a className="f-skip" href="#main">
+      <a className={skipLinkClass} href="#main">
         {t('Saltar al contenido', 'Skip to content', 'Pular para o conteúdo')}
       </a>
       <Sidebar
@@ -1318,15 +1327,15 @@ export default function App() {
           <>
             <button
               type="button"
-              className="f-side-link"
+              className={cn('f-side-link', sideLinkClass)}
               aria-current={screen === 'sources' ? 'page' : undefined}
               onClick={() => setScreen('sources')}
             >
-              <DatabaseIcon size={20} aria-hidden="true" />
+              <DatabaseIcon className="size-4" aria-hidden="true" />
               {t('Fuentes', 'Sources', 'Fontes')}
             </button>
-            <a className="f-side-link" href="/privacy.html">
-              <ShieldCheckIcon size={20} aria-hidden="true" />
+            <a className={cn('f-side-link', sideLinkClass)} href="/privacy.html">
+              <ShieldCheckIcon className="size-4" aria-hidden="true" />
               {t('Privacidad', 'Privacy', 'Privacidade')}
             </a>
           </>
@@ -1335,7 +1344,7 @@ export default function App() {
       <Header {...frame} />
       {!live.online && (
         <StatusBar>
-          <WifiSlashIcon size={16} aria-hidden="true" />
+          <WifiOffIcon className="size-4" aria-hidden="true" />
           {/* The one vocabulary: "Sin conexión · último dato 07:29". */}
           {live.fetched
             ? capitalize(
@@ -1355,9 +1364,9 @@ export default function App() {
         </StatusBar>
       )}
       {/* The scrolling region keeps the older screens' classes while they move to the design system. */}
-      <main id="main" className="f-content" ref={appRef} data-screen={screen}>
-        <div className="f-page" data-screen={screen}>
-          <p className="f-visually-hidden" role="status">
+      <main id="main" className={contentClass} ref={appRef} data-screen={screen}>
+        <div className={pageClass} data-screen={screen}>
+          <p className="sr-only" role="status">
             {connection === 'lost'
               ? t(
                   'Sin conexión. Los números de emergencia y la guía siguen disponibles.',
@@ -1373,7 +1382,7 @@ export default function App() {
                 : ''}
           </p>
           {profileFeedback && (
-            <div className="f-stack" data-gap="sm">
+            <div className="f-stack grid gap-2" data-gap="sm">
               <Note>
                 <span role="status">
                   {profileFeedback === 'storage'
@@ -1418,7 +1427,7 @@ export default function App() {
             <div role="status">
               <List>
                 <ListRow
-                  lead={<RowIcon icon={<ClockCounterClockwiseIcon size={20} />} />}
+                  lead={<RowIcon icon={<HistoryIcon className="size-4" />} />}
                   title={t(
                     'Tienes pendiente avisar cómo estás.',
                     'Your planned check-in is overdue.',
@@ -1431,7 +1440,7 @@ export default function App() {
             </div>
           )}
           {screen !== 'activity' && screen !== 'emergency' && screen !== 'country' && (
-            <div className="f-stack" data-gap="sm" data-head="">
+            <div className="f-stack grid gap-2" data-gap="sm" data-head="">
               {screen === 'detail' && (
                 <BackLink onClick={() => setScreen('activity')}>
                   {t('Situación', 'Situation', 'Situação')}
@@ -1472,7 +1481,7 @@ export default function App() {
                 {tracking && (
                   <>
                     {' '}
-                    <button type="button" className="f-inline-link" onClick={stopLocation}>
+                    <button type="button" className={inlineLink} onClick={stopLocation}>
                       {t('Detener ubicación', 'Stop location', 'Parar localização')}
                     </button>
                   </>
@@ -1659,10 +1668,10 @@ export default function App() {
                   />
                 }
                 map={
-                  <div className="f-stack" data-gap="lg">
-                    <div className="f-stack" data-gap="sm">
+                  <div className="f-stack grid gap-8" data-gap="lg">
+                    <div className="f-stack grid gap-2" data-gap="sm">
                       {/* Past the map's controls in one step, to its legend. */}
-                      <a className="f-skip" href="#fw-map-foot">
+                      <a className={skipLinkClass} href="#fw-map-foot">
                         {t('Saltar el mapa', 'Skip the map', 'Pular o mapa')}
                       </a>
                       <MapFrame>
@@ -1686,9 +1695,11 @@ export default function App() {
                           legendId="fw-map-foot"
                           action={
                             dirty ? (
-                              <Button
+                              <UiButton
+                                type="button"
+                                size="sm"
                                 variant="secondary"
-                                icon={<MagnifyingGlassIcon size={18} aria-hidden="true" />}
+                                className="shadow-md"
                                 onClick={() => {
                                   setBounds(pending);
                                   setScope('area');
@@ -1699,8 +1710,9 @@ export default function App() {
                                     ?.focus({ preventScroll: true });
                                 }}
                               >
+                                <SearchIcon aria-hidden="true" />
                                 {t('Buscar en esta área', 'Search this area', 'Buscar nesta área')}
-                              </Button>
+                              </UiButton>
                             ) : undefined
                           }
                         />
@@ -1729,7 +1741,7 @@ export default function App() {
                     </div>
                     {/* Wide screens have room for the latest earthquakes beside the hazards. The
                         section stays when the catalogue fails or has nothing, and says which. */}
-                    <div className="f-when-split">
+                    <div className="f-when-split @max-[1200px]/app:hidden">
                       <Section
                         id="fw-latest"
                         title={placedTitle(
@@ -1738,7 +1750,7 @@ export default function App() {
                         aside={provider}
                       >
                         {results.length > 0 ? (
-                          <div className="f-stack" data-gap="sm">
+                          <div className="f-stack grid gap-2" data-gap="sm">
                             {/* Records from a source that stopped answering are not current. */}
                             {stale && live.fetched > 0 && (
                               <SourceStamp state="stale">
@@ -1778,7 +1790,7 @@ export default function App() {
                         ) : (
                           // Never answered, failing, offline or empty: said here, never a "none"
                           // for a failure.
-                          <div className="f-stack" data-gap="sm" role="status">
+                          <div className="f-stack grid gap-2" data-gap="sm" role="status">
                             <SourceStamp
                               state={
                                 emptyList === 'failed' || emptyList === 'offline'
@@ -1878,7 +1890,7 @@ export default function App() {
             </>
           )}
           {screen === 'detail' && (
-            <div className="f-column">
+            <div className="f-column grid w-full max-w-2xl gap-8">
               <HomeTabs
                 label={t('Detalle por fuente', 'Detail by source', 'Detalhe por fonte')}
                 active={homeTab}
@@ -1889,7 +1901,7 @@ export default function App() {
                     // The count is in the list title, so the four tabs fit from 360 px.
                     label: t('Sismos', 'Earthquakes', 'Terremotos'),
                     content: (
-                      <div className="f-stack" data-gap="lg" id="sismos">
+                      <div className="f-stack grid gap-8" data-gap="lg" id="sismos">
                         <LiveActivity
                           events={results}
                           updates={live.updates.filter((u) =>
@@ -2031,7 +2043,7 @@ export default function App() {
                                 )}
                                 <Button
                                   variant="secondary"
-                                  icon={<CrosshairIcon size={18} aria-hidden="true" />}
+                                  icon={<CrosshairIcon className="size-4" aria-hidden="true" />}
                                   onClick={locate}
                                   disabled={geoState === 'pending'}
                                 >
@@ -2047,7 +2059,7 @@ export default function App() {
                                         'Terremotos perto de mim',
                                       )}
                                 </Button>
-                                <p className="f-caption">
+                                <p className="f-caption m-0 text-sm text-muted-foreground">
                                   {t(
                                     'La ubicación es opcional y requiere tu permiso.',
                                     'Location is optional and requires your permission.',
@@ -2071,7 +2083,7 @@ export default function App() {
                             old: said with its date, with the other catalogs one tap away. Never
                             read as "no earthquakes". */}
                           {!stale && quietSince && live.online && (
-                            <div className="f-stack" data-gap="sm" role="status">
+                            <div className="f-stack grid gap-2" data-gap="sm" role="status">
                               <SourceStamp state="stale">
                                 {t(
                                   `El registro más reciente de ${provider} es del ${stamp(quietSince)}. Otras fuentes pueden tener datos más nuevos:`,
@@ -2091,7 +2103,7 @@ export default function App() {
                           {/* Offline is already said by the bar above; this is for records from a
                             failing or late source. Without any record, the list says it once. */}
                           {stale && live.online && live.fetched > 0 && (
-                            <div className="f-stack" data-gap="sm" role="status">
+                            <div className="f-stack grid gap-2" data-gap="sm" role="status">
                               <SourceStamp state="stale">
                                 {t(
                                   'No hay una actualización reciente. Estos registros pueden estar desactualizados.',
@@ -2122,12 +2134,16 @@ export default function App() {
                           )}
                         </LiveActivity>
                         <section
-                          className="f-section"
+                          className="f-section @container grid gap-3"
                           id="fw-events"
                           aria-labelledby="fw-events-title"
                         >
-                          <div className="f-section-head">
-                            <h2 className="f-section-title" id="fw-events-title" tabIndex={-1}>
+                          <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                            <h2
+                              className="f-section-title m-0 text-base leading-snug font-semibold outline-none"
+                              id="fw-events-title"
+                              tabIndex={-1}
+                            >
                               {/* No count before the catalog has answered: "0" would read as none.
                                 With a count, the place the rows leave out: "51 sismos en Panam\u00e1". */}
                               {!live.fetched || (quietSince && !results.length)
@@ -2141,7 +2157,7 @@ export default function App() {
                                   )}
                             </h2>
                             {listPage.pages > 1 && (
-                              <span className="f-section-aside">
+                              <span className="f-section-aside text-sm text-muted-foreground">
                                 {t(
                                   `Mostrando\u00a0${listPage.start + 1}–${listPage.end}`,
                                   `Showing\u00a0${listPage.start + 1}–${listPage.end}`,
@@ -2221,7 +2237,7 @@ export default function App() {
                                   lead={
                                     <>
                                       <Magnitude value={q.mag} />
-                                      <span className="f-visually-hidden">
+                                      <span className="sr-only">
                                         {t('Magnitud', 'Magnitude', 'Magnitude')}
                                       </span>
                                     </>
@@ -2245,8 +2261,8 @@ export default function App() {
                               ))}
                             </List>
                           ) : (
-                            <div className="f-stack" data-gap="sm">
-                              <h3 className="f-subhead">
+                            <div className="f-stack grid gap-2" data-gap="sm">
+                              <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
                                 {emptyList === 'offline'
                                   ? t('Sin conexión', 'Offline', 'Sem conexão')
                                   : emptyList === 'checking'
@@ -2263,8 +2279,8 @@ export default function App() {
                                           'Sem registros nesta consulta',
                                         )}
                               </h3>
-                              <div className="f-prose">
-                                <p>
+                              <div className="f-prose grid max-w-2xl gap-3 *:m-0">
+                                <p className="text-sm text-muted-foreground">
                                   {emptyList === 'offline'
                                     ? t(
                                         'Cuando vuelva la conexión, intentaremos actualizar los datos. La ayuda y tus datos guardados siguen disponibles en esta página.',
@@ -2393,7 +2409,7 @@ export default function App() {
                           )}{' '}
                           <button
                             type="button"
-                            className="f-inline-link"
+                            className={inlineLink}
                             onClick={() => go('sources')}
                           >
                             {t('Fuentes y cobertura', 'Sources & coverage', 'Fontes e cobertura')}
@@ -2611,7 +2627,7 @@ export default function App() {
             />
           )}
           {screen === 'help' && (
-            <div className="f-column">
+            <div className="f-column grid w-full max-w-2xl gap-8">
               <EmergencyNumbers country={country} lang={lang} />
               <EmbassyPanel
                 onProfile={() => setScreen('hotel')}
@@ -2719,7 +2735,7 @@ export default function App() {
           </div>
           {screen === 'hotel' && (
             // The rest of Viaje shares the form's reading column, so no block runs wider.
-            <div className="f-column">
+            <div className="f-column grid w-full max-w-2xl gap-8">
               <OfflineMap lang={lang} {...offlineArea(point)} />
               <TravelContacts key={country} country={country} lang={lang} />
               <EvacuationPlan country={country} lang={lang} />
@@ -2755,7 +2771,7 @@ export default function App() {
           </div>
           {/* One footer on every screen: who made Faro, its pages, and what opens offline. Each
               source is credited where its data appears and on Fuentes. */}
-          <footer className="f-footer">
+          <footer className="f-footer grid max-w-2xl gap-1 border-t pt-4 text-sm text-muted-foreground [&_a]:font-medium [&_a]:text-foreground [&_a]:underline-offset-4 [&_a]:hover:underline">
             <span>
               {t('Creado por', 'Created by', 'Criado por')}{' '}
               <a href="https://oktsec.com" target="_blank" rel="noopener">
@@ -2766,7 +2782,11 @@ export default function App() {
               {'\u00a0· '}
               <a href="/privacy.html">{t('Privacidad', 'Privacy', 'Privacidade')}</a>
               {'\u00a0· '}
-              <button type="button" className="f-inline-link" onClick={() => setScreen('sources')}>
+              <button
+                type="button"
+                className={cn(inlineLink, 'no-underline hover:underline')}
+                onClick={() => setScreen('sources')}
+              >
                 {t('Fuentes', 'Sources', 'Fontes')}
               </button>
             </span>

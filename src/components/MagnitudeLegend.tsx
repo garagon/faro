@@ -27,7 +27,11 @@ export default function MagnitudeLegend({
   return (
     <Note
       more={
-        <button type="button" className="f-inline-link" onClick={onExplain}>
+        <button
+          type="button"
+          className="f-inline-link inline cursor-pointer rounded-sm border-0 bg-transparent p-0 font-medium text-foreground underline underline-offset-4 outline-none hover:decoration-2 focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          onClick={onExplain}
+        >
           {t('Cómo leer esto', 'How to read this', 'Como ler isto')}
         </button>
       }
@@ -50,12 +54,14 @@ export function MagnitudeScale({ lang }: { lang: Lang }) {
   const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
   return (
     <div
-      className="f-stack"
+      className="f-stack grid gap-2"
       data-gap="sm"
       role="group"
       aria-label={t('Colores por magnitud', 'Magnitude colors', 'Cores por magnitude')}
     >
-      <h3 className="f-subhead">{t('Magnitud', 'Magnitude', 'Magnitude')}</h3>
+      <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
+        {t('Magnitud', 'Magnitude', 'Magnitude')}
+      </h3>
       <div className="f-actions" role="list">
         {magnitudeRanges.map((range) => (
           <span key={range.id} role="listitem" className="f-mag" data-band={bands[range.id]}>
@@ -66,7 +72,7 @@ export function MagnitudeScale({ lang }: { lang: Lang }) {
           <span className="f-mag">—</span> {t('Sin dato', 'Not reported', 'Sem dados')}
         </span>
       </div>
-      <div className="f-prose">
+      <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
         <p>
           {t(
             'El color no indica el riesgo local',

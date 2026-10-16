@@ -37,6 +37,10 @@ export {
   Sidebar,
   StatusBar,
   TabBar,
+  contentClass,
+  pageClass,
+  sideLinkClass,
+  skipLinkClass,
   type ShellText,
   type Tab,
 } from './Shell.tsx';

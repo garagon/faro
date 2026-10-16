@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MegaphoneSimpleIcon } from '@phosphor-icons/react';
+import { MegaphoneIcon } from 'lucide-react';
 import type { ActiveResponse } from '../data/responses.ts';
 import { missionKinds, missionsFor } from '../data/consularMissions.ts';
 import { hostOf, reviewDate } from '../lib/links.ts';
@@ -28,12 +28,12 @@ export default function ResponsePanel({ lang, response: r, nationality, now }: P
       id={`fw-response-${r.id}`}
       open={open}
       onToggle={() => setOpen(!open)}
-      lead={<RowIcon icon={<MegaphoneSimpleIcon size={20} />} />}
+      lead={<RowIcon icon={<MegaphoneIcon className="size-4" />} />}
       title={r.title[i]}
       meta={`${ageLabel(Date.parse(r.occurredAt), now, lang)} · ${t('según el', 'per', 'segundo o')} ${r.occurredSource}`}
     >
       <p>{r.highlight[i]}</p>
-      <p className="f-caption">
+      <p className="f-caption m-0 text-sm text-muted-foreground">
         {r.when[i]}, {t('según el', 'according to', 'segundo o')} {r.occurredSource}.
         {r.magnitudes.length > 1 && (
           <>
@@ -108,7 +108,7 @@ export default function ResponsePanel({ lang, response: r, nationality, now }: P
           <ListRow key={l.url} title={l.name[i]} meta={hostOf(l.url)} href={l.url} external />
         ))}
       </List>
-      <p className="f-caption">
+      <p className="f-caption m-0 text-sm text-muted-foreground">
         {t(
           `Resumen de Faro revisado el ${reviewDate(r.reviewedAt, lang)}. Las cifras cambian: consulta cada fuente para ver la última actualización. Faro dejará de mostrarlo el ${reviewDate(r.showUntil, lang)} si no se vuelve a revisar.`,
           `Faro summary reviewed on ${reviewDate(r.reviewedAt, lang)}. Figures change: check each source for the latest update. Faro stops showing it on ${reviewDate(r.showUntil, lang)} unless it is reviewed again.`,

@@ -1,4 +1,4 @@
-import { ArrowUpRightIcon, ChatCircleTextIcon } from '@phosphor-icons/react';
+import { ArrowUpRightIcon, MessageSquareTextIcon } from 'lucide-react';
 import { hostOf, splitName } from '../lib/links.ts';
 import { caption } from '../lib/caption.ts';
 import { familyLinksFor } from '../data/familyLinks.ts';
@@ -32,7 +32,7 @@ export default function FamilyLinks({ country, lang, onStatus, nationality }: Pr
       </Text>
       <Button
         variant="secondary"
-        icon={<ChatCircleTextIcon size={20} aria-hidden="true" />}
+        icon={<MessageSquareTextIcon className="size-4" aria-hidden="true" />}
         onClick={onStatus}
       >
         {/* The same name as the Avisar tab ("Check in" in English). */}
@@ -54,7 +54,7 @@ export default function FamilyLinks({ country, lang, onStatus, nationality }: Pr
               external
               title={service ? `${service} (${agency})` : agency}
               meta={caption(l.description[idx], hostOf(l.url[idx]))}
-              trail={<ArrowUpRightIcon size={16} aria-hidden="true" />}
+              trail={<ArrowUpRightIcon className="size-4" aria-hidden="true" />}
             />
           );
         })}

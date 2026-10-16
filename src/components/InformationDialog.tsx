@@ -1,4 +1,4 @@
-import { ArrowUpRightIcon, MapPinIcon } from '@phosphor-icons/react';
+import { ArrowUpRightIcon, MapPinIcon } from 'lucide-react';
 import { displayPlace, distanceKm, placeLang, type Quake } from '../lib/domain.ts';
 import type { Geo } from './WebMap.tsx';
 import QuakeImpact from './QuakeImpact.tsx';
@@ -117,13 +117,16 @@ export default function InformationDialog(p: Props) {
       }
       actions={
         <>
-          <Button icon={<MapPinIcon size={18} aria-hidden="true" />} onClick={() => p.onMap(q)}>
+          <Button
+            icon={<MapPinIcon className="size-4" aria-hidden="true" />}
+            onClick={() => p.onMap(q)}
+          >
             {t('Ver en el mapa', 'Show on map', 'Ver no mapa')}
           </Button>
           {q.url && (
             <LinkButton variant="secondary" href={q.url} external>
               {t('Reporte oficial', 'Official report', 'Relatório oficial')}
-              <ArrowUpRightIcon size={16} aria-hidden="true" />
+              <ArrowUpRightIcon className="size-4" aria-hidden="true" />
             </LinkButton>
           )}
         </>

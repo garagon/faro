@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowUpRightIcon } from '@phosphor-icons/react';
+import { ArrowUpRightIcon } from 'lucide-react';
 import { destinationFor } from '../data/destinations/index.ts';
 import { missionsFor } from '../data/consularMissions.ts';
 import { hostOf } from '../lib/links.ts';
@@ -50,8 +50,8 @@ export default function DestinationInfo({
     setOpen(next);
   };
   const more = resources.length > 0 && (
-    <div className="f-stack" data-gap="sm">
-      <h3 className="f-subhead">
+    <div className="f-stack grid gap-2" data-gap="sm">
+      <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
         {t(
           'Más recursos y preparación',
           'More resources and preparedness',
@@ -65,7 +65,11 @@ export default function DestinationInfo({
             <>
               {' '}
               {t('Cambia el país en', 'Change the country in', 'Altere o país em')}{' '}
-              <button type="button" className="f-inline-link" onClick={onCountry}>
+              <button
+                type="button"
+                className="f-inline-link inline cursor-pointer rounded-sm border-0 bg-transparent p-0 font-medium text-foreground underline underline-offset-4 outline-none hover:decoration-2 focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                onClick={onCountry}
+              >
                 {t('País', 'Country', 'País')}
               </button>
               .
@@ -101,8 +105,8 @@ export default function DestinationInfo({
   if (!data)
     return (
       <Section id="fw-sources" title={title}>
-        <div className="f-stack" data-gap="sm">
-          <h3 className="f-subhead">
+        <div className="f-stack grid gap-2" data-gap="sm">
+          <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
             {country === 'WORLD'
               ? t(
                   'Elige el país donde necesitas ayuda',
@@ -170,7 +174,7 @@ export default function DestinationInfo({
                 external
                 title={keepSeparators(source.name)}
                 meta={caption(label, hostOf(source.url))}
-                trail={<ArrowUpRightIcon size={16} aria-hidden="true" />}
+                trail={<ArrowUpRightIcon className="size-4" aria-hidden="true" />}
               />
             ),
         )}
@@ -182,7 +186,7 @@ export default function DestinationInfo({
           'O que o Faro oferece aqui',
         )}
       >
-        <dl className="f-prose">
+        <dl className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
           <div>
             <dt>{t('Sismos en el mapa', 'Earthquakes on the map', 'Terremotos no mapa')}</dt>
             <dd>

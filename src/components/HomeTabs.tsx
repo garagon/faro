@@ -52,7 +52,7 @@ export default function HomeTabs({
     refs.current[next.id]?.focus();
   }
   return (
-    <section className="f-stack" id="fw-detail">
+    <section className="f-stack grid gap-4" id="fw-detail">
       <ScrollCue>
         <div className="f-tabs" role="tablist" aria-label={label}>
           {tabs.map((tab) => (

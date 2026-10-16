@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DropIcon, HurricaneIcon } from '@phosphor-icons/react';
+import { DropletIcon, WindIcon } from 'lucide-react';
 import { nwsEventLabels, type NwsAlert } from '../lib/nws.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import { checkedLabel } from '../lib/time.ts';
@@ -62,9 +62,12 @@ export default function NwsPanel({
     lang,
   });
   return (
-    <div className="f-stack" data-gap="lg">
-      <section className="f-section" aria-labelledby="fw-nws-weather-title">
-        <h2 className="f-section-title" id="fw-nws-weather-title">
+    <div className="f-stack grid gap-8" data-gap="lg">
+      <section className="f-section @container grid gap-3" aria-labelledby="fw-nws-weather-title">
+        <h2
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          id="fw-nws-weather-title"
+        >
           {t(
             'Avisos de huracán e inundación',
             'Hurricane and flood alerts',
@@ -87,7 +90,7 @@ export default function NwsPanel({
           </div>
         )}
         {rows && rows.length === 0 && !failed && (
-          <div className="f-prose">
+          <div className="f-prose grid max-w-2xl gap-3 *:m-0 [&_dd]:m-0 [&_dl]:grid [&_dl]:gap-3 [&_dt]:font-medium [&_h3]:text-sm [&_h3]:font-medium [&_small]:text-sm [&_small]:text-muted-foreground [&_ul]:grid [&_ul]:list-disc [&_ul]:gap-2 [&_ul]:ps-5">
             <p>
               {t(
                 'El NWS no lista avisos de este tipo activos.',
@@ -114,9 +117,9 @@ export default function NwsPanel({
                       level={a.emergency ? 3 : 1}
                       icon={
                         a.kind === 'tropical' ? (
-                          <HurricaneIcon size={20} weight="bold" />
+                          <WindIcon className="size-4" />
                         ) : (
-                          <DropIcon size={20} weight="fill" />
+                          <DropletIcon className="size-4" />
                         )
                       }
                     />

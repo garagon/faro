@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileTextIcon, WarningIcon } from '@phosphor-icons/react';
+import { FileTextIcon, TriangleAlertIcon } from 'lucide-react';
 import {
   Actions,
   Badge,
@@ -117,7 +117,7 @@ export function NationalWarningRow({
   const level = severityLevel[w.severity];
   const row = {
     lead: (
-      <StatusIcon state="listed" level={level} icon={<WarningIcon size={20} weight="bold" />} />
+      <StatusIcon state="listed" level={level} icon={<TriangleAlertIcon className="size-4" />} />
     ),
     title: <span lang="es">{readableEvent(w.event)}</span>,
     badge: <Badge level={level}>{severityLabels[w.severity][langIndex(lang)]}</Badge>,
@@ -242,7 +242,7 @@ export default function OfficialNow({
           </ul>
         )}
         {tr && (
-          <p className="f-caption">
+          <p className="f-caption m-0 text-sm text-muted-foreground">
             {help(
               'Automatic translation made on this device. The Spanish original is the official text.',
               'Tradução automática feita neste dispositivo. O original em espanhol é o texto oficial.',
@@ -250,7 +250,7 @@ export default function OfficialNow({
           </p>
         )}
         {translateFailed === id && (
-          <p className="f-caption" role="status">
+          <p className="f-caption m-0 text-sm text-muted-foreground" role="status">
             {help(
               'This device could not translate it. Use Google Translate instead.',
               'Este dispositivo não conseguiu traduzir. Use o Google Tradutor.',
@@ -387,9 +387,12 @@ export default function OfficialNow({
       {/* English and Portuguese readers are told once, not under every source. */}
       {(warnings.length > 0 || shownPosts.length > 0) && spanishNote}
       {national && (
-        <div className="f-stack" data-gap="sm">
-          <div className="f-section-head">
-            <h3 className="f-subhead" id="fw-official-national">
+        <div className="f-stack grid gap-2" data-gap="sm">
+          <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h3
+              className="f-subhead m-0 text-sm leading-snug font-medium"
+              id="fw-official-national"
+            >
               {t(
                 `Avisos vigentes del ${national.agency}`,
                 `${national.agency} warnings in force`,
@@ -397,7 +400,7 @@ export default function OfficialNow({
               )}
             </h3>
             {nationalLine && (
-              <span className="f-section-aside">
+              <span className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900">
                 <SourceStamp state={lineStamp(nationalLine.state)}>
                   {capitalize(nationalLine.text)}
                 </SourceStamp>
@@ -420,7 +423,7 @@ export default function OfficialNow({
                         <StatusIcon
                           state="listed"
                           level={level}
-                          icon={<WarningIcon size={20} weight="bold" />}
+                          icon={<TriangleAlertIcon className="size-4" />}
                         />
                       }
                       title={<span lang="es">{readableEvent(w.event)}</span>}
@@ -492,9 +495,9 @@ export default function OfficialNow({
       )}
 
       {civil && (
-        <div className="f-stack" data-gap="sm">
-          <div className="f-section-head">
-            <h3 className="f-subhead" id="fw-official-civil">
+        <div className="f-stack grid gap-2" data-gap="sm">
+          <div className="f-section-head flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h3 className="f-subhead m-0 text-sm leading-snug font-medium" id="fw-official-civil">
               {t(
                 `Comunicados de ${civil.agency}`,
                 `${civil.agency} communiqués`,
@@ -502,7 +505,7 @@ export default function OfficialNow({
               )}
             </h3>
             {civilLine && (
-              <span className="f-section-aside">
+              <span className="f-section-aside text-sm text-muted-foreground data-[state=stale]:text-amber-900">
                 <SourceStamp state={lineStamp(civilLine.state)}>
                   {capitalize(civilLine.text)}
                 </SourceStamp>
@@ -521,7 +524,9 @@ export default function OfficialNow({
                       id={id}
                       open={open.has(id)}
                       onToggle={() => onToggle(id)}
-                      lead={<StatusIcon state="listed" icon={<FileTextIcon size={20} />} />}
+                      lead={
+                        <StatusIcon state="listed" icon={<FileTextIcon className="size-4" />} />
+                      }
                       title={<span lang="es">{postTitle(post.title)}</span>}
                       meta={`${at(post.published)} · ${ageLabel(post.published, now, lang)}`}
                     >
@@ -539,7 +544,7 @@ export default function OfficialNow({
                       )}
                       {/* The site records any later save, not what changed: stated, not interpreted. */}
                       {update && (
-                        <p className="f-caption">
+                        <p className="f-caption m-0 text-sm text-muted-foreground">
                           {t(
                             `Última edición en su sitio: ${at(update)}.`,
                             `Last edited on its site: ${at(update)}.`,
@@ -573,8 +578,8 @@ export default function OfficialNow({
       )}
 
       {!national && weather && (
-        <div className="f-stack" data-gap="sm">
-          <h3 className="f-subhead">
+        <div className="f-stack grid gap-2" data-gap="sm">
+          <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
             {t(`Avisos de ${weather.name}`, `${weather.name} warnings`, `Avisos: ${weather.name}`)}
           </h3>
           <Note
@@ -594,8 +599,8 @@ export default function OfficialNow({
       )}
 
       {services && services.length > 0 && (
-        <div className="f-stack" data-gap="sm">
-          <h3 className="f-subhead">
+        <div className="f-stack grid gap-2" data-gap="sm">
+          <h3 className="f-subhead m-0 text-sm leading-snug font-medium">
             {t(
               `Faro no tiene datos oficiales de ${new Intl.ListFormat(lang, { type: 'disjunction' }).format(services.map((s) => s.topic[idx]))}`,
               `Faro has no official data on ${new Intl.ListFormat(lang, { type: 'disjunction' }).format(services.map((s) => s.topic[idx]))}`,

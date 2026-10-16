@@ -1,12 +1,12 @@
 import { useState, type ReactNode } from 'react';
 import {
-  DropIcon,
-  FireIcon,
-  HurricaneIcon,
-  MountainsIcon,
-  PulseIcon,
+  ActivityIcon,
+  DropletIcon,
+  FlameIcon,
+  MountainIcon,
   SunIcon,
-} from '@phosphor-icons/react';
+  WindIcon,
+} from 'lucide-react';
 import { lineStamp, sourceLine } from '../lib/sourceStatus.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import {
@@ -50,12 +50,12 @@ type Props = {
 };
 
 const icons: Record<AlertType, ReactNode> = {
-  EQ: <PulseIcon size={20} weight="bold" />,
-  TC: <HurricaneIcon size={20} weight="bold" />,
-  FL: <DropIcon size={20} weight="fill" />,
-  VO: <MountainsIcon size={20} weight="bold" />,
-  DR: <SunIcon size={20} weight="bold" />,
-  WF: <FireIcon size={20} weight="bold" />,
+  EQ: <ActivityIcon className="size-4" />,
+  TC: <WindIcon className="size-4" />,
+  FL: <DropletIcon className="size-4" />,
+  VO: <MountainIcon className="size-4" />,
+  DR: <SunIcon className="size-4" />,
+  WF: <FlameIcon className="size-4" />,
 };
 // GDACS levels on Faro's official scale, as on Situación. Green is listed without a warning colour.
 const levels: Record<AlertLevel, 2 | 3 | undefined> = { green: undefined, orange: 2, red: 3 };
@@ -105,11 +105,14 @@ export default function AlertsPanel(p: Props) {
     .filter(Boolean)
     .join(' · ');
   return (
-    <div className="f-stack" data-gap="lg">
-      <div className="f-stack">
+    <div className="f-stack grid gap-8" data-gap="lg">
+      <div className="f-stack grid gap-4">
         {/* The answer first, in one sentence. */}
         {p.data && (
-          <h2 className="f-section-title" id="fw-alerts-title">
+          <h2
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+            id="fw-alerts-title"
+          >
             {rows.length === 0
               ? t(
                   `Ningún evento con alerta para ${p.countryName} en los últimos 14 días.`,

@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   BookOpenTextIcon,
-  ChatCircleTextIcon,
-  FirstAidKitIcon,
+  BriefcaseMedicalIcon,
   FlagIcon,
   MapPinIcon,
-  WhatsappLogoIcon,
+  MessageCircleIcon,
+  MessageSquareTextIcon,
   WavesIcon,
-} from '@phosphor-icons/react';
+} from 'lucide-react';
 import CountrySearch from './CountrySearch.tsx';
 import { NationalWarningRow, feedLine } from './OfficialNow.tsx';
 import {
@@ -205,7 +205,11 @@ export default function EmergencyScreen(p: Props) {
         {s.action && s.action !== 'call' && (
           <>
             {' '}
-            <button type="button" className="f-inline-link" onClick={() => act(s.action!)}>
+            <button
+              type="button"
+              className="f-inline-link inline cursor-pointer rounded-sm border-0 bg-transparent p-0 font-medium text-foreground underline underline-offset-4 outline-none hover:decoration-2 focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              onClick={() => act(s.action!)}
+            >
               {actionLabel[s.action]}
             </button>
           </>
@@ -247,11 +251,15 @@ export default function EmergencyScreen(p: Props) {
       ? t('Oficina y urgencias', 'Office and emergencies', 'Escritório e emergências')
       : t('Urgencias consulares', 'Consular emergencies', 'Emergências consulares');
   return (
-    <div className="f-column" ref={root} lang={p.lang}>
+    <div className="f-column grid w-full max-w-2xl gap-8" ref={root} lang={p.lang}>
       <ScreenHead title={t('Emergencia', 'Emergency', 'Emergência')} />
       {choosing ? (
-        <section className="f-section" aria-labelledby="fw-emergency-where">
-          <h2 id="fw-emergency-where" className="f-section-title" tabIndex={-1}>
+        <section className="f-section @container grid gap-3" aria-labelledby="fw-emergency-where">
+          <h2
+            id="fw-emergency-where"
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+            tabIndex={-1}
+          >
             {t('¿En qué país estás?', 'Which country are you in?', 'Em que país você está?')}
           </h2>
           <p>
@@ -329,7 +337,7 @@ export default function EmergencyScreen(p: Props) {
                     figure
                     title={local.whatsapp.number}
                     meta={local.whatsapp.label[idx]}
-                    trail={<WhatsappLogoIcon size={20} weight="fill" aria-hidden="true" />}
+                    trail={<MessageCircleIcon className="size-4" aria-hidden="true" />}
                   />
                 )}
               </List>
@@ -360,8 +368,12 @@ export default function EmergencyScreen(p: Props) {
       {choosing && p.alert}
       {choosing && warnings}
 
-      <section className="f-section" aria-labelledby="fw-first-minutes-title">
-        <h2 id="fw-first-minutes-title" className="f-section-title" tabIndex={-1}>
+      <section className="f-section @container grid gap-3" aria-labelledby="fw-first-minutes-title">
+        <h2
+          id="fw-first-minutes-title"
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+          tabIndex={-1}
+        >
           {t('Primeros minutos', 'First minutes', 'Primeiros minutos')}
         </h2>
         <Segmented
@@ -374,8 +386,11 @@ export default function EmergencyScreen(p: Props) {
         <Steps items={hazardSteps[kind].map(step)} />
       </section>
 
-      <section className="f-section" aria-labelledby="fw-any-emergency-title">
-        <h2 id="fw-any-emergency-title" className="f-section-title">
+      <section className="f-section @container grid gap-3" aria-labelledby="fw-any-emergency-title">
+        <h2
+          id="fw-any-emergency-title"
+          className="f-section-title m-0 text-base leading-snug font-semibold"
+        >
           {t('En cualquier emergencia', 'In any emergency', 'Em qualquer emergência')}
         </h2>
         <Steps items={generalSteps.map(step)} />
@@ -399,8 +414,12 @@ export default function EmergencyScreen(p: Props) {
       </section>
 
       {!choosing && (
-        <section className="f-section" aria-labelledby="fw-emergency-embassy">
-          <h2 id="fw-emergency-embassy" className="f-section-title" tabIndex={-1}>
+        <section className="f-section @container grid gap-3" aria-labelledby="fw-emergency-embassy">
+          <h2
+            id="fw-emergency-embassy"
+            className="f-section-title m-0 text-base leading-snug font-semibold"
+            tabIndex={-1}
+          >
             {p.nationality
               ? t(
                   `Tu embajada (${names.of(p.nationality)})`,
@@ -414,7 +433,7 @@ export default function EmergencyScreen(p: Props) {
             // next to the embassy directory, and kept for the next visit.
             <List>
               <ListRow
-                lead={<RowIcon icon={<FlagIcon size={20} />} />}
+                lead={<RowIcon icon={<FlagIcon className="size-4" />} />}
                 title={t(
                   'Elige tu nacionalidad',
                   'Choose your nationality',
@@ -497,7 +516,7 @@ export default function EmergencyScreen(p: Props) {
         >
           <List>
             <ListRow
-              lead={<RowIcon icon={<MapPinIcon size={20} />} />}
+              lead={<RowIcon icon={<MapPinIcon className="size-4" />} />}
               title={plan.meeting}
               meta={`${t(
                 'Tu punto de encuentro, nota personal sin verificar',
@@ -551,7 +570,7 @@ export default function EmergencyScreen(p: Props) {
       <Section id="fw-emergency-next" title={t('Después', 'Next', 'Depois')}>
         <List>
           <ListRow
-            lead={<RowIcon icon={<ChatCircleTextIcon size={20} />} />}
+            lead={<RowIcon icon={<MessageSquareTextIcon className="size-4" />} />}
             title={t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
             meta={t(
               'Prepara un mensaje y envíalo tú',
@@ -561,19 +580,19 @@ export default function EmergencyScreen(p: Props) {
             onClick={p.onStatus}
           />
           <ListRow
-            lead={<RowIcon icon={<FirstAidKitIcon size={20} />} />}
+            lead={<RowIcon icon={<BriefcaseMedicalIcon className="size-4" />} />}
             title={t('Hospitales y farmacias', 'Hospitals and pharmacies', 'Hospitais e farmácias')}
             meta={t('En Ayuda', 'In Help', 'Em Ajuda')}
             onClick={p.onHelp}
           />
           <ListRow
-            lead={<RowIcon icon={<WavesIcon size={20} />} />}
+            lead={<RowIcon icon={<WavesIcon className="size-4" />} />}
             title={t('Boletines de tsunami', 'Tsunami bulletins', 'Boletins de tsunami')}
             meta="NOAA/PTWC"
             onClick={() => p.onActivity('tsunami')}
           />
           <ListRow
-            lead={<RowIcon icon={<BookOpenTextIcon size={20} />} />}
+            lead={<RowIcon icon={<BookOpenTextIcon className="size-4" />} />}
             title={t('Guía completa', 'Full guide', 'Guia completo')}
             meta={t(
               'Sismo, tsunami, huracán y más',

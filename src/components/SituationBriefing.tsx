@@ -6,13 +6,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
-import {
-  DropIcon,
-  HurricaneIcon,
-  MountainsIcon,
-  PulseIcon,
-  WavesIcon,
-} from '@phosphor-icons/react';
+import { ActivityIcon, DropletIcon, MountainIcon, WavesIcon, WindIcon } from 'lucide-react';
 import OfficialNow, {
   NationalWarningRow,
   officialRowId,
@@ -133,11 +127,11 @@ type Props = {
 };
 
 const icons: Record<HazardKey, ReactNode> = {
-  earthquake: <PulseIcon size={20} weight="bold" />,
-  tsunami: <WavesIcon size={20} weight="bold" />,
-  cyclone: <HurricaneIcon size={20} weight="bold" />,
-  flood: <DropIcon size={20} weight="bold" />,
-  volcano: <MountainsIcon size={20} weight="bold" />,
+  earthquake: <ActivityIcon className="size-4" />,
+  tsunami: <WavesIcon className="size-4" />,
+  cyclone: <WindIcon className="size-4" />,
+  flood: <DropletIcon className="size-4" />,
+  volcano: <MountainIcon className="size-4" />,
 };
 const names: Record<HazardKey, Localized> = {
   earthquake: ['Sismos', 'Earthquakes', 'Terremotos'],
@@ -632,7 +626,7 @@ export default function SituationBriefing(p: Props) {
       }
     >
       {/* The visible state ticks; screen readers hear only a change of state. */}
-      <p className="f-visually-hidden" role="status">
+      <p className="sr-only" role="status">
         {offline
           ? anyData
             ? t(
@@ -660,7 +654,11 @@ export default function SituationBriefing(p: Props) {
       <List label={t('Peligros', 'Hazards', 'Perigos')}>{ordered.map((r) => r.node)}</List>
       <Note
         more={
-          <button type="button" className="f-inline-link" onClick={p.onSources}>
+          <button
+            type="button"
+            className="f-inline-link inline cursor-pointer rounded-sm border-0 bg-transparent p-0 font-medium text-foreground underline underline-offset-4 outline-none hover:decoration-2 focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            onClick={p.onSources}
+          >
             {t('Cómo leer esto', 'How to read this', 'Como ler isto')}
           </button>
         }
@@ -757,7 +755,10 @@ export default function SituationBriefing(p: Props) {
   const after = Math.max(keyAt('now'), keyAt('actions'));
   const items = [...main.slice(0, after + 1), side, ...main.slice(after + 1)];
   return (
-    <div className="f-dashboard" style={{ '--f-side-span': main.length } as React.CSSProperties}>
+    <div
+      className="f-dashboard grid max-w-2xl grid-cols-[minmax(0,1fr)] items-start gap-8 @min-[1200px]/app:max-w-none @min-[1200px]/app:grid-cols-[minmax(0,42rem)_minmax(20rem,1fr)] @min-[1200px]/app:*:col-start-1 @min-[1200px]/app:[&>[data-side]]:sticky @min-[1200px]/app:[&>[data-side]]:top-8 @min-[1200px]/app:[&>[data-side]]:col-start-2 @min-[1200px]/app:[&>[data-side]]:row-[1/span_var(--f-side-span,6)]"
+      style={{ '--f-side-span': main.length } as React.CSSProperties}
+    >
       {items}
     </div>
   );

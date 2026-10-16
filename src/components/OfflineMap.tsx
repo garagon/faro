@@ -1,4 +1,4 @@
-import { ListNumbersIcon, MapTrifoldIcon } from '@phosphor-icons/react';
+import { ListOrderedIcon, MapIcon } from 'lucide-react';
 import { pick, type Lang } from '../lib/i18n.ts';
 import { googleMapsArea, offlineMapsHelp } from '../lib/offlineMap.ts';
 import {
@@ -80,7 +80,7 @@ export default function OfflineMap({ lang, view, around }: Props) {
         variant="secondary"
         href={url}
         external
-        icon={<MapTrifoldIcon size={20} aria-hidden="true" />}
+        icon={<MapIcon className="size-4" aria-hidden="true" />}
       >
         {around === 'stay'
           ? t(
@@ -110,7 +110,7 @@ export default function OfflineMap({ lang, view, around }: Props) {
       </Note>
       {/* Viaje (its one home) starts every row with an icon: this one shares the text edge. */}
       <Disclosure
-        lead={<RowIcon icon={<ListNumbersIcon size={20} />} />}
+        lead={<RowIcon icon={<ListOrderedIcon className="size-4" />} />}
         title={t(
           'Cómo guardarla y sus límites',
           'How to save it and its limits',
