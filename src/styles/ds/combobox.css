@@ -1,0 +1,103 @@
+/*
+ * Combobox: a Field with a search icon whose options open as rows in a panel under it, over
+ * the content that follows. Tokens only; one class plus one attribute at most.
+ */
+.f-combo {
+  position: relative;
+  min-width: 0;
+}
+.f-combo-box {
+  position: relative;
+  display: block;
+}
+.f-combo-input {
+  padding-inline: var(--f-space-10);
+}
+.f-combo-input[aria-invalid='true'] {
+  border-color: var(--f-color-text);
+}
+.f-combo-lead,
+.f-combo-done {
+  position: absolute;
+  top: 50%;
+  color: var(--f-color-text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.f-combo-lead {
+  left: var(--f-space-3);
+}
+.f-combo-done {
+  right: var(--f-space-3);
+  color: var(--f-color-action);
+}
+.f-combo-menu {
+  position: absolute;
+  z-index: var(--f-z-overlay);
+  top: 100%;
+  right: 0;
+  left: 0;
+  overflow: hidden;
+  margin-top: var(--f-space-1);
+  border: var(--f-hairline);
+  border-radius: var(--f-radius-md);
+  background: var(--f-color-surface);
+  box-shadow: var(--f-shadow-overlay);
+}
+.f-combo-list {
+  max-height: 16rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.f-combo-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--f-space-3);
+  width: 100%;
+  min-height: var(--f-touch);
+  margin: 0;
+  padding: var(--f-space-2) var(--f-space-4);
+  border: 0;
+  border-bottom: var(--f-hairline);
+  background: transparent;
+  color: var(--f-color-text);
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-regular);
+  line-height: var(--f-leading-snug);
+  text-align: start;
+  cursor: pointer;
+}
+.f-combo-option[data-active] {
+  background: var(--f-color-surface-muted);
+}
+.f-combo-option[aria-selected='true'] {
+  font-weight: var(--f-weight-medium);
+}
+@media (hover: hover) {
+  .f-combo-option:hover {
+    background: var(--f-color-surface-muted);
+  }
+}
+.f-combo-meta {
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  font-weight: var(--f-weight-regular);
+}
+.f-combo-status {
+  margin: 0;
+  padding: var(--f-space-2) var(--f-space-4);
+  color: var(--f-color-text-muted);
+  font-size: var(--f-text-sm);
+  line-height: var(--f-leading-snug);
+}
+.f-combo-error {
+  display: flex;
+  gap: var(--f-space-2);
+  align-items: center;
+  margin: 0;
+  color: var(--f-color-text);
+  font-size: var(--f-text-md);
+  font-weight: var(--f-weight-medium);
+  line-height: var(--f-leading-snug);
+}

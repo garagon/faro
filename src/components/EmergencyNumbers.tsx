@@ -1,81 +1,93 @@
-import { emergencyFor } from '../lib/emergency.ts';
-import { PhoneButton, PhoneRow } from './Ui.tsx';
-import { langIndex, pick, type Lang } from '../lib/i18n.ts';
-import { telHref, whatsappHref } from '../lib/phone.ts';
 import { WhatsappLogoIcon } from '@phosphor-icons/react';
+import { emergencyFor } from '../lib/emergency.ts';
+import { reviewDate } from '../lib/links.ts';
+import { langIndex, pick, type Lang } from '../lib/i18n.ts';
+import { whatsappHref } from '../lib/phone.ts';
+import {
+  CallButton,
+  List,
+  ListRow,
+  Note,
+  OutLink,
+  PhoneRow,
+  SafetyNotice,
+  Section,
+  Text,
+} from '../ui/index.ts';
+
+/** The country's emergency numbers: the main one as the call button, the others as rows. */
 export default function EmergencyNumbers({ country, lang }: { country: string; lang: Lang }) {
-  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt);
+  const t = (es: string, en: string, pt: string) => pick(lang, es, en, pt),
+    idx = langIndex(lang);
   const data = emergencyFor(country),
     name =
       country === 'WORLD'
-        ? t('el destino', 'your destination', 'seu destino')
+        ? undefined
         : new Intl.DisplayNames([lang], { type: 'region' }).of(country);
+  const [main, ...others] = data?.numbers ?? [];
   return (
-    <section
-      className="fw-emergency-numbers"
-      aria-label={t('Teléfonos de emergencia', 'Emergency numbers', 'Telefones de emergência')}
-    >
-      <header>
-        <div>
-          <h2>{t(`Emergencias en ${name}`, `Emergencies in ${name}`, `Emergência · ${name}`)}</h2>
-          <p>
-            {t(
-              'Llama desde este país. Si estás en otro lugar, cambia el país arriba.',
-              'Call from within this country. If you are elsewhere, change the country above.',
-              'Ligue de dentro deste país. Se você estiver em outro lugar, altere o país acima.',
-            )}
-          </p>
-        </div>
-      </header>
-      {data ? (
-        // The main number is the only red button; backups share the neutral style.
-        <PhoneRow>
-          {data.numbers.map((n, i) => (
-            <PhoneButton
-              key={n.number}
-              href={telHref(n.number)}
-              number={i === 0 ? `${t('Llamar al', 'Call', 'Ligar para o')} ${n.number}` : n.number}
-              label={n.label[langIndex(lang)]}
-              tone={i === 0 ? 'call' : 'neutral'}
-            />
-          ))}
-          {data.whatsapp && (
-            <PhoneButton
-              href={whatsappHref(data.whatsapp.number)}
-              number={data.whatsapp.number}
-              label={data.whatsapp.label[langIndex(lang)]}
-              tone="neutral"
-              icon={<WhatsappLogoIcon size={18} weight="fill" aria-hidden="true" />}
-            />
+    <Section id="fw-help-numbers" title={t('Números', 'Numbers', 'Números')} aside={name}>
+      {data && main ? (
+        <>
+          {/* The main number is the only red button; backups are rows. */}
+          <CallButton
+            number={main.number}
+            label={`${t('Llamar al', 'Call', 'Ligar para o')} ${main.number}`}
+            note={main.label[idx]}
+          />
+          {(others.length > 0 || data.whatsapp) && (
+            <List label={t('Otros teléfonos', 'Other numbers', 'Outros telefones')}>
+              {others.map((n) => (
+                <PhoneRow key={n.number} number={n.number} name={n.label[idx]} />
+              ))}
+              {/* A text line for when calls do not go through but data does. */}
+              {data.whatsapp && (
+                <ListRow
+                  href={whatsappHref(data.whatsapp.number)}
+                  external
+                  figure
+                  title={data.whatsapp.number}
+                  meta={data.whatsapp.label[idx]}
+                  trail={<WhatsappLogoIcon size={20} weight="fill" aria-hidden="true" />}
+                />
+              )}
+            </List>
           )}
-        </PhoneRow>
+          {data.note && <SafetyNotice>{data.note[idx]}</SafetyNotice>}
+          <Note
+            more={
+              <OutLink href={data.source}>
+                {t('Fuente oficial', 'Official source', 'Fonte oficial')}
+              </OutLink>
+            }
+          >
+            {t(
+              'Números para llamar dentro del país, no desde el extranjero.',
+              'Numbers for calls within the country, not from abroad.',
+              'Números para ligar dentro do país, não do exterior.',
+            )}{' '}
+            {t(
+              'Si estás en otro lugar, cambia el país arriba.',
+              'If you are elsewhere, change the country above.',
+              'Se você estiver em outro lugar, altere o país acima.',
+            )}{' '}
+            {t('Revisada el', 'Reviewed', 'Revisada em')} {reviewDate(data.reviewedAt, lang)}.
+          </Note>
+        </>
       ) : (
-        <p>
+        <Text>
           {t(
             'No tenemos teléfonos verificados para este destino. Consulta al personal del alojamiento o a las autoridades locales.',
             'We have no verified numbers for this destination. Ask accommodation staff or local authorities.',
             'Não temos telefones verificados para este destino. Pergunte à equipe da hospedagem ou às autoridades locais.',
-          )}
-        </p>
-      )}
-      {data?.note && <p className="fw-emergency-scope">{data.note[langIndex(lang)]}</p>}
-      {data && (
-        <small>
-          {t(
-            'Números para llamar dentro del país, no desde el extranjero.',
-            'Numbers for calls within the country, not from abroad.',
-            'Números para ligar dentro do país, não do exterior.',
           )}{' '}
-          <a href={data.source} target="_blank" rel="noreferrer">
-            {t('Fuente oficial', 'Official source', 'Fonte oficial')}
-          </a>
-          , {t('revisada el', 'reviewed', 'revisada em')}{' '}
-          {new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeZone: 'UTC' }).format(
-            new Date(data.reviewedAt + 'T12:00:00Z'),
+          {t(
+            'Si estás en otro lugar, cambia el país arriba.',
+            'If you are elsewhere, change the country above.',
+            'Se você estiver em outro lugar, altere o país acima.',
           )}
-          .
-        </small>
+        </Text>
       )}
-    </section>
+    </Section>
   );
 }
