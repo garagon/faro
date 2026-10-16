@@ -1,4 +1,5 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { flushSync } from 'react-dom';
 import {
   CaretDownIcon,
   CaretUpIcon,
@@ -46,23 +47,35 @@ type Props = {
   profile: Preferences | null;
   plan: HotelPlan | null;
   geo: Geo | null;
-  onSave: (profile: Preferences, plan: HotelPlan | null) => boolean;
-  onDeleteAll: () => void;
+  /** `follow`: the person picked another country here, so the app moves to it. */
+  onSave: (profile: Preferences, plan: HotelPlan | null, follow: boolean) => boolean;
+  /** False when the browser kept part of the data. */
+  onDeleteAll: () => boolean;
 };
 
-type Draft = {
+type Fields = {
   name: string;
   nationality: string;
   destination: string;
   phone: string;
   email: string;
-  info: EmergencyInfo;
   stayName: string;
   meeting: string;
   notes: string;
   lat: string;
   lng: string;
 };
+type InfoPart = 'contact' | 'health' | 'insurance' | 'stay';
+/**
+ * What the person typed and has not saved, kept apart from the saved data: fields they have not
+ * touched keep following the saved profile (a nationality chosen on another screen, the country
+ * being browsed). It lives only in memory, never in storage.
+ */
+type Edits = {
+  fields: Partial<Fields>;
+  info: { [K in InfoPart]?: Partial<EmergencyInfo[K]> };
+};
+const noEdits: Edits = { fields: {}, info: {} };
 
 /**
  * The traveler's details for an emergency, in five short sections, and the card they make,
@@ -72,41 +85,68 @@ type Draft = {
 export default function TripProfile(p: Props) {
   const t = (es: string, en: string, pt: string) => pick(p.lang, es, en, pt);
   const names = new Intl.DisplayNames([p.lang], { type: 'region' });
-  const initialCountry = p.countryCodes.includes(p.country)
-    ? p.country
-    : (p.profile?.destination ?? 'PA');
-  const [draft, setDraft] = useState<Draft>(() => ({
+  // "Todo el mundo" is not a place to be in: the country starts empty until the person picks one.
+  const world = !p.countryCodes.includes(p.country);
+  const [savedInfo, setSavedInfo] = useState(() => readEmergencyInfo() ?? emptyEmergencyInfo());
+  const [edits, setEdits] = useState<Edits>(noEdits);
+  const info: EmergencyInfo = {
+    ...savedInfo,
+    contact: { ...savedInfo.contact, ...edits.info.contact },
+    health: { ...savedInfo.health, ...edits.info.health },
+    insurance: { ...savedInfo.insurance, ...edits.info.insurance },
+    stay: { ...savedInfo.stay, ...edits.info.stay },
+  };
+  const draft: Fields = {
     name: p.profile?.name ?? '',
     nationality: p.profile?.nationality ?? '',
-    destination: p.profile?.destination ?? initialCountry,
+    destination: world ? '' : (p.profile?.destination ?? p.country),
     phone: p.profile?.phone ?? '',
     email: p.profile?.email ?? '',
-    info: readEmergencyInfo() ?? emptyEmergencyInfo(),
     stayName: p.plan?.name ?? '',
     meeting: p.plan?.meeting ?? '',
     notes: p.plan?.notes ?? '',
     lat: p.plan?.lat ?? '',
     lng: p.plan?.lng ?? '',
-  }));
-  const [status, setStatus] = useState<'saved' | 'invalid' | 'storage' | null>(null);
+    ...edits.fields,
+  };
+  const [status, setStatus] = useState<
+    'saved' | 'invalid' | 'storage' | 'deleted' | 'notDeleted' | null
+  >(null);
+  // The country the app moved to with the last save, named in its confirmation.
+  const [movedTo, setMovedTo] = useState('');
+  // After a save with errors, each section's header says what to fix inside it.
+  const [attempted, setAttempted] = useState(false);
+  const [openSteps, setOpenSteps] = useState<number[]>([1]);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [imageNote, setImageNote] = useState('');
   // The coordinates are a rarely used part of the stay section: closed until asked for.
   const [coordinatesOpen, setCoordinatesOpen] = useState(false);
-  const set = (patch: Partial<Draft>) => {
-    setDraft((d) => ({ ...d, ...patch }));
+  const destinationField = useRef<HTMLDivElement>(null);
+  const deleteButton = useRef<HTMLButtonElement>(null);
+  const confirmButton = useRef<HTMLButtonElement>(null);
+  const statusRegion = useRef<HTMLDivElement>(null);
+  const set = (patch: Partial<Fields>) => {
+    setEdits((e) => ({ ...e, fields: { ...e.fields, ...patch } }));
     setStatus(null);
   };
-  const setInfo = <K extends keyof EmergencyInfo>(key: K, patch: Partial<EmergencyInfo[K]>) => {
-    setDraft((d) => ({
-      ...d,
-      info: { ...d.info, [key]: { ...(d.info[key] as object), ...patch } },
-    }));
+  const setInfo = <K extends InfoPart>(key: K, patch: Partial<EmergencyInfo[K]>) => {
+    setEdits((e) => ({ ...e, info: { ...e.info, [key]: { ...e.info[key], ...patch } } }));
     setStatus(null);
   };
-  const { info } = draft;
+  const toggleStep = (n: number, open: boolean) =>
+    setOpenSteps((s) => (open ? (s.includes(n) ? s : [...s, n]) : s.filter((x) => x !== n)));
 
+  const labels = {
+    destination: t('País donde estás', 'Country you are in', 'País onde você está'),
+    phone: t('Tu teléfono', 'Your phone', 'Seu telefone'),
+    email: t('Tu correo', 'Your email', 'Seu e-mail'),
+    contactPhone: t('Teléfono', 'Phone', 'Telefone'),
+    insurancePhone: t('Teléfono de asistencia', 'Assistance phone', 'Telefone da assistência'),
+    dates: t('Salida', 'Departure', 'Saída'),
+    coordinates: t('Coordenadas', 'Coordinates', 'Coordenadas'),
+  };
   const errors = {
+    destination: !draft.destination,
     phone: !!draft.phone.trim() && !validProfilePhone(draft.phone),
     email: !!draft.email.trim() && !validProfileEmail(draft.email),
     contactPhone: !validEmergencyPhone(info.contact.phone),
@@ -116,7 +156,29 @@ export default function TripProfile(p: Props) {
       !planCoordinates({ ...emptyPlanFields, lat: draft.lat, lng: draft.lng }),
     dates: !!info.stay.arrival && !!info.stay.departure && info.stay.departure < info.stay.arrival,
   };
-  const invalid = Object.values(errors).some(Boolean);
+  // Every check in the order the fields appear: its section and the field that carries the mark.
+  const checks: { key: keyof typeof errors; step: number; field: string }[] = [
+    { key: 'destination', step: 1, field: '' },
+    { key: 'phone', step: 1, field: 'trip-phone' },
+    { key: 'email', step: 1, field: 'trip-email' },
+    { key: 'contactPhone', step: 2, field: 'trip-contact-phone' },
+    { key: 'insurancePhone', step: 4, field: 'trip-insurance-phone' },
+    { key: 'dates', step: 5, field: 'trip-departure' },
+    { key: 'coordinates', step: 5, field: 'trip-lng' },
+  ];
+  const failing = checks.filter((c) => errors[c.key]);
+  // The header caption of a section with something to fix, once the person has tried to save.
+  const stepProblem = (step: number) => {
+    const here = attempted ? failing.filter((c) => c.step === step) : [];
+    if (!here.length) return undefined;
+    return here.length === 1
+      ? `${t('Revisa', 'Check', 'Confira')}: ${labels[here[0].key]}`
+      : t(
+          `Revisa ${here.length} campos`,
+          `Check ${here.length} fields`,
+          `Confira ${here.length} campos`,
+        );
+  };
   // An error replaces the field's hint, with a mark so it is not read as a plain hint.
   const problem = (text: string) => (
     <>
@@ -161,8 +223,22 @@ export default function TripProfile(p: Props) {
 
   function save(e: FormEvent) {
     e.preventDefault();
-    if (invalid) {
-      setStatus('invalid');
+    const first = failing[0];
+    if (first) {
+      // Open the section with the first error and take the person to that field, so the
+      // message never points at marks hidden in a closed section.
+      flushSync(() => {
+        setStatus('invalid');
+        setAttempted(true);
+        toggleStep(first.step, true);
+        if (first.key === 'coordinates') setCoordinatesOpen(true);
+      });
+      if (first.key === 'destination') {
+        const input = destinationField.current?.querySelector('input');
+        // The country search shows its own message and marks itself invalid.
+        input?.checkValidity();
+        input?.focus();
+      } else document.getElementById(first.field)?.focus();
       return;
     }
     const profile: Preferences = {
@@ -195,14 +271,39 @@ export default function TripProfile(p: Props) {
       setStatus('storage');
       return;
     }
-    setStatus(p.onSave(profile, plan) ? 'saved' : 'storage');
+    // The app moves to another country only when the person picked it here, and says so.
+    const follow = edits.fields.destination !== undefined && draft.destination !== p.country;
+    if (!p.onSave(profile, plan, follow)) {
+      setStatus('storage');
+      return;
+    }
+    setSavedInfo(info);
+    setEdits(noEdits);
+    setAttempted(false);
+    setMovedTo(follow ? draft.destination : '');
+    setStatus('saved');
+  }
+
+  function deleteAll() {
+    const deleted = p.onDeleteAll();
+    flushSync(() => {
+      setSavedInfo(readEmergencyInfo() ?? emptyEmergencyInfo());
+      setEdits(noEdits);
+      setAttempted(false);
+      setConfirmDelete(false);
+      setStatus(deleted ? 'deleted' : 'notDeleted');
+    });
+    // The result is read where focus lands, next to the button that started it.
+    statusRegion.current?.focus();
   }
 
   async function saveImage() {
     setImageNote('');
+    // The saved country when the field is still empty (worldwide view).
+    const country = draft.destination || p.profile?.destination || p.plan?.country || '';
     try {
-      const lines = cardLines(draft.destination, p.lang, readContacts(), p.plan, p.profile, card);
-      await downloadCardImage(draft.destination, p.lang, lines);
+      const lines = cardLines(country, p.lang, readContacts(), p.plan, p.profile, card);
+      await downloadCardImage(country, p.lang, lines);
       setImageNote(
         t(
           'Imagen guardada en Descargas. Úsala como fondo de pantalla o guárdala en tus fotos.',
@@ -234,14 +335,19 @@ export default function TripProfile(p: Props) {
     insurance: [info.insurance.company, info.insurance.policy].filter((v) => v.trim()).join(', '),
     stay: [draft.stayName, info.stay.address].filter((v) => v.trim()).join(', '),
   };
+  const step = (n: number) => ({
+    n,
+    open: openSteps.includes(n),
+    onToggle: (open: boolean) => toggleStep(n, open),
+    problem: stepProblem(n),
+  });
 
   return (
     <div className="f-column">
       <form className="f-stack" onSubmit={save} noValidate>
         <div className="f-stack" data-gap="sm">
           <Step
-            n={1}
-            open
+            {...step(1)}
             title={t('Tus datos', 'About you', 'Seus dados')}
             summary={[draft.name, draft.nationality && names.of(draft.nationality)]
               .filter(Boolean)
@@ -263,15 +369,19 @@ export default function TripProfile(p: Props) {
               value={draft.nationality}
               onChange={(value) => set({ nationality: value })}
             />
-            <CountrySearch
-              label={t('País donde estás', 'Country you are in', 'País onde você está')}
-              lang={p.lang}
-              value={draft.destination}
-              onChange={(value) => value && set({ destination: value })}
-            />
+            {/* The wrapper lets a failed save find the search field to focus it. */}
+            <div ref={destinationField}>
+              <CountrySearch
+                label={labels.destination}
+                lang={p.lang}
+                required
+                value={draft.destination}
+                onChange={(value) => value && set({ destination: value })}
+              />
+            </div>
             <Field
               id="trip-phone"
-              label={t('Tu teléfono', 'Your phone', 'Seu telefone')}
+              label={labels.phone}
               hint={errors.phone ? checkNumber : undefined}
               aria-invalid={errors.phone || undefined}
               type="tel"
@@ -284,7 +394,7 @@ export default function TripProfile(p: Props) {
             />
             <Field
               id="trip-email"
-              label={t('Tu correo', 'Your email', 'Seu e-mail')}
+              label={labels.email}
               hint={
                 errors.email
                   ? problem(t('Revisa el correo.', 'Check the email.', 'Confira o e-mail.'))
@@ -300,7 +410,7 @@ export default function TripProfile(p: Props) {
           </Step>
 
           <Step
-            n={2}
+            {...step(2)}
             title={t('Contacto de emergencia', 'Emergency contact', 'Contato de emergência')}
             summary={summary.contact}
             empty={t(
@@ -330,7 +440,7 @@ export default function TripProfile(p: Props) {
             />
             <Field
               id="trip-contact-phone"
-              label={t('Teléfono', 'Phone', 'Telefone')}
+              label={labels.contactPhone}
               hint={
                 errors.contactPhone
                   ? checkNumber
@@ -356,7 +466,7 @@ export default function TripProfile(p: Props) {
           </Step>
 
           <Step
-            n={3}
+            {...step(3)}
             title={t('Salud', 'Health', 'Saúde')}
             summary={summary.health}
             empty={t(
@@ -432,7 +542,7 @@ export default function TripProfile(p: Props) {
           </Step>
 
           <Step
-            n={4}
+            {...step(4)}
             title={t('Seguro de viaje', 'Travel insurance', 'Seguro viagem')}
             summary={summary.insurance}
             empty={t(
@@ -457,7 +567,7 @@ export default function TripProfile(p: Props) {
             />
             <Field
               id="trip-insurance-phone"
-              label={t('Teléfono de asistencia', 'Assistance phone', 'Telefone da assistência')}
+              label={labels.insurancePhone}
               hint={errors.insurancePhone ? checkNumber : undefined}
               aria-invalid={errors.insurancePhone || undefined}
               type="tel"
@@ -469,7 +579,7 @@ export default function TripProfile(p: Props) {
           </Step>
 
           <Step
-            n={5}
+            {...step(5)}
             title={t('Alojamiento y fechas', 'Accommodation and dates', 'Hospedagem e datas')}
             summary={summary.stay}
             empty={t(
@@ -502,7 +612,7 @@ export default function TripProfile(p: Props) {
             />
             <Field
               id="trip-departure"
-              label={t('Salida', 'Departure', 'Saída')}
+              label={labels.dates}
               hint={
                 errors.dates
                   ? problem(
@@ -616,8 +726,9 @@ export default function TripProfile(p: Props) {
           <Button type="submit" icon={<CheckCircleIcon size={20} aria-hidden="true" />}>
             {t('Guardar', 'Save', 'Salvar')}
           </Button>
-          {/* Always present, so a screen reader announces the result when it appears. */}
-          <div role="status">
+          {/* Always present, so a screen reader announces the result when it appears. Focus
+              comes here after deleting, so the result is read and seen next to the button. */}
+          <div role="status" ref={statusRegion} tabIndex={-1}>
             {status && (
               <Note>
                 {status === 'saved'
@@ -625,24 +736,52 @@ export default function TripProfile(p: Props) {
                       'Guardado en este navegador.',
                       'Saved in this browser.',
                       'Salvo neste navegador.',
-                    )
+                    ) +
+                    (movedTo
+                      ? ' ' +
+                        t(
+                          `Faro ahora muestra el país que elegiste: ${names.of(movedTo)}.`,
+                          `Faro now shows the country you chose: ${names.of(movedTo)}.`,
+                          `O Faro agora mostra o país que você escolheu: ${names.of(movedTo)}.`,
+                        )
+                      : '')
                   : status === 'invalid'
                     ? t(
                         'Revisa los campos marcados.',
                         'Check the highlighted fields.',
                         'Confira os campos marcados.',
                       )
-                    : t(
-                        'El navegador no permitió guardar. Descarga o comparte tu ficha.',
-                        'The browser did not allow saving. Download or share your card.',
-                        'O navegador não permitiu salvar. Baixe ou compartilhe sua ficha.',
-                      )}
+                    : status === 'deleted'
+                      ? t(
+                          'Datos borrados de este navegador.',
+                          'Details deleted from this browser.',
+                          'Dados apagados deste navegador.',
+                        )
+                      : status === 'notDeleted'
+                        ? t(
+                            'El navegador no permitió borrar todos los datos. Inténtalo de nuevo.',
+                            'The browser did not allow deleting all the details. Try again.',
+                            'O navegador não permitiu apagar todos os dados. Tente de novo.',
+                          )
+                        : t(
+                            'El navegador no permitió guardar. Descarga o comparte tu ficha.',
+                            'The browser did not allow saving. Download or share your card.',
+                            'O navegador não permitiu salvar. Baixe ou compartilhe sua ficha.',
+                          )}
               </Note>
             )}
           </div>
           {!confirmDelete ? (
             <Actions>
-              <button type="button" onClick={() => setConfirmDelete(true)}>
+              <button
+                type="button"
+                ref={deleteButton}
+                onClick={() => {
+                  // The button gives way to the confirmation: focus moves to its first choice.
+                  flushSync(() => setConfirmDelete(true));
+                  confirmButton.current?.focus();
+                }}
+              >
                 {t('Borrar mis datos', 'Delete my details', 'Apagar meus dados')}
               </button>
             </Actions>
@@ -660,30 +799,16 @@ export default function TripProfile(p: Props) {
                 )}
               </p>
               <Actions>
+                <button type="button" ref={confirmButton} onClick={deleteAll}>
+                  {t('Sí, borrar', 'Yes, delete', 'Sim, apagar')}
+                </button>
                 <button
                   type="button"
                   onClick={() => {
-                    p.onDeleteAll();
-                    setDraft({
-                      name: '',
-                      nationality: '',
-                      destination: initialCountry,
-                      phone: '',
-                      email: '',
-                      info: emptyEmergencyInfo(),
-                      stayName: '',
-                      meeting: '',
-                      notes: '',
-                      lat: '',
-                      lng: '',
-                    });
-                    setConfirmDelete(false);
-                    setStatus(null);
+                    flushSync(() => setConfirmDelete(false));
+                    deleteButton.current?.focus();
                   }}
                 >
-                  {t('Sí, borrar', 'Yes, delete', 'Sim, apagar')}
-                </button>
-                <button type="button" onClick={() => setConfirmDelete(false)}>
                   {t('Cancelar', 'Cancel', 'Cancelar')}
                 </button>
               </Actions>
@@ -757,28 +882,45 @@ const emptyPlanFields: HotelPlan = {
   country: 'PA',
 };
 
-/** One optional part of the profile: its number, its title and what is filled in so far. */
+/**
+ * One optional part of the profile: its number, its title and what is filled in so far, or,
+ * after a save with errors, what to fix inside it.
+ */
 function Step({
   n,
   title,
   summary,
   empty,
   open,
+  onToggle,
+  problem,
   children,
 }: {
   n: number;
   title: string;
   summary: string;
   empty: string;
-  open?: boolean;
+  open: boolean;
+  onToggle: (open: boolean) => void;
+  problem?: string;
   children: ReactNode;
 }) {
   return (
     <Disclosure
       open={open}
+      onToggle={onToggle}
       lead={<RowIcon icon={<span>{n}</span>} />}
       title={title}
-      meta={summary || empty}
+      invalid={!!problem}
+      meta={
+        problem ? (
+          <>
+            <WarningCircleIcon size={16} weight="fill" aria-hidden="true" /> {problem}
+          </>
+        ) : (
+          summary || empty
+        )
+      }
     >
       {children}
     </Disclosure>

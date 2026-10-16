@@ -265,6 +265,10 @@
   font-size: var(--f-text-sm);
   text-wrap: pretty;
 }
+/* A caption that says what to fix: the error colour of source stamps, in the same caption. */
+.f-row-meta[data-state='error'] {
+  color: var(--f-color-level-1-text);
+}
 .f-row-trail {
   display: flex;
   align-items: center;

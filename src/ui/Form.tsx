@@ -161,6 +161,7 @@ export function Disclosure({
   lead,
   open,
   onToggle,
+  invalid,
   children,
 }: {
   title: ReactNode;
@@ -168,6 +169,8 @@ export function Disclosure({
   lead?: ReactNode;
   open?: boolean;
   onToggle?: (open: boolean) => void;
+  /** The caption says what to fix inside, in the error colour (a form part with an error). */
+  invalid?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -180,7 +183,11 @@ export function Disclosure({
         <span className="f-row-lead">{lead}</span>
         <span className="f-row-body">
           <span className="f-row-title">{title}</span>
-          {meta && <span className="f-row-meta">{meta}</span>}
+          {meta && (
+            <span className="f-row-meta" data-state={invalid ? 'error' : undefined}>
+              {meta}
+            </span>
+          )}
         </span>
         <span className="f-row-trail">
           <CaretDownIcon className="f-expand-caret" size={16} aria-hidden="true" />
