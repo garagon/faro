@@ -1,9 +1,0 @@
-/* The choice is marked the same way for every status; colour stays on the icon. */
-/* Asking for help without a place: said plainly next to the field, in the text colour. */
-.fw-app .fw-place-missing {
-  margin: -4px 0 0;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--ink);
-}

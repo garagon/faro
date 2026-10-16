@@ -421,7 +421,7 @@ export default function App() {
     }
     if (screen === 'emergency' || screen === 'detail') return;
     requestAnimationFrame(() =>
-      appRef.current?.querySelector<HTMLElement>('.fw-main h1')?.focus({ preventScroll: true }),
+      appRef.current?.querySelector<HTMLElement>('.f-page h1')?.focus({ preventScroll: true }),
     );
   }, [screen]);
   const names = useMemo(() => new Intl.DisplayNames([lang], { type: 'region' }), [lang]);
@@ -1335,8 +1335,8 @@ export default function App() {
         </StatusBar>
       )}
       {/* The scrolling region keeps the older screens' classes while they move to the design system. */}
-      <main id="main" className="f-content fw-app" ref={appRef} data-screen={screen}>
-        <div className="f-page fw-main" data-screen={screen}>
+      <main id="main" className="f-content" ref={appRef} data-screen={screen}>
+        <div className="f-page" data-screen={screen}>
           <p className="f-visually-hidden" role="status">
             {connection === 'lost'
               ? t(

@@ -3,14 +3,12 @@
  * one, whatever the selectors, so new work never needs higher specificity or !important:
  *
  * 1. vendor: the map libraries' own styles.
- * 2. ds-base: the design system's defaults (type, links, focus), below the older screens.
- * 3. legacy: the screen styles written before the design system, in their historical order.
- *    They are deleted screen by screen as each screen moves to the design system.
- * 4. ds: the design system (src/styles/ds): tokens, components and the app frame.
+ * 2. ds-base: tokens, the document and the defaults inside the app frame (type, links, fields).
+ * 3. ds: the design system's components and the app frame (src/styles/ds).
  *
  * The loading screen (boot.css) is linked from index.html and stays outside the layers.
  */
-@layer vendor, ds-base, legacy, ds;
+@layer vendor, ds-base, ds;
 
 @import '@fontsource/public-sans/latin-400.css';
 @import '@fontsource/public-sans/latin-600.css';
@@ -22,24 +20,6 @@
 
 @import './ds/tokens.css' layer(ds-base);
 @import './ds/base.css' layer(ds-base);
-@import './base.css' layer(legacy);
-@import './emergency.css' layer(legacy);
-@import './sources.css' layer(legacy);
-@import './trip.css' layer(legacy);
-@import './web.css' layer(legacy);
-@import './professional.css' layer(legacy);
-@import './workspace.css' layer(legacy);
-@import './liveActivity.css' layer(legacy);
-@import './travelSetup.css' layer(legacy);
-@import './situation.css' layer(legacy);
-@import './home.css' layer(legacy);
-@import './layout.css' layer(legacy);
-@import './travelerSupport.css' layer(legacy);
-@import './status.css' layer(legacy);
-@import './emergencyFlow.css' layer(legacy);
-@import './preparedness.css' layer(legacy);
-@import './board.css' layer(legacy);
-@import './system.css' layer(legacy);
 
 @import './ds/components.css' layer(ds);
 @import './ds/shell.css' layer(ds);
@@ -53,3 +33,4 @@
 @import './ds/facts.css' layer(ds);
 @import './ds/pager.css' layer(ds);
 @import './ds/scrollCue.css' layer(ds);
+@import './ds/map.css' layer(ds);

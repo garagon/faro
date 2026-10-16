@@ -896,42 +896,6 @@
   pointer-events: none;
 }
 
-/* Bridge for the legacy map component inside the frame; goes when WebMap is migrated.
-   Pins follow the one-hue magnitude scale; clusters are neutral ink. */
-.f-map > .fw-map-wrapper {
-  height: 100%;
-}
-.f-map .fw-pin {
-  color: var(--f-mag-1);
-}
-.f-map .fw-mag-band-4 {
-  color: var(--f-mag-2);
-}
-.f-map .fw-mag-band-5 {
-  color: var(--f-mag-3);
-}
-.f-map .fw-mag-band-6 {
-  color: var(--f-mag-4);
-}
-.f-map .fw-mag-band-7plus {
-  color: var(--f-mag-5);
-}
-.f-map .marker-cluster {
-  background: rgb(21 31 28 / 14%);
-}
-.f-map .marker-cluster div {
-  background: var(--f-neutral-700);
-  color: var(--f-white);
-  font-family: var(--f-font);
-  font-weight: var(--f-weight-bold);
-}
-.f-map .fw-map {
-  height: 100%;
-  min-height: 0;
-  border: 0;
-  border-radius: 0;
-}
-
 .f-skeleton {
   display: inline-block;
   width: var(--f-skeleton-width, 8rem);
@@ -960,5 +924,24 @@
   }
   .f-pressable:active {
     transform: none;
+  }
+}
+
+/* High-contrast (forced colours) mode drops backgrounds and tints, which is how Faro marks the
+   chosen hazard, the current screen and the pressed option: an outline says it instead. */
+@media (forced-colors: active) {
+  .f-root
+    :is(
+      [aria-current='page'],
+      [aria-current='true'],
+      [aria-pressed='true'],
+      [aria-checked='true'],
+      [aria-selected='true']
+    ) {
+    outline: 3px solid Highlight;
+    outline-offset: -3px;
+  }
+  .f-root :is(button, a) svg {
+    color: inherit;
   }
 }

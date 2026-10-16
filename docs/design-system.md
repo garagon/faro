@@ -15,23 +15,20 @@ the same everywhere. Screens compose these pieces; they do not restyle them.
 
 ## Cascade layers
 
-`src/styles/index.css` loads every style into four layers, in this order:
+`src/styles/index.css` loads every style into three layers, in this order:
 
 1. `vendor`: the map libraries' own styles.
-2. `ds-base`: tokens and the design system's defaults (type, links, focus), below the older
-   screens so they keep their own colours and spacing.
-3. `legacy`: the screen styles written before the design system.
-4. `ds`: components and the app frame, above everything else.
+2. `ds-base`: tokens, the document (box sizing, the frame filling the window) and the defaults
+   inside the app frame (type, links, fields).
+3. `ds`: components, the map and the app frame, above everything else.
 
 A later layer always wins, whatever the selector, so design-system rules never need higher
 specificity or `!important`. The loading screen (`boot.css`) is linked from `index.html` and stays
-outside. Components set their own margins; nothing in `ds-base` resets elements globally.
+outside. Components set their own margins; nothing in `ds-base` resets element margins.
 
-Every screen, the earthquake sheet, the install sheet and the crash fallback are on the design
-system. What remains in `legacy` is small: the map's pins and error state (WebMap), the guide's
-illustrations and a few frame rules; the content region still carries the `fw-app` and `fw-main`
-classes for them. A legacy rule whose class no source renders any more is deleted, not kept
-"just in case"; check with a visual regression run before and after.
+Every screen, the sheets, the map and the crash fallback are built from `src/ui` and
+`src/styles/ds`; the older stylesheets are gone. A rule whose class no source renders any more
+is deleted, not kept "just in case"; check with a visual regression run before and after.
 
 ## Rules
 
@@ -133,5 +130,5 @@ shows one mockup filling the window. Production builds do not include it.
 ## Not yet
 
 Dark mode: tokens already separate roles from values, so it is a `prefers-color-scheme` block in
-`tokens.css`. It waits for the last legacy rules (map pins, illustrations) to read tokens too, and
-for a contrast review of the official level colours on a dark page.
+`tokens.css`. It waits for a contrast review of the official level colours, the map tiles and the
+guide's drawings on a dark page.

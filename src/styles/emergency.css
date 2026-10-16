@@ -1,8 +1,0 @@
-/*
- * Emergency screen: the call action first and largest, then first steps, consular help, the
- * meeting point and the latest earthquake, separated by hairlines rather than nested boxes.
- * On wide screens the steps sit beside the numbers so both are visible without scrolling.
- * Older stylesheets load after this one, so every rule is scoped to the screen.
- */
-@media (min-width: 900px) {
-}

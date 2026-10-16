@@ -1,8 +1,35 @@
 /*
- * Defaults for everything inside the app frame: type, links, fields and focus. This layer sits
- * below the legacy screen styles (see index.css), so older screens keep their own colours and
- * spacing; design-system components set what they need in the `ds` layer above both.
+ * The document and the defaults for everything inside the app frame: type, links and fields.
+ * Components set what they need in the `ds` layer above this one.
  */
+:root {
+  background: var(--f-color-surface);
+  color: var(--f-color-text);
+  font-family: var(--f-font);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+/* The frame scrolls inside its content region, never the page; nothing forces a minimum width,
+   so a zoomed narrow phone still fits the emergency button. */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+body {
+  overflow: hidden;
+}
+button {
+  cursor: pointer;
+}
 .f-root {
   font-family: var(--f-font);
   font-size: var(--f-text-md);

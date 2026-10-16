@@ -1,0 +1,132 @@
+/*
+ * The map (WebMap): the Leaflet canvas, its controls and the pins. Pins read the same scales as
+ * the lists: magnitude in the one-hue ramp, official levels in their colours, anything else in
+ * neutral ink. A colour on the map never means more than the same colour in a list.
+ */
+.f-map-frame {
+  position: relative;
+  height: 100%;
+}
+/* Its own stacking context, so the map's panes never cover the header or the tabs. */
+.f-map-canvas {
+  z-index: 0;
+  height: 100%;
+  background: var(--f-map-ground);
+  font-family: var(--f-font);
+}
+.f-map-canvas .leaflet-control-zoom a {
+  width: var(--f-touch);
+  height: var(--f-touch);
+  line-height: var(--f-touch);
+}
+.f-map-canvas .leaflet-control-attribution {
+  font-size: var(--f-text-xs);
+}
+/* Tiles that did not load: said over the map, in the colour of data that is not current. */
+.f-map-error {
+  position: absolute;
+  right: var(--f-space-3);
+  bottom: var(--f-space-8);
+  left: var(--f-space-3);
+  z-index: 500;
+  padding: var(--f-space-2) var(--f-space-3);
+  border-radius: var(--f-radius-sm);
+  background: var(--f-color-level-1-soft);
+  color: var(--f-color-level-1-text);
+  font-size: var(--f-text-sm);
+}
+
+/* Earthquakes: a tag with the magnitude, pointing at the epicentre. Leaflet icons take a class
+   name only, so the variants here are classes rather than data attributes. */
+.f-pin {
+  color: var(--f-mag-1);
+  filter: var(--f-pin-shadow);
+}
+.f-pin-band-4 {
+  color: var(--f-mag-2);
+}
+.f-pin-band-5 {
+  color: var(--f-mag-3);
+}
+.f-pin-band-6 {
+  color: var(--f-mag-4);
+}
+.f-pin-band-7plus {
+  color: var(--f-mag-5);
+}
+.f-pin::before {
+  content: '';
+  position: absolute;
+  inset: 1px 1px 7px;
+  border: 2px solid var(--f-white);
+  border-radius: 7px;
+  background: currentColor;
+}
+.f-pin::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: calc(50% - 4px);
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+.f-pin b {
+  position: absolute;
+  inset: 0 0 6px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: var(--f-white);
+  font-size: 11px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.f-pin-selected {
+  filter: var(--f-pin-shadow-selected);
+}
+.f-pin-selected b {
+  font-size: 13px;
+}
+.f-map-canvas .marker-cluster {
+  background: rgb(21 31 28 / 14%);
+}
+.f-map-canvas .marker-cluster div {
+  background: var(--f-neutral-700);
+  color: var(--f-white);
+  font-family: var(--f-font);
+  font-weight: var(--f-weight-bold);
+}
+
+/* Warnings from GDACS and storms from NHC: the hazard's icon in a circle, tinted by its level. */
+.f-pin-hazard {
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--f-white);
+  border-radius: var(--f-radius-full);
+  background: var(--f-neutral-700);
+  box-shadow: var(--f-pin-shadow-box);
+  color: var(--f-white);
+}
+.f-pin-hazard-orange {
+  background: var(--f-color-level-2);
+}
+.f-pin-hazard-red {
+  background: var(--f-color-level-3);
+}
+
+/* Not data: an embassy, and the person's own meeting point. */
+.f-pin-embassy {
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--f-white);
+  border-radius: 7px;
+  background: var(--f-map-embassy);
+  box-shadow: var(--f-pin-shadow-box);
+  color: var(--f-white);
+}
+.f-pin-personal {
+  color: var(--f-map-personal);
+  filter: drop-shadow(0 1px 2px var(--f-white));
+}

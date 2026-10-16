@@ -138,7 +138,7 @@ export default function EmergencyScreen(p: Props) {
    */
   function reveal(selector: string, behavior: ScrollBehavior = scrollMotion()) {
     const target = root.current?.querySelector<HTMLElement>(selector);
-    const app = root.current?.closest<HTMLElement>('.fw-app');
+    const app = root.current?.closest<HTMLElement>('.f-content');
     if (!target) return;
     target.focus({ preventScroll: true });
     if (app)

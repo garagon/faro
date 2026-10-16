@@ -263,7 +263,7 @@ export default function WebMap({
     latestEvents.current.forEach((q) => {
       const size = q.id === selected ? 42 : 34;
       const icon = L.divIcon({
-        className: `fw-pin fw-mag-band-${magnitudeBand(q.mag)}${q.id === selected ? ' fw-pin-selected' : ''}`,
+        className: `f-pin f-pin-band-${magnitudeBand(q.mag)}${q.id === selected ? ' f-pin-selected' : ''}`,
         html: renderToStaticMarkup(<b>{q.mag?.toFixed(1) ?? '—'}</b>),
         iconSize: [size, size],
         iconAnchor: [size / 2, size],
@@ -286,7 +286,7 @@ export default function WebMap({
     embassies.forEach((e) => {
       const label = e.name[langIndex(lang)];
       const icon = L.divIcon({
-        className: 'fw-embassy-pin',
+        className: 'f-pin-embassy',
         html: renderToStaticMarkup(<FlagIcon size={26} weight="fill" />),
         iconSize: [32, 32],
         iconAnchor: [16, 30],
@@ -351,7 +351,7 @@ export default function WebMap({
         'Ponto pessoal · não verificado',
       );
       const icon = L.divIcon({
-        className: 'fw-hotel-pin',
+        className: 'f-pin-personal',
         html: renderToStaticMarkup(<FlagIcon size={28} weight="fill" />),
         iconSize: [32, 32],
         iconAnchor: [16, 30],
@@ -421,7 +421,7 @@ export default function WebMap({
     latestHazards.current.forEach((h) => {
       const Icon = hazardIcons[h.kind];
       const icon = L.divIcon({
-        className: `fw-hazard-pin fw-hazard-pin-${h.level}`,
+        className: `f-pin-hazard f-pin-hazard-${h.level}`,
         html: renderToStaticMarkup(<Icon size={22} weight="bold" />),
         iconSize: [36, 36],
         iconAnchor: [18, 18],
@@ -468,10 +468,10 @@ export default function WebMap({
     });
   }, [lang]);
   return (
-    <div className="fw-map-wrapper">
+    <div className="f-map-frame">
       <div
         ref={el}
-        className="fw-map"
+        className="f-map-canvas"
         role="region"
         aria-label={
           label ||
@@ -494,7 +494,7 @@ export default function WebMap({
         </p>
       )}
       {tileError && (
-        <div className="fw-map-error" role="status">
+        <div className="f-map-error" role="status">
           {pick(
             lang,
             'Algunas partes del mapa no cargaron. Consulta la lista de eventos.',

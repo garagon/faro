@@ -33,3 +33,10 @@
   font-size: var(--f-text-sm);
   line-height: var(--f-leading-snug);
 }
+
+/* Faro's own scene drawings (the guide): the width of their column, never cropped. */
+.f-illustration {
+  display: block;
+  width: 100%;
+  height: auto;
+}

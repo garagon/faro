@@ -1629,7 +1629,7 @@ export default function SafetyIllustration({ scene, lang }: { scene: SafetyScene
   );
   return (
     <svg
-      className="fw-safety-illustration"
+      className="f-illustration"
       data-scene={scene}
       viewBox={compact ? '0 0 240 180' : '0 0 480 300'}
       role="img"

@@ -1,5 +1,0 @@
-/* Practical touch sizes and stable icons on narrow screens. */
-.fw-app button > svg,
-.fw-app a > svg {
-  flex-shrink: 0;
-}
