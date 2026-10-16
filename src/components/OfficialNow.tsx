@@ -12,6 +12,7 @@ import {
   StatusIcon,
 } from '../ui/index.ts';
 import { checkedLabel } from '../lib/time.ts';
+import { failingLabel } from '../lib/sourceStatus.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import {
   floodWarnings,
@@ -48,6 +49,8 @@ export type NationalFeed = {
   agency: string;
   warnings: NationalWarning[] | null;
   failed: boolean;
+  /** When the last failed attempt was made. */
+  failedAt?: number | null;
   partial: boolean;
   checked: number | null;
   stale: boolean;
@@ -56,6 +59,7 @@ export type CivilFeed = {
   agency: string;
   posts: CivilPost[] | null;
   failed: boolean;
+  failedAt?: number | null;
   stale: boolean;
   checked: number | null;
   offline?: boolean;
@@ -261,10 +265,12 @@ export default function OfficialNow({
           )
       : '';
   const signal = national ? nationalSignal(national) : null;
+  // A failing source says so beside its heading, with the time of its last data or attempt, even
+  // while its last warnings are still listed: they may have been lifted or raised since.
   const nationalState = !national
     ? ''
-    : signal === 'failed'
-      ? t('No responde', 'Not responding', 'Não responde')
+    : national.failed
+      ? failingLabel({ checked: national.checked, failedAt: national.failedAt, now, lang })
       : signal === 'offline'
         ? t('Sin conexión', 'Offline', 'Sem conexão')
         : signal === 'checking'
@@ -288,13 +294,18 @@ export default function OfficialNow({
           : '';
   const civilState = !civil
     ? ''
-    : !civil.posts
-      ? civil.failed
-        ? t('No responde', 'Not responding', 'Não responde')
-        : civil.offline
+    : civil.failed
+      ? failingLabel({
+          checked: civil.posts ? civil.checked : null,
+          failedAt: civil.failedAt,
+          now,
+          lang,
+        })
+      : !civil.posts
+        ? civil.offline
           ? t('Sin conexión', 'Offline', 'Sem conexão')
           : t('Consultando…', 'Checking…', 'Consultando…')
-      : checked(civil.checked, civil.stale || civil.failed);
+        : checked(civil.checked, civil.stale);
   // A quiet week still says when the agency last published, so silence is not read as news.
   const last = civil?.posts && posts.length === 0 ? lastPost(civil.posts, now) : null;
   const day = (n: number) =>
@@ -345,7 +356,12 @@ export default function OfficialNow({
                 `Avisos em vigor: ${national.agency}`,
               )}
             </h3>
-            <span className="f-section-aside">{nationalState}</span>
+            <span
+              className="f-section-aside"
+              data-state={national.failed || national.stale ? 'stale' : undefined}
+            >
+              {nationalState}
+            </span>
           </div>
           {warnings.length > 0 ? (
             <>
@@ -431,7 +447,12 @@ export default function OfficialNow({
                 `Comunicados: ${civil.agency}`,
               )}
             </h3>
-            <span className="f-section-aside">{civilState}</span>
+            <span
+              className="f-section-aside"
+              data-state={civil.failed || civil.stale ? 'stale' : undefined}
+            >
+              {civilState}
+            </span>
           </div>
           {shownPosts.length > 0 ? (
             <>

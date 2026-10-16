@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { attemptResult, type Attempt } from '../lib/sourceStatus.ts';
 
 /** A last good answer kept on the device, validated again before it is shown. */
 export type Persist<T> = { key: string; revive: (value: unknown) => T | null };
@@ -13,7 +14,8 @@ function restore<T>(persist?: Persist<T>): T | null {
 
 /**
  * Polls a read function while the tab is visible and online. A failure keeps the previous
- * snapshot and sets `failed`; it never replaces data with an empty success. With `persist`,
+ * snapshot, sets `failed` and records when it was tried (`failedAt`); it never replaces data with
+ * an empty success. With `persist`,
  * the last good answer is stored and restored on a later visit (for example offline), carrying
  * its original retrieval time so it is shown as older data.
  */
@@ -24,7 +26,7 @@ export function usePolled<T>(
   persist?: Persist<T>,
 ) {
   const [data, setData] = useState<T | null>(() => (enabled ? restore(persist) : null)),
-    [failed, setFailed] = useState(false),
+    [attempt, setAttempt] = useState<Attempt>({ failed: false, failedAt: null }),
     [busy, setBusy] = useState(false),
     // When this device last received a valid answer, for sources without their own time.
     [at, setAt] = useState<number | null>(null);
@@ -34,7 +36,7 @@ export function usePolled<T>(
   if (lastRead.current !== read) {
     lastRead.current = read;
     setData(enabled ? restore(persist) : null);
-    if (failed) setFailed(false);
+    if (attempt.failed) setAttempt({ failed: false, failedAt: null });
     if (at !== null) setAt(null);
   }
   const refresh = useCallback(async () => {
@@ -46,9 +48,10 @@ export function usePolled<T>(
     try {
       const next = await read(ac.signal);
       if (controller.current !== ac) return;
+      const received = Date.now();
       setData(next);
-      setFailed(false);
-      setAt(Date.now());
+      setAttempt(attemptResult(true, received));
+      setAt(received);
       if (persist)
         try {
           localStorage.setItem(persist.key, JSON.stringify(next));
@@ -56,7 +59,7 @@ export function usePolled<T>(
           // Storage blocked or full: the answer is still shown, just not kept.
         }
     } catch {
-      if (controller.current === ac) setFailed(true);
+      if (controller.current === ac) setAttempt(attemptResult(false, Date.now()));
     } finally {
       clearTimeout(timer);
       if (controller.current === ac) {
@@ -86,5 +89,5 @@ export function usePolled<T>(
       document.removeEventListener('visibilitychange', resume);
     };
   }, [refresh, interval, enabled]);
-  return { data, failed, busy, at, refresh };
+  return { data, failed: attempt.failed, failedAt: attempt.failedAt, busy, at, refresh };
 }

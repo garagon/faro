@@ -9,7 +9,7 @@ import {
   WavesIcon,
 } from '@phosphor-icons/react';
 import { checkedLabel } from '../lib/time.ts';
-import type { SourceState } from '../lib/sourceStatus.ts';
+import { capitalize, sourceTime, type SourceState } from '../lib/sourceStatus.ts';
 import type { FeedUpdate } from '../lib/feedUpdates.ts';
 import { displayPlace, placeLang, type Quake } from '../lib/domain.ts';
 import { pick, type Lang } from '../lib/i18n.ts';
@@ -35,6 +35,8 @@ export type SourceRow = {
   url: string;
   state: SourceState;
   checked: number | null;
+  /** When the last failed request was made, while the source is failing. */
+  failedAt: number | null;
   /** How often Faro asks while the page is open. */
   every: string;
 };
@@ -97,20 +99,23 @@ export default function SourcesScreen({ lang, now, countryName, rows, next, upda
     offline: t('Sin conexión', 'Offline', 'Sem conexão'),
     idle: t('Se consulta al elegirla', 'Checked when selected', 'Consultada ao selecionar'),
   };
+  // When its data is from and, for a failing source, when Faro last tried it.
   const when = (r: SourceRow) =>
-    r.checked
-      ? r.state === 'ok' || r.state === 'partial'
-        ? t(
-            `Consultado ${checkedLabel(r.checked, now, lang)}`,
-            `Checked ${checkedLabel(r.checked, now, lang)}`,
-            `Consultado ${checkedLabel(r.checked, now, lang)}`,
-          )
-        : t(
-            `Último dato ${checkedLabel(r.checked, now, lang)}`,
-            `Last data ${checkedLabel(r.checked, now, lang)}`,
-            `Último dado ${checkedLabel(r.checked, now, lang)}`,
-          )
-      : '';
+    capitalize(
+      [
+        sourceTime({
+          checked: r.checked,
+          old: r.state !== 'ok' && r.state !== 'partial',
+          now,
+          lang,
+        }),
+        r.state === 'failed'
+          ? sourceTime({ checked: null, old: true, failedAt: r.failedAt, now, lang })
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    );
   const countdown = (r: SourceRow) =>
     next?.id === r.id
       ? `${t('Próxima consulta', 'Next check', 'Próxima consulta')}: ${Math.max(0, Math.ceil((next.at - now) / 1000))}\u00a0s`

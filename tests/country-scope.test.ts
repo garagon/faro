@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { inCountryScope, hasCountryBoundary } from '../src/lib/countryScope.ts';
+import { inCountryScope, hasCountryBoundary, reachesSea } from '../src/lib/countryScope.ts';
 test('Colombia excludes the Panama events that used to dominate its rectangular view', () => {
   for (const event of [
     { lat: 7.5, lng: -80.4 },
@@ -20,4 +20,11 @@ test('country view retains coastal earthquakes and distant islands without inclu
   assert.equal(inCountryScope({ lat: 7.89, lng: -72.5 }, 'VE'), false);
   assert.equal(inCountryScope({ lat: 8, lng: -81 }, 'WORLD'), true);
   assert.equal(hasCountryBoundary('invalid'), false);
+});
+test('the country view says "offshore" only where its buffer reaches the sea', () => {
+  for (const code of ['PA', 'CL', 'US', 'GB']) assert.equal(reachesSea(code), true, code);
+  for (const code of ['CZ', 'CH', 'BO', 'PY', 'VA']) assert.equal(reachesSea(code), false, code);
+  // The Caspian Sea is within reach of Kazakhstan's buffer.
+  assert.equal(reachesSea('KZ'), true);
+  assert.equal(reachesSea('invalid'), false);
 });

@@ -7,7 +7,7 @@ import {
   PulseIcon,
   SunIcon,
 } from '@phosphor-icons/react';
-import { checkedLabel } from '../lib/time.ts';
+import { failingLabel, sourceTime } from '../lib/sourceStatus.ts';
 import { ageLabel } from '../lib/feedUpdates.ts';
 import {
   ACTIVE_WINDOW,
@@ -43,6 +43,8 @@ type Props = {
   bounds: Bounds;
   data: AlertsSnapshot | null;
   failed: boolean;
+  /** When the last failed request was made, while GDACS is failing. */
+  failedAt?: number | null;
   online: boolean;
   now: number;
 };
@@ -81,7 +83,20 @@ export default function AlertsPanel(p: Props) {
   const shown = all ? rows : rows.slice(0, 4);
   const date = (n: number) =>
     new Intl.DateTimeFormat(p.lang, { day: 'numeric', month: 'short' }).format(n);
-  const stale = !!p.data && p.now - p.data.fetched > 15 * 60000;
+  // Offline or older than 15 minutes, the list is the last data, said as on every tab; a failing
+  // source says so with its time instead.
+  const stale = !!p.data && !p.failed && (!p.online || p.now - p.data.fetched > 15 * 60000);
+  // Under the list: a partial answer and, while current, when it was checked. The time is said
+  // above when the data is old or the source failing; with nothing to add, only the issuer.
+  const foot = [
+    p.data?.partial && t('Respuesta parcial.', 'Partial response.', 'Resposta parcial.'),
+    p.data &&
+      !stale &&
+      !p.failed &&
+      sourceTime({ checked: p.data.fetched, old: false, now: p.now, lang: p.lang }),
+  ]
+    .filter(Boolean)
+    .join(' · ');
   return (
     <div className="f-stack" data-gap="lg">
       <div className="f-stack">
@@ -118,17 +133,40 @@ export default function AlertsPanel(p: Props) {
           <div role="status">
             <SourceStamp issuer="GDACS" state="error">
               <span>
+                {failingLabel({
+                  checked: p.data?.fetched ?? null,
+                  failedAt: p.failedAt,
+                  now: p.now,
+                  lang: p.lang,
+                })}
+                .{' '}
                 {p.data
                   ? t(
-                      'No se pudo actualizar GDACS. Se muestran los últimos datos recibidos.',
-                      'GDACS could not be refreshed. Showing the last data received.',
-                      'Não foi possível atualizar o GDACS. Mostrando os últimos dados recebidos.',
+                      'Se muestran los últimos datos recibidos.',
+                      'Showing the last data received.',
+                      'Mostrando os últimos dados recebidos.',
                     )
                   : t(
-                      'No se pudo consultar GDACS. Esto no significa que no haya alertas.',
-                      'GDACS could not be reached. This does not mean there are no alerts.',
-                      'Não foi possível consultar o GDACS. Isso não significa que não haja alertas.',
+                      'Esto no significa que no haya alertas.',
+                      'This does not mean there are no alerts.',
+                      'Isso não significa que não haja alertas.',
                     )}
+              </span>
+            </SourceStamp>
+          </div>
+        )}
+        {stale && p.data && (
+          <div role="status">
+            <SourceStamp issuer="GDACS" state="stale">
+              <span>
+                {[
+                  t(
+                    'La consulta está desactualizada',
+                    'This check is out of date',
+                    'A consulta está desatualizada',
+                  ),
+                  sourceTime({ checked: p.data.fetched, old: true, now: p.now, lang: p.lang }),
+                ].join(' · ')}
               </span>
             </SourceStamp>
           </div>
@@ -229,24 +267,9 @@ export default function AlertsPanel(p: Props) {
                 Global Disaster Alert and Coordination System, GDACS
               </a>
             }
-            state={stale || p.data?.partial ? 'stale' : undefined}
+            state={p.data?.partial ? 'stale' : undefined}
           >
-            <span>
-              {[
-                stale &&
-                  t(
-                    'Datos con más de 15 minutos.',
-                    'Data older than 15 minutes.',
-                    'Dados com mais de 15 minutos.',
-                  ),
-                p.data?.partial &&
-                  t('Respuesta parcial.', 'Partial response.', 'Resposta parcial.'),
-                p.data &&
-                  `${t('consultado', 'checked', 'consultado')} ${checkedLabel(p.data.fetched, p.now, p.lang)}`,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </span>
+            {foot && <span>{foot}</span>}
           </SourceStamp>
         </div>
       </div>
