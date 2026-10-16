@@ -405,14 +405,14 @@ export default function SituationBriefing(p: Props) {
             meta={`${
               notice.count === 1
                 ? t(
-                    `${notice.agency}: 1 comunicado sobre lluvias`,
-                    `${notice.agency}: 1 post about rain`,
-                    `${notice.agency}: 1 comunicado sobre chuvas`,
+                    `${notice.agency}: 1 comunicado`,
+                    `${notice.agency}: 1 post`,
+                    `${notice.agency}: 1 comunicado`,
                   )
                 : t(
-                    `${notice.agency}: ${notice.count} comunicados sobre lluvias`,
-                    `${notice.agency}: ${notice.count} posts about rain`,
-                    `${notice.agency}: ${notice.count} comunicados sobre chuvas`,
+                    `${notice.agency}: ${notice.count} comunicados`,
+                    `${notice.agency}: ${notice.count} posts`,
+                    `${notice.agency}: ${notice.count} comunicados`,
                   )
             } · ${ago(notice.published)}`}
             onClick={opens(() => reveal(notice.rowId))}
@@ -478,7 +478,7 @@ export default function SituationBriefing(p: Props) {
               )
             : h.key === 'cyclone' && p.stormsInBasin
               ? // The basin count comes once, from the NHC note.
-                t('Ninguno con alerta', 'None with an alert', 'Nenhum com alerta')
+                t('Sin alerta', 'No alert', 'Sem alerta')
               : t(
                   'Sin alertas internacionales',
                   'No international alerts',

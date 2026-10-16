@@ -865,11 +865,11 @@ export default function App() {
         !!storms.data &&
         (activeStorms.length
           ? t(
-              `NHC: ${activeStorms.length} activo${activeStorms.length > 1 ? 's' : ''} en la cuenca`,
-              `NHC: ${activeStorms.length} active in the basin`,
-              `NHC: ${activeStorms.length} ativo${activeStorms.length > 1 ? 's' : ''} na bacia`,
+              `${activeStorms.length} en la cuenca (NHC)`,
+              `${activeStorms.length} in the basin (NHC)`,
+              `${activeStorms.length} na bacia (NHC)`,
             )
-          : t('NHC: ninguno activo', 'NHC: none active', 'NHC: nenhum ativo')),
+          : t('Ninguno en la cuenca (NHC)', 'None in the basin (NHC)', 'Nenhum na bacia (NHC)')),
       nwsCount('tropical') !== null &&
         t(
           `NWS: ${nwsCount('tropical')} avisos`,
