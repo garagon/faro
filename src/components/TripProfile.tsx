@@ -546,9 +546,9 @@ export default function TripProfile(p: Props) {
             title={t('Seguro de viaje', 'Travel insurance', 'Seguro viagem')}
             summary={summary.insurance}
             empty={t(
-              'Aseguradora, póliza y asistencia 24 h',
+              'Aseguradora, póliza y asistencia 24\u00a0h',
               'Insurer, policy and 24-hour assistance',
-              'Seguradora, apólice e assistência 24 h',
+              'Seguradora, apólice e assistência 24\u00a0h',
             )}
           >
             <Field
