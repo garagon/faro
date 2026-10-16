@@ -604,8 +604,9 @@ export default function App() {
       150,
     );
   };
-  // Saves the trip form: profile and meeting plan together, without leaving the screen.
-  const saveTrip = (value: Preferences, nextPlan: HotelPlan | null) => {
+  // Saves the trip form: profile and meeting plan together, without leaving the screen. The
+  // country on screen changes only when the person picked another one in the form.
+  const saveTrip = (value: Preferences, nextPlan: HotelPlan | null, follow: boolean) => {
     try {
       const saved = storePreferences(value, countryCodes);
       if (nextPlan) writeLocal('faro-hotel-v1', JSON.stringify(nextPlan));
@@ -614,7 +615,7 @@ export default function App() {
       setNationality(saved.nationality);
       setShowEmbassies(!!saved.nationality);
       setPlan(nextPlan);
-      if (saved.destination !== country) changeCountry(saved.destination);
+      if (follow && saved.destination !== country) changeCountry(saved.destination);
       // Asks the browser to keep the trip and the offline copy instead of clearing them when
       // space runs low or the site goes unused. The browser decides; nothing depends on it.
       void navigator.storage?.persist?.().catch(() => false);
@@ -642,6 +643,7 @@ export default function App() {
     setPlan(null);
     setNationality('');
     setShowEmbassies(false);
+    return !failed.length;
   };
 
   const temporal = useMemo(
@@ -2435,18 +2437,22 @@ export default function App() {
               </ScopeNote>
             </div>
           )}
+          {/* Viaje stays mounted and hidden, like Avisar, so what the person typed and has not
+              saved survives a change of tab. It is kept in memory only, never in storage. */}
+          <div hidden={screen !== 'hotel'}>
+            <TripProfile
+              lang={lang}
+              country={country}
+              countryCodes={countryCodes}
+              profile={profile}
+              plan={plan}
+              geo={geo}
+              onSave={saveTrip}
+              onDeleteAll={deleteTrip}
+            />
+          </div>
           {screen === 'hotel' && (
             <>
-              <TripProfile
-                lang={lang}
-                country={country}
-                countryCodes={countryCodes}
-                profile={profile}
-                plan={plan}
-                geo={geo}
-                onSave={saveTrip}
-                onDeleteAll={deleteTrip}
-              />
               <OfflineMap lang={lang} {...offlineArea(point)} />
               <TravelContacts key={country} country={country} lang={lang} />
               <EvacuationPlan country={country} lang={lang} />
