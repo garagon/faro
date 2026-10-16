@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { CaretLeftIcon } from '@phosphor-icons/react';
+import { ChevronLeftIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 /** A part of a screen: a title and space, not a box. */
 export function Section({
@@ -17,13 +18,17 @@ export function Section({
   const headingId = id ? `${id}-title` : undefined;
   return (
     // The id makes the section a target for links that open a screen at one of its parts.
-    <section id={id} className="f-section" aria-labelledby={title ? headingId : undefined}>
+    <section
+      id={id}
+      className="grid gap-3 @container"
+      aria-labelledby={title ? headingId : undefined}
+    >
       {title && (
-        <div className="f-section-head">
-          <h2 className="f-section-title" id={headingId}>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h2 className="text-base leading-snug font-semibold" id={headingId}>
             {title}
           </h2>
-          {aside && <span className="f-section-aside">{aside}</span>}
+          {aside && <span className="text-sm text-muted-foreground">{aside}</span>}
         </div>
       )}
       {children}
@@ -50,14 +55,14 @@ export function ScreenHead({
   titleId?: string;
 }) {
   return (
-    <header className="f-screen-head">
-      <div className="f-section-head">
-        <h1 className="f-screen-title" id={titleId} tabIndex={-1}>
+    <header className="grid gap-1">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight" id={titleId} tabIndex={-1}>
           {title}
         </h1>
-        {aside && <span className="f-section-aside">{aside}</span>}
+        {aside && <span className="text-sm text-muted-foreground">{aside}</span>}
       </div>
-      {lead && <p className="f-screen-lead">{lead}</p>}
+      {lead && <p className="max-w-[42rem] text-sm text-muted-foreground">{lead}</p>}
     </header>
   );
 }
@@ -65,9 +70,15 @@ export function ScreenHead({
 /** Back to the parent screen, named: "‹ Situación". */
 export function BackLink({ children, onClick }: { children: ReactNode; onClick: () => void }) {
   return (
-    <button type="button" className="f-back" onClick={onClick}>
-      <CaretLeftIcon size={18} aria-hidden="true" />
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="-ms-2.5 h-10 justify-self-start md:h-8"
+      onClick={onClick}
+    >
+      <ChevronLeftIcon aria-hidden="true" />
       {children}
-    </button>
+    </Button>
   );
 }

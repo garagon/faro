@@ -10,19 +10,22 @@ export type Fact = {
 };
 
 /**
- * Facts about one record as term and value pairs, divided by hairlines: the term as a caption,
- * the value as a label. Side by side when there is room, stacked on narrow screens.
+ * Facts about one record as a description list: muted terms beside their values, in two columns
+ * that every pair shares, divided by fine lines.
  */
 export function Facts({ items, label }: { items: readonly Fact[]; label?: string }) {
   return (
-    <dl className="f-facts" aria-label={label}>
+    <dl className="grid grid-cols-[auto_1fr] text-sm" aria-label={label}>
       {items.map((f) => (
-        <div key={f.id}>
-          <dt>
+        <div
+          key={f.id}
+          className="col-span-2 grid grid-cols-subgrid items-baseline gap-x-4 border-b py-2.5 first:pt-0 last:border-b-0 last:pb-0"
+        >
+          <dt className="grid text-muted-foreground">
             {f.term}
-            {f.hint && <span>{f.hint}</span>}
+            {f.hint && <span className="text-xs">{f.hint}</span>}
           </dt>
-          <dd>{f.value}</dd>
+          <dd className="font-medium tabular-nums [overflow-wrap:anywhere]">{f.value}</dd>
         </div>
       ))}
     </dl>
