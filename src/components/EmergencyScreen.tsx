@@ -43,9 +43,9 @@ import {
 } from '../data/firstMinutes.ts';
 import { missionKinds, missionsFor } from '../data/consularMissions.ts';
 import { supportFor } from '../data/travelerSupport.ts';
-import { displayPlace, placeLang, type Quake } from '../lib/domain.ts';
-import { ageLabel } from '../lib/feedUpdates.ts';
-import { atLabel } from '../lib/time.ts';
+import type { Quake } from '../lib/domain.ts';
+import { checkedLabel } from '../lib/time.ts';
+import { quakeRegion, quakeTime } from '../lib/quakeText.ts';
 import { scrollMotion } from '../lib/motion.ts';
 import { displayPhone, whatsappHref } from '../lib/phone.ts';
 import type { HotelPlan } from '../lib/resources.ts';
@@ -118,6 +118,7 @@ export default function EmergencyScreen(p: Props) {
   const local = country ? emergencyFor(country) : undefined;
   const plan = p.plan && p.plan.country === country ? p.plan : null;
   const latest = p.latest && p.country === country ? p.latest : undefined;
+  const latestRegion = latest ? quakeRegion(latest, p.lang, country) : null;
 
   // Arriving here, focus starts on the call button. Without a country it starts on the question,
   // not the search box, so the list and the phone keyboard do not open by themselves.
@@ -185,7 +186,7 @@ export default function EmergencyScreen(p: Props) {
       'Tsunami bulletins (once on high ground)',
       'Boletins de tsunami (já em lugar alto)',
     ),
-    status: t('Avisar cómo estoy', 'Tell people how I am', 'Avisar como estou'),
+    status: t('Avisar cómo estoy', 'Check in', 'Avisar como estou'),
   };
   const steps = [...hazardSteps[kind], ...generalSteps];
   // One link per publisher, so the line stays short.
@@ -504,16 +505,23 @@ export default function EmergencyScreen(p: Props) {
           <List>
             <ListRow
               lead={<Magnitude value={latest.mag} />}
-              title={<span lang={placeLang(latest)}>{displayPlace(latest.place)}</span>}
-              meta={`${p.provider} · ${ageLabel(latest.time, p.now, p.lang)}${
-                p.latestStaleSince
-                  ? t(
-                      ` · sin actualizar desde ${atLabel(p.latestStaleSince, p.now, p.lang)}`,
-                      ` · not updated since ${atLabel(p.latestStaleSince, p.now, p.lang)}`,
-                      ` · sem atualização desde ${atLabel(p.latestStaleSince, p.now, p.lang)}`,
-                    )
-                  : ''
-              }`}
+              // Written as everywhere else (src/lib/quakeText.ts): when as the title, then where.
+              title={quakeTime(latest.time, p.now, p.lang)}
+              meta={
+                <>
+                  {latestRegion && (
+                    <>
+                      <span lang={latestRegion.lang === p.lang ? undefined : latestRegion.lang}>
+                        {latestRegion.text}
+                      </span>
+                      {' · '}
+                    </>
+                  )}
+                  {p.provider}
+                  {p.latestStaleSince &&
+                    ` · ${t('último dato', 'last data', 'último dado')} ${checkedLabel(p.latestStaleSince, p.now, p.lang)}`}
+                </>
+              }
               onClick={() => p.onQuake(latest)}
             />
           </List>
@@ -532,7 +540,7 @@ export default function EmergencyScreen(p: Props) {
         <List>
           <ListRow
             lead={<RowIcon icon={<ChatCircleTextIcon size={20} />} />}
-            title={t('Avisar cómo estoy', 'Tell people how I am', 'Avisar como estou')}
+            title={t('Avisar cómo estoy', 'Check in', 'Avisar como estou')}
             meta={t(
               'Prepara un mensaje y envíalo tú',
               'Prepare a message, send it yourself',

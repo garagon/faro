@@ -95,6 +95,10 @@
   background: transparent;
   color: var(--f-color-action);
 }
+/* A ghost button that removes the person's data: the colour of a caution, never the call red. */
+.f-button[data-variant='ghost'][data-tone='error'] {
+  color: var(--f-color-level-1-text);
+}
 .f-button[data-variant='call'] {
   display: flex;
   justify-self: stretch;

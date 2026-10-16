@@ -146,7 +146,7 @@ export default function DestinationInfo({
     },
   ];
   return (
-    <Section id="fw-sources" title={title} aside={name || undefined}>
+    <Section id="fw-sources" title={title}>
       <Text>
         {t(
           'Cada enlace abre el sitio del organismo. Sus publicaciones más recientes están allí.',

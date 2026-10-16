@@ -4,7 +4,7 @@ import type { Geo } from './WebMap.tsx';
 import QuakeImpact from './QuakeImpact.tsx';
 import { langTag, pick, type Lang } from '../lib/i18n.ts';
 import { depthInFull, distance } from '../lib/units.ts';
-import { quakeTime } from '../lib/quakeText.ts';
+import { quakeRegion, quakeTime } from '../lib/quakeText.ts';
 import {
   Disclosure,
   Button,
@@ -77,6 +77,7 @@ export default function InformationDialog(p: Props) {
       </Sheet>
     );
   const magType = q.magType && q.magType.toUpperCase() !== 'M' ? q.magType : '';
+  const region = quakeRegion(q, lang);
   return (
     <Sheet
       open={p.open}
@@ -90,7 +91,14 @@ export default function InformationDialog(p: Props) {
           label={`${t('magnitud', 'magnitude', 'magnitude')}${magType ? ` ${magType}` : ''}`}
         />
       }
-      title={<span lang={placeLang(q)}>{displayPlace(q.place)}</span>}
+      // The region as Faro writes it everywhere (translated when it is a known pattern).
+      title={
+        region ? (
+          <span lang={region.lang === lang ? undefined : region.lang}>{region.text}</span>
+        ) : (
+          <span lang={placeLang(q)}>{displayPlace(q.place)}</span>
+        )
+      }
       description={
         <>
           {/* Who calculated it, when EMSC credits another agency, is under the facts. */}
